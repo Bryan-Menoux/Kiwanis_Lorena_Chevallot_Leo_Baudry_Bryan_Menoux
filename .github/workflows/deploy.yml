@@ -32,7 +32,9 @@ jobs:
           username: ${{ secrets.USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            sudo rm -rf /var/www/kiwanis/
+            if [ -d /var/www/kiwanis ] && [ "$(ls -A /var/www/kiwanis)" ]; then
+              sudo rm -rf /var/www/kiwanis/
+            fi
 
       - name: Deploy to VPS via SCP
         uses: appleboy/scp-action@v0.1.3
