@@ -1,0 +1,11 @@
+User-agent: *
+Allow: /
+
+User-agent: Googlebot-Image
+Allow: /favicon*
+Allow: /apple-touch-icon*
+Allow: /android-chrome*
+Allow: /site.webmanifest
+
+Disallow: /admin
+Disallow: /private
