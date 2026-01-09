@@ -1,5 +1,6 @@
 ---
 import "../styles/global.css";
+import Footer from "../components/Footer.astro";
 ---
 
 <!doctype html>
@@ -52,8 +53,9 @@ import "../styles/global.css";
 
     <title>Kiwanis Pays de Montbéliard</title>
   </head>
-  <body>
+  <body class="m-0 p-0">
     <slot />
+    <Footer />
   </body>
 </html>
 <style>
