@@ -24,6 +24,7 @@ jobs:
       - name: Build project
         run: |
           npm run build
+          mkdir -p dist/server
           cp package.json dist/server/
       - name: Clean remote directory before deploy
         uses: appleboy/ssh-action@v1.0.0
