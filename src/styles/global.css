@@ -1,2 +1,41 @@
 @import "tailwindcss";
 @plugin "daisyui";
+
+@plugin "daisyui/theme" {
+  name: "Kiwanis";
+  default: true;
+  prefersdark: false;
+  color-scheme: "light";
+  --color-base-100: oklch(98% 0.002 247.839);
+  --color-base-200: oklch(96% 0.003 264.542);
+  --color-base-300: oklch(92% 0.006 264.531);
+  --color-base-content: oklch(21% 0.034 264.665);
+  --color-primary: #1e3c71;
+  --color-primary-content: oklch(98% 0.002 247.839);
+  --color-secondary: #e8a958;
+  --color-secondary-content: oklch(21% 0.034 264.665);
+  --color-accent: #2b2549;
+  --color-accent-content: oklch(98% 0.002 247.839);
+  --color-neutral: oklch(87% 0.01 258.338);
+  --color-neutral-content: oklch(21% 0.034 264.665);
+  --color-info: #e8a958;
+  --color-info-content: oklch(21% 0.034 264.665);
+  --color-success: oklch(72% 0.219 149.579);
+  --color-success-content: oklch(97% 0.021 166.113);
+  --color-warning: oklch(70% 0.213 47.604);
+  --color-warning-content: oklch(98% 0.016 73.684);
+  --color-error: oklch(63% 0.237 25.331);
+  --color-error-content: oklch(97% 0.014 343.198);
+  --radius-selector: 2rem;
+  --radius-field: 0.5rem;
+  --radius-box: 1rem;
+  --size-selector: 0.25rem;
+  --size-field: 0.25rem;
+  --border: 1px;
+  --depth: 1;
+  --noise: 0;
+}
+
+.btn {
+  border-radius: 9999px;
+}
