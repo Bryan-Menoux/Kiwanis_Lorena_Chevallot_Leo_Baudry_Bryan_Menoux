@@ -1,12 +1,111 @@
 ---
 import logo from "../assets/logo.svg";
+import diagArrow from "../assets/diag-arrow.svg";
 ---
 
-<footer class="bg-accent flex justify-between p-8 h-64">
-  <div class="flex gap-4 items-center h-full">
-    <p class="text-white font-black text-4xl h-full leading-snug">
-      KIWANIS<br /> PAYS<br /> DE<br /> MONTBÉLIARD
-    </p>
-    <img src={logo.src} alt="logo kiwanis" class="h-full" />
+<footer class="bg-[#2B2549] px-4 py-8 md:px-6 md:py-10 lg:px-6 lg:py-10">
+  <div class="flex flex-col lg:flex-row lg:gap-8 lg:items-stretch">
+    
+    <!-- Logo et Titre -->
+    <div class="flex flex-col items-center md:flex-row md:gap-8 md:items-start gap-4 mb-8 md:mb-0 md:flex-1 lg:w-1/2 lg:flex-row-reverse lg:justify-between lg:items-stretch justify-between min-w-96">
+      <img 
+        src={logo.src} 
+        alt="logo kiwanis" 
+        class="w-24 h-24 md:w-48 md:h-auto lg:w-44 lg:h-auto flex-shrink-0 object-contain" 
+      />
+      <div class="text-center md:text-left lg:h-full lg:flex lg:flex-col lg:justify-between">
+        <h1 class="text-white font-serif text-3xl md:text-5xl lg:text-5xl font-normal leading-[1.1] tracking-tighter -mb-1 md:-mb-2">
+          KIWANIS
+        </h1>
+        <div class="flex flex-col gap-0">
+          <p class="text-white font-serif text-xl md:text-4xl lg:text-[44px] font-light leading-[1.1] tracking-tighter -mb-0.5 md:-mb-1">
+            PAYS
+          </p>
+          <p class="text-white font-serif text-xl md:text-4xl lg:text-[44px] font-light leading-[1.1] tracking-tighter -mb-0.5 md:-mb-1">
+            DE
+          </p>
+          <p class="text-white font-serif text-xl md:text-4xl lg:text-[44px] font-light leading-[1.1] tracking-tighter">
+            MONTBÉLIARD
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Navigation et Contact -->
+    <div class="flex flex-col gap-6 md:gap-8 lg:gap-6 lg:w-1/2 lg:justify-between">
+      
+      <!-- Navigation -->
+      <div class="grid grid-cols-2 md:grid-cols-3 lg:flex gap-6 md:gap-8 w-full md:pb-8 md:border-b md:border-white/10">
+        <div class="col-span-2 md:col-span-2 lg:w-2/3 flex flex-row gap-6 md:gap-8 lg:gap-12 lg:justify-between">
+          <nav class="flex flex-col gap-3 md:gap-3 lg:gap-2 min-w-40">
+            <a href="/nos-membres" class="text-white hover:opacity-70 transition-opacity flex items-center justify-between w-full">
+              Nos membres
+              <img src={diagArrow.src} alt="" class="w-3 h-3" />
+            </a>
+            <a href="/contact" class="text-white hover:opacity-70 transition-opacity flex items-center justify-between w-full">
+              Page contact
+              <img src={diagArrow.src} alt="" class="w-3 h-3" />
+            </a>
+            <a href="/faire-un-don" class="text-white hover:opacity-70 transition-opacity flex items-center justify-between w-full">
+              Faire un don
+              <img src={diagArrow.src} alt="" class="w-3 h-3" />
+            </a>
+          </nav>
+
+          <nav class="flex flex-col gap-3 md:gap-3 lg:gap-2 min-w-40">
+            <a href="/nos-actions" class="text-white hover:opacity-70 transition-opacity flex items-center justify-between w-full">
+              Nos actions
+              <img src={diagArrow.src} alt="" class="w-3 h-3" />
+            </a>
+            <a href="/nos-projets" class="text-white hover:opacity-70 transition-opacity flex items-center justify-between w-full">
+              Nos projets
+              <img src={diagArrow.src} alt="" class="w-3 h-3" />
+            </a>
+            <a href="/nos-produits" class="text-white hover:opacity-70 transition-opacity flex items-center justify-between w-full">
+              Nos produits
+              <img src={diagArrow.src} alt="" class="w-3 h-3" />
+            </a>
+          </nav>
+        </div>
+
+        <div class="hidden md:flex lg:flex flex-col justify-start lg:ml-auto">
+          <p class="text-white font-sans text-xs font-normal opacity-40">
+            © 2026 — Copyright
+          </p>
+        </div>
+      </div>
+
+      <!-- Contact et Réseaux -->
+      <div class="flex flex-col md:flex-row md:justify-between md:items-end gap-6 lg:justify-between lg:items-end lg:gap-6">
+        <div class="flex flex-col gap-2">
+          <p class="text-white font-sans text-xs font-medium leading-[1.3] lg:leading-none tracking-widest uppercase opacity-60">
+            Contactez-nous
+          </p>
+          <div class="flex flex-col gap-2 md:gap-1 lg:gap-0.5">
+            <a href="tel:+33684523650" class="text-white font-sans text-sm font-normal leading-[1.4] lg:leading-tight tracking-wide hover:opacity-70 transition-opacity">
+              06 84 52 36 50
+            </a>
+            <a href="mailto:kiwanisfeminin.montbeliard@gmail.com" class="text-white font-sans text-xs font-normal leading-[1.4] lg:leading-tight tracking-wide hover:opacity-70 transition-opacity break-all md:break-normal">
+              kiwanisfeminin.montbeliard@gmail.com
+            </a>
+          </div>
+        </div>
+
+        <div class="flex gap-3 md:gap-2 lg:gap-2 items-center flex-shrink-0">
+          <svg class="w-6 h-6 md:w-7 md:h-7 lg:w-7 lg:h-7 flex-shrink-0 hover:opacity-80 transition-opacity" viewBox="0 0 35 35" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Facebook">
+            <path fill="white" d="M17.5 32c8.284 0 15-6.716 15-15 0-8.284-6.716-15-15-15-8.284 0-15 6.716-15 15 0 8.284 6.716 15 15 15Z"/>
+            <path fill="#2B2549" d="M20.637 25V17.62h2.455l.368-2.853h-2.823V12.89c0-.826.229-1.389 1.415-1.389h1.512v-2.549c-.261-.034-1.156-.113-2.197-.113-2.176 0-3.67 1.327-3.67 3.764v2.105h-2.465v2.853h2.465V25h2.945Z"/>
+          </svg>
+          <a href="#" class="px-3 py-1.5 border border-white/30 rounded-full text-white font-sans text-xs font-normal leading-[1.3] md:leading-[1.3] lg:leading-tight tracking-wide whitespace-nowrap hover:bg-white/10 transition-colors duration-300">
+            Facebook
+          </a>
+        </div>
+
+      </div>
+    </div>
   </div>
+
+  <p class="text-white font-sans text-xs font-normal opacity-40 text-center md:text-right lg:text-right mt-6 pt-6 md:mt-0 md:pt-0 md:border-0 border-t border-white/10 md:hidden">
+    © 2026 — Copyright
+  </p>
 </footer>

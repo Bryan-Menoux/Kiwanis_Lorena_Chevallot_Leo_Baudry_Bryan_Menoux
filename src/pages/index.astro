@@ -7,23 +7,3 @@ import Layout from "../layouts/Layout.astro";
     ⚠️ Initialisation du site ⚠️
   </h1>
 </Layout>
-
-<script>
-  import gsap from "gsap";
-
-  const tl = gsap.timeline();
-
-  tl.from(".init-title", {
-    opacity: 0,
-    y: 40,
-    scale: 0.95,
-    duration: 1,
-    ease: "power3.out",
-  }).to(".init-title", {
-    scale: 1.03,
-    duration: 0.8,
-    repeat: -1,
-    yoyo: true,
-    ease: "power1.inOut",
-  });
-</script>

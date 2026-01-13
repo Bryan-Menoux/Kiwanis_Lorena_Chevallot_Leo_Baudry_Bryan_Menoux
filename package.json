@@ -16,5 +16,21 @@
     "gsap": "^3.14.2",
     "node": "^24.12.0",
     "tailwindcss": "^4.1.18"
-  }
+  },
+  "description": "```sh\r npm create astro@latest -- --template basics\r ```",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "devDependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Bryan-Menoux/Kiwanis_Lorena_Chevallot_Leo_Baudry_Bryan_Menoux.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Bryan-Menoux/Kiwanis_Lorena_Chevallot_Leo_Baudry_Bryan_Menoux/issues"
+  },
+  "homepage": "https://github.com/Bryan-Menoux/Kiwanis_Lorena_Chevallot_Leo_Baudry_Bryan_Menoux#readme"
 }
