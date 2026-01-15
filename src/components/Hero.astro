@@ -2,8 +2,25 @@
 const hero = Astro.props;
 ---
 
-<div style={`background-image: url("${hero.src}");`} class="w-[95dvw] h-[85dvh] bg-cover bg-center bg-no-repeat mx-auto rounded-box mt-28 flex flex-col justify-end px-16 py-44">
-    <h1 class="text-white text-7xl font-bold" >Kiwanis Montbéliard Sochaux</h1>
-    <p class="text-white text-2xl font-medium ">Servir les enfants du monde, au cœur de notre territoire</p>
+<div style={`background-image: url("${hero.image}");`} class="w-[95dvw] h-[85dvh] bg-cover bg-center bg-no-repeat mx-auto rounded-box mt-28 flex flex-col justify-end px-16 py-44 overflow-hidden">
+    <h1 class="text-white text-7xl font-bold title" >{hero.title}</h1>
+    <p class="text-white text-2xl font-medium text">{hero.subtitle}</p>
 </div>
 
+<script>
+    import { gsap } from 'gsap';
+    // Animation du titre
+    gsap.from(".title", {
+        opacity: 0, 
+        y: 500,
+        x: -400, 
+        duration: 1
+    });
+    // Animation du sous-titre
+    gsap.from(".text", {
+        opacity: 0, 
+        y: 500,
+        x: 100,
+        duration: 1
+    });
+</script>
