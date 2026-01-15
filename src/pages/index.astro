@@ -9,6 +9,9 @@ import evelynePerriot from "../assets/evelyne_perriot.webp";
 import landing2 from "../assets/landing-2.webp";
 import rollUp from "../assets/rollup.webp";
 import fanion from "../assets/fanion.webp";
+import why1 from "../assets/why-1.webp";
+import why2 from "../assets/why-2.webp";
+import why3 from "../assets/why-3.webp";
 ---
 
 <Layout>
@@ -86,4 +89,42 @@ import fanion from "../assets/fanion.webp";
           </div>
       </div>
   </div>
+
+  <!-- Section pourquoi soutenir -->
+   <div class="flex flex-col gap-8">
+    <div class="flex flex-col max-w-7xl mx-auto my-32 gap-8 px-8">
+      <h2>Pourquoi soutenir le Kiwanis féminin Pays de Montbéliard ?</h2>
+      <p>Soutenir le Kiwanis féminin Pays de Montbéliard, c’est donner un coup de pouce à un club de 16 bénévoles qui agit depuis 2019 pour les enfants du Pays de Montbéliard.</p>
+      <div class="grid grid-cols-1 md:grid-cols-[1fr_1fr] gap-8 lg:gap-16 min-h-[40dvh]">
+          <div class="flex flex-col gap-4 mt-6">
+            <h4>Des effets concrets pour les enfants d’ici</h4>
+            <p>Votre soutien permet de financer des projets concrets pour les enfants du Pays de Montbéliard, comme des actions menées avec des écoles, des associations locales ou des familles, et contribue directement à améliorer leur quotidien.</p>
+          </div>
+          <div class="flex flex-col w-full mx-auto md:max-w-full">
+            <img src={why1.src} alt="Photographie de collégiens avec les kiwaniens" class="w-full flex-1 object-cover rounded-box max-h-64" />
+          </div>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-[1fr_1fr] gap-8 lg:gap-16 min-h-[40dvh]">
+        <div class="flex-col w-full mx-auto md:max-w-full hidden md:flex">
+          <img src={why2.src} alt="Photographie des Kiwaniens avec Loïc Ballet" class="w-full flex-1 object-cover rounded-box max-h-64" />
+        </div>
+        <div class="flex flex-col gap-4 mt-6">
+          <h4>Plusieurs façons de vous engager à nos côtés</h4>
+          <p>Entreprises, commerces, collectivités ou particuliers, chacun peut s’engager à sa manière, par un don, un partenariat, des lots ou la mise à disposition de produits ou de services. Quel que soit le format, votre soutien renforce nos actions en faveur des enfants.</p>
+        </div>
+        <div class="flex flex-col w-full mx-auto md:max-w-full md:hidden">
+          <img src={why2.src} alt="Photographie des Kiwaniens avec Loïc Ballet" class="w-full flex-1 object-cover rounded-box max-h-64" />
+        </div>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-[1fr_1fr] gap-8 lg:gap-16 min-h-[40dvh]">
+        <div class="flex flex-col gap-4 mt-6">
+          <h4>Un cadre clair pour votre contribution</h4>
+          <p>Les cotisations de nos membres assurent le fonctionnement du club. Les recettes des événements et les dons sont entièrement dédiés aux projets pour les enfants. Votre soutien finance des actions concrètes, directement sur le terrain.</p>
+        </div>
+        <div class="flex flex-col w-full mx-auto md:max-w-full">
+          <img src={why3.src} alt="Photographie des Kiwaniens" class="w-full flex-1 object-cover rounded-box max-h-64" />
+        </div>
+      </div>
+  </div>
+   </div>
 </Layout>

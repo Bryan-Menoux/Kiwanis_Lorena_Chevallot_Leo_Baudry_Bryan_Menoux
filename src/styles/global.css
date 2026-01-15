@@ -116,6 +116,23 @@ h3{
   }
 }
 
+h4{
+  font-size: 0.9rem;
+  font-weight: bold;
+}
+
+@media (min-width: 768px) {
+  h4{
+    font-size: 1.05rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  h4{
+    font-size: 1.150rem;
+  }
+}
+
 body, p, a, li, span {
   font-size: 0.875rem;
   line-height: 1.6;
