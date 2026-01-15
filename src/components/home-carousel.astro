@@ -1,0 +1,48 @@
+---
+const imageModules = import.meta.glob('/src/assets/home-carousel/*.webp', { eager: true });
+
+const images = Object.keys(imageModules).map((path, index) => ({
+  src: path,
+  alt: `Image du carousel Kiwanis numéro ${index + 1}`
+}));
+
+const duplicatedImages = [...images, ...images];
+---
+
+<div class="carousel-container overflow-hidden relative w-full h-fit">
+  <div class="carousel-inner flex gap-4 md:gap-8 h-full">
+    {duplicatedImages.map((image, index) => (
+      <img
+        src={image.src}
+        alt={image.alt}
+        class="shrink-0 w-80 md:w-1/2 lg:w-1/4 h-full object-cover rounded-box"
+      />
+    ))}
+  </div>
+</div>
+
+<style>
+  .carousel-inner {
+    will-change: transform;
+  }
+</style>
+
+<script>
+  // For smoother infinite scroll without jerking
+  const carousel = document.querySelector('.carousel-inner') as HTMLElement;
+  if (carousel) {
+    let startTime: number | null = null;
+    const speed = 50; // pixels per second
+
+    function animate(currentTime: number) {
+      if (startTime === null) {
+        startTime = currentTime;
+      }
+      const elapsed = currentTime - startTime;
+      const position = -(elapsed * speed / 1000) % (carousel.scrollWidth / 2);
+      carousel.style.transform = `translateX(${position}px)`;
+      requestAnimationFrame(animate);
+    }
+    requestAnimationFrame(animate);
+  }
+</script>
