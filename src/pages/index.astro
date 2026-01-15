@@ -7,12 +7,14 @@ import HomeCarousel from "../components/home-carousel.astro";
 import diagArrow from "../assets/diag-arrow.svg";
 import evelynePerriot from "../assets/evelyne_perriot.webp";
 import landing2 from "../assets/landing-2.webp";
+import rollUp from "../assets/rollup.webp";
+import fanion from "../assets/fanion.webp";
 ---
 
 <Layout>
   <Hero image={heroLanding.src} title="Kiwanis Montbéliard Sochaux" subtitle="Servir les enfants du monde, au cœur de notre territoire" />
 
-  
+  <!-- Section qui sommes nous -->
   <div class="flex flex-col max-w-7xl mx-auto my-32 gap-4 px-8">
         <h2>Qui sommes nous ?</h2>
       <div class="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-8 lg:gap-16 min-h-[40dvh]">
@@ -31,6 +33,7 @@ import landing2 from "../assets/landing-2.webp";
 
   <HomeCarousel />
 
+  <!-- Section Membres -->
   <div class="flex flex-col max-w-7xl mx-auto my-32 gap-4 px-8">
       <h2>Nos membres</h2>
       <div class="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-8 lg:gap-16 min-h-[40dvh]">
@@ -41,11 +44,13 @@ import landing2 from "../assets/landing-2.webp";
             <a href="/membres" class="btn btn-accent w-fit px-8 py-6 mt-auto self-end" >Voir tous les membres <img src={diagArrow.src} aria-hidden="true" ></a>
           </div>
           <div class="flex flex-col w-full mx-auto max-w-75 md:max-w-1/2 lg:max-w-full">
-            <img src={evelynePerriot.src} alt="Photographie de membres du Kiwanis aux 12 coups de Midi" class="w-full flex-1 object-cover rounded-box" />
+            <img src={evelynePerriot.src} alt="Photographie de Evelyne PERRIOT" class="w-full flex-1 object-cover rounded-box" />
             <p class="text-sm mt-2" >Evelyne PERRIOT, présidente du groupe Kiwanis Pays de Montbéliard.</p>
           </div>
       </div>
   </div>
+
+  <!-- Section nous retrouver -->
   <div class="flex flex-col max-w-7xl mx-auto my-32 gap-4 px-8">
       <h2>Nous retrouver</h2>
       <div class="grid grid-cols-1 lg:grid-cols-[1fr_1fr] gap-8 lg:gap-16 min-h-[40dvh] mb-4">
@@ -57,8 +62,7 @@ import landing2 from "../assets/landing-2.webp";
           </div>
           <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-1 gap-4">
             <div class="flex flex-col w-full mx-auto max-w-75 md:max-w-full">
-              <img src={landing2.src} alt="Photographie de membres du Kiwanis aux 12 coups de Midi" class="w-full flex-1 object-cover rounded-box" />
-              <p class="text-sm mt-2">Evelyne PERRIOT, présidente du groupe Kiwanis Pays de Montbéliard.</p>
+              <img src={landing2.src} alt="Photographie du 76 bis faubourg de Besançon" class="w-full flex-1 object-cover rounded-box" />
             </div>
             <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2694.976201081879!2d6.781242576695513!3d47.5098546946529!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x479216ec97288eb1%3A0x14b7da3408d3161f!2s76%20Fbg%20de%20Besan%C3%A7on%2C%2025200%20Montb%C3%A9liard!5e0!3m2!1sfr!2sfr!4v1768495883263!5m2!1sfr!2sfr" class="w-full min-h-64 md:h-full lg:hidden rounded-box" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
           </div>
@@ -66,6 +70,20 @@ import landing2 from "../assets/landing-2.webp";
       <div class="relative">
         <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2694.976201081879!2d6.781242576695513!3d47.5098546946529!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x479216ec97288eb1%3A0x14b7da3408d3161f!2s76%20Fbg%20de%20Besan%C3%A7on%2C%2025200%20Montb%C3%A9liard!5e0!3m2!1sfr!2sfr!4v1768495883263!5m2!1sfr!2sfr" class="w-full min-h-96 hidden lg:flex rounded-box" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
         <a href="https://www.google.com/maps?ll=47.509851,6.783818&z=16&t=m&hl=fr&gl=FR&mapclient=embed&q=76+Fbg+de+Besan%C3%A7on+25200+Montb%C3%A9liard" target="_blank" class="btn btn-accent w-fit px-4 py-2 lg:px-8 lg:py-6 mt-auto self-end absolute right-2 bottom-12 md:bottom-12 md:right-3 lg:right-2 lg:bottom-5" >Voir sur maps<img src={diagArrow.src} aria-hidden="true" ></a>
+      </div>
+  </div>
+
+  <!-- Section banderole -->
+   <div class="flex flex-col max-w-7xl mx-auto my-32 gap-4 px-8">
+     <div class="grid grid-cols-1 lg:grid-cols-[1fr_1fr] gap-8 lg:gap-16 min-h-[40dvh]">
+       <div class="flex flex-col gap-8 justify-center items-center">
+            <h3>Le fanion et le roll-up qui nous accompagnent lors de chaque action et événement.</h3>
+            <a href="/membres" class="btn btn-accent w-fit px-8 py-6" >Télécharger notre roll-up<img src={diagArrow.src} aria-hidden="true" ></a>
+          </div>
+          <div class="flex gap-8 w-full mx-auto justify-center items-center">
+            <img src={rollUp.src} alt="Photographie du rollup du kiwanis pays de montbéliard" class="flex-1 h-auto object-contain w-fit max-w-[40dvw] lg:w-1/2 max-h-[50dvh] lg:max-h-[65dvh]" />
+            <img src={fanion.src} alt="Photographie du fanion du kiwanis pays de montbéliard" class="flex-1 h-auto object-contain w-fit max-w-[40dvw] lg:w-1/2 max-h-[50dvh] lg:max-h-[65dvh] mix-blend-multiply" />
+          </div>
       </div>
   </div>
 </Layout>
