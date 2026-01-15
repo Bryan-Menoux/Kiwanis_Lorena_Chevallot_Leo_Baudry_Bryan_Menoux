@@ -3,31 +3,29 @@ import logo from "../assets/logo.svg";
 import diagArrow from "../assets/diag-arrow.svg";
 ---
 
-<footer class="bg-[#2B2549] px-6 py-10 md:px-6 md:py-10 lg:px-6 lg:py-10 w-full">
-  <div class="flex flex-col lg:flex-row lg:gap-8 lg:items-stretch max-w-full">
+<footer class="bg-[#2B2549] px-6 py-10 md:px-6 md:py-10 lg:px-6 lg:py-10 w-full lg:min-h-75">
+  <div class="flex flex-col lg:flex-row lg:gap-8 lg:items-stretch lg:h-full max-w-full">
     
     <!-- Logo et Titre -->
-    <div class="flex flex-col items-center gap-6 mb-10 sm:flex-row-reverse sm:items-start sm:gap-6 lg:mb-0 lg:w-1/2 lg:flex-row-reverse lg:gap-8 lg:items-start lg:justify-between min-w-0">
+    <div class="h-full flex flex-col items-center gap-6 mb-10 sm:flex-row-reverse sm:items-start sm:gap-6 lg:mb-0 lg:justify-end lg:w-1/2 lg:h-full lg:flex-row-reverse lg:gap-12 lg:items-center min-w-0">
       <img 
         src={logo.src} 
         alt="logo kiwanis" 
-        class="w-32 h-32 md:w-40 md:h-40 lg:w-44 lg:h-auto flex-shrink-0 object-contain" 
+        class="w-32 h-32 md:w-40 md:h-40 lg:w-auto lg:h-auto shrink lg:min-w-0 object-contain" 
       />
-      <div class="text-left lg:text-left lg:h-full lg:flex lg:flex-col lg:justify-between flex-1 min-w-0">
-        <h1 class="text-white font-serif text-4xl md:text-5xl lg:text-6xl font-normal leading-[1.1] tracking-tighter -mb-1 md:-mb-2">
+      <div class="text-left flex flex-col flex-1 lg:flex-initial justify-between lg:h-full gap-0 w-fit">
+        <p class="text-white font-serif text-4xl md:text-5xl lg:text-6xl font-normal leading-[1.1] tracking-tighter m-0">
           KIWANIS
-        </h1>
-        <div class="flex flex-col gap-0">
-          <p class="text-white font-serif text-2xl md:text-4xl lg:text-5xl font-light leading-[1.1] tracking-tighter -mb-0.5 md:-mb-1">
-            PAYS
-          </p>
-          <p class="text-white font-serif text-2xl md:text-4xl lg:text-5xl font-light leading-[1.1] tracking-tighter -mb-0.5 md:-mb-1">
-            DE
-          </p>
-          <p class="text-white font-serif text-2xl md:text-4xl lg:text-5xl font-light leading-[1.1] tracking-tighter">
-            MONTBÉLIARD
-          </p>
-        </div>
+        </p>
+        <p class="text-white font-serif text-2xl md:text-4xl lg:text-5xl font-light leading-[1.1] tracking-tighter m-0">
+          PAYS
+        </p>
+        <p class="text-white font-serif text-2xl md:text-4xl lg:text-5xl font-light leading-[1.1] tracking-tighter m-0">
+          DE
+        </p>
+        <p class="text-white font-serif text-2xl md:text-4xl lg:text-5xl font-light leading-[1.1] tracking-tighter m-0">
+          MONTBÉLIARD
+        </p>
       </div>
     </div>
 
@@ -91,8 +89,8 @@ import diagArrow from "../assets/diag-arrow.svg";
           </div>
         </div>
 
-        <div class="flex gap-3 md:gap-2 lg:gap-2 items-center flex-shrink-0">
-          <svg class="w-6 h-6 md:w-7 md:h-7 lg:w-7 lg:h-7 flex-shrink-0 hover:opacity-80 transition-opacity" viewBox="0 0 35 35" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Facebook">
+        <div class="flex gap-3 md:gap-2 lg:gap-2 items-center shrink-0">
+          <svg class="w-6 h-6 md:w-7 md:h-7 lg:w-7 lg:h-7 shrink-0 hover:opacity-80 transition-opacity" viewBox="0 0 35 35" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Facebook">
             <path fill="white" d="M17.5 32c8.284 0 15-6.716 15-15 0-8.284-6.716-15-15-15-8.284 0-15 6.716-15 15 0 8.284 6.716 15 15 15Z"/>
             <path fill="#2B2549" d="M20.637 25V17.62h2.455l.368-2.853h-2.823V12.89c0-.826.229-1.389 1.415-1.389h1.512v-2.549c-.261-.034-1.156-.113-2.197-.113-2.176 0-3.67 1.327-3.67 3.764v2.105h-2.465v2.853h2.465V25h2.945Z"/>
           </svg>
