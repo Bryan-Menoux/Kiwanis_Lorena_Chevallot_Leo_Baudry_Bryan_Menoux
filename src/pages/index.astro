@@ -2,8 +2,25 @@
 import Layout from "../layouts/Layout.astro";
 import heroLanding from "../assets/hero-landing.webp";
 import Hero from "../components/Hero.astro";
+import landing1 from "../assets/landing-1.webp";
 ---
 
 <Layout>
   <Hero image={heroLanding.src} title="Kiwanis Montbéliard Sochaux" subtitle="Servir les enfants du monde, au cœur de notre territoire" />
+
+  
+  <div class="flex flex-col ">
+      <h2>qui sommes nous ?</h2>
+      <div class="flex justify-between">
+          <div class="flex flex-col justify-between">
+            <p>Un club-service de bénévoles au service des enfants</p>
+            <p>Le Kiwanis Pays de Montbéliard est un club de bénévoles engagé pour les enfants et les jeunes du territoire. Membre du réseau Kiwanis International, qui compte plus de 250 clubs, il partage des valeurs communes tout en menant des actions locales.</p>
+            <p>Créé en 2019, notre club mène des actions solidaires et des événements caritatifs pour soutenir des projets éducatifs, culturels et sociaux en faveur de la jeunesse.</p>
+            <p>Guidés par notre devise <span class="font-bold" >« Le monde de demain sera fait par les enfants d’aujourd’hui »</span>, nous accompagnons les jeunes et leur offrons de nouvelles perspectives.</p>
+          </div>
+          <div>
+            <img src={landing1.src} alt="Photographie de membres du Kiwanis lors d'une action caritative" />
+          </div>
+      </div>
+  </div>
 </Layout>
