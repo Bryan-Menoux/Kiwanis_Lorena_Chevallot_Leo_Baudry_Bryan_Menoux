@@ -5,7 +5,7 @@ import Logo from '../assets/logo-kiwanis-full.svg';
 const brandBlue = "bg-[oklch(0.2903_0.0643_289.42)]";
 ---
 
-<header id="main-header" class="fixed z-[100] w-full top-0 transition-transform duration-300 lg:bg-white lg:border-b lg:border-gray-100 bg-transparent font-sans">
+<header id="main-header" class="fixed z-100 w-full top-0 transition-transform duration-300 lg:bg-white lg:border-b lg:border-gray-100 bg-transparent font-sans">
   
   <div class="hidden lg:flex py-4 px-12 items-center justify-between">
     <div class="flex items-center gap-4">
@@ -40,7 +40,7 @@ const brandBlue = "bg-[oklch(0.2903_0.0643_289.42)]";
 
   <div class="lg:hidden flex flex-col items-center p-4 gap-3">
     
-    <div class="w-full flex items-center justify-between gap-4 max-w-[400px]">
+    <div class="w-full flex items-center justify-between gap-4 max-w-100">
       <a href="/" class="shrink-0">
         <img src={Logo.src} alt="Logo" class="h-12 w-auto" />
       </a>
@@ -58,7 +58,7 @@ const brandBlue = "bg-[oklch(0.2903_0.0643_289.42)]";
       </button>
     </div>
 
-    <div id="mobile-dropdown" class={`w-full max-w-[400px] rounded-2xl p-7 text-white shadow-2xl ${brandBlue}`} style="display: none;">
+    <div id="mobile-dropdown" class={`w-full max-w-100 rounded-2xl p-7 text-white shadow-2xl ${brandBlue}`} style="display: none;">
       <h2 class="text-xs font-bold tracking-widest mb-6 opacity-90 uppercase">KIWANIS PAYS DE MONTBÉLIARD</h2>
       
       <nav class="flex flex-col">
