@@ -11,8 +11,8 @@ const brandBlue = "bg-[oklch(0.2903_0.0643_289.42)]";
     <div class="flex items-center gap-4">
       <img src={Logo.src} alt="Logo" class="h-14 w-auto" />
       <div class="flex flex-col text-gray-900 leading-tight">
-        <span class="text-xl font-bold tracking-tighter">KIWANIS</span>
-        <span class="text-xl font-light tracking-[-0.02em] text-[0.7rem] -mt-1 uppercase">PAYS DE MONTBÉLIARD</span>
+        <span class="text-xl font-bold tracking-tighter font-merriweather">KIWANIS</span>
+        <span class="text-xl font-light tracking-[-0.02em] text-[0.7rem] -mt-1 uppercase font-merriweather">PAYS DE MONTBÉLIARD</span>
       </div>
     </div>
 
@@ -117,14 +117,17 @@ const brandBlue = "bg-[oklch(0.2903_0.0643_289.42)]";
 
       if (isOpen) {
         dropdown.style.display = 'block';
-        gsap.to(dropdown, { opacity: 1, y: 0, duration: 0.3, ease: "power2.out" });
-        gsap.fromTo(links, { opacity: 0, y: 5 }, { opacity: 1, y: 0, stagger: 0.04, duration: 0.2 }, "-=0.1");
-        gsap.to(hamIcon, { opacity: 0, scale: 0.5, duration: 0.2 });
-        gsap.to(closeIcon, { opacity: 1, scale: 1, duration: 0.2 });
+        const tl = gsap.timeline();
+        tl.to(dropdown, { opacity: 1, y: 0, duration: 0.3, ease: "power2.out" })
+          .fromTo(links, { opacity: 0, y: 5 }, { opacity: 1, y: 0, stagger: 0.04, duration: 0.2 }, "-=0.1")
+          .to(hamIcon, { opacity: 0, scale: 0.5, duration: 0.2 }, "<")
+          .to(closeIcon, { opacity: 1, scale: 1, duration: 0.2 }, "<");
       } else {
-        gsap.to(dropdown, { opacity: 0, y: -10, duration: 0.2, onComplete: () => { dropdown.style.display = 'none'; } });
-        gsap.to(hamIcon, { opacity: 1, scale: 1, duration: 0.2 });
-        gsap.to(closeIcon, { opacity: 0, scale: 0.5, duration: 0.2 });
+        const tl = gsap.timeline();
+        tl.to(dropdown, { opacity: 0, y: -10, duration: 0.2 })
+          .to(hamIcon, { opacity: 1, scale: 1, duration: 0.2 }, "<")
+          .to(closeIcon, { opacity: 0, scale: 0.5, duration: 0.2 }, "<")
+          .set(dropdown, { display: 'none' });
       }
     });
 
