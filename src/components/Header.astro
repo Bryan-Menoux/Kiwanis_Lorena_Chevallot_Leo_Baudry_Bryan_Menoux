@@ -1,0 +1,144 @@
+---
+// src/components/Header.astro
+import Logo from '../assets/logo-kiwanis-full.svg';
+
+const brandBlue = "bg-[oklch(0.2903_0.0643_289.42)]";
+---
+
+<header id="main-header" class="fixed z-[100] w-full top-0 transition-transform duration-300 lg:bg-white lg:border-b lg:border-gray-100 bg-transparent font-sans">
+  
+  <div class="hidden lg:flex py-4 px-12 items-center justify-between">
+    <div class="flex items-center gap-4">
+      <img src={Logo.src} alt="Logo" class="h-14 w-auto" />
+      <div class="flex flex-col text-gray-900 leading-tight">
+        <span class="text-xl font-bold tracking-tighter">KIWANIS</span>
+        <span class="text-xl font-light tracking-[-0.02em] text-[0.7rem] -mt-1 uppercase">PAYS DE MONTBÉLIARD</span>
+      </div>
+    </div>
+
+    <nav class="flex items-center gap-8 text-sm font-semibold text-gray-800">
+      <a href="/membres" class="hover:text-blue-900 transition-colors uppercase">Nos membres</a>
+      <div class="h-6 w-px bg-gray-300"></div>
+      <div class="relative group cursor-pointer py-2">
+        <button class="hover:text-blue-900 transition-colors uppercase flex items-center gap-2 group-hover:text-blue-900">
+          Découvrir <span class="text-[10px] transition-transform duration-300 group-hover:rotate-90">❯</span>
+        </button>
+        <div class="absolute left-0 mt-2 w-52 bg-white border border-gray-100 shadow-xl rounded-lg overflow-hidden opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 translate-y-2 group-hover:translate-y-0">
+          <a href="/histoire" class="block px-4 py-3 text-gray-700 hover:bg-gray-50 hover:text-blue-900 border-b border-gray-50 transition-colors uppercase text-xs">Notre histoire</a>
+          <a href="/membres" class="block px-4 py-3 text-gray-700 hover:bg-gray-50 hover:text-blue-900 transition-colors uppercase text-xs">Nos membres</a>
+        </div>
+      </div>
+      <div class="h-6 w-px bg-gray-300"></div>
+      <a href="/don" class="hover:text-blue-900 transition-colors uppercase">Faire un don</a>
+    </nav>
+
+    <div class="flex items-center gap-3">
+      <a href="/connexion" class="px-5 py-2 border-[1.5px] text-black border-gray-900 rounded-lg text-xs font-semibold uppercase hover:bg-gray-900 hover:text-white transition-all">Connexion</a>
+      <a href="/contact" class="px-5 py-2 border-[1.5px] text-black border-gray-900 rounded-lg text-xs font-semibold uppercase hover:bg-gray-900 hover:text-white transition-all">Contact</a>
+    </div>
+  </div>
+
+  <div class="lg:hidden flex flex-col items-center p-4 gap-3">
+    
+    <div class="w-full flex items-center justify-between gap-4 max-w-[400px]">
+      <a href="/" class="shrink-0">
+        <img src={Logo.src} alt="Logo" class="h-12 w-auto" />
+      </a>
+      
+      <button id="menu-toggle" class={`flex-1 flex items-center justify-between px-5 py-3 rounded-xl text-white ${brandBlue}`}>
+        <span class="text-base font-medium">Menu</span>
+        <div class="relative w-6 h-6">
+          <svg id="ham-icon" class="w-6 h-6 absolute transition-opacity" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 8h16M4 16h16" />
+          </svg>
+          <svg id="close-icon" class="w-6 h-6 absolute opacity-0 scale-50 transition-all" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </div>
+      </button>
+    </div>
+
+    <div id="mobile-dropdown" class={`w-full max-w-[400px] rounded-2xl p-7 text-white shadow-2xl ${brandBlue}`} style="display: none;">
+      <h2 class="text-xs font-bold tracking-widest mb-6 opacity-90 uppercase">KIWANIS PAYS DE MONTBÉLIARD</h2>
+      
+      <nav class="flex flex-col">
+        <a href="/membres" class="mob-link flex justify-between items-center py-2 text-base">
+          Nos membres <span class="opacity-40">↗</span>
+        </a>
+        <a href="/don" class="mob-link flex justify-between items-center py-2 text-base">
+          Faire un don <span class="opacity-40">↗</span>
+        </a>
+
+        <div class="mob-link h-px w-full bg-white/20 my-4"></div>
+
+        <a href="/actions" class="mob-link flex justify-between items-center py-2 text-base">
+          Nos actions <span class="opacity-40">↗</span>
+        </a>
+        <a href="/projets" class="mob-link flex justify-between items-center py-2 text-base">
+          Nos projets <span class="opacity-40">↗</span>
+        </a>
+        <a href="/produits" class="mob-link flex justify-between items-center py-2 text-base">
+          Nos produits <span class="opacity-40">↗</span>
+        </a>
+
+        <div class="mob-link h-px w-full bg-white/20 my-4"></div>
+
+        <div class="mob-link grid grid-cols-2 gap-3 mt-2">
+          <a href="/connexion" class="py-3 border border-white/30 rounded-lg text-center text-[11px] font-bold uppercase">Connexion</a>
+          <a href="/contact" class="py-3 border border-white/30 rounded-lg text-center text-[11px] font-bold uppercase">Contact</a>
+        </div>
+      </nav>
+    </div>
+  </div>
+</header>
+
+<style is:global>
+  #main-header.header-hidden { transform: translateY(-110%); }
+</style>
+
+<script>
+  import { gsap } from "gsap";
+
+  function initMenu() {
+    const toggle = document.getElementById('menu-toggle');
+    const dropdown = document.getElementById('mobile-dropdown');
+    const hamIcon = document.getElementById('ham-icon');
+    const closeIcon = document.getElementById('close-icon');
+    const links = document.querySelectorAll('.mob-link');
+
+    if (!toggle || !dropdown) return;
+
+    let isOpen = false;
+    gsap.set(dropdown, { display: 'none', opacity: 0, y: -10 });
+
+    toggle.addEventListener('click', (e) => {
+      e.stopPropagation();
+      isOpen = !isOpen;
+
+      if (isOpen) {
+        dropdown.style.display = 'block';
+        gsap.to(dropdown, { opacity: 1, y: 0, duration: 0.3, ease: "power2.out" });
+        gsap.fromTo(links, { opacity: 0, y: 5 }, { opacity: 1, y: 0, stagger: 0.04, duration: 0.2 }, "-=0.1");
+        gsap.to(hamIcon, { opacity: 0, scale: 0.5, duration: 0.2 });
+        gsap.to(closeIcon, { opacity: 1, scale: 1, duration: 0.2 });
+      } else {
+        gsap.to(dropdown, { opacity: 0, y: -10, duration: 0.2, onComplete: () => { dropdown.style.display = 'none'; } });
+        gsap.to(hamIcon, { opacity: 1, scale: 1, duration: 0.2 });
+        gsap.to(closeIcon, { opacity: 0, scale: 0.5, duration: 0.2 });
+      }
+    });
+
+    // Reset si on change la taille de fenêtre (évite les bugs inspecteur)
+    window.addEventListener('resize', () => {
+      if (window.innerWidth >= 1024 && isOpen) {
+        isOpen = false;
+        dropdown.style.display = 'none';
+        gsap.set(hamIcon, { opacity: 1, scale: 1 });
+        gsap.set(closeIcon, { opacity: 0, scale: 0.5 });
+      }
+    });
+  }
+
+  initMenu();
+  document.addEventListener('astro:after-swap', initMenu);
+</script>
