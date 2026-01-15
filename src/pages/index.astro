@@ -1,10 +1,9 @@
 ---
 import Layout from "../layouts/Layout.astro";
 import heroLanding from "../assets/hero-landing.webp";
+import Hero from "../components/Hero.astro";
 ---
 
 <Layout>
-  <div style={`background-image: url("${heroLanding.src}");`} class="w-[95dvw] h-[80dvh] bg-cover bg-center bg-no-repeat mx-auto rounded-box">
-    <!-- Hero content here -->
-  </div>
+  <Hero src={heroLanding.src} />
 </Layout>
