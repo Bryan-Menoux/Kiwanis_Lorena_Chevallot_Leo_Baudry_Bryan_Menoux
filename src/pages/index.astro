@@ -9,17 +9,18 @@ import landing1 from "../assets/landing-1.webp";
   <Hero image={heroLanding.src} title="Kiwanis Montbéliard Sochaux" subtitle="Servir les enfants du monde, au cœur de notre territoire" />
 
   
-  <div class="flex flex-col ">
-      <h2>qui sommes nous ?</h2>
-      <div class="flex justify-between">
-          <div class="flex flex-col justify-between">
-            <p>Un club-service de bénévoles au service des enfants</p>
+  <div class="flex flex-col max-w-7xl mx-auto my-32 gap-4 px-8">
+        <h2>Qui sommes nous ?</h2>
+      <div class="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-8 lg:gap-16 min-h-[40dvh]">
+          <div class="flex flex-col gap-8">
+            <h3 class="mb-2" >Un club-service de bénévoles au service des enfants</h3>
             <p>Le Kiwanis Pays de Montbéliard est un club de bénévoles engagé pour les enfants et les jeunes du territoire. Membre du réseau Kiwanis International, qui compte plus de 250 clubs, il partage des valeurs communes tout en menant des actions locales.</p>
             <p>Créé en 2019, notre club mène des actions solidaires et des événements caritatifs pour soutenir des projets éducatifs, culturels et sociaux en faveur de la jeunesse.</p>
             <p>Guidés par notre devise <span class="font-bold" >« Le monde de demain sera fait par les enfants d’aujourd’hui »</span>, nous accompagnons les jeunes et leur offrons de nouvelles perspectives.</p>
           </div>
-          <div>
-            <img src={landing1.src} alt="Photographie de membres du Kiwanis lors d'une action caritative" />
+          <div class="flex flex-col w-full h-full relative mx-auto max-w-75 md:max-w-1/2 lg:max-w-full">
+            <img src={landing1.src} alt="Photographie de membres du Kiwanis aux 12 coups de Midi" class="w-full flex-1 object-cover rounded-box" />
+            <p class="text-sm absolute -bottom-6 left-2 translate-y-1/2 " >Le Kiwanis Féminin aux 12 coups de Midi </p>
           </div>
       </div>
   </div>

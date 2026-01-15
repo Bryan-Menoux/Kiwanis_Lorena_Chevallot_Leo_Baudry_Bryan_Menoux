@@ -57,19 +57,78 @@
 }
 
 /* Appliquer les polices */
-h1, h2, h3, h4, h5, h6 {
-  font-family: 'Merriweather', serif;
-}
 
-h1{
-  font-size: 4.5rem;
-  font-weight: bold;
-}
-
-body {
+h1, h2, h3, h4, h5, h6, body, a {
   font-family: 'poppins', serif;
 }
 
 .font-merriweather {
   font-family: 'Merriweather', serif;
+}
+
+h1{
+  font-size: 2rem;
+  font-weight: bold;
+}
+
+@media (min-width: 768px) {
+  h1{
+    font-size: 3rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  h1{
+    font-size: 4.5rem;
+  }
+}
+
+h2{
+  font-size: 1.5rem;
+  font-weight: bold;
+}
+
+@media (min-width: 768px) {
+  h2{
+    font-size: 1.75rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  h2{
+    font-size: 2rem;
+  }
+}
+
+h3{
+  font-size: 1.25rem;
+}
+
+@media (min-width: 768px) {
+  h3{
+    font-size: 1.375rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  h3{
+    font-size: 1.5rem;
+  }
+}
+
+body, p, a, li, span {
+  font-size: 0.875rem;
+  line-height: 1.6;
+}
+
+@media (min-width: 768px) {
+  body, p, a, li, span {
+    font-size: 0.9375rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  body, p, a, li, span {
+    font-size: 1rem;
+  }
 }

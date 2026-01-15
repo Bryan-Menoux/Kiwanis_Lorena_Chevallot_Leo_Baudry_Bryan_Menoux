@@ -2,9 +2,9 @@
 const hero = Astro.props;
 ---
 
-<div style={`background-image: url("${hero.image}");`} class="w-[95dvw] h-[85dvh] bg-cover bg-center bg-no-repeat mx-auto rounded-box mt-28 flex flex-col justify-end px-16 py-44 overflow-hidden">
-    <h1 class="text-white text-7xl font-bold title" >{hero.title}</h1>
-    <p class="text-white text-2xl font-medium text">{hero.subtitle}</p>
+<div style={`background-image: url("${hero.image}");`} class="w-[95dvw] h-[85dvh] bg-cover bg-center bg-no-repeat mx-auto rounded-box mt-[10dvh] lg:mt-28 flex flex-col justify-end px-8 md:px-12 lg:px-16 py-12 md:py-20 lg:py-44 overflow-hidden">
+    <h1 class="text-white text-4xl md:text-5xl lg:text-7xl font-bold title font-merriweather" >{hero.title}</h1>
+    <p class="text-white text-lg md:text-xl lg:text-2xl font-medium text">{hero.subtitle}</p>
 </div>
 
 <script>
