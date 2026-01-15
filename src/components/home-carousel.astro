@@ -1,16 +1,19 @@
 ---
-const imageModules = import.meta.glob('/src/assets/home-carousel/*.webp', { eager: true });
+import { Image } from 'astro:assets';
+import type { ImageMetadata } from 'astro';
 
-const images = Object.keys(imageModules).map((path, index) => ({
-  src: path,
+const imageModules = import.meta.glob<{ default: ImageMetadata }>('/src/assets/home-carousel/*.webp', { eager: true });
+
+const images = Object.entries(imageModules).map(([path, module], index) => ({
+  src: module.default.src,
   alt: `Image du carousel Kiwanis numéro ${index + 1}`
 }));
 
 const duplicatedImages = [...images, ...images];
 ---
 
-<div class="carousel-container overflow-hidden relative w-full h-fit">
-  <div class="carousel-inner flex gap-4 md:gap-8 h-full">
+<div class="home-carousel-container overflow-hidden relative w-full h-fit">
+  <div class="home-carousel-inner flex gap-4 md:gap-8 h-full">
     {duplicatedImages.map((image, index) => (
       <img
         src={image.src}
@@ -22,24 +25,29 @@ const duplicatedImages = [...images, ...images];
 </div>
 
 <style>
-  .carousel-inner {
+  .home-carousel-inner {
     will-change: transform;
   }
 </style>
 
 <script>
   // For smoother infinite scroll without jerking
-  const carousel = document.querySelector('.carousel-inner') as HTMLElement;
+  const carousel = document.querySelector('.home-carousel-inner') as HTMLElement;
   if (carousel) {
     let startTime: number | null = null;
+    let position = 0;
     const speed = 50; // pixels per second
 
     function animate(currentTime: number) {
       if (startTime === null) {
         startTime = currentTime;
       }
-      const elapsed = currentTime - startTime;
-      const position = -(elapsed * speed / 1000) % (carousel.scrollWidth / 2);
+      const delta = (currentTime - startTime) * speed / 1000;
+      position -= delta;
+      startTime = currentTime;
+      if (position <= -(carousel.scrollWidth / 2)) {
+        position += carousel.scrollWidth / 2;
+      }
       carousel.style.transform = `translateX(${position}px)`;
       requestAnimationFrame(animate);
     }
