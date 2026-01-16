@@ -30,16 +30,36 @@ export async function createUser(data) {
   }
 }
 
+// connection de l'utilisateur avec option rester connecté
 export async function authenticateUser(email, password) {
-    console.log("Authenticating user with email:", email);
-    console.log("Using PocketBase URL:", pb.baseUrl);
-    try {
-        const authData = await pb.collection("users").authWithPassword(email, password);
-        console.log("Authentication success:", authData);
-        return authData;
-    } catch (error) {
-        console.error("Error authenticating user:", error);
-        console.error("Error details:", error.status, error.response);
-        throw error;
+  try {
+    const authData = await pb.collection("users").authWithPassword(email, password);
+    
+    // Vérifier si l'utilisateur est vérifié
+    if (!authData.record.verified) {
+      pb.authStore.clear(); // Déconnexion de l'utilisateur non vérifié
+      const error = new Error("Votre compte est en attente de validation par un administrateur.");
+      error.errorType = "warning";
+      throw error;
     }
+    
+    return authData;
+  } catch (error) {
+    // Traduire les erreurs PocketBase en français
+    if (error.errorType === "warning") {
+      throw error;
+    }
+    
+    // Erreur d'authentification (identifiants incorrects)
+    if (error.status === 400 || error.message?.includes("Failed to authenticate")) {
+      const authError = new Error("Identifiants incorrects. Veuillez vérifier votre adresse e-mail et votre mot de passe.");
+      authError.errorType = "error";
+      throw authError;
+    }
+    
+    // Autres erreurs
+    const genericError = new Error("Une erreur est survenue lors de la connexion. Veuillez réessayer.");
+    genericError.errorType = "error";
+    throw genericError;
+  }
 }
