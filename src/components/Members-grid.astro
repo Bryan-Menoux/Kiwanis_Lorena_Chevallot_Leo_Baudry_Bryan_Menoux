@@ -1,0 +1,35 @@
+---
+import { Image } from 'astro:assets';
+import type { ImageMetadata } from 'astro';
+import membersData from '../data/list_members.json';
+
+const imageModules = import.meta.glob<{ default: ImageMetadata }>('/src/assets/members/*.webp', { eager: true });
+
+const members = Object.keys(membersData).map((filename) => {
+  const imagePath = `/src/assets/members/${filename}.webp`;
+  const module = imageModules[imagePath];
+  const data = membersData[filename as keyof typeof membersData];
+  
+  return {
+    image: module?.default,
+    name: data?.name || filename,
+    status: data?.status || ''
+  };
+}).filter(member => member.image);
+---
+
+<div class="members-grid grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 max-w-7xl mx-auto px-8 my-12 ">
+  {members.map((member) => (
+    <div class="relative">
+      <Image 
+        src={member.image} 
+        alt={member.name}
+        class="w-full rounded-box mb-2 md:mb-4"
+      />
+      <div class="md:absolute md:bottom-6 md:left-4 md:text-white md:bg-black/40 md:px-3 md:py-1 md:rounded-box">
+        <h4>{member.name}</h4>
+        <p>{member.status}</p>
+      </div>
+    </div>
+  ))}
+</div>

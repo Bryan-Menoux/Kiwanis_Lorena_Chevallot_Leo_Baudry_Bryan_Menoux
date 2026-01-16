@@ -1,0 +1,64 @@
+---
+import Hero from "../components/Hero.astro";
+import Layout from "../layouts/Layout.astro";
+import heroMember from "../assets/hero-member.webp";
+import MembersGrid from "../components/Members-grid.astro";
+import diagArrow from "../assets/diag-arrow.svg";
+import members1 from "../assets/members-1.webp";
+import members2 from "../assets/members-2.webp";
+---
+
+<Layout>
+  <Hero
+    image={heroMember.src}
+    title="Membres"
+    subtitle="Découvrez les membres de notre communauté."
+  />
+  <div class="flex flex-col max-w-7xl mx-auto my-32 gap-4 px-8">
+    <p>
+      Créé en 2019 par Marie-France ZUSATZ, le club rassemble 16 femmes aux
+      parcours variés, unies par l’envie d’agir pour les autres, et notamment
+      pour les enfants. Chacune apporte son histoire et ses compétences, ce qui
+      fait la richesse et l’identité du club.
+    </p>
+  </div>
+  <MembersGrid />
+  <div class="flex flex-col max-w-7xl mx-auto my-32 gap-4 px-8">
+    <h3 class="mx-auto self-center font-medium!">
+      Car <b>ensemble</b> nous sommes plus <b>forts</b>, et nous conjugons nos <b
+        >talents</b
+      >.
+    </h3>
+    <button class="btn btn-accent w-fit px-8 py-6 mx-auto mt-16 md:24 lg:32"
+      >Télécharger la liste des membres <img
+        src={diagArrow.src}
+        aria-hidden="true"
+      /></button
+    >
+  </div>
+
+  <!-- Bas de page -->
+   <div class="flex flex-col max-w-7xl mx-auto my-32 gap-8 px-8">
+      <div class="grid grid-cols-1 md:grid-cols-[1fr_1fr] gap-8 lg:gap-16 min-h-[40dvh]">
+          <div class="flex flex-col gap-4 mt-6">
+            <h4>Des effets concrets pour les enfants d’ici</h4>
+            <p>Votre soutien permet de financer des projets concrets pour les enfants du Pays de Montbéliard, comme des actions menées avec des écoles, des associations locales ou des familles, et contribue directement à améliorer leur quotidien.</p>
+          </div>
+          <div class="flex flex-col w-full mx-auto md:max-w-full">
+            <img src={members1.src} alt="Photographie de collégiens avec les kiwaniens" class="w-full flex-1 object-cover rounded-box max-h-80 object-top" />
+          </div>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-[1fr_1fr] gap-8 lg:gap-16 min-h-[40dvh]">
+        <div class="flex-col w-full mx-auto md:max-w-full hidden md:flex">
+          <img src={members2.src} alt="Photographie des Kiwaniens avec Loïc Ballet" class="w-full flex-1 object-cover rounded-box max-h-80 object-bottom" />
+        </div>
+        <div class="flex flex-col gap-4 mt-6">
+          <h4>Plusieurs façons de vous engager à nos côtés</h4>
+          <p>Entreprises, commerces, collectivités ou particuliers, chacun peut s’engager à sa manière, par un don, un partenariat, des lots ou la mise à disposition de produits ou de services. Quel que soit le format, votre soutien renforce nos actions en faveur des enfants.</p>
+        </div>
+        <div class="flex flex-col w-full mx-auto md:max-w-full md:hidden">
+          <img src={members2.src} alt="Photographie des Kiwaniens avec Loïc Ballet" class="w-full flex-1 object-cover rounded-box max-h-80 object-bottom" />
+        </div>
+      </div>
+  </div>
+</Layout>

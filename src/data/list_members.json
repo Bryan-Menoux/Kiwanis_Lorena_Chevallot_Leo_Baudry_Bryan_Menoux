@@ -1,0 +1,66 @@
+{
+  "evelyne_perriot_presidente": {
+    "name": "Evelyne Perriot",
+    "status": "Présidente"
+  },
+  "marie-france_zusatz_fondatrice": {
+    "name": "Marie-France Zusatz",
+    "status": "Fondatrice"
+  },
+  "bernadette_gomard_secretaire": {
+    "name": "Bernadette Gomard",
+    "status": "Secrétaire"
+  },
+  "catherine_regnier_tresoriere": {
+    "name": "Catherine Regnier",
+    "status": "Trésorière"
+  },
+  "regine_membre": {
+    "name": "Regine",
+    "status": "Membre"
+  },
+  "patricia_membre": {
+    "name": "Patricia",
+    "status": "Membre"
+  },
+  "veronique_scimone_membre": {
+    "name": "Véronique Scimone",
+    "status": "Membre"
+  },
+  "suzanne_membre": {
+    "name": "Suzanne",
+    "status": "Membre"
+  },
+  "nora_membre": {
+    "name": "Nora",
+    "status": "Membre"
+  },
+  "natalia_membre": {
+    "name": "Natalia",
+    "status": "Membre"
+  },
+  "michelle_clement_membre": {
+    "name": "Michelle Clément",
+    "status": "Membre"
+  },
+  "emilie_membre": {
+    "name": "Émilie",
+    "status": "Membre"
+  },
+  "francoise_laurainne_membre": {
+    "name": "Françoise Laurainne",
+    "status": "Membre"
+  },
+  "francoise_authier_membre": {
+    "name": "Françoise Authier",
+    "status": "Membre"
+  },
+  "corrine_membre": {
+    "name": "Corrine",
+    "status": "Membre"
+  },
+  "bernadette_hantz_membre": {
+    "name": "Bernadette Hantz",
+    "status": "Membre"
+  }
+}
