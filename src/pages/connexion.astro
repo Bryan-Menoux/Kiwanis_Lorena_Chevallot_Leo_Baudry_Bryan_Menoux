@@ -1,0 +1,78 @@
+---
+import Layout from "../layouts/Layout-login.astro";
+import shapesLeft from "../assets/login-page/shapes-left.svg";
+import shapesRight from "../assets/login-page/shapes-right.svg";
+import logo from "../assets/logo-kiwanis-full.svg";
+---
+
+<Layout>
+  <img
+    src={shapesLeft.src}
+    aria-hidden="true"
+    class="absolute left-0 bottom-0 w-[50dvw] lg:w-[25dvw] select-none"
+    draggable="false"
+  />
+  <img
+    src={shapesRight.src}
+    aria-hidden="true"
+    class="absolute right-0 top-0 w-[70dvw] md:w-[50dvw] lg:w-[40dvw] select-none"
+    draggable="false"
+  />
+
+  <div
+    class="absolute -translate-x-1/2 -translate-y-1/2 left-1/2 top-1/2 flex flex-col lg:flex-row gap-4 md:gap-16 justify-center items-center z-10"
+  >
+    <img
+      src={logo.src}
+      alt="Logo Kiwanis Pays de Montbéliard"
+      class="md:w-[30dvw] lg:w-[15dvw]"
+    />
+    <div class="lg:max-w-[20dvw]">
+      <form method="POST" class="flex flex-col w-full">
+        <input
+          type="email"
+          name="email"
+          placeholder="Adresse e-mail"
+          class="input input-bordered w-full my-2 bg-transparent border-gray-200 text-gray-200"
+        />
+        <input
+          type="password"
+          name="password"
+          placeholder="Mot de passe"
+          class="input input-bordered w-full my-2 bg-transparent border-gray-200 text-gray-200"
+        />
+        <button
+          class="btn btn-primary rounded-lg! bg-white text-primary w-full mt-4"
+          >Se connecter</button>
+      </form>
+      <div
+        class="flex justify-between w-full mt-4 text-sm text-white gap-x-4 flex-wrap md:flex-row"
+      >
+        <a href="/inscription">S'inscrire</a>
+        <a href="/mot-de-passe-oublie">Mot de passe oublié ?</a>
+      </div>
+    </div>
+  </div>
+</Layout>
+
+<script>
+    import {authenticateUser} from '../lib/pocketbase.mjs';
+  const form = document.querySelector("form");
+  form?.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const formData = new FormData(form);
+      const email = formData.get("email");
+      const password = formData.get("password");
+
+      try {
+          const authData = await authenticateUser(email, password);
+          console.log("Connexion réussie :", authData);
+          alert("Connexion réussie !");
+          // Rediriger ou autre action
+      } catch (error) {
+          console.error("Erreur de connexion :", error);
+          const errorMessage = error instanceof Error ? error.message : "Erreur inconnue";
+          alert("Erreur de connexion : " + errorMessage);
+      }
+  });
+</script>

@@ -15,6 +15,7 @@
     "daisyui": "^5.5.14",
     "gsap": "^3.14.2",
     "node": "^24.12.0",
+    "pocketbase": "^0.26.6",
     "tailwindcss": "^4.1.18"
   },
   "description": "```sh\r npm create astro@latest -- --template basics\r ```",
@@ -22,7 +23,6 @@
   "directories": {
     "doc": "docs"
   },
-  "devDependencies": {},
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Bryan-Menoux/Kiwanis_Lorena_Chevallot_Leo_Baudry_Bryan_Menoux.git"
