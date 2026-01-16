@@ -8,30 +8,41 @@ const brandBlue = "bg-[oklch(0.2903_0.0643_289.42)]";
 <header id="main-header" class="fixed z-100 w-full top-0 transition-transform duration-300 lg:bg-white lg:border-b lg:border-gray-100 bg-transparent font-sans">
   
   <div class="hidden lg:flex py-4 px-12 items-center justify-between">
-    <div class="flex items-center gap-4">
-      <img src={Logo.src} alt="Logo" class="h-14 w-auto" />
+    <a href="/" class="flex items-center gap-4">
+      <img src={Logo.src} alt="Logo" class="h-14 w-auto" draggable="false" />
       <div class="flex flex-col text-gray-900 leading-tight">
-        <span class="text-xl font-bold tracking-tighter font-merriweather">KIWANIS</span>
-        <span class="text-xl font-light tracking-[-0.02em] text-[0.7rem] -mt-1 uppercase font-merriweather">PAYS DE MONTBÉLIARD</span>
+      <span class="text-xl font-bold tracking-tighter font-merriweather">KIWANIS</span>
+      <span class="text-xl font-light tracking-[-0.02em] text-[0.7rem] -mt-1 uppercase font-merriweather">PAYS DE MONTBÉLIARD</span>
       </div>
+    </a>
+
+<nav class="flex items-center gap-3 xl:gap-8 text-[11px] xl:text-sm font-semibold text-gray-800 tracking-tight xl:tracking-normal">
+  <a href="/membres" class="hover:text-blue-900 transition-colors uppercase whitespace-nowrap">Nos membres</a>
+
+  <div class="h-4 xl:h-6 w-px bg-gray-300"></div>
+
+  <div class="relative group cursor-pointer py-2">
+    <button class="hover:text-blue-900 transition-colors uppercase flex items-center gap-2 xl:gap-8 group-hover:text-blue-900 font-semibold">
+      <a href="/#" class="whitespace-nowrap">Nous découvrir</a>
+      <span class="text-[10px] transition-transform duration-300 group-hover:rotate-90">❯</span>
+    </button>
+    <div class="absolute left-1/2 -translate-x-1/2 mt-2 w-44 xl:w-52 bg-white border border-gray-100 shadow-xl rounded-lg overflow-hidden opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 translate-y-2 group-hover:translate-y-0">
+      <a href="/actions" class="block px-4 py-3 text-gray-700 hover:bg-gray-50 hover:text-blue-900 border-b border-gray-50 transition-colors uppercase text-[10px] xl:text-xs font-bold">
+      Nos actions </a>
+      <a href="/projets" class="block px-4 py-3 text-gray-700 hover:bg-gray-50 hover:text-blue-900 border-b border-gray-50 transition-colors uppercase text-[10px] xl:text-xs font-bold">
+      Nos projets </a>
+      <a href="/produits" class="block px-4 py-3 text-gray-700 hover:bg-gray-50 hover:text-blue-900 transition-colors uppercase text-[10px] xl:text-xs font-bold">
+      Nos produits</a>
     </div>
+  </div>
 
-    <nav class="flex items-center gap-8 text-sm font-semibold text-gray-800">
-      <a href="/membres" class="hover:text-blue-900 transition-colors uppercase">Nos membres</a>
-      <div class="h-6 w-px bg-gray-300"></div>
-      <div class="relative group cursor-pointer py-2">
-        <button class="hover:text-blue-900 transition-colors uppercase flex items-center gap-2 group-hover:text-blue-900">
-          Découvrir <span class="text-[10px] transition-transform duration-300 group-hover:rotate-90">❯</span>
-        </button>
-        <div class="absolute left-0 mt-2 w-52 bg-white border border-gray-100 shadow-xl rounded-lg overflow-hidden opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 translate-y-2 group-hover:translate-y-0">
-          <a href="/histoire" class="block px-4 py-3 text-gray-700 hover:bg-gray-50 hover:text-blue-900 border-b border-gray-50 transition-colors uppercase text-xs">Notre histoire</a>
-          <a href="/membres" class="block px-4 py-3 text-gray-700 hover:bg-gray-50 hover:text-blue-900 transition-colors uppercase text-xs">Nos membres</a>
-        </div>
-      </div>
-      <div class="h-6 w-px bg-gray-300"></div>
-      <a href="/don" class="hover:text-blue-900 transition-colors uppercase">Faire un don</a>
-    </nav>
+  <div class="h-4 xl:h-6 w-px bg-gray-300"></div>
 
+  <a href="/don" class="hover:text-blue-900 transition-colors uppercase whitespace-nowrap">
+    Faire un don
+  </a>
+  
+</nav>
     <div class="flex items-center gap-3">
       <a href="/connexion" class="px-5 py-2 border-[1.5px] text-black border-gray-900 rounded-lg text-xs font-semibold uppercase hover:bg-gray-900 hover:text-white transition-all">Connexion</a>
       <a href="/contact" class="px-5 py-2 border-[1.5px] text-black border-gray-900 rounded-lg text-xs font-semibold uppercase hover:bg-gray-900 hover:text-white transition-all">Contact</a>
