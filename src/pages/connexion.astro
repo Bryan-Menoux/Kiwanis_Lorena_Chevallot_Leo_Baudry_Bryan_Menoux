@@ -3,9 +3,16 @@ import Layout from "../layouts/Layout-login.astro";
 import shapesLeft from "../assets/login-page/shapes-left.svg";
 import shapesRight from "../assets/login-page/shapes-right.svg";
 import logo from "../assets/logo-kiwanis-full.svg";
+import backArrow from "../assets/back-arrow.svg";
+import userIcon from "../assets/login-page/user.svg";
+import lockIcon from "../assets/login-page/lock.svg";
 ---
 
 <Layout>
+  <div class="absolute top-8 left-8 flex items-center text-white hover:underline z-10">
+    <img src={backArrow.src} aria-hidden="true">
+    <a href="/" class="text-white ml-2">Retour à l'accueil</a>
+  </div>
   <img
     src={shapesLeft.src}
     aria-hidden="true"
@@ -28,19 +35,28 @@ import logo from "../assets/logo-kiwanis-full.svg";
       class="md:w-[30dvw] lg:w-[15dvw]"
     />
     <div class="lg:max-w-[20dvw]">
-      <form method="POST" class="flex flex-col w-full">
-        <input
-          type="email"
-          name="email"
-          placeholder="Adresse e-mail"
-          class="input input-bordered w-full my-2 bg-transparent border-gray-200 text-gray-200"
-        />
-        <input
-          type="password"
-          name="password"
-          placeholder="Mot de passe"
-          class="input input-bordered w-full my-2 bg-transparent border-gray-200 text-gray-200"
-        />
+      <form class="flex flex-col w-full relative">
+        <div id="errorText" class="absolute left-0 right-0 text-sm text-start font-semibold opacity-0 pointer-events-none" style="bottom: calc(100% + 0.5rem);"></div>
+        
+        <div class="relative my-2">
+          <img src={userIcon.src} alt="" class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 opacity-70">
+          <input
+            type="email"
+            name="email"
+            placeholder="Adresse e-mail"
+            class="input input-bordered w-full pl-10 bg-transparent border-gray-200 text-gray-200"
+          />
+        </div>
+        <div class="relative my-2">
+          <img src={lockIcon.src} alt="" class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 opacity-70">
+          <input
+            type="password"
+            name="password"
+            placeholder="Mot de passe"
+            class="input input-bordered w-full pl-10 bg-transparent border-gray-200 text-gray-200"
+          />
+        </div>
+        
         <button
           class="btn btn-primary rounded-lg! bg-white text-primary w-full mt-4"
           >Se connecter</button>
@@ -57,22 +73,66 @@ import logo from "../assets/logo-kiwanis-full.svg";
 
 <script>
     import {authenticateUser} from '../lib/pocketbase.mjs';
+    import { gsap } from 'gsap';
+  
   const form = document.querySelector("form");
+  const errorText = document.getElementById("errorText") as HTMLElement | null;
+
+  function showError(message: string, type: string = "error") {
+    if (errorText) {
+      gsap.killTweensOf(errorText);
+      gsap.set(errorText, { opacity: 0, y: 60 });
+      
+      errorText.classList.remove("text-red-500", "text-secondary");
+      errorText.classList.add(type === "warning" ? "text-secondary" : "text-red-500");
+      
+      errorText.textContent = message;
+      errorText.style.pointerEvents = "auto";
+      
+      requestAnimationFrame(() => {
+        gsap.to(errorText, {
+          opacity: 1,
+          y: 0,
+          duration: 0.5,
+          ease: "power2.out"
+        });
+      });
+    }
+  }
+
+  function hideError() {
+    if (errorText) {
+      gsap.to(errorText, {
+        opacity: 0,
+        y: -60,
+        duration: 0.3,
+        ease: "power2.in",
+        onComplete: () => {
+          if (errorText) {
+            errorText.style.pointerEvents = "none";
+            errorText.classList.remove("text-red-500", "text-secondary");
+          }
+        }
+      });
+    }
+  }
+
   form?.addEventListener("submit", async (event) => {
       event.preventDefault();
+      hideError();
+      
       const formData = new FormData(form);
-      const email = formData.get("email");
-      const password = formData.get("password");
-
+      const email = formData.get("email") as string;
+      const password = formData.get("password") as string;
+      
       try {
-          const authData = await authenticateUser(email, password);
-          console.log("Connexion réussie :", authData);
-          alert("Connexion réussie !");
-          // Rediriger ou autre action
-      } catch (error) {
-          console.error("Erreur de connexion :", error);
-          const errorMessage = error instanceof Error ? error.message : "Erreur inconnue";
-          alert("Erreur de connexion : " + errorMessage);
+          await authenticateUser(email, password);
+          console.log("Connexion réussie !");
+          window.location.href = "/";
+      } catch (error: any) {
+          const message = error.message || "Échec de la connexion. Veuillez vérifier vos identifiants et réessayer.";
+          const errorType = error.errorType || "error";
+          showError(message, errorType);
       }
   });
 </script>
