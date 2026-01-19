@@ -19,31 +19,36 @@ const brandBlue = "bg-[oklch(0.2903_0.0643_289.42)]";
       </div>
     </div>
 
-    <nav class="flex items-center gap-8 text-sm font-semibold text-gray-800">
-      <a href="/membres" class="hover:text-blue-900 transition-colors uppercase">Nos membres</a>
-      <div class="h-6 w-px bg-gray-300"></div>
-      <div class="relative group cursor-pointer py-2">
-        <button class="hover:text-blue-900 transition-colors uppercase flex items-center gap-2 group-hover:text-blue-900">
-          Découvrir <span class="text-[10px] transition-transform duration-300 group-hover:rotate-90">❯</span>
-        </button>
-        <div class="absolute left-0 mt-2 w-52 bg-white border border-gray-100 shadow-xl rounded-lg overflow-hidden opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 translate-y-2 group-hover:translate-y-0">
-          <a href="/histoire" class="block px-4 py-3 text-gray-700 hover:bg-gray-50 hover:text-blue-900 border-b border-gray-50 transition-colors uppercase text-xs">Notre histoire</a>
-          <a href="/membres" class="block px-4 py-3 text-gray-700 hover:bg-gray-50 hover:text-blue-900 transition-colors uppercase text-xs">Nos membres</a>
+    <nav class="flex items-center gap-3 xl:gap-8 text-[11px] xl:text-sm font-semibold text-gray-800 tracking-tight xl:tracking-normal">
+      <a href="/membres" class="hover:text-blue-900 transition-colors uppercase whitespace-nowrap">Nos membres</a>
+
+      <div class="h-4 xl:h-6 w-px bg-gray-300"></div>
+
+      <div class="relative cursor-pointer py-2">
+        <div id="discover-toggle" class="nav-item hover:text-blue-900 transition-colors uppercase flex items-center gap-2 xl:gap-8">
+          <span class="whitespace-nowrap">Nous découvrir</span>
+          <span id="discover-arrow" class="text-[10px] transition-transform duration-300">❯</span>
+        </div>
+        <div id="discover-dropdown" class="absolute left-0 mt-2 w-44 xl:w-52 bg-white border border-gray-100 shadow-xl rounded-lg overflow-hidden opacity-0 invisible transition-all duration-300 translate-y-2 pointer-events-none">
+          <a href="/actions" class="block px-4 py-3 text-gray-700 hover:bg-gray-50 hover:text-blue-900 border-b border-gray-50 transition-colors uppercase text-[10px] xl:text-xs font-bold">Nos actions</a>
+          <a href="/projets" class="block px-4 py-3 text-gray-700 hover:bg-gray-50 hover:text-blue-900 border-b border-gray-50 transition-colors uppercase text-[10px] xl:text-xs font-bold">Nos projets</a>
+          <a href="/produits" class="block px-4 py-3 text-gray-700 hover:bg-gray-50 hover:text-blue-900 transition-colors uppercase text-[10px] xl:text-xs font-bold">Nos produits</a>
         </div>
       </div>
-      <div class="h-6 w-px bg-gray-300"></div>
-      <a href="/don" class="hover:text-blue-900 transition-colors uppercase">Faire un don</a>
+
+      <div class="h-4 xl:h-6 w-px bg-gray-300"></div>
+
+      <a href="/don" class="hover:text-blue-900 transition-colors uppercase whitespace-nowrap">Faire un don</a>
     </nav>
 
     <div class="flex items-center gap-3">
       <a id="connexion-link" href="/connexion" class="px-5 py-2 border-[1.5px] text-black border-gray-900 rounded-lg text-xs font-semibold uppercase hover:bg-gray-900 hover:text-white transition-all">Connexion</a>
       <a href="/contact" class="px-5 py-2 border-[1.5px] text-black border-gray-900 rounded-lg text-xs font-semibold uppercase hover:bg-gray-900 hover:text-white transition-all">Contact</a>
-      <a id="account-link" href="/mon-compte"> <img src={user.src} alt="icône utilisateur" class="h-10 w-auto" ></a>
+      <a id="account-link" href="/mon-compte"><img src={user.src} alt="icône utilisateur" class="h-10 w-auto" /></a>
     </div>
   </div>
 
   <div class="lg:hidden flex flex-col items-center p-4 gap-3">
-    
     <div class="w-full flex items-center justify-between gap-4 max-w-100">
       <a href="/" class="shrink-0">
         <img src={Logo.src} alt="Logo" class="h-12 w-auto" />
@@ -90,7 +95,7 @@ const brandBlue = "bg-[oklch(0.2903_0.0643_289.42)]";
         <div class="mob-link grid grid-cols-2 gap-3 mt-2">
           <a id="mobile-connexion-link" href="/connexion" class="py-3 border border-white/30 rounded-lg text-center text-[11px] font-bold uppercase">Connexion</a>
           <a href="/contact" class="py-3 border border-white/30 rounded-lg text-center text-[11px] font-bold uppercase">Contact</a>
-          <a id="mobile-account-link" href="/mon-compte" class="self-center"> <img src={userWhite.src} alt="icône utilisateur" class="h-10 w-auto" ></a>
+          <a id="mobile-account-link" href="/mon-compte"><img src={userWhite.src} alt="icône utilisateur" class="h-10 w-auto" /></a>
         </div>
       </nav>
     </div>
@@ -104,6 +109,9 @@ const brandBlue = "bg-[oklch(0.2903_0.0643_289.42)]";
 <script>
   import { gsap } from "gsap";
   import { isAuthenticated } from "../lib/pocketbase.mjs";
+
+  let discoverIsOpen = false;
+  let globalClickHandler: ((e: Event) => void) | null = null;
 
   function initMenu() {
     const toggle = document.getElementById('menu-toggle');
@@ -123,29 +131,70 @@ const brandBlue = "bg-[oklch(0.2903_0.0643_289.42)]";
 
       if (isOpen) {
         dropdown.style.display = 'block';
-        const tl = gsap.timeline();
-        tl.to(dropdown, { opacity: 1, y: 0, duration: 0.3, ease: "power2.out" })
-          .fromTo(links, { opacity: 0, y: 5 }, { opacity: 1, y: 0, stagger: 0.04, duration: 0.2 }, "-=0.1")
-          .to(hamIcon, { opacity: 0, scale: 0.5, duration: 0.2 }, "<")
-          .to(closeIcon, { opacity: 1, scale: 1, duration: 0.2 }, "<");
+        gsap.timeline()
+          .to(dropdown, { opacity: 1, y: 0, duration: 0.2, ease: "power2.out" })
+          .fromTo(links, { opacity: 0, y: 5 }, { opacity: 1, y: 0, stagger: 0.02, duration: 0.15 }, "-=0.1")
+          .to(hamIcon, { opacity: 0, scale: 0.5, duration: 0.15 }, 0)
+          .to(closeIcon, { opacity: 1, scale: 1, duration: 0.15 }, 0);
       } else {
-        const tl = gsap.timeline();
-        tl.to(dropdown, { opacity: 0, y: -10, duration: 0.2 })
-          .to(hamIcon, { opacity: 1, scale: 1, duration: 0.2 }, "<")
-          .to(closeIcon, { opacity: 0, scale: 0.5, duration: 0.2 }, "<")
+        gsap.timeline()
+          .to(dropdown, { opacity: 0, y: -10, duration: 0.15 })
+          .to(hamIcon, { opacity: 1, scale: 1, duration: 0.15 }, 0)
+          .to(closeIcon, { opacity: 0, scale: 0.5, duration: 0.15 }, 0)
           .set(dropdown, { display: 'none' });
       }
     });
 
-    // Reset si on change la taille de fenêtre (évite les bugs inspecteur)
     window.addEventListener('resize', () => {
       if (window.innerWidth >= 1024 && isOpen) {
         isOpen = false;
         dropdown.style.display = 'none';
-        gsap.set(hamIcon, { opacity: 1, scale: 1 });
-        gsap.set(closeIcon, { opacity: 0, scale: 0.5 });
+        gsap.set([hamIcon, closeIcon], { clearProps: 'all' });
       }
     });
+  }
+
+  function closeDiscoverDropdown() {
+    const discoverDropdown = document.getElementById('discover-dropdown');
+    const discoverArrow = document.getElementById('discover-arrow');
+    if (discoverDropdown && discoverArrow) {
+      discoverIsOpen = false;
+      gsap.to(discoverDropdown, { opacity: 0, visibility: 'hidden', y: -10, pointerEvents: 'none', duration: 0.15 });
+      gsap.to(discoverArrow, { rotate: 0, duration: 0.15 });
+    }
+  }
+
+  function initDiscoverDropdown() {
+    const discoverToggle = document.getElementById('discover-toggle');
+    const discoverDropdown = document.getElementById('discover-dropdown');
+    const discoverArrow = document.getElementById('discover-arrow');
+
+    if (!discoverToggle || !discoverDropdown) return;
+
+    // Supprimer l'ancien handler
+    if (globalClickHandler) {
+      document.removeEventListener('click', globalClickHandler);
+    }
+
+    discoverToggle.addEventListener('click', (e) => {
+      e.stopPropagation();
+      discoverIsOpen = !discoverIsOpen;
+
+      if (discoverIsOpen) {
+        gsap.to(discoverDropdown, { opacity: 1, visibility: 'visible', y: 0, pointerEvents: 'auto', duration: 0.08 });
+        gsap.to(discoverArrow, { rotate: 90, duration: 0.08 });
+      } else {
+        closeDiscoverDropdown();
+      }
+    }, { once: false });
+
+    // Ajouter le handler global une seule fois
+    globalClickHandler = (e: Event) => {
+      if (discoverIsOpen && !discoverToggle.contains(e.target as Node) && !discoverDropdown.contains(e.target as Node)) {
+        closeDiscoverDropdown();
+      }
+    };
+    document.addEventListener('click', globalClickHandler);
   }
 
   function checkAuthStatus() {
@@ -155,13 +204,11 @@ const brandBlue = "bg-[oklch(0.2903_0.0643_289.42)]";
     const mobileAccountLink = document.getElementById('mobile-account-link');
     
     if (isAuthenticated()) {
-      // User is logged in, hide the connexion links
       if (connexionLink) connexionLink.style.display = 'none';
       if (mobileConnexionLink) mobileConnexionLink.style.display = 'none';
       if (accountLink) accountLink.style.display = '';
       if (mobileAccountLink) mobileAccountLink.style.display = '';
     } else {
-      // User is not logged in, show the connexion links
       if (connexionLink) connexionLink.style.display = '';
       if (mobileConnexionLink) mobileConnexionLink.style.display = '';
       if (accountLink) accountLink.style.display = 'none';
@@ -170,9 +217,13 @@ const brandBlue = "bg-[oklch(0.2903_0.0643_289.42)]";
   }
 
   initMenu();
+  initDiscoverDropdown();
   checkAuthStatus();
   document.addEventListener('astro:after-swap', () => {
     initMenu();
+    initDiscoverDropdown();
     checkAuthStatus();
+  });
+</script>
   });
 </script>
