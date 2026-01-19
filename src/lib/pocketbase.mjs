@@ -63,3 +63,8 @@ export async function authenticateUser(email, password) {
     throw genericError;
   }
 }
+
+// Est ce que l'utilisateur est authentifié
+export function isAuthenticated() {
+  return pb.authStore.isValid;
+}

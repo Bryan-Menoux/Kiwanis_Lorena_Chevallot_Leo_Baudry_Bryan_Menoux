@@ -1,6 +1,8 @@
 ---
 // src/components/Header.astro
 import Logo from '../assets/logo-kiwanis-full.svg';
+import user from '../assets/user.svg';
+import userWhite from '../assets/user-white.svg';
 
 const brandBlue = "bg-[oklch(0.2903_0.0643_289.42)]";
 ---
@@ -16,87 +18,83 @@ const brandBlue = "bg-[oklch(0.2903_0.0643_289.42)]";
       </div>
     </a>
 
-<nav class="flex items-center gap-3 xl:gap-8 text-[11px] xl:text-sm font-semibold text-gray-800 tracking-tight xl:tracking-normal">
-  <a href="/membres" class="hover:text-blue-900 transition-colors uppercase whitespace-nowrap">Nos membres</a>
+    <nav class="flex items-center gap-3 xl:gap-8 text-[11px] xl:text-sm font-semibold text-gray-800 tracking-tight xl:tracking-normal">
+      <a href="/membres" class="hover:text-blue-900 transition-colors uppercase whitespace-nowrap">Nos membres</a>
 
-  <div class="h-4 xl:h-6 w-px bg-gray-300"></div>
+      <div class="h-4 xl:h-6 w-px bg-gray-300"></div>
 
-  <div class="relative group cursor-pointer py-2">
-    <button class="hover:text-blue-900 transition-colors uppercase flex items-center gap-2 xl:gap-8 group-hover:text-blue-900 font-semibold">
-      <a href="/#" class="whitespace-nowrap">Nous découvrir</a>
-      <span class="text-[10px] transition-transform duration-300 group-hover:rotate-90">❯</span>
-    </button>
-    <div class="absolute left-1/2 -translate-x-1/2 mt-2 w-44 xl:w-52 bg-white border border-gray-100 shadow-xl rounded-lg overflow-hidden opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 translate-y-2 group-hover:translate-y-0">
-      <a href="/actions" class="block px-4 py-3 text-gray-700 hover:bg-gray-50 hover:text-blue-900 border-b border-gray-50 transition-colors uppercase text-[10px] xl:text-xs font-bold">
-      Nos actions </a>
-      <a href="/projets" class="block px-4 py-3 text-gray-700 hover:bg-gray-50 hover:text-blue-900 border-b border-gray-50 transition-colors uppercase text-[10px] xl:text-xs font-bold">
-      Nos projets </a>
-      <a href="/produits" class="block px-4 py-3 text-gray-700 hover:bg-gray-50 hover:text-blue-900 transition-colors uppercase text-[10px] xl:text-xs font-bold">
-      Nos produits</a>
-    </div>
-  </div>
+      <div class="relative cursor-pointer py-2">
+        <div id="discover-toggle" class="nav-item hover:text-blue-900 transition-colors uppercase flex items-center gap-2 xl:gap-8" role="button" aria-expanded="false" aria-controls="discover-dropdown" tabindex="0">
+          <span class="whitespace-nowrap">Nous découvrir</span>
+          <span id="discover-arrow" class="text-[10px] transition-transform duration-300" aria-hidden="true">❯</span>
+        </div>
+        <div id="discover-dropdown" class="absolute left-0 mt-2 w-44 xl:w-52 bg-white border border-gray-100 shadow-xl rounded-lg overflow-hidden opacity-0 invisible transition-all duration-300 translate-y-2 pointer-events-none" role="menu" aria-hidden="true">
+          <a href="/actions" class="block px-4 py-3 text-gray-700 hover:bg-gray-50 hover:text-blue-900 border-b border-gray-50 transition-colors uppercase text-[10px] xl:text-xs font-bold" role="menuitem">Nos actions</a>
+          <a href="/projets" class="block px-4 py-3 text-gray-700 hover:bg-gray-50 hover:text-blue-900 border-b border-gray-50 transition-colors uppercase text-[10px] xl:text-xs font-bold" role="menuitem">Nos projets</a>
+          <a href="/produits" class="block px-4 py-3 text-gray-700 hover:bg-gray-50 hover:text-blue-900 transition-colors uppercase text-[10px] xl:text-xs font-bold" role="menuitem">Nos produits</a>
+        </div>
+      </div>
 
-  <div class="h-4 xl:h-6 w-px bg-gray-300"></div>
+      <div class="h-4 xl:h-6 w-px bg-gray-300"></div>
 
-  <a href="/don" class="hover:text-blue-900 transition-colors uppercase whitespace-nowrap">
-    Faire un don
-  </a>
-  
-</nav>
+      <a href="/don" class="hover:text-blue-900 transition-colors uppercase whitespace-nowrap">Faire un don</a>
+    </nav>
+
     <div class="flex items-center gap-3">
-      <a href="/connexion" class="px-5 py-2 border-[1.5px] text-black border-gray-900 rounded-lg text-xs font-semibold uppercase hover:bg-gray-900 hover:text-white transition-all">Connexion</a>
+      <a id="connexion-link" href="/connexion" class="px-5 py-2 border-[1.5px] text-black border-gray-900 rounded-lg text-xs font-semibold uppercase hover:bg-gray-900 hover:text-white transition-all">Connexion</a>
       <a href="/contact" class="px-5 py-2 border-[1.5px] text-black border-gray-900 rounded-lg text-xs font-semibold uppercase hover:bg-gray-900 hover:text-white transition-all">Contact</a>
+      <a id="account-link" href="/mon-compte"><img src={user.src} alt="icône utilisateur" class="h-10 w-auto" /></a>
     </div>
   </div>
 
   <div class="lg:hidden flex flex-col items-center p-4 gap-3">
-    
     <div class="w-full flex items-center justify-between gap-4 max-w-100">
       <a href="/" class="shrink-0">
         <img src={Logo.src} alt="Logo" class="h-12 w-auto" />
       </a>
       
-      <button id="menu-toggle" class={`flex-1 flex items-center justify-between px-5 py-3 rounded-xl text-white ${brandBlue}`}>
+      <button id="menu-toggle" class={`flex-1 flex items-center justify-between px-5 py-3 rounded-xl text-white ${brandBlue}`} aria-expanded="false" aria-controls="mobile-dropdown" aria-label="Ouvrir le menu">
         <span class="text-base font-medium">Menu</span>
         <div class="relative w-6 h-6">
-          <svg id="ham-icon" class="w-6 h-6 absolute transition-opacity" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg id="ham-icon" class="w-6 h-6 absolute transition-opacity" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 8h16M4 16h16" />
           </svg>
-          <svg id="close-icon" class="w-6 h-6 absolute opacity-0 scale-50 transition-all" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg id="close-icon" class="w-6 h-6 absolute opacity-0 scale-50 transition-all" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 18L18 6M6 6l12 12" />
           </svg>
         </div>
       </button>
     </div>
 
-    <div id="mobile-dropdown" class={`w-full max-w-100 rounded-2xl p-7 text-white shadow-2xl ${brandBlue}`} style="display: none;">
+    <div id="mobile-dropdown" class={`w-full max-w-100 rounded-2xl p-7 text-white shadow-2xl ${brandBlue}`} style="display: none;" role="menu" aria-hidden="true">
       <h2 class="text-xs font-bold tracking-widest mb-6 opacity-90 uppercase">KIWANIS PAYS DE MONTBÉLIARD</h2>
       
-      <nav class="flex flex-col">
-        <a href="/membres" class="mob-link flex justify-between items-center py-2 text-base">
-          Nos membres <span class="opacity-40">↗</span>
+      <nav class="flex flex-col" role="navigation">
+        <a href="/membres" class="mob-link flex justify-between items-center py-2 text-base" role="menuitem">
+          Nos membres <span class="opacity-40" aria-hidden="true">↗</span>
         </a>
-        <a href="/don" class="mob-link flex justify-between items-center py-2 text-base">
-          Faire un don <span class="opacity-40">↗</span>
-        </a>
-
-        <div class="mob-link h-px w-full bg-white/20 my-4"></div>
-
-        <a href="/actions" class="mob-link flex justify-between items-center py-2 text-base">
-          Nos actions <span class="opacity-40">↗</span>
-        </a>
-        <a href="/projets" class="mob-link flex justify-between items-center py-2 text-base">
-          Nos projets <span class="opacity-40">↗</span>
-        </a>
-        <a href="/produits" class="mob-link flex justify-between items-center py-2 text-base">
-          Nos produits <span class="opacity-40">↗</span>
+        <a href="/don" class="mob-link flex justify-between items-center py-2 text-base" role="menuitem">
+          Faire un don <span class="opacity-40" aria-hidden="true">↗</span>
         </a>
 
-        <div class="mob-link h-px w-full bg-white/20 my-4"></div>
+        <div class="mob-link h-px w-full bg-white/20 my-4" role="separator" aria-hidden="true"></div>
+
+        <a href="/actions" class="mob-link flex justify-between items-center py-2 text-base" role="menuitem">
+          Nos actions <span class="opacity-40" aria-hidden="true">↗</span>
+        </a>
+        <a href="/projets" class="mob-link flex justify-between items-center py-2 text-base" role="menuitem">
+          Nos projets <span class="opacity-40" aria-hidden="true">↗</span>
+        </a>
+        <a href="/produits" class="mob-link flex justify-between items-center py-2 text-base" role="menuitem">
+          Nos produits <span class="opacity-40" aria-hidden="true">↗</span>
+        </a>
+
+        <div class="mob-link h-px w-full bg-white/20 my-4" role="separator" aria-hidden="true"></div>
 
         <div class="mob-link grid grid-cols-2 gap-3 mt-2">
-          <a href="/connexion" class="py-3 border border-white/30 rounded-lg text-center text-[11px] font-bold uppercase">Connexion</a>
-          <a href="/contact" class="py-3 border border-white/30 rounded-lg text-center text-[11px] font-bold uppercase">Contact</a>
+          <a id="mobile-connexion-link" href="/connexion" class="py-3 border border-white/30 rounded-lg text-center text-[11px] font-bold uppercase" role="menuitem">Connexion</a>
+          <a href="/contact" class="py-3 border border-white/30 rounded-lg text-center text-[11px] font-bold uppercase" role="menuitem">Contact</a>
+          <a id="mobile-account-link" href="/mon-compte" role="menuitem"><img src={userWhite.src} alt="icône utilisateur" class="h-10 w-auto" /></a>
         </div>
       </nav>
     </div>
@@ -109,12 +107,14 @@ const brandBlue = "bg-[oklch(0.2903_0.0643_289.42)]";
 
 <script>
   import { gsap } from "gsap";
+  import { isAuthenticated } from "../lib/pocketbase.mjs";
+
+  let discoverIsOpen = false;
+  let globalClickHandler: ((e: Event) => void) | null = null;
 
   function initMenu() {
-    const toggle = document.getElementById('menu-toggle');
-    const dropdown = document.getElementById('mobile-dropdown');
-    const hamIcon = document.getElementById('ham-icon');
-    const closeIcon = document.getElementById('close-icon');
+    const toggle = document.getElementById('menu-toggle') as HTMLButtonElement;
+    const dropdown = document.getElementById('mobile-dropdown') as HTMLElement;
     const links = document.querySelectorAll('.mob-link');
 
     if (!toggle || !dropdown) return;
@@ -122,37 +122,142 @@ const brandBlue = "bg-[oklch(0.2903_0.0643_289.42)]";
     let isOpen = false;
     gsap.set(dropdown, { display: 'none', opacity: 0, y: -10 });
 
-    toggle.addEventListener('click', (e) => {
-      e.stopPropagation();
+    const toggleMenu = (e?: Event) => {
+      e?.stopPropagation();
       isOpen = !isOpen;
+
+      // Update ARIA attributes
+      toggle.setAttribute('aria-expanded', isOpen.toString());
+      dropdown.setAttribute('aria-hidden', (!isOpen).toString());
 
       if (isOpen) {
         dropdown.style.display = 'block';
-        const tl = gsap.timeline();
-        tl.to(dropdown, { opacity: 1, y: 0, duration: 0.3, ease: "power2.out" })
-          .fromTo(links, { opacity: 0, y: 5 }, { opacity: 1, y: 0, stagger: 0.04, duration: 0.2 }, "-=0.1")
-          .to(hamIcon, { opacity: 0, scale: 0.5, duration: 0.2 }, "<")
-          .to(closeIcon, { opacity: 1, scale: 1, duration: 0.2 }, "<");
+        gsap.timeline()
+          .to(dropdown, { opacity: 1, y: 0, duration: 0.2, ease: "power2.out" })
+          .fromTo(links, { opacity: 0, y: 5 }, { opacity: 1, y: 0, stagger: 0.02, duration: 0.15 }, "-=0.1");
       } else {
-        const tl = gsap.timeline();
-        tl.to(dropdown, { opacity: 0, y: -10, duration: 0.2 })
-          .to(hamIcon, { opacity: 1, scale: 1, duration: 0.2 }, "<")
-          .to(closeIcon, { opacity: 0, scale: 0.5, duration: 0.2 }, "<")
+        gsap.timeline()
+          .to(dropdown, { opacity: 0, y: -10, duration: 0.15 })
           .set(dropdown, { display: 'none' });
+      }
+    };
+
+    toggle.addEventListener('click', toggleMenu);
+
+    // Keyboard navigation
+    toggle.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        toggleMenu();
       }
     });
 
-    // Reset si on change la taille de fenêtre (évite les bugs inspecteur)
     window.addEventListener('resize', () => {
       if (window.innerWidth >= 1024 && isOpen) {
         isOpen = false;
         dropdown.style.display = 'none';
-        gsap.set(hamIcon, { opacity: 1, scale: 1 });
-        gsap.set(closeIcon, { opacity: 0, scale: 0.5 });
+        toggle.setAttribute('aria-expanded', 'false');
+        dropdown.setAttribute('aria-hidden', 'true');
       }
     });
   }
 
+  function closeDiscoverDropdown() {
+    const discoverDropdown = document.getElementById('discover-dropdown') as HTMLElement;
+    const discoverArrow = document.getElementById('discover-arrow') as HTMLElement;
+    const discoverToggle = document.getElementById('discover-toggle') as HTMLElement;
+
+    if (discoverDropdown && discoverArrow) {
+      discoverIsOpen = false;
+      gsap.to(discoverDropdown, { opacity: 0, visibility: 'hidden', y: -10, pointerEvents: 'none', duration: 0.15 });
+      gsap.to(discoverArrow, { rotate: 0, duration: 0.15 });
+
+      // Update ARIA attributes
+      if (discoverToggle) {
+        discoverToggle.setAttribute('aria-expanded', 'false');
+        discoverDropdown.setAttribute('aria-hidden', 'true');
+      }
+    }
+  }
+
+  function initDiscoverDropdown() {
+    const discoverToggle = document.getElementById('discover-toggle') as HTMLElement;
+    const discoverDropdown = document.getElementById('discover-dropdown') as HTMLElement;
+    const discoverArrow = document.getElementById('discover-arrow') as HTMLElement;
+
+    if (!discoverToggle || !discoverDropdown) return;
+
+    // Supprimer l'ancien handler
+    if (globalClickHandler) {
+      document.removeEventListener('click', globalClickHandler);
+    }
+
+    const toggleDropdown = (e?: Event) => {
+      e?.stopPropagation();
+      discoverIsOpen = !discoverIsOpen;
+
+      // Update ARIA attributes
+      discoverToggle.setAttribute('aria-expanded', discoverIsOpen.toString());
+      discoverDropdown.setAttribute('aria-hidden', (!discoverIsOpen).toString());
+
+      if (discoverIsOpen) {
+        gsap.to(discoverDropdown, { opacity: 1, visibility: 'visible', y: 0, pointerEvents: 'auto', duration: 0.08 });
+        gsap.to(discoverArrow, { rotate: 90, duration: 0.08 });
+      } else {
+        closeDiscoverDropdown();
+      }
+    };
+
+    discoverToggle.addEventListener('click', toggleDropdown);
+
+    // Keyboard navigation
+    discoverToggle.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        toggleDropdown();
+      } else if (e.key === 'Escape' && discoverIsOpen) {
+        closeDiscoverDropdown();
+        discoverToggle.setAttribute('aria-expanded', 'false');
+        discoverDropdown.setAttribute('aria-hidden', 'true');
+      }
+    });
+
+    // Ajouter le handler global une seule fois
+    globalClickHandler = (e: Event) => {
+      if (discoverIsOpen && !discoverToggle.contains(e.target as Node) && !discoverDropdown.contains(e.target as Node)) {
+        closeDiscoverDropdown();
+        discoverToggle.setAttribute('aria-expanded', 'false');
+        discoverDropdown.setAttribute('aria-hidden', 'true');
+      }
+    };
+    document.addEventListener('click', globalClickHandler);
+  }
+
+  function checkAuthStatus() {
+    const isAuth = isAuthenticated();
+    const displayValue = isAuth ? 'none' : '';
+    const accountDisplay = isAuth ? '' : 'none';
+
+    // Desktop links
+    const connexionLink = document.getElementById('connexion-link') as HTMLAnchorElement;
+    const accountLink = document.getElementById('account-link') as HTMLAnchorElement;
+
+    // Mobile links
+    const mobileConnexionLink = document.getElementById('mobile-connexion-link') as HTMLAnchorElement;
+    const mobileAccountLink = document.getElementById('mobile-account-link') as HTMLAnchorElement;
+
+    if (connexionLink) connexionLink.style.display = displayValue;
+    if (mobileConnexionLink) mobileConnexionLink.style.display = displayValue;
+    if (accountLink) accountLink.style.display = accountDisplay;
+    if (mobileAccountLink) mobileAccountLink.style.display = accountDisplay;
+  }
+
   initMenu();
-  document.addEventListener('astro:after-swap', initMenu);
+  initDiscoverDropdown();
+  checkAuthStatus();
+  document.addEventListener('astro:after-swap', () => {
+    initMenu();
+    initDiscoverDropdown();
+    checkAuthStatus();
+  });
 </script>

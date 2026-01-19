@@ -62,6 +62,10 @@ h1, h2, h3, h4, h5, h6, body, a {
   font-family: 'poppins', serif;
 }
 
+.nav-item {
+  font-family: 'poppins', serif;
+}
+
 .font-merriweather {
   font-family: 'Merriweather', serif;
 }
