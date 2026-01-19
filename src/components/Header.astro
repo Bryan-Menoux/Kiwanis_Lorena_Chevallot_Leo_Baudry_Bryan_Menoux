@@ -1,6 +1,9 @@
 ---
 // src/components/Header.astro
+import { userInfo } from 'node:os';
 import Logo from '../assets/logo-kiwanis-full.svg';
+import user from '../assets/user.svg';
+import userWhite from '../assets/user-white.svg';
 
 const brandBlue = "bg-[oklch(0.2903_0.0643_289.42)]";
 ---
@@ -33,8 +36,9 @@ const brandBlue = "bg-[oklch(0.2903_0.0643_289.42)]";
     </nav>
 
     <div class="flex items-center gap-3">
-      <a href="/connexion" class="px-5 py-2 border-[1.5px] text-black border-gray-900 rounded-lg text-xs font-semibold uppercase hover:bg-gray-900 hover:text-white transition-all">Connexion</a>
+      <a id="connexion-link" href="/connexion" class="px-5 py-2 border-[1.5px] text-black border-gray-900 rounded-lg text-xs font-semibold uppercase hover:bg-gray-900 hover:text-white transition-all">Connexion</a>
       <a href="/contact" class="px-5 py-2 border-[1.5px] text-black border-gray-900 rounded-lg text-xs font-semibold uppercase hover:bg-gray-900 hover:text-white transition-all">Contact</a>
+      <a id="account-link" href="/mon-compte"> <img src={user.src} alt="icône utilisateur" class="h-10 w-auto" ></a>
     </div>
   </div>
 
@@ -84,8 +88,9 @@ const brandBlue = "bg-[oklch(0.2903_0.0643_289.42)]";
         <div class="mob-link h-px w-full bg-white/20 my-4"></div>
 
         <div class="mob-link grid grid-cols-2 gap-3 mt-2">
-          <a href="/connexion" class="py-3 border border-white/30 rounded-lg text-center text-[11px] font-bold uppercase">Connexion</a>
+          <a id="mobile-connexion-link" href="/connexion" class="py-3 border border-white/30 rounded-lg text-center text-[11px] font-bold uppercase">Connexion</a>
           <a href="/contact" class="py-3 border border-white/30 rounded-lg text-center text-[11px] font-bold uppercase">Contact</a>
+          <a id="mobile-account-link" href="/mon-compte" class="self-center"> <img src={userWhite.src} alt="icône utilisateur" class="h-10 w-auto" ></a>
         </div>
       </nav>
     </div>
@@ -98,6 +103,7 @@ const brandBlue = "bg-[oklch(0.2903_0.0643_289.42)]";
 
 <script>
   import { gsap } from "gsap";
+  import { isAuthenticated } from "../lib/pocketbase.mjs";
 
   function initMenu() {
     const toggle = document.getElementById('menu-toggle');
@@ -142,6 +148,31 @@ const brandBlue = "bg-[oklch(0.2903_0.0643_289.42)]";
     });
   }
 
+  function checkAuthStatus() {
+    const connexionLink = document.getElementById('connexion-link');
+    const mobileConnexionLink = document.getElementById('mobile-connexion-link');
+    const accountLink = document.getElementById('account-link');
+    const mobileAccountLink = document.getElementById('mobile-account-link');
+    
+    if (isAuthenticated()) {
+      // User is logged in, hide the connexion links
+      if (connexionLink) connexionLink.style.display = 'none';
+      if (mobileConnexionLink) mobileConnexionLink.style.display = 'none';
+      if (accountLink) accountLink.style.display = '';
+      if (mobileAccountLink) mobileAccountLink.style.display = '';
+    } else {
+      // User is not logged in, show the connexion links
+      if (connexionLink) connexionLink.style.display = '';
+      if (mobileConnexionLink) mobileConnexionLink.style.display = '';
+      if (accountLink) accountLink.style.display = 'none';
+      if (mobileAccountLink) mobileAccountLink.style.display = 'none';
+    }
+  }
+
   initMenu();
-  document.addEventListener('astro:after-swap', initMenu);
+  checkAuthStatus();
+  document.addEventListener('astro:after-swap', () => {
+    initMenu();
+    checkAuthStatus();
+  });
 </script>
