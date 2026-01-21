@@ -25,10 +25,6 @@ jobs:
         run: |
           npm run build
           cp package.json dist/
-          cp .env.example dist/.env || echo "No .env.example found, creating empty .env"
-          echo "POCKETBASE_URL=${{ secrets.POCKETBASE_URL }}" >> dist/.env
-          echo "POCKETBASE_ADMIN_EMAIL=${{ secrets.POCKETBASE_ADMIN_EMAIL }}" >> dist/.env
-          echo "POCKETBASE_ADMIN_PASSWORD=${{ secrets.POCKETBASE_ADMIN_PASSWORD }}" >> dist/.env
       - name: Clean remote directory before deploy
         uses: appleboy/ssh-action@v1.0.0
         with:
@@ -36,8 +32,15 @@ jobs:
           username: ${{ secrets.USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            if [ -d /var/www/kiwanis ] && [ "$(ls -A /var/www/kiwanis)" ]; then
-              sudo rm -rf /var/www/kiwanis/
+            # Supprimer seulement les parties qui doivent être mises à jour
+            if [ -d /var/www/kiwanis/client ]; then
+              rm -rf /var/www/kiwanis/client
+            fi
+            if [ -d /var/www/kiwanis/server ]; then
+              rm -rf /var/www/kiwanis/server
+            fi
+            if [ -f /var/www/kiwanis/package.json ]; then
+              rm -f /var/www/kiwanis/package.json
             fi
 
       - name: Deploy to VPS via SCP
@@ -84,6 +87,6 @@ jobs:
             cd /var/www/kiwanis
             npm install --production
             ls -la
-            echo "Using .env from /var/www/pocketbase-kiwanis/.env"
-            ls -la /var/www/pocketbase-kiwanis/.env
-            PORT=8085 HOST=127.0.0.1 pm2 restart kiwanis || PORT=8085 HOST=127.0.0.1 pm2 start server/entry.mjs --name kiwanis --env-file /var/www/pocketbase-kiwanis/.env
+            echo "Using .env from /var/www/kiwanis/.env"
+            cat .env
+            PORT=8085 HOST=127.0.0.1 pm2 restart kiwanis || PORT=8085 HOST=127.0.0.1 pm2 start server/entry.mjs --name kiwanis --env-file .env
