@@ -53,8 +53,8 @@ jobs:
           host: ${{ secrets.HOST }}
           username: ${{ secrets.USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          source: "dist/server/"
-          target: "/var/www/kiwanis/server/"
+          source: "dist/server/*"
+          target: "/var/www/kiwanis/server"
           rm: false
           overwrite: true
           debug: true
@@ -65,8 +65,8 @@ jobs:
           host: ${{ secrets.HOST }}
           username: ${{ secrets.USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          source: "dist/client/"
-          target: "/var/www/kiwanis/client/"
+          source: "dist/client/*"
+          target: "/var/www/kiwanis/client"
           rm: false
           overwrite: true
 
