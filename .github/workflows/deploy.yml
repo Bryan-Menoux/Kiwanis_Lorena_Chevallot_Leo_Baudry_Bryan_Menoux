@@ -45,10 +45,23 @@ jobs:
           username: ${{ secrets.USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           source: "dist/**"
-          target: "/var/www/kiwanis"
+          target: "/var/www/kiwanis/dist-temp"
           rm: false
           overwrite: true
           debug: true
+
+      - name: Move deployed files to correct location
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd /var/www/kiwanis
+            # Copier le contenu de dist-temp vers kiwanis
+            cp -r dist-temp/* .
+            # Supprimer le dossier temporaire
+            rm -rf dist-temp
 
       - name: Install production dependencies on VPS
         uses: appleboy/ssh-action@v1.0.0
