@@ -36,8 +36,8 @@ jobs:
           username: ${{ secrets.USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            if [ -d /var/www/pocketbase-kiwanis/kiwanis-app ] && [ "$(ls -A /var/www/pocketbase-kiwanis/kiwanis-app)" ]; then
-              sudo rm -rf /var/www/pocketbase-kiwanis/kiwanis-app/
+            if [ -d /var/www/kiwanis ] && [ "$(ls -A /var/www/kiwanis)" ]; then
+              sudo rm -rf /var/www/kiwanis/
             fi
 
       - name: Deploy to VPS via SCP
@@ -47,7 +47,7 @@ jobs:
           username: ${{ secrets.USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           source: "dist/"
-          target: "/var/www/pocketbase-kiwanis/kiwanis-app/"
+          target: "/var/www/kiwanis/"
           rm: false
           overwrite: true
           debug: true
@@ -59,9 +59,9 @@ jobs:
           username: ${{ secrets.USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            cd /var/www/pocketbase-kiwanis/kiwanis-app
+            cd /var/www/kiwanis
             npm install --production
             ls -la
-            cat .env
-            ln -sf /var/www/pocketbase-kiwanis/.env .env
+            echo "Using .env from /var/www/pocketbase-kiwanis/.env"
+            ls -la /var/www/pocketbase-kiwanis/.env
             PORT=8085 HOST=127.0.0.1 pm2 restart kiwanis || PORT=8085 HOST=127.0.0.1 pm2 start server/entry.mjs --name kiwanis --env-file /var/www/pocketbase-kiwanis/.env
