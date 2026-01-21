@@ -82,4 +82,4 @@ jobs:
             ls -la server/ 2>/dev/null || echo "server/ directory missing"
             echo "=== Starting application ==="
             export PORT=8085 HOST=127.0.0.1
-            pm2 restart kiwanis || pm2 start server/entry.mjs --name kiwanis --env-file .env
+            pm2 restart kiwanis || pm2 start server/entry.mjs --name kiwanis --env-file /var/www/kiwanis/.env
