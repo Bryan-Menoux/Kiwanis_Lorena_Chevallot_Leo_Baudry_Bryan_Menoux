@@ -1,0 +1,581 @@
+---
+// Définition des propriétés du composant
+interface Props {
+  unverifiedUsers?: Array<any>;
+}
+
+// Récupération des utilisateurs non vérifiés passés en props
+const { unverifiedUsers = [] } = Astro.props;
+import backArrow from '../assets/back-arrow.svg';
+---
+
+
+
+<div
+  class="min-h-screen mt-24 lg: from-base-100 via-base-100 to-base-200 py-8 px-4 md:px-8 pt-4 md:pt-12"
+>
+  <div class="max-w-4xl mx-auto">
+    <!-- En-tête de la section vérifications -->
+    <div class="mb-12 text-center">
+      <h1
+        class="text-4xl md:text-5xl lg:text-7xl font-bold title font-merriweather mb-4"
+      >
+        Vérifications
+      </h1>
+      <p class="text-base-content/60 text-lg">
+        Gérer les demandes d'adhésion en attente
+      </p>
+    </div>
+
+    <!-- Carte principale contenant le contenu administrateur -->
+    <div class="bg-white rounded-2xl shadow-2xl overflow-hidden">
+      <!-- Contenu pour les administrateurs -->
+      <div id="adminContent" class="px-8 py-8">
+        <!-- Zone d'affichage des messages -->
+        <div
+          id="message"
+          class="alert hidden h-fit p-4 mb-6 transition-all duration-300"
+          role="status"
+          aria-live="polite"
+          aria-atomic="true"
+        >
+          <span id="messageText"></span>
+        </div>
+
+        <!-- Section des utilisateurs rejetés -->
+        <div class="mb-6">
+          <details class="collapse collapse-arrow border border-base-300 bg-base-100">
+            <summary class="collapse-title text-lg font-medium cursor-pointer">
+              📋 Utilisateurs rejetés
+            </summary>
+            <div class="collapse-content">
+              <div id="rejectedUsersList" class="space-y-2 mt-4 mb-4">
+                <!-- Les utilisateurs rejetés seront chargés dynamiquement -->
+              </div>
+              <div id="noRejectedUsers" class="text-center py-4 text-base-content/60">
+                <p>Aucun utilisateur rejeté</p>
+              </div>
+              <button 
+                id="deleteAllRejectedBtn"
+                class="btn btn-error btn-sm w-full"
+                disabled
+              >
+                🗑️ Supprimer tous les rejetés
+              </button>
+            </div>
+          </details>
+        </div>
+
+        <!-- Liste des utilisateurs en attente de vérification -->
+        <div id="pendingUsers" class="space-y-4">
+          <!-- Les utilisateurs seront chargés dynamiquement -->
+        </div>
+
+        <!-- Message si aucun utilisateur en attente -->
+        <div id="noPendingUsers" class="text-center py-12 text-base-content/60 hidden">
+          <div class="text-6xl mb-4">📋</div>
+          <h3 class="text-xl font-semibold mb-2">Aucune demande en attente</h3>
+          <p>Toutes les demandes d'adhésion ont été traitées.</p>
+        </div>
+      </div>
+
+      <!-- Contenu affiché si l'utilisateur n'est pas administrateur -->
+      <div id="accessDenied" class="px-8 py-12 text-center hidden">
+        <div class="text-6xl mb-4">🔒</div>
+        <h3 class="text-xl font-semibold mb-2 text-base-content">Accès refusé</h3>
+        <p class="text-base-content/60">Seuls les administrateurs peuvent accéder à cette section.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Passer les données des utilisateurs non vérifiés au script client -->
+<script data-unverified-users={JSON.stringify(unverifiedUsers)} data-back-arrow-src={backArrow.src}></script>
+
+<script>
+  import { isUserAdmin } from "../lib/pocketbase.mjs";
+  import { pb } from "../lib/pocketbase.mjs";
+
+  // Récupération des données passées depuis le serveur
+  const unverifiedUsersDataElement = document.querySelector('script[data-unverified-users]') as HTMLScriptElement | null;
+  const unverifiedUsersData = unverifiedUsersDataElement?.dataset.unverifiedUsers;
+  const backArrowSrc = unverifiedUsersDataElement?.dataset.backArrowSrc;
+  const unverifiedUsers: any[] = unverifiedUsersData ? JSON.parse(unverifiedUsersData) : [];
+
+  // Récupération des éléments DOM
+  const adminContent = document.getElementById('adminContent');
+  const accessDenied = document.getElementById('accessDenied');
+  const messageDiv = document.getElementById('message');
+  const messageText = document.getElementById('messageText');
+  const pendingUsersDiv = document.getElementById('pendingUsers');
+  const noPendingUsersDiv = document.getElementById('noPendingUsers');
+  const rejectedUsersDiv = document.getElementById('rejectedUsersList');
+  const noRejectedUsersDiv = document.getElementById('noRejectedUsers');
+  const deleteAllRejectedBtn = document.getElementById('deleteAllRejectedBtn') as HTMLButtonElement | null;
+
+  // Variable pour stocker le token CSRF généré côté serveur
+  let csrfToken: string | null = null;
+
+  // Fonction pour récupérer un token CSRF sécurisé depuis l'endpoint API
+  // Cela remplace le fallback non sécurisé à pb.authStore.record?.id
+  async function fetchCSRFToken() {
+    try {
+      const response = await fetch('/api/csrf-token', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${pb.authStore.token}`
+        }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        csrfToken = data.csrfToken;
+      } else {
+        throw new Error('Échec de la récupération du token CSRF');
+      }
+    } catch (error) {
+      showMessage('Erreur de sécurité: Impossible de récupérer le token CSRF.', 'error');
+    }
+  }
+
+  // Vérification des droits administrateur et chargement initial
+  (async () => {
+    try {
+      // Attendez que le DOM soit prêt
+      await new Promise(resolve => setTimeout(resolve, 300));
+      
+      // Récupérez l'utilisateur depuis localStorage pour avoir l'ID
+      const authData = localStorage.getItem('pocketbase_auth');
+      if (!authData) {
+        if (accessDenied) accessDenied.classList.remove('hidden');
+        if (adminContent) adminContent.classList.add('hidden');
+        return;
+      }
+
+      const parsed = JSON.parse(authData);
+      const userId = parsed?.record?.id;
+
+      if (!userId) {
+        if (accessDenied) accessDenied.classList.remove('hidden');
+        if (adminContent) adminContent.classList.add('hidden');
+        return;
+      }
+
+      // Récupérez les données complètes de l'utilisateur via l'endpoint API serveur
+      const response = await fetch('/api/get-user-full', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${pb.authStore.token}`
+        },
+        body: JSON.stringify({ userId }),
+      });
+
+      if (!response.ok) {
+        if (accessDenied) accessDenied.classList.remove('hidden');
+        if (adminContent) adminContent.classList.add('hidden');
+        return;
+      }
+
+      const data = await response.json();
+      const fullUser = data.user;
+
+      const isAdmin = fullUser.administrateur === true;
+      const isVerified = fullUser.verified === true;
+
+      if (isAdmin && isVerified) {
+        if (adminContent) adminContent.classList.remove('hidden');
+        if (accessDenied) accessDenied.classList.add('hidden');
+
+        // Récupération du token CSRF avant les opérations
+        await fetchCSRFToken();
+
+        await loadPendingUsers();
+        await loadRejectedUsers();
+        
+        if (deleteAllRejectedBtn) {
+          deleteAllRejectedBtn.addEventListener('click', handleDeleteAllRejected);
+        }
+      } else {
+        if (adminContent) adminContent.classList.add('hidden');
+        if (accessDenied) accessDenied.classList.remove('hidden');
+      }
+    } catch (error) {
+      if (adminContent) adminContent.classList.add('hidden');
+      if (accessDenied) accessDenied.classList.remove('hidden');
+    }
+  })();
+
+  // Fonction pour afficher un message temporaire
+  function showMessage(text: string, type: string = 'info') {
+    if (!messageDiv || !messageText) return;
+
+    messageText.textContent = text;
+    messageDiv.className = `alert alert-${type} h-fit p-4 mb-6 transition-all duration-300`;
+    messageDiv.classList.remove('hidden');
+
+    setTimeout(() => {
+      messageDiv.classList.add('hidden');
+    }, 5000);
+  }
+
+  // Fonction pour créer une carte utilisateur de manière sécurisée
+  // ✅ CORRECTION: Utilisation de textContent et création d'éléments DOM au lieu d'innerHTML
+  // Cela prévient les attaques XSS en échappant automatiquement les données
+  function createUserCard(user: any) {
+    const card = document.createElement('div');
+    card.className = 'bg-base-100 rounded-xl p-6 border border-base-300';
+
+    // Création de la structure DOM de manière sécurisée
+    const contentDiv = document.createElement('div');
+    contentDiv.className = 'flex flex-col md:flex-row md:items-center md:justify-between gap-4';
+
+    // Section d'informations utilisateur
+    const infoDiv = document.createElement('div');
+    infoDiv.className = 'flex-1';
+
+    const nameElement = document.createElement('h3');
+    nameElement.className = 'text-lg font-semibold text-base-content';
+    nameElement.textContent = user.name || 'Nom non spécifié'; // ✅ textContent échappe les données
+
+    const emailElement = document.createElement('p');
+    emailElement.className = 'text-base-content/70';
+    emailElement.textContent = user.email; // ✅ Pas de risque XSS
+
+    const dateElement = document.createElement('p');
+    dateElement.className = 'text-sm text-base-content/50';
+    const createdDate = new Date(user.created).toLocaleDateString('fr-FR');
+    dateElement.textContent = `Inscrit le ${createdDate}`; // ✅ Date formatée de manière sécurisée
+
+    infoDiv.appendChild(nameElement);
+    infoDiv.appendChild(emailElement);
+    infoDiv.appendChild(dateElement);
+
+    // Section des boutons d'action
+    const buttonDiv = document.createElement('div');
+    buttonDiv.className = 'flex gap-3';
+
+    const approveBtn = document.createElement('button');
+    approveBtn.className = 'btn btn-success btn-sm';
+    approveBtn.setAttribute('data-user-id', user.id);
+    approveBtn.setAttribute('data-action', 'verify');
+    approveBtn.textContent = '✓ Approuver';
+
+    const rejectBtn = document.createElement('button');
+    rejectBtn.className = 'btn btn-error btn-sm';
+    rejectBtn.setAttribute('data-user-id', user.id);
+    rejectBtn.setAttribute('data-action', 'reject');
+    rejectBtn.textContent = '✗ Rejeter';
+
+    buttonDiv.appendChild(approveBtn);
+    buttonDiv.appendChild(rejectBtn);
+
+    contentDiv.appendChild(infoDiv);
+    contentDiv.appendChild(buttonDiv);
+    card.appendChild(contentDiv);
+
+    return card;
+  }
+
+  // Fonction pour charger et afficher les utilisateurs en attente
+  async function loadPendingUsers() {
+    try {
+      if (pendingUsersDiv) {
+        pendingUsersDiv.innerHTML = '';
+      }
+
+      if (unverifiedUsers.length === 0) {
+        if (noPendingUsersDiv) {
+          noPendingUsersDiv.classList.remove('hidden');
+        }
+        return;
+      }
+
+      if (noPendingUsersDiv) {
+        noPendingUsersDiv.classList.add('hidden');
+      }
+
+      unverifiedUsers.forEach((user: any, index: number) => {
+        const card = createUserCard(user);
+        if (pendingUsersDiv) {
+          pendingUsersDiv.appendChild(card);
+        }
+      });
+
+      document.querySelectorAll('[data-action]').forEach(button => {
+        button.addEventListener('click', handleUserAction);
+      });
+
+    } catch (error) {
+      showMessage('Erreur lors du chargement des demandes d\'adhésion.', 'error');
+    }
+  }
+
+  // Gestionnaire pour les actions sur les utilisateurs (approuver/rejeter)
+  async function handleUserAction(event: Event) {
+    const button = event.target as HTMLButtonElement;
+    const userId = button.getAttribute('data-user-id');
+    const action = button.getAttribute('data-action');
+
+    if (!userId || !action) return;
+
+    button.disabled = true;
+    const originalText = button.textContent;
+    button.textContent = 'Traitement...';
+
+    try {
+      const token = pb.authStore.token;
+      if (!token) {
+        throw new Error('Non authentifié - token manquant');
+      }
+
+      // Utilisation du token CSRF généré côté serveur pour prévenir les attaques CSRF
+      if (!csrfToken) {
+        throw new Error('Token CSRF manquant - sécurité compromise');
+      }
+
+      const response = await fetch('/api/verify-user', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ userId, action, csrfToken })
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Erreur lors de l\'action');
+      }
+
+      const result = await response.json();
+
+      if (action === 'verify') {
+        showMessage('Utilisateur approuvé avec succès.', 'success');
+      } else if (action === 'reject') {
+        showMessage('Demande d\'adhésion rejetée.', 'warning');
+        setTimeout(() => loadRejectedUsers(), 500);
+      }
+
+      const card = button.closest('.bg-base-100') as HTMLElement;
+      if (card) {
+        card.style.opacity = '0';
+        card.style.transform = 'scale(0.95)';
+        card.style.transition = 'all 0.3s ease-out';
+        
+        setTimeout(() => {
+          card.remove();
+          
+          const remainingCards = pendingUsersDiv?.querySelectorAll('.bg-base-100').length || 0;
+          if (remainingCards === 0 && noPendingUsersDiv) {
+            noPendingUsersDiv.classList.remove('hidden');
+          }
+        }, 300);
+      }
+
+    } catch (error) {
+      showMessage('Une erreur est survenue lors du traitement de la demande.', 'error');
+      button.disabled = false;
+      button.textContent = originalText;
+    }
+  }
+
+  // Fonction pour charger les utilisateurs rejetés
+  async function loadRejectedUsers() {
+    try {
+
+
+      const response = await fetch('/api/rejected-users', {
+        headers: {
+          'Authorization': `Bearer ${pb.authStore.token}`
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Erreur lors du chargement des utilisateurs rejetés');
+      }
+
+      const data = await response.json();
+      const rejectedUsers = data.users || [];
+
+
+
+      // Vider la liste
+      if (rejectedUsersDiv) {
+        rejectedUsersDiv.innerHTML = '';
+      }
+
+      if (rejectedUsers.length === 0) {
+        if (noRejectedUsersDiv) {
+          noRejectedUsersDiv.classList.remove('hidden');
+        }
+        if (deleteAllRejectedBtn) {
+          deleteAllRejectedBtn.disabled = true;
+        }
+        return;
+      }
+
+      if (noRejectedUsersDiv) {
+        noRejectedUsersDiv.classList.add('hidden');
+      }
+
+      // Créer une ligne pour chaque utilisateur rejeté de manière sécurisée
+      // ✅ CORRECTION: Utilisation de textContent au lieu d'innerHTML pour prévenir les XSS
+      rejectedUsers.forEach((user: any) => {
+        const item = document.createElement('div');
+        item.className = 'flex items-center justify-between p-3 bg-error/10 rounded-lg border border-error/20';
+
+        // Section d'informations utilisateur
+        const infoDiv = document.createElement('div');
+        infoDiv.className = 'flex-1';
+
+        const nameElement = document.createElement('p');
+        nameElement.className = 'font-semibold text-sm';
+        nameElement.textContent = user.name || 'Nom non spécifié'; // ✅ textContent échappe les données
+
+        const emailElement = document.createElement('p');
+        emailElement.className = 'text-xs text-base-content/60';
+        emailElement.textContent = user.email; // ✅ Pas de risque XSS
+
+        const rejectionDateElement = document.createElement('p');
+        rejectionDateElement.className = 'text-xs text-base-content/50';
+        const rejectionDate = new Date(user.rejectionDate).toLocaleDateString('fr-FR');
+        rejectionDateElement.textContent = `Rejeté le ${rejectionDate}`; // ✅ Date formatée de manière sécurisée
+
+        infoDiv.appendChild(nameElement);
+        infoDiv.appendChild(emailElement);
+        infoDiv.appendChild(rejectionDateElement);
+
+        // Bouton d'annulation du rejet
+        const cancelBtn = document.createElement('button');
+        cancelBtn.className = 'btn btn-warning btn-xs';
+        cancelBtn.setAttribute('data-user-id', user.id);
+        cancelBtn.setAttribute('data-action', 'cancel-reject');
+        cancelBtn.textContent = '↶ Annuler';
+
+        item.appendChild(infoDiv);
+        item.appendChild(cancelBtn);
+
+        if (rejectedUsersDiv) {
+          rejectedUsersDiv.appendChild(item);
+        }
+      });
+
+      // Ajouter des event listeners pour les boutons d'annulation
+      document.querySelectorAll('[data-action="cancel-reject"]').forEach(button => {
+        button.addEventListener('click', handleRejectionCancelAction);
+      });
+
+      // Activer le bouton de suppression
+      if (deleteAllRejectedBtn) {
+        deleteAllRejectedBtn.disabled = false;
+      }
+
+    } catch (error) {
+
+    }
+  }
+
+  // Gestionnaire pour annuler le rejet d'un utilisateur
+  async function handleRejectionCancelAction(event: Event) {
+    const button = event.target as HTMLButtonElement;
+    const userId = button.getAttribute('data-user-id');
+
+    if (!userId) return;
+
+    if (!confirm('Êtes-vous sûr de vouloir annuler le rejet de cet utilisateur ?')) {
+      return;
+    }
+
+    button.disabled = true;
+    const originalText = button.textContent;
+    button.textContent = 'Traitement...';
+
+    try {
+      const token = pb.authStore.token;
+      if (!token) {
+        throw new Error('Non authentifié - token manquant');
+      }
+
+      // Utilisation du token CSRF généré côté serveur pour prévenir les attaques CSRF
+      if (!csrfToken) {
+        throw new Error('Token CSRF manquant - sécurité compromise');
+      }
+
+      const response = await fetch('/api/verify-user', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ userId, action: 'cancel-reject', csrfToken })
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Erreur lors de l\'annulation');
+      }
+
+      showMessage('Rejet annulé avec succès.', 'success');
+      await loadRejectedUsers();
+      await loadPendingUsers();
+      await loadPendingUsers();
+
+    } catch (error) {
+      showMessage('Une erreur est survenue lors de l\'annulation du rejet.', 'error');
+      button.disabled = false;
+      button.textContent = originalText;
+    }
+  }
+
+  // Gestionnaire pour supprimer tous les utilisateurs rejetés
+  async function handleDeleteAllRejected() {
+    if (!deleteAllRejectedBtn) return;
+
+    if (!confirm('⚠️ Êtes-vous sûr de vouloir supprimer TOUS les utilisateurs rejetés ? Cette action est irréversible.')) {
+      return;
+    }
+
+    deleteAllRejectedBtn.disabled = true;
+    const originalText = deleteAllRejectedBtn.textContent;
+    deleteAllRejectedBtn.textContent = 'Suppression...';
+
+    try {
+      const token = pb.authStore.token;
+      if (!token) {
+        throw new Error('Non authentifié');
+      }
+
+      // Utilisation du token CSRF généré côté serveur pour prévenir les attaques CSRF
+      if (!csrfToken) {
+        throw new Error('Token CSRF manquant - sécurité compromise');
+      }
+
+      const response = await fetch('/api/delete-rejected-users', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ csrfToken })
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Erreur lors de la suppression');
+      }
+
+      const result = await response.json();
+      showMessage(`✅ ${result.deleted} utilisateur(s) supprimé(s)`, 'success');
+
+      await loadRejectedUsers();
+
+    } catch (error) {
+      showMessage('Une erreur est survenue lors de la suppression.', 'error');
+      deleteAllRejectedBtn.disabled = false;
+      deleteAllRejectedBtn.textContent = originalText;
+    }
+  }
+</script>
+
+<script>
+</script>

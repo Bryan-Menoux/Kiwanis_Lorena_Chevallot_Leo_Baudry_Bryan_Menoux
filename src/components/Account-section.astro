@@ -1,0 +1,364 @@
+<div
+    class="min-h-screen mt-24 lg: from-base-100 via-base-100 to-base-200 py-8 px-4 md:px-8 pt-4 md:pt-12"
+  >
+    <div class="max-w-3xl mx-auto">
+      <!-- En-tête de la section compte -->
+      <div class="mb-12 text-center">
+        <h1
+          class="text-4xl md:text-5xl lg:text-7xl font-bold title font-merriweather mb-4"
+        >
+          Mon Compte
+        </h1>
+        <p class="text-base-content/60 text-lg">
+          Mettez à jour vos informations personnelles
+        </p>
+      </div>
+
+      <!-- Carte principale contenant le formulaire -->
+      <div class="bg-white rounded-2xl shadow-2xl overflow-hidden">
+        <!-- Formulaire de mise à jour du profil -->
+        <form id="profileForm" class="px-8 py-8 space-y-8">
+          <!-- Zone d'affichage des messages de statut -->
+          <div
+            id="message"
+            class="alert hidden h-fit p-0 transition-all duration-300"
+            role="status"
+            aria-live="polite"
+            aria-atomic="true"
+          >
+            <span id="messageText"></span>
+          </div>
+
+          <!-- Section des informations personnelles -->
+          <div>
+            <h3 class="text-lg font-bold text-base-content mb-6">
+              Informations personnelles
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <!-- Champ prénom -->
+              <div class="form-control w-full">
+                <label class="label pb-2">
+                  <span class="label-text font-semibold text-base-content"
+                    >Prénom</span
+                  >
+                </label>
+                <input
+                  type="text"
+                  id="firstName"
+                  name="firstName"
+                  class="input input-bordered w-full"
+                  placeholder="Votre prénom"
+                  required
+                />
+              </div>
+
+              <!-- Champ nom -->
+              <div class="form-control w-full">
+                <label class="label pb-2">
+                  <span class="label-text font-semibold text-base-content"
+                    >Nom</span
+                  >
+                </label>
+                <input
+                  type="text"
+                  id="lastName"
+                  name="lastName"
+                  class="input input-bordered w-full"
+                  placeholder="Votre nom"
+                  required
+                />
+              </div>
+            </div>
+
+            <!-- Champ email en lecture seule -->
+            <div class="form-control w-full mt-6">
+              <label class="label pb-2">
+                <span class="label-text font-semibold text-base-content"
+                  >Adresse e-mail</span
+                >
+              </label>
+              <input
+                type="email"
+                id="email"
+                name="email"
+                class="input input-bordered w-full bg-base-200 cursor-not-allowed"
+                placeholder="votre.email@exemple.com"
+                readonly
+              />
+              <p class="text-xs text-base-content/60 mt-2">
+                Pour changer votre adresse e-mail, veuillez contacter un
+                administrateur.
+              </p>
+            </div>
+          </div>
+
+          <!-- Section du mot de passe -->
+          <div>
+            <h3 class="text-lg font-bold text-base-content mb-6">
+              Mot de passe
+            </h3>
+            <!-- Messages spécifiques aux mots de passe -->
+            <div
+              id="passwordMessage"
+              class="alert hidden h-fit p-0 transition-all duration-300 mb-6"
+              role="status"
+              aria-live="polite"
+              aria-atomic="true"
+            >
+              <span id="passwordMessageText"></span>
+            </div>
+            <p class="text-base-content/60 text-sm mb-6">
+              Laissez vide pour ne pas changer votre mot de passe.
+            </p>
+            <div class="space-y-6">
+              <!-- Champ ancien mot de passe -->
+              <div class="form-control w-full">
+                <label class="label pb-2">
+                  <span class="label-text font-semibold text-base-content"
+                    >Ancien mot de passe</span
+                  >
+                </label>
+                <input
+                  type="password"
+                  id="oldPassword"
+                  name="oldPassword"
+                  class="input input-bordered w-full"
+                  placeholder="Minimum 8 caractères"
+                />
+              </div>
+              <!-- Champ nouveau mot de passe -->
+              <div class="form-control w-full">
+                <label class="label pb-2">
+                  <span class="label-text font-semibold text-base-content"
+                    >Nouveau mot de passe</span
+                  >
+                </label>
+                <input
+                  type="password"
+                  id="newPassword"
+                  name="newPassword"
+                  class="input input-bordered w-full"
+                  placeholder="Minimum 8 caractères"
+                />
+              </div>
+
+              <!-- Champ confirmation mot de passe -->
+              <div class="form-control w-full">
+                <label class="label pb-2">
+                  <span class="label-text font-semibold text-base-content"
+                    >Confirmer le mot de passe</span
+                  >
+                </label>
+                <input
+                  type="password"
+                  id="newPasswordConfirm"
+                  name="newPasswordConfirm"
+                  class="input input-bordered w-full"
+                  placeholder="Confirmez votre mot de passe"
+                />
+              </div>
+            </div>
+          </div>
+
+          <!-- Section des actions du formulaire -->
+          <div
+            class="flex flex-col sm:flex-row gap-4 pt-8 border-t border-base-300"
+          >
+            <button
+              type="submit"
+              class="btn btn-primary btn-lg flex-1 rounded-full gap-2"
+            >
+              <span id="submitText">Enregistrer</span>
+              <span
+                id="loadingSpinner"
+                class="loading loading-spinner loading-sm hidden"></span>
+            </button>
+            <a href="/" class="btn btn-outline btn-lg rounded-full"> Retour </a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+  
+<script>
+  import { updateUserProfile, getCurrentUser } from "../lib/pocketbase.mjs";
+  import { gsap } from "gsap";
+
+  // Récupération des éléments DOM pour le formulaire et les messages
+  const form = document.getElementById("profileForm") as HTMLFormElement;
+  const message = document.getElementById("message") as HTMLElement;
+  const messageText = document.getElementById("messageText") as HTMLElement;
+  const passwordMessage = document.getElementById("passwordMessage") as HTMLElement;
+  const passwordMessageText = document.getElementById("passwordMessageText") as HTMLElement;
+  const submitText = document.getElementById("submitText") as HTMLElement;
+  const loadingSpinner = document.getElementById(
+    "loadingSpinner",
+  ) as HTMLElement;
+
+  // Fonction pour afficher un message général avec animation
+  function showMessage(text: string, type: "success" | "error" = "success") {
+    messageText.textContent = text;
+    message.classList.remove("alert-success", "alert-error");
+    message.classList.add(type === "success" ? "alert-success" : "alert-error");
+
+    gsap.killTweensOf(message);
+    gsap.set(message, { display: "block", autoAlpha: 0, padding: 0 });
+    gsap.to(message, { autoAlpha: 1, padding: "1rem", duration: 0.3, ease: "power2.out" });
+    gsap.to(message, {
+      autoAlpha: 0,
+      padding: 0,
+      delay: 5,
+      duration: 0.3,
+      ease: "power2.out",
+      onComplete: () => {
+        gsap.set(message, { display: "none" });
+        messageText.textContent = "";
+      },
+    });
+  }
+
+  // Fonction pour afficher un message spécifique aux mots de passe avec animation
+  function showPasswordMessage(text: string, type: "success" | "error" = "error") {
+    passwordMessageText.textContent = text;
+    passwordMessage.classList.remove("alert-success", "alert-error");
+    passwordMessage.classList.add(type === "success" ? "alert-success" : "alert-error");
+
+    gsap.killTweensOf(passwordMessage);
+    gsap.set(passwordMessage, { display: "block", autoAlpha: 0, padding: 0 });
+    gsap.to(passwordMessage, { autoAlpha: 1, padding: "1rem", duration: 0.3, ease: "power2.out" });
+    gsap.to(passwordMessage, {
+      autoAlpha: 0,
+      padding: 0,
+      delay: 5,
+      duration: 0.3,
+      ease: "power2.out",
+      onComplete: () => {
+        gsap.set(passwordMessage, { display: "none" });
+        passwordMessageText.textContent = "";
+      },
+    });
+  }
+
+  // Fonction pour charger les données de l'utilisateur dans le formulaire
+  function loadUserData() {
+    try {
+      const user = getCurrentUser();
+
+      (document.getElementById("firstName") as HTMLInputElement).value =
+        user?.nameParts[0] || "";
+      (document.getElementById("lastName") as HTMLInputElement).value =
+        user?.nameParts.slice(1).join(" ") || "";
+      (document.getElementById("email") as HTMLInputElement).value =
+        user?.email || "";
+    } catch (error) {
+      console.error("Error loading user data:", error);
+    }
+  }
+
+  // Gestionnaire pour la soumission du formulaire
+  form?.addEventListener("submit", async (event) => {
+    event.preventDefault();
+
+    // Récupération des valeurs du formulaire
+    const formData = new FormData(form);
+    const firstName = (formData.get("firstName") as string).trim();
+    const lastName = (formData.get("lastName") as string).trim();
+    const email = (formData.get("email") as string).trim();
+    const oldPassword = (formData.get("oldPassword") as string).trim();
+    const newPassword = (formData.get("newPassword") as string).trim();
+    const newPasswordConfirm = (
+      formData.get("newPasswordConfirm") as string
+    ).trim();
+
+    // Validation des champs obligatoires
+    if (!firstName || !lastName || !email) {
+      showMessage("Tous les champs sont obligatoires.", "error");
+      return;
+    }
+
+    // Validation du changement de mot de passe
+    if (newPassword || oldPassword || newPasswordConfirm) {
+      if (!oldPassword) {
+        showPasswordMessage(
+          "L'ancien mot de passe est obligatoire pour changer votre mot de passe.",
+          "error",
+        );
+        return;
+      }
+
+      if (!newPassword) {
+        showPasswordMessage("Veuillez entrer votre nouveau mot de passe.", "error");
+        return;
+      }
+
+      if (newPassword.length < 8) {
+        showPasswordMessage(
+          "Le mot de passe doit contenir au moins 8 caractères.",
+          "error",
+        );
+        return;
+      }
+
+      if (newPassword !== newPasswordConfirm) {
+        showPasswordMessage("Les mots de passe ne correspondent pas.", "error");
+        return;
+      }
+    }
+
+    // Préparation des données pour la mise à jour
+    const updateData: any = {
+      name: `${firstName} ${lastName}`,
+      email: email,
+    };
+
+    if (newPassword) {
+      updateData.oldPassword = oldPassword;
+      updateData.password = newPassword;
+      updateData.passwordConfirm = newPasswordConfirm;
+    }
+
+    // Affichage de l'état de chargement
+    submitText.textContent = "Enregistrement...";
+    gsap.to(loadingSpinner, {
+      opacity: 1,
+      display: "inline-block",
+      duration: 0.3,
+    });
+    form.style.opacity = "0.6";
+    form.style.pointerEvents = "none";
+
+    try {
+      const result = await updateUserProfile(updateData);
+
+      if (result.passwordChanged) {
+        showMessage(
+          "Mot de passe mis à jour avec succès ! Redirection vers la connexion...",
+          "success",
+        );
+      } else {
+        showMessage("Profil mis à jour avec succès !", "success");
+        // Réinitialisation des champs de mot de passe
+        (document.getElementById("newPassword") as HTMLInputElement).value = "";
+        (
+          document.getElementById("newPasswordConfirm") as HTMLInputElement
+        ).value = "";
+      }
+    } catch (error: any) {
+      const errorMessage = error.message || "Erreur lors de la mise à jour.";
+      showMessage(errorMessage, "error");
+    } finally {
+      // Réinitialisation de l'état du formulaire
+      submitText.textContent = "Enregistrer";
+      gsap.to(loadingSpinner, { opacity: 0, display: "none", duration: 0.3 });
+      form.style.opacity = "1";
+      form.style.pointerEvents = "auto";
+    }
+  });
+
+  // Initialisation du chargement des données utilisateur
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", loadUserData);
+  } else {
+    loadUserData();
+  }
+</script>

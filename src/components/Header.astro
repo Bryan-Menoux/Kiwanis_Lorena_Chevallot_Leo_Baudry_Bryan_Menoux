@@ -43,7 +43,7 @@ const brandBlue = "bg-[oklch(0.2903_0.0643_289.42)]";
     <div class="flex items-center gap-3">
       <a id="connexion-link" href="/connexion" class="px-5 py-2 border-[1.5px] text-black border-gray-900 rounded-lg text-xs font-semibold uppercase hover:bg-gray-900 hover:text-white transition-all">Connexion</a>
       <a href="/contact" class="px-5 py-2 border-[1.5px] text-black border-gray-900 rounded-lg text-xs font-semibold uppercase hover:bg-gray-900 hover:text-white transition-all">Contact</a>
-      <a id="account-link" href="/mon-compte"><img src={user.src} alt="icône utilisateur" class="h-10 w-auto" /></a>
+      <a id="account-link" href="/mon-compte"><div class="w-10 h-10 icon-accent" style={`--icon-url: url(${user.src})`}></div></a>
     </div>
   </div>
 
@@ -107,7 +107,7 @@ const brandBlue = "bg-[oklch(0.2903_0.0643_289.42)]";
 
 <script>
   import { gsap } from "gsap";
-  import { isAuthenticated } from "../lib/pocketbase.mjs";
+  import { isUserAuthenticated } from "../lib/pocketbase.mjs";
 
   let discoverIsOpen = false;
   let globalClickHandler: ((e: Event) => void) | null = null;
@@ -234,7 +234,7 @@ const brandBlue = "bg-[oklch(0.2903_0.0643_289.42)]";
   }
 
   function checkAuthStatus() {
-    const isAuth = isAuthenticated();
+    const isAuth = isUserAuthenticated();
     const displayValue = isAuth ? 'none' : '';
     const accountDisplay = isAuth ? '' : 'none';
 

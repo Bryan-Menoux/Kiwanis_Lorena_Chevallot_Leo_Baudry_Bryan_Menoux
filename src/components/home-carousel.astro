@@ -12,7 +12,7 @@ const images = Object.entries(imageModules).map(([path, module], index) => ({
 const duplicatedImages = [...images, ...images];
 ---
 
-<div class="home-carousel-container overflow-hidden relative w-full h-fit">
+<div class="home-carousel-container overflow-x-auto relative w-full h-fit">
   <div class="home-carousel-inner flex gap-4 md:gap-8 h-full">
     {duplicatedImages.map((image, index) => (
       <img
@@ -25,6 +25,22 @@ const duplicatedImages = [...images, ...images];
 </div>
 
 <style>
+  .home-carousel-container {
+    /* Permettre le scroll horizontal mais cacher la scrollbar */
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE et Edge */
+  }
+  
+  /* Cacher la scrollbar sur Webkit (Chrome, Safari, Edge) */
+  .home-carousel-container::-webkit-scrollbar {
+    height: 0;
+    width: 0;
+    display: none;
+  }
+  
   .home-carousel-inner {
     will-change: transform;
   }
@@ -33,6 +49,21 @@ const duplicatedImages = [...images, ...images];
 <script>
   // For smoother infinite scroll without jerking
   const carousel = document.querySelector('.home-carousel-inner') as HTMLElement;
+  const container = document.querySelector('.home-carousel-container') as HTMLElement;
+
+  // Prevent manual scrolling (wheel / touch) while preserving overflow for programmatic animation
+  if (container) {
+    container.addEventListener('wheel', (e) => {
+      // Prevent horizontal scroll from wheel
+      e.preventDefault();
+    }, { passive: false });
+
+    container.addEventListener('touchmove', (e) => {
+      // Prevent touch swipe scrolling
+      e.preventDefault();
+    }, { passive: false });
+  }
+
   if (carousel) {
     let startTime: number | null = null;
     let position = 0;

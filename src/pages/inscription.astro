@@ -136,14 +136,11 @@ import lockIcon from "../assets/login-page/lock.svg";
 </Layout>
 
 <script>
-  import { createUser } from "../lib/pocketbase.mjs";
   import { gsap } from 'gsap';
   
-  // Sélection des éléments DOM
   const form = document.querySelector("form");
   const errorText = document.getElementById("errorText") as HTMLElement | null;
 
-  // Fonction pour afficher les erreurs avec animation GSAP
   function showError(message: string, type: string = "error") {
     if (errorText) {
       gsap.killTweensOf(errorText);
@@ -166,7 +163,6 @@ import lockIcon from "../assets/login-page/lock.svg";
     }
   }
 
-  // Fonction pour masquer les erreurs avec animation GSAP
   function hideError() {
     if (errorText) {
       gsap.to(errorText, {
@@ -184,7 +180,6 @@ import lockIcon from "../assets/login-page/lock.svg";
     }
   }
 
-  // Gestionnaire d'événement pour la soumission du formulaire
   form?.addEventListener("submit", async (event) => {
     event.preventDefault();
     hideError();
@@ -196,20 +191,28 @@ import lockIcon from "../assets/login-page/lock.svg";
     const password = formData.get("password") as string;
     const passwordConfirm = formData.get("passwordConfirm") as string;
 
-    // Vérification de la correspondance des mots de passe
     if (password !== passwordConfirm) {
       showError("Les mots de passe ne correspondent pas.");
       return;
     }
 
     try {
-      // Tentative de création de l'utilisateur via PocketBase
-      await createUser({
-        email: email,
-        password: password,
-        passwordConfirm: passwordConfirm,
-        name: `${firstName} ${lastName}`,
+      const response = await fetch('/api/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email,
+          password,
+          passwordConfirm,
+          name: `${firstName} ${lastName}`,
+        }),
       });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Registration failed');
+      }
+
       showError("Inscription réussie ! Vous pouvez maintenant vous connecter.", "warning");
       setTimeout(() => {
         window.location.href = "/connexion";
