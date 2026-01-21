@@ -35,8 +35,9 @@ jobs:
           script: |
             cd /var/www/kiwanis
             # Supprimer tout sauf .env
-            find . -maxdepth 1 -type f -not -name '.env' -delete
-            find . -maxdepth 1 -type d -not -name '.' -exec rm -rf {} + 2>/dev/null || true
+            rm -rf server client dist dist-temp
+            rm -f package.json package-lock.json
+            ls -la
 
       - name: Deploy entire dist directory
         uses: appleboy/scp-action@v0.1.3
@@ -58,10 +59,13 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             cd /var/www/kiwanis
-            # Copier le contenu de dist-temp vers kiwanis
-            cp -r dist-temp/* .
-            # Supprimer le dossier temporaire
-            rm -rf dist-temp
+            echo "=== Contenu de dist-temp ===" 
+            ls -la dist-temp/
+            echo "=== Déplacement des fichiers ==="
+            mv dist-temp/* .
+            rmdir dist-temp || true
+            echo "=== Contenu final ===" 
+            ls -la
 
       - name: Install production dependencies on VPS
         uses: appleboy/ssh-action@v1.0.0
