@@ -93,7 +93,6 @@ import backArrow from '../assets/back-arrow.svg';
 <script data-unverified-users={JSON.stringify(unverifiedUsers)} data-back-arrow-src={backArrow.src}></script>
 
 <script>
-  console.log('[DEBUG] Verification-Account-section component loaded');
   import { isUserAdmin } from "../lib/pocketbase.mjs";
   import { pb } from "../lib/pocketbase.mjs";
 
@@ -102,7 +101,6 @@ import backArrow from '../assets/back-arrow.svg';
   const unverifiedUsersData = unverifiedUsersDataElement?.dataset.unverifiedUsers;
   const backArrowSrc = unverifiedUsersDataElement?.dataset.backArrowSrc;
   const unverifiedUsers: any[] = unverifiedUsersData ? JSON.parse(unverifiedUsersData) : [];
-  console.log('[DEBUG] Unverified users data:', unverifiedUsers);
 
   // Récupération des éléments DOM
   const adminContent = document.getElementById('adminContent');

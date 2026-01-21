@@ -221,31 +221,25 @@ const navItems = [
   import { pb } from "../lib/pocketbase.mjs";
   
   (async () => {
-    console.log('[DEBUG] Starting admin verification check');
     try {
       // Attendez que PocketBase soit initialisé et que le DOM soit prêt
       await new Promise(resolve => setTimeout(resolve, 500));
       
       // Récupérez l'utilisateur depuis localStorage pour avoir l'ID
       const authData = localStorage.getItem('pocketbase_auth');
-      console.log('[DEBUG] Auth data from localStorage:', authData ? 'present' : 'null');
       
       if (!authData) {
-        console.log('[DEBUG] No auth data found, exiting');
         return;
       }
       
       const parsed = JSON.parse(authData);
       const userId = parsed?.record?.id;
-      console.log('[DEBUG] Parsed user ID:', userId);
       
       if (!userId) {
-        console.log('[DEBUG] No user ID found, exiting');
         return;
       }
       
       // Récupérez les données complètes de l'utilisateur via l'endpoint API serveur
-      console.log('[DEBUG] Making API call to /api/get-user-full');
       try {
         const response = await fetch('/api/get-user-full', {
           method: 'POST',
@@ -256,23 +250,17 @@ const navItems = [
           body: JSON.stringify({ userId }),
         });
 
-        console.log('[DEBUG] API response status:', response.status);
         if (!response.ok) {
-          console.log('[DEBUG] API response not ok, throwing error');
           throw new Error('Erreur lors de la récupération du user');
         }
 
         const data = await response.json();
-        console.log('[DEBUG] API response data:', data);
         const fullUser = data.user;
-        console.log('[DEBUG] Full user data:', fullUser);
         
         const isAdmin = fullUser.administrateur === true;
         const isVerified = fullUser.verified === true;
-        console.log('[DEBUG] User admin status:', isAdmin, 'verified status:', isVerified);
         
         if (isAdmin && isVerified) {
-          console.log('[DEBUG] User is admin and verified, showing verification section');
           const verifNavItem = document.querySelector<HTMLElement>('.nav-item[data-section="verifications"]');
           const verificationSection = document.getElementById('verifications');
           
@@ -285,14 +273,12 @@ const navItems = [
             gsap.fromTo(verificationSection, { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.6, ease: 'power2.out', delay: 0.1 });
           }
         } else {
-          console.log('[DEBUG] User is not admin and verified, hiding verification section');
           const verifNavItem = document.querySelector<HTMLElement>('.nav-item[data-section="verifications"]');
           const verificationSection = document.getElementById('verifications');
           if (verifNavItem) verifNavItem.classList.add('hidden');
           if (verificationSection) verificationSection.classList.add('hidden');
         }
       } catch (apiError) {
-        console.log('[DEBUG] API error:', apiError);
         // En cas d'erreur, masquer les éléments pour sécurité
         const verifNavItem = document.querySelector<HTMLElement>('.nav-item[data-section="verifications"]');
         const verificationSection = document.getElementById('verifications');
@@ -300,7 +286,6 @@ const navItems = [
         if (verificationSection) verificationSection.classList.add('hidden');
       }
     } catch (error) {
-      console.log('[DEBUG] General error in admin check:', error);
       // En cas d'erreur, masquer les éléments de vérification pour sécurité
       const verifNavItem = document.querySelector<HTMLElement>('.nav-item[data-section="verifications"]');
       const verificationSection = document.getElementById('verifications');
