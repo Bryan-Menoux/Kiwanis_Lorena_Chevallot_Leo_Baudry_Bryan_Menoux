@@ -39,33 +39,16 @@ jobs:
             rm -f package.json package-lock.json
             ls -la
 
-      - name: Deploy entire dist directory
+      - name: Deploy dist directory
         uses: appleboy/scp-action@v0.1.3
         with:
           host: ${{ secrets.HOST }}
           username: ${{ secrets.USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          source: "dist/**"
-          target: "/var/www/kiwanis/dist-temp"
+          source: "dist/*"
+          target: "/var/www/kiwanis"
           rm: false
           overwrite: true
-          debug: true
-
-      - name: Move deployed files to correct location
-        uses: appleboy/ssh-action@v1.0.0
-        with:
-          host: ${{ secrets.HOST }}
-          username: ${{ secrets.USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script: |
-            cd /var/www/kiwanis
-            echo "=== Contenu de dist-temp ===" 
-            ls -la dist-temp/
-            echo "=== Déplacement des fichiers ==="
-            mv dist-temp/* .
-            rmdir dist-temp || true
-            echo "=== Contenu final ===" 
-            ls -la
 
       - name: Install production dependencies on VPS
         uses: appleboy/ssh-action@v1.0.0
@@ -75,11 +58,17 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             cd /var/www/kiwanis
+            # Déplacer les fichiers de dist/ vers le parent
+            if [ -d "dist" ]; then
+              mv dist/* .
+              rm -rf dist
+            fi
             ls -la
             echo "=== Installing dependencies ==="
-            npm install --production
+            npm install
             echo "=== Files after npm install ==="
             ls -la server/ 2>/dev/null || echo "server/ directory missing"
             echo "=== Starting application ==="
-            export PORT=8085 HOST=127.0.0.1
-            pm2 restart kiwanis || pm2 start server/entry.mjs --name kiwanis --env-file /var/www/kiwanis/.env
+            export PORT=8085 HOST=0.0.0.0 NODE_OPTIONS="--dns-result-order=ipv4first"
+            set -a && source .env && set +a
+            pm2 restart kiwanis || pm2 start server/entry.mjs --name kiwanis --node-args="--dns-result-order=ipv4first"
