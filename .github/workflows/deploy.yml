@@ -24,8 +24,8 @@ jobs:
       - name: Build project
         run: |
           npm run build
-          mkdir -p dist/server
-          cp package.json dist/server/
+          cp package.json dist/
+          cp .env dist/ || echo "No .env file found, skipping copy"
       - name: Clean remote directory before deploy
         uses: appleboy/ssh-action@v1.0.0
         with:
@@ -57,8 +57,6 @@ jobs:
           username: ${{ secrets.USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            cd /var/www/kiwanis/server
-            npm install
-            npm install astro pm2 node
-            npm install send server-destroy
-            PORT=8085 HOST=127.0.0.1 pm2 restart kiwanis || PORT=8085 HOST=127.0.0.1 pm2 start entry.mjs --name kiwanis
+            cd /var/www/kiwanis
+            npm install --production
+            PORT=8085 HOST=127.0.0.1 pm2 restart kiwanis || PORT=8085 HOST=127.0.0.1 pm2 start server/entry.mjs --name kiwanis --env-file .env
