@@ -1,68 +1,50 @@
-// Endpoint API pour générer un token CSRF valide
-// Les tokens CSRF sont uniques, aléatoires et expirables pour prévenir les attaques CSRF
-// Ce token doit être inclus dans toutes les requêtes POST/PUT/DELETE pour vérifier l'authenticité
-import type { APIRoute } from 'astro';
-import { generateCSRFToken, verifyJWT } from '../../lib/security';
-import { getPbServerInstance } from '../../lib/pocketbase.mjs';
-import dotenv from 'dotenv';
+import type { APIRoute } from "astro";
+import { generateCSRFToken, verifyJWT } from "../../lib/security";
+import { getPbServerInstance } from "../../lib/pocketbase.mjs";
 
 export const prerender = false;
 
-// Chargement des variables d'environnement
-if (typeof process !== 'undefined' && process.env) {
-  try {
-    dotenv.config();
-  } catch (e) {
-  }
+function json(body: unknown, status = 200) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: {
+      "Content-Type": "application/json; charset=utf-8",
+      "Cache-Control": "no-store",
+      Pragma: "no-cache",
+      "X-Content-Type-Options": "nosniff",
+    },
+  });
 }
 
 export const POST: APIRoute = async ({ request }) => {
   try {
-    // Vérification de l'authentification via le token JWT dans l'en-tête Authorization
-    const authHeader = request.headers.get('authorization');
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return new Response(
-        JSON.stringify({ error: 'Non authentifié' }),
-        { status: 401, headers: { 'Content-Type': 'application/json' } }
+    const contentType = request.headers.get("content-type") || "";
+    if (!contentType.includes("application/json")) {
+      return json(
+        { error: "Content-Type invalide. Utilisez application/json." },
+        415
       );
     }
 
-    const token = authHeader.substring(7);
+    const authHeader = request.headers.get("authorization") || "";
+    if (!authHeader.startsWith("Bearer ")) {
+      return json({ error: "Non authentifié" }, 401);
+    }
+
+    const token = authHeader.slice(7).trim();
+    if (!token) return json({ error: "Non authentifié" }, 401);
+
     const pbServer = await getPbServerInstance();
 
-    // ✅ VÉRIFICATION CRITIQUE: Vérification du token JWT côté serveur pour s'assurer de l'authenticité
     const decoded = await verifyJWT(token, pbServer);
     if (!decoded || !decoded.id) {
-      return new Response(
-        JSON.stringify({ error: 'Token invalide' }),
-        { status: 401, headers: { 'Content-Type': 'application/json' } }
-      );
+      return json({ error: "Token invalide" }, 401);
     }
 
-    // Génération d'un nouveau token CSRF aléatoire et sécurisé lié à l'utilisateur
-    // Le token expire après 5 minutes pour limiter les risques en cas de fuite
-    const csrfToken = generateCSRFToken(decoded.id, 300); // Valide 5 minutes
+    const csrfToken = generateCSRFToken(decoded.id, 300);
 
-    return new Response(
-      JSON.stringify({
-        success: true,
-        csrfToken,
-        expiresIn: 300, // en secondes
-      }),
-      { status: 200, headers: { 'Content-Type': 'application/json' } }
-    );
-  } catch (error) {
-    // Gestion sécurisée des erreurs : ne pas exposer les détails en production
-    const isDevelopment = process.env.NODE_ENV === 'development';
-    const errorMsg = isDevelopment
-      ? error instanceof Error
-        ? error.message
-        : 'Erreur inconnue'
-      : 'Une erreur serveur est survenue';
-
-    return new Response(
-      JSON.stringify({ error: errorMsg }),
-      { status: 500, headers: { 'Content-Type': 'application/json' } }
-    );
+    return json({ success: true, csrfToken, expiresIn: 300 }, 200);
+  } catch {
+    return json({ error: "Une erreur serveur est survenue" }, 500);
   }
 };
