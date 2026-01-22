@@ -26,6 +26,7 @@ jobs:
           npm run build
           cp package.json dist/
           cp package-lock.json dist/
+          test -f dist/server/entry.mjs
 
       - name: Clean remote directory before deploy (keep only .env)
         uses: appleboy/ssh-action@v1.0.0
@@ -36,28 +37,21 @@ jobs:
           script: |
             set -e
             cd /var/www/kiwanis
-
-            echo "=== Before cleanup ==="
-            ls -la
-
-            echo "=== Cleaning everything except .env ==="
             find . -mindepth 1 -maxdepth 1 ! -name '.env' -exec rm -rf {} +
-
-            echo "=== After cleanup ==="
             ls -la
 
-      - name: Deploy dist folder into /var/www/kiwanis/dist
+      - name: Upload dist to VPS
         uses: appleboy/scp-action@v0.1.3
         with:
           host: ${{ secrets.HOST }}
           username: ${{ secrets.USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          source: "dist"
+          source: "dist/**"
           target: "/var/www/kiwanis"
           rm: false
           overwrite: true
 
-      - name: Install production dependencies and restart PM2
+      - name: Install deps in dist and restart PM2
         uses: appleboy/ssh-action@v1.0.0
         with:
           host: ${{ secrets.HOST }}
@@ -65,25 +59,33 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             set -e
+
             cd /var/www/kiwanis
-
-            echo "=== Folder content ==="
             ls -la
+            ls -la dist
+            test -f dist/server/entry.mjs
 
-            echo "=== dist content ==="
-            ls -la dist || true
-
-            echo "=== Installing dependencies in dist ==="
-            cd dist
+            cd /var/www/kiwanis/dist
             npm ci --omit=dev
 
-            echo "=== Starting application with PM2 (entry in dist/server) ==="
+            cd /var/www/kiwanis
+
             export PORT=8085
             export HOST=0.0.0.0
             export NODE_OPTIONS="--dns-result-order=ipv4first"
+            export DOTENV_CONFIG_PATH=/var/www/kiwanis/.env
 
-            cd /var/www/kiwanis
             set -a && source .env && set +a
 
-            pm2 restart kiwanis || pm2 start /var/www/kiwanis/dist/server/entry.mjs --name kiwanis --node-args="--dns-result-order=ipv4first"
+            pm2 stop kiwanis || true
+            pm2 delete kiwanis || true
+
+            pm2 start /var/www/kiwanis/dist/server/entry.mjs \
+              --name kiwanis \
+              --cwd /var/www/kiwanis \
+              --node-args="--dns-result-order=ipv4first"
+
             pm2 save
+
+            ss -ltnp | grep 8085 || true
+            curl -I http://127.0.0.1:8085/ || true
