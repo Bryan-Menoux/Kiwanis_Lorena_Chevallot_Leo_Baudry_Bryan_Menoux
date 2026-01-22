@@ -12,7 +12,7 @@ if (typeof process !== "undefined" && process.env) {
 // - Browser : utilise l'URL publique en prod, localhost en dev
 // - Server : utilise l'URL interne ou celle des variables d'environnement
 const isBrowser = typeof window !== "undefined";
-const PUBLIC_PB_URL = "https://kiwanis-pays-de-montbeliard.bryan-menoux.fr/";
+const PUBLIC_PB_URL = "https://pb-kiwanis.bryan-menoux.fr";
 const INTERNAL_URL = "http://127.0.0.1:8086"; // Port interne pour le serveur
 const DEV_URL = "http://127.0.0.1:8090"; // Port de développement
 
