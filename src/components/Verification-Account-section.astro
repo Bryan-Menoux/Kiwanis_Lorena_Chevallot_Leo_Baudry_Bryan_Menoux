@@ -1,13 +1,4 @@
----
-// Définition des propriétés du composant
-interface Props {
-  unverifiedUsers?: Array<any>;
-}
 
-// Récupération des utilisateurs non vérifiés passés en props
-const { unverifiedUsers = [] } = Astro.props;
-import backArrow from "../assets/back-arrow.svg";
----
 
 <div
   class="min-h-screen mt-24 lg: from-base-100 via-base-100 to-base-200 py-8 px-4 md:px-8 pt-4 md:pt-12"
@@ -99,25 +90,33 @@ import backArrow from "../assets/back-arrow.svg";
   </div>
 </div>
 
-<!-- Passer les données des utilisateurs non vérifiés au script client -->
-<script
-  data-unverified-users={JSON.stringify(unverifiedUsers)}
-  data-back-arrow-src={backArrow.src}></script>
-
 <script>
   import { isUserAdmin } from "../lib/pocketbase.mjs";
   import { pb } from "../lib/pocketbase.mjs";
 
-  // Récupération des données passées depuis le serveur
-  const unverifiedUsersDataElement = document.querySelector(
-    "script[data-unverified-users]",
-  ) as HTMLScriptElement | null;
-  const unverifiedUsersData =
-    unverifiedUsersDataElement?.dataset.unverifiedUsers;
-  const backArrowSrc = unverifiedUsersDataElement?.dataset.backArrowSrc;
-  const unverifiedUsers: any[] = unverifiedUsersData
-    ? JSON.parse(unverifiedUsersData)
-    : [];
+  const backArrowSrc = document.querySelector("script[data-back-arrow-src]")?.getAttribute("data-back-arrow-src") || "";
+
+let unverifiedUsers: any[] = [];
+
+async function fetchUnverifiedUsers() {
+  const res = await fetch("/api/unverified-users", {
+    method: "GET",
+    headers: {
+      Accept: "application/json",
+      Authorization: `Bearer ${pb.authStore.token}`,
+    },
+    credentials: "same-origin",
+    cache: "no-store",
+  });
+
+  if (!res.ok) {
+    throw new Error("Impossible de charger les utilisateurs en attente");
+  }
+
+  const data = await res.json();
+  unverifiedUsers = Array.isArray(data.users) ? data.users : [];
+}
+
 
   // Récupération des éléments DOM
   const adminContent = document.getElementById("adminContent");
@@ -216,7 +215,7 @@ import backArrow from "../assets/back-arrow.svg";
 
         // Récupération du token CSRF avant les opérations
         await fetchCSRFToken();
-
+        await fetchUnverifiedUsers();
         await loadPendingUsers();
         await loadRejectedUsers();
 
