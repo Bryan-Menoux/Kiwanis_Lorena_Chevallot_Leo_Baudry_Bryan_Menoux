@@ -5,7 +5,10 @@ import crypto from 'crypto';
 // ==================== CONSTANTES DE SÉCURITÉ ====================
 
 // Limite de requêtes par minute par IP (rate limiting)
-const RATE_LIMIT_MAX_REQUESTS = 5;
+// En développement: plus permissif pour faciliter les tests
+// En production: plus strict pour la sécurité
+const isDevelopment = process.env.NODE_ENV === 'development';
+const RATE_LIMIT_MAX_REQUESTS = isDevelopment ? 20 : 5;
 const RATE_LIMIT_WINDOW_MS = 60000;
 
 // Limites de validation des données

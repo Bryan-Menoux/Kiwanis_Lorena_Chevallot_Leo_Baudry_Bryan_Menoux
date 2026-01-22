@@ -29,7 +29,24 @@
           <span id="messageText"></span>
         </div>
 
-        <!-- Section des utilisateurs rejetés -->
+        
+
+        <!-- Liste des utilisateurs en attente de vérification -->
+        <div id="pendingUsers" class="space-y-4">
+          <!-- Les utilisateurs seront chargés dynamiquement -->
+        </div>
+
+        <!-- Message si aucun utilisateur en attente -->
+        <div
+          id="noPendingUsers"
+          class="text-center py-12 text-base-content/60 hidden"
+        >
+          <div class="text-6xl mb-4">📋</div>
+          <h3 class="text-xl font-semibold mb-2">Aucune demande en attente</h3>
+          <p>Toutes les demandes d'adhésion ont été traitées.</p>
+        </div>
+      </div>
+      <!-- Section des utilisateurs rejetés -->
         <div class="mb-6">
           <details
             class="collapse collapse-arrow border border-base-300 bg-base-100"
@@ -58,21 +75,27 @@
           </details>
         </div>
 
-        <!-- Liste des utilisateurs en attente de vérification -->
-        <div id="pendingUsers" class="space-y-4">
-          <!-- Les utilisateurs seront chargés dynamiquement -->
+        <!-- Section des utilisateurs vérifiés -->
+        <div class="mb-6">
+          <details
+            class="collapse collapse-arrow border border-base-300 bg-base-100"
+          >
+            <summary class="collapse-title text-lg font-medium cursor-pointer">
+              ✅ Utilisateurs vérifiés
+            </summary>
+            <div class="collapse-content">
+              <div id="verifiedUsersList" class="space-y-2 mt-4 mb-4">
+                <!-- Les utilisateurs vérifiés seront chargés dynamiquement -->
+              </div>
+              <div
+                id="noVerifiedUsers"
+                class="text-center py-4 text-base-content/60"
+              >
+                <p>Aucun utilisateur vérifié</p>
+              </div>
+            </div>
+          </details>
         </div>
-
-        <!-- Message si aucun utilisateur en attente -->
-        <div
-          id="noPendingUsers"
-          class="text-center py-12 text-base-content/60 hidden"
-        >
-          <div class="text-6xl mb-4">📋</div>
-          <h3 class="text-xl font-semibold mb-2">Aucune demande en attente</h3>
-          <p>Toutes les demandes d'adhésion ont été traitées.</p>
-        </div>
-      </div>
 
       <!-- Contenu affiché si l'utilisateur n'est pas administrateur -->
       <div id="accessDenied" class="px-8 py-12 text-center hidden">
@@ -98,6 +121,7 @@
       ?.getAttribute("data-back-arrow-src") || "";
 
   let unverifiedUsers: any[] = [];
+  let verifiedUsers: any[] = [];
 
   async function fetchUnverifiedUsers() {
     const res = await fetch("/api/unverified-users", {
@@ -118,6 +142,25 @@
     unverifiedUsers = Array.isArray(data.users) ? data.users : [];
   }
 
+  async function fetchVerifiedUsers() {
+    const res = await fetch("/api/verified-users", {
+      method: "GET",
+      headers: {
+        Accept: "application/json",
+        Authorization: `Bearer ${pb.authStore.token}`,
+      },
+      credentials: "same-origin",
+      cache: "no-store",
+    });
+
+    if (!res.ok) {
+      throw new Error("Impossible de charger les utilisateurs vérifiés");
+    }
+
+    const data = await res.json();
+    verifiedUsers = Array.isArray(data.users) ? data.users : [];
+  }
+
   // Récupération des éléments DOM
   const adminContent = document.getElementById("adminContent");
   const accessDenied = document.getElementById("accessDenied");
@@ -130,6 +173,8 @@
   const deleteAllRejectedBtn = document.getElementById(
     "deleteAllRejectedBtn",
   ) as HTMLButtonElement | null;
+  const verifiedUsersDiv = document.getElementById("verifiedUsersList");
+  const noVerifiedUsersDiv = document.getElementById("noVerifiedUsers");
 
   // Variable pour stocker le token CSRF généré côté serveur
   let csrfToken: string | null = null;
@@ -216,8 +261,10 @@
         // Récupération du token CSRF avant les opérations
         await fetchCSRFToken();
         await fetchUnverifiedUsers();
+        await fetchVerifiedUsers();
         await loadPendingUsers();
         await loadRejectedUsers();
+        await loadVerifiedUsers();
 
         if (deleteAllRejectedBtn) {
           deleteAllRejectedBtn.addEventListener(
@@ -307,6 +354,56 @@
     return card;
   }
 
+  // Fonction pour créer une carte utilisateur vérifié de manière sécurisée
+  function createVerifiedUserCard(user: any) {
+    const card = document.createElement("div");
+    card.className = "bg-base-100 rounded-xl p-6 border border-base-300";
+
+    // Création de la structure DOM de manière sécurisée
+    const contentDiv = document.createElement("div");
+    contentDiv.className =
+      "flex flex-col md:flex-row md:items-center md:justify-between gap-4";
+
+    // Section d'informations utilisateur
+    const infoDiv = document.createElement("div");
+    infoDiv.className = "flex-1";
+
+    const nameElement = document.createElement("h3");
+    nameElement.className = "text-lg font-semibold text-base-content";
+    nameElement.textContent = user.name || "Nom non spécifié"; // ✅ textContent échappe les données
+
+    const emailElement = document.createElement("p");
+    emailElement.className = "text-base-content/70";
+    emailElement.textContent = user.email; // ✅ Pas de risque XSS
+
+    const dateElement = document.createElement("p");
+    dateElement.className = "text-sm text-base-content/50";
+    const createdDate = new Date(user.created).toLocaleDateString("fr-FR");
+    dateElement.textContent = `Inscrit le ${createdDate}`; // ✅ Date formatée de manière sécurisée
+
+    infoDiv.appendChild(nameElement);
+    infoDiv.appendChild(emailElement);
+    infoDiv.appendChild(dateElement);
+
+    // Section des boutons d'action
+    const buttonDiv = document.createElement("div");
+    buttonDiv.className = "flex gap-3";
+
+    const unverifyBtn = document.createElement("button");
+    unverifyBtn.className = "btn btn-warning btn-sm";
+    unverifyBtn.setAttribute("data-user-id", user.id);
+    unverifyBtn.setAttribute("data-action", "reset");
+    unverifyBtn.textContent = "⏪ Dévérifier";
+
+    buttonDiv.appendChild(unverifyBtn);
+
+    contentDiv.appendChild(infoDiv);
+    contentDiv.appendChild(buttonDiv);
+    card.appendChild(contentDiv);
+
+    return card;
+  }
+
   // Fonction pour charger et afficher les utilisateurs en attente
   async function loadPendingUsers() {
     try {
@@ -339,8 +436,40 @@
     }
   }
 
+  // Fonction pour charger et afficher les utilisateurs vérifiés
+  async function loadVerifiedUsers() {
+    try {
+      if (verifiedUsersDiv) {
+        verifiedUsersDiv.innerHTML = "";
+      }
+
+      if (verifiedUsers.length === 0) {
+        if (noVerifiedUsersDiv) {
+          noVerifiedUsersDiv.classList.remove("hidden");
+        }
+        return;
+      }
+
+      if (noVerifiedUsersDiv) {
+        noVerifiedUsersDiv.classList.add("hidden");
+      }
+
+      verifiedUsers.forEach((user: any, index: number) => {
+        const card = createVerifiedUserCard(user);
+        if (verifiedUsersDiv) {
+          verifiedUsersDiv.appendChild(card);
+        }
+      });
+    } catch (error) {
+      showMessage(
+        "Erreur lors du chargement des utilisateurs vérifiés.",
+        "error",
+      );
+    }
+  }
+
   // Gestionnaire pour les actions sur les utilisateurs (approuver/rejeter)
-  async function handleUserActionFromButton(button: HTMLButtonElement) {
+  async function handleUserActionFromButton(button: HTMLButtonElement, originalText: string) {
     const userId = button.getAttribute("data-user-id");
     const action = button.getAttribute("data-action");
 
@@ -350,9 +479,7 @@
     if (inFlight.has(key)) return;
     inFlight.add(key);
 
-    button.disabled = true;
-    const originalText = button.textContent;
-    button.textContent = "Traitement...";
+    // Le bouton est déjà désactivé et le texte changé dans l'event listener
 
     try {
       const token = pb.authStore.token;
@@ -376,28 +503,74 @@
 
       if (!response.ok) {
         const err = await response.json().catch(() => null);
-        throw new Error(err?.error || "Erreur lors de l action");
+        if (response.status === 429) {
+          throw new Error("Trop de requêtes. Veuillez patienter une minute avant de réessayer.");
+        }
+        throw new Error(err?.error || "Erreur lors de l'action");
       }
 
       if (action === "verify")
         showMessage("Utilisateur approuvé avec succès.", "success");
+        // Déplacer instantanément la carte
+        const card = button.closest(".bg-base-100") as HTMLElement | null;
+        if (card) {
+          // Mettre à jour les arrays locaux d'abord
+          const userIndex = unverifiedUsers.findIndex((u: any) => u.id === userId);
+          if (userIndex !== -1) {
+            const user = unverifiedUsers[userIndex];
+            unverifiedUsers.splice(userIndex, 1);
+            verifiedUsers.push(user);
+
+            // Créer la nouvelle carte immédiatement
+            const newCard = createVerifiedUserCard(user);
+            if (verifiedUsersDiv) {
+              // Ajouter la nouvelle carte avant de supprimer l'ancienne pour éviter le délai
+              verifiedUsersDiv.appendChild(newCard);
+              // Masquer le message "aucun vérifié" si visible
+              if (noVerifiedUsersDiv) noVerifiedUsersDiv.classList.add("hidden");
+            }
+            // Supprimer l'ancienne carte
+            card.remove();
+          }
+          // Recharger pour cohérence après un délai
+          setTimeout(() => {
+            loadPendingUsers();
+            loadVerifiedUsers();
+          }, 2000);
+        }
+      if (action === "reset") {
+        showMessage("Utilisateur remis en attente de vérification.", "info");
+        // Déplacer instantanément la carte
+        const card = button.closest(".bg-base-100") as HTMLElement | null;
+        if (card) {
+          // Mettre à jour les arrays locaux d'abord
+          const userIndex = verifiedUsers.findIndex((u: any) => u.id === userId);
+          if (userIndex !== -1) {
+            const user = verifiedUsers[userIndex];
+            verifiedUsers.splice(userIndex, 1);
+            unverifiedUsers.push(user);
+
+            // Créer la nouvelle carte immédiatement
+            const newCard = createUserCard(user);
+            if (pendingUsersDiv) {
+              // Ajouter la nouvelle carte avant de supprimer l'ancienne pour éviter le délai
+              pendingUsersDiv.appendChild(newCard);
+              // Masquer le message "aucun en attente" si visible
+              if (noPendingUsersDiv) noPendingUsersDiv.classList.add("hidden");
+            }
+            // Supprimer l'ancienne carte
+            card.remove();
+          }
+          // Recharger pour cohérence après un délai
+          setTimeout(() => {
+            loadPendingUsers();
+            loadVerifiedUsers();
+          }, 2000);
+        }
+      }
       if (action === "reject") {
         showMessage("Demande d'adhésion rejetée.", "warning");
         setTimeout(() => loadRejectedUsers(), 300);
-      }
-
-      const card = button.closest(".bg-base-100") as HTMLElement | null;
-      if (card) {
-        card.style.opacity = "0";
-        card.style.transform = "scale(0.95)";
-        card.style.transition = "all 0.3s ease-out";
-        setTimeout(() => {
-          card.remove();
-          const remaining =
-            pendingUsersDiv?.querySelectorAll(".bg-base-100").length || 0;
-          if (remaining === 0 && noPendingUsersDiv)
-            noPendingUsersDiv.classList.remove("hidden");
-        }, 300);
       }
     } catch (e) {
       showMessage("Une erreur est survenue lors du traitement.", "error");
@@ -425,9 +598,15 @@
       if (!btn) return;
 
       const action = btn.getAttribute("data-action");
-      if (action !== "verify" && action !== "reject") return;
+      if (action !== "verify" && action !== "reset" && action !== "reject") return;
 
-      handleUserActionFromButton(btn);
+      // Désactiver immédiatement le bouton pour éviter les clics multiples
+      if (btn.disabled) return;
+      btn.disabled = true;
+      const originalText = btn.textContent || "";
+      btn.textContent = "Traitement...";
+
+      handleUserActionFromButton(btn, originalText);
     });
   }
 
@@ -439,7 +618,34 @@
       );
       if (!btn) return;
 
-      handleRejectionCancelActionFromButton(btn);
+      // Désactiver immédiatement le bouton pour éviter les clics multiples
+      if (btn.disabled) return;
+      btn.disabled = true;
+      const originalText = btn.textContent || "";
+      btn.textContent = "Traitement...";
+
+      handleRejectionCancelActionFromButton(btn, originalText);
+    });
+  }
+
+  if (verifiedUsersDiv) {
+    verifiedUsersDiv.addEventListener("click", (event) => {
+      const btn = getClosestButton(
+        event.target,
+        "button[data-action][data-user-id]",
+      );
+      if (!btn) return;
+
+      const action = btn.getAttribute("data-action");
+      if (action !== "reset") return;
+
+      // Désactiver immédiatement le bouton pour éviter les clics multiples
+      if (btn.disabled) return;
+      btn.disabled = true;
+      const originalText = btn.textContent || "";
+      btn.textContent = "Traitement...";
+
+      handleUserActionFromButton(btn, originalText);
     });
   }
 
@@ -530,7 +736,7 @@
     } catch (error) {}
   }
 
-  async function handleRejectionCancelActionFromButton(button: HTMLButtonElement) {
+  async function handleRejectionCancelActionFromButton(button: HTMLButtonElement, originalText: string) {
   const userId = button.getAttribute("data-user-id");
   if (!userId) return;
 
@@ -540,9 +746,7 @@
   if (inFlight.has(key)) return;
   inFlight.add(key);
 
-  button.disabled = true;
-  const originalText = button.textContent;
-  button.textContent = "Traitement...";
+  // Le bouton est déjà désactivé et le texte changé dans l'event listener
 
   try {
     const token = pb.authStore.token;
