@@ -79,8 +79,8 @@ export const POST: APIRoute = async ({ request }) => {
       return createErrorResponse('userId et action requis', 400);
     }
 
-    if (action !== 'verify' && action !== 'reject' && action !== 'cancel-reject') {
-      return createErrorResponse('action invalide (verify, reject ou cancel-reject)', 400);
+    if (action !== 'verify' && action !== 'reject' && action !== 'reset' && action !== 'cancel-reject') {
+      return createErrorResponse('action invalide (verify, reject, reset ou cancel-reject)', 400);
     }
 
     // Validation du format de l'ID utilisateur
@@ -131,6 +131,28 @@ export const POST: APIRoute = async ({ request }) => {
             : 'Erreur lors de la mise à jour';
         return createErrorResponse(errorMsg, 500, isDevelopment);
       }
+    } else if (action === 'reset') {
+      try {
+        const resetUser = await pbServer.collection('users').update(userId, {
+          verified: false,
+          rejected: false,
+          rejectionDate: null,
+          rejectedBy: null,
+        });
+
+        return new Response(
+          JSON.stringify({
+            success: true,
+            message: 'Utilisateur remis en attente de vérification',
+            user: resetUser,
+          }),
+          { status: 200, headers: { 'Content-Type': 'application/json' } }
+        );
+      } catch (resetError) {
+        const errorMsg =
+          resetError instanceof Error ? resetError.message : 'Erreur lors de la remise en attente';
+        return createErrorResponse(errorMsg, 500, isDevelopment);
+      }
     } else if (action === 'reject') {
       try {
         const rejectedUser = await pbServer.collection('users').update(userId, {
@@ -155,9 +177,8 @@ export const POST: APIRoute = async ({ request }) => {
       }
     } else if (action === 'cancel-reject') {
       try {
-        // ✅ CORRECTION: Mettre verified à true lors de l'annulation du rejet
         const canceledUser = await pbServer.collection('users').update(userId, {
-          verified: true,
+          verified: false,
           rejected: false,
           rejectionDate: null,
           rejectedBy: null,
@@ -166,7 +187,7 @@ export const POST: APIRoute = async ({ request }) => {
         return new Response(
           JSON.stringify({
             success: true,
-            message: 'Rejet annulé - utilisateur approuvé',
+            message: 'Rejet annulé - utilisateur remis en attente',
             user: canceledUser,
           }),
           { status: 200, headers: { 'Content-Type': 'application/json' } }

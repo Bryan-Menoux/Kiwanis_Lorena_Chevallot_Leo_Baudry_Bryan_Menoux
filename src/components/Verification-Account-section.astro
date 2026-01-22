@@ -1,7 +1,5 @@
-
-
 <div
-  class="min-h-screen mt-24 lg: from-base-100 via-base-100 to-base-200 py-8 px-4 md:px-8 pt-4 md:pt-12"
+  class="min-h-screen mt-24 lg:bg-linear-to-br from-base-100 via-base-100 to-base-200 py-8 px-4 md:px-8 pt-4 md:pt-12"
 >
   <div class="max-w-4xl mx-auto">
     <!-- En-tête de la section vérifications -->
@@ -94,29 +92,31 @@
   import { isUserAdmin } from "../lib/pocketbase.mjs";
   import { pb } from "../lib/pocketbase.mjs";
 
-  const backArrowSrc = document.querySelector("script[data-back-arrow-src]")?.getAttribute("data-back-arrow-src") || "";
+  const backArrowSrc =
+    document
+      .querySelector("script[data-back-arrow-src]")
+      ?.getAttribute("data-back-arrow-src") || "";
 
-let unverifiedUsers: any[] = [];
+  let unverifiedUsers: any[] = [];
 
-async function fetchUnverifiedUsers() {
-  const res = await fetch("/api/unverified-users", {
-    method: "GET",
-    headers: {
-      Accept: "application/json",
-      Authorization: `Bearer ${pb.authStore.token}`,
-    },
-    credentials: "same-origin",
-    cache: "no-store",
-  });
+  async function fetchUnverifiedUsers() {
+    const res = await fetch("/api/unverified-users", {
+      method: "GET",
+      headers: {
+        Accept: "application/json",
+        Authorization: `Bearer ${pb.authStore.token}`,
+      },
+      credentials: "same-origin",
+      cache: "no-store",
+    });
 
-  if (!res.ok) {
-    throw new Error("Impossible de charger les utilisateurs en attente");
+    if (!res.ok) {
+      throw new Error("Impossible de charger les utilisateurs en attente");
+    }
+
+    const data = await res.json();
+    unverifiedUsers = Array.isArray(data.users) ? data.users : [];
   }
-
-  const data = await res.json();
-  unverifiedUsers = Array.isArray(data.users) ? data.users : [];
-}
-
 
   // Récupération des éléments DOM
   const adminContent = document.getElementById("adminContent");
@@ -331,10 +331,6 @@ async function fetchUnverifiedUsers() {
           pendingUsersDiv.appendChild(card);
         }
       });
-
-      document.querySelectorAll("[data-action]").forEach((button) => {
-        button.addEventListener("click", handleUserAction);
-      });
     } catch (error) {
       showMessage(
         "Erreur lors du chargement des demandes d'adhésion.",
@@ -344,12 +340,15 @@ async function fetchUnverifiedUsers() {
   }
 
   // Gestionnaire pour les actions sur les utilisateurs (approuver/rejeter)
-  async function handleUserAction(event: Event) {
-    const button = event.target as HTMLButtonElement;
+  async function handleUserActionFromButton(button: HTMLButtonElement) {
     const userId = button.getAttribute("data-user-id");
     const action = button.getAttribute("data-action");
 
     if (!userId || !action) return;
+
+    const key = `${action}:${userId}`;
+    if (inFlight.has(key)) return;
+    inFlight.add(key);
 
     button.disabled = true;
     const originalText = button.textContent;
@@ -357,62 +356,91 @@ async function fetchUnverifiedUsers() {
 
     try {
       const token = pb.authStore.token;
-      if (!token) {
-        throw new Error("Non authentifié - token manquant");
-      }
+      if (!token) throw new Error("Non authentifié");
 
-      // Utilisation du token CSRF généré côté serveur pour prévenir les attaques CSRF
-      if (!csrfToken) {
-        throw new Error("Token CSRF manquant - sécurité compromise");
-      }
+      // Récupération d'un nouveau token CSRF pour chaque action
+      await fetchCSRFToken();
+      if (!csrfToken) throw new Error("Token CSRF manquant");
 
       const response = await fetch("/api/verify-user", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          Accept: "application/json",
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ userId, action, csrfToken }),
+        credentials: "same-origin",
+        cache: "no-store",
       });
 
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || "Erreur lors de l'action");
+        const err = await response.json().catch(() => null);
+        throw new Error(err?.error || "Erreur lors de l action");
       }
 
-      const result = await response.json();
-
-      if (action === "verify") {
+      if (action === "verify")
         showMessage("Utilisateur approuvé avec succès.", "success");
-      } else if (action === "reject") {
+      if (action === "reject") {
         showMessage("Demande d'adhésion rejetée.", "warning");
-        setTimeout(() => loadRejectedUsers(), 500);
+        setTimeout(() => loadRejectedUsers(), 300);
       }
 
-      const card = button.closest(".bg-base-100") as HTMLElement;
+      const card = button.closest(".bg-base-100") as HTMLElement | null;
       if (card) {
         card.style.opacity = "0";
         card.style.transform = "scale(0.95)";
         card.style.transition = "all 0.3s ease-out";
-
         setTimeout(() => {
           card.remove();
-
-          const remainingCards =
+          const remaining =
             pendingUsersDiv?.querySelectorAll(".bg-base-100").length || 0;
-          if (remainingCards === 0 && noPendingUsersDiv) {
+          if (remaining === 0 && noPendingUsersDiv)
             noPendingUsersDiv.classList.remove("hidden");
-          }
         }, 300);
       }
-    } catch (error) {
-      showMessage(
-        "Une erreur est survenue lors du traitement de la demande.",
-        "error",
-      );
+    } catch (e) {
+      showMessage("Une erreur est survenue lors du traitement.", "error");
       button.disabled = false;
       button.textContent = originalText;
+    } finally {
+      inFlight.delete(key);
     }
+  }
+
+   const inFlight = new Set<string>();
+
+  function getClosestButton(el: EventTarget | null, selector: string) {
+    return (el as HTMLElement | null)?.closest(
+      selector,
+    ) as HTMLButtonElement | null;
+  }
+
+  if (pendingUsersDiv) {
+    pendingUsersDiv.addEventListener("click", (event) => {
+      const btn = getClosestButton(
+        event.target,
+        "button[data-action][data-user-id]",
+      );
+      if (!btn) return;
+
+      const action = btn.getAttribute("data-action");
+      if (action !== "verify" && action !== "reject") return;
+
+      handleUserActionFromButton(btn);
+    });
+  }
+
+  if (rejectedUsersDiv) {
+    rejectedUsersDiv.addEventListener("click", (event) => {
+      const btn = getClosestButton(
+        event.target,
+        'button[data-action="cancel-reject"][data-user-id]',
+      );
+      if (!btn) return;
+
+      handleRejectionCancelActionFromButton(btn);
+    });
   }
 
   // Fonction pour charger les utilisateurs rejetés
@@ -485,7 +513,7 @@ async function fetchUnverifiedUsers() {
         cancelBtn.className = "btn btn-warning btn-xs";
         cancelBtn.setAttribute("data-user-id", user.id);
         cancelBtn.setAttribute("data-action", "cancel-reject");
-        cancelBtn.textContent = "↶ Annuler";
+        cancelBtn.textContent = "⏳ Remettre en attente";
 
         item.appendChild(infoDiv);
         item.appendChild(cancelBtn);
@@ -495,13 +523,6 @@ async function fetchUnverifiedUsers() {
         }
       });
 
-      // Ajouter des event listeners pour les boutons d'annulation
-      document
-        .querySelectorAll('[data-action="cancel-reject"]')
-        .forEach((button) => {
-          button.addEventListener("click", handleRejectionCancelAction);
-        });
-
       // Activer le bouton de suppression
       if (deleteAllRejectedBtn) {
         deleteAllRejectedBtn.disabled = false;
@@ -509,61 +530,57 @@ async function fetchUnverifiedUsers() {
     } catch (error) {}
   }
 
-  // Gestionnaire pour annuler le rejet d'un utilisateur
-  async function handleRejectionCancelAction(event: Event) {
-    const button = event.target as HTMLButtonElement;
-    const userId = button.getAttribute("data-user-id");
+  async function handleRejectionCancelActionFromButton(button: HTMLButtonElement) {
+  const userId = button.getAttribute("data-user-id");
+  if (!userId) return;
 
-    if (!userId) return;
+  if (!confirm("Êtes-vous sûr de vouloir remettre cet utilisateur en attente de vérification ?")) return;
 
-    if (
-      !confirm("Êtes-vous sûr de vouloir annuler le rejet de cet utilisateur ?")
-    ) {
-      return;
+  const key = `cancel-reject:${userId}`;
+  if (inFlight.has(key)) return;
+  inFlight.add(key);
+
+  button.disabled = true;
+  const originalText = button.textContent;
+  button.textContent = "Traitement...";
+
+  try {
+    const token = pb.authStore.token;
+    if (!token) throw new Error("Non authentifié");
+
+    // Récupération d'un nouveau token CSRF pour chaque action
+    await fetchCSRFToken();
+    if (!csrfToken) throw new Error("Token CSRF manquant");
+
+    const response = await fetch("/api/verify-user", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ userId, action: "cancel-reject", csrfToken }),
+      credentials: "same-origin",
+      cache: "no-store",
+    });
+
+    if (!response.ok) {
+      const err = await response.json().catch(() => null);
+      throw new Error(err?.error || "Erreur lors de l annulation");
     }
 
-    button.disabled = true;
-    const originalText = button.textContent;
-    button.textContent = "Traitement...";
-
-    try {
-      const token = pb.authStore.token;
-      if (!token) {
-        throw new Error("Non authentifié - token manquant");
-      }
-
-      // Utilisation du token CSRF généré côté serveur pour prévenir les attaques CSRF
-      if (!csrfToken) {
-        throw new Error("Token CSRF manquant - sécurité compromise");
-      }
-
-      const response = await fetch("/api/verify-user", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ userId, action: "cancel-reject", csrfToken }),
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || "Erreur lors de l'annulation");
-      }
-
-      showMessage("Rejet annulé avec succès.", "success");
-      await loadRejectedUsers();
-      await loadPendingUsers();
-      await loadPendingUsers();
-    } catch (error) {
-      showMessage(
-        "Une erreur est survenue lors de l'annulation du rejet.",
-        "error",
-      );
-      button.disabled = false;
-      button.textContent = originalText;
-    }
+    showMessage("Rejet annulé - utilisateur remis en attente.", "info");
+    await loadRejectedUsers();
+    await loadPendingUsers();
+  } catch (e) {
+    showMessage("Une erreur est survenue lors de l'annulation du rejet.", "error");
+    button.disabled = false;
+    button.textContent = originalText;
+  } finally {
+    inFlight.delete(key);
   }
+}
+
 
   // Gestionnaire pour supprimer tous les utilisateurs rejetés
   async function handleDeleteAllRejected() {
@@ -587,6 +604,8 @@ async function fetchUnverifiedUsers() {
         throw new Error("Non authentifié");
       }
 
+      // Récupération d'un nouveau token CSRF pour chaque action
+      await fetchCSRFToken();
       // Utilisation du token CSRF généré côté serveur pour prévenir les attaques CSRF
       if (!csrfToken) {
         throw new Error("Token CSRF manquant - sécurité compromise");
@@ -617,5 +636,3 @@ async function fetchUnverifiedUsers() {
     }
   }
 </script>
-
-<script></script>

@@ -244,9 +244,8 @@ export function verifyCSRFToken(token: string, userId: string): boolean {
     return false;
   }
 
-  // Supprime le token après une utilisation réussie (utilisation unique)
-  csrfTokenStore.delete(token);
-
+  // Le token reste valide jusqu'à expiration (pas de suppression après utilisation)
+  // Cela permet l'utilisation multiple dans une session courte
   return true;
 }
 
