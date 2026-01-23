@@ -26,7 +26,9 @@ export const POST: APIRoute = async ({ request }) => {
 
     // ✅ VÉRIFICATION CRITIQUE: Vérification et décodage du token JWT
     const decoded = await verifyJWT(token, pbServer);
+    console.log('Decoded token:', decoded);
     if (!decoded || !decoded.id) {
+      console.log('Token invalid or no id');
       return createErrorResponse('Token invalide ou expiré', 401);
     }
 
@@ -39,6 +41,7 @@ export const POST: APIRoute = async ({ request }) => {
     }
 
     const { userId } = body;
+    console.log('Requested userId:', userId);
 
     // ✅ VALIDATION: Vérification du format de l'ID
     if (!userId || typeof userId !== 'string' || !isValidUserId(userId)) {
@@ -47,6 +50,7 @@ export const POST: APIRoute = async ({ request }) => {
 
     // ✅ AUTORISATION CRITIQUE: Vérifier que l'utilisateur demande ses propres données
     // L'utilisateur ne peut accéder qu'à ses propres informations
+    console.log('Decoded id:', decoded.id, 'userId:', userId);
     if (decoded.id !== userId) {
       return createErrorResponse('Non autorisé - vous ne pouvez accéder qu\'à vos propres données', 403);
     }

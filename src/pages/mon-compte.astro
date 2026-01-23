@@ -51,10 +51,14 @@ const navItems = [
           aria-selected={item.active}
           data-section={item.id}
         >
-          <div class="w-10 h-10 icon-accent" style={`--icon-url: url(${item.icon.src})`}></div>
+          {item.icon && <div class="w-10 h-10 icon-accent" style={`--icon-url: url(${item.icon.src})`}></div>}
           <a href={`#${item.id}`}>{item.label}</a>
         </li>
       ))}
+      <!-- Bouton de déconnexion -->
+      <li class="flex items-center gap-4 min-w-full cursor-pointer transition-colors duration-300 px-4 relative nav-item h-13 mt-8 btn btn-accent rounded-md!">
+        <button id="logout-btn" class="w-full text-left">Déconnexion</button>
+      </li>
     </ul>
   </nav>
   <!-- Contenu principal avec défilement horizontal pour les sections -->
@@ -164,6 +168,16 @@ const navItems = [
       }
     });
   });
+  
+  // Gestion du bouton de déconnexion
+  const logoutBtn = document.getElementById('logout-btn');
+  if (logoutBtn) {
+    logoutBtn.addEventListener('click', () => {
+      pb.authStore.clear();
+      localStorage.removeItem('pocketbase_auth');
+      window.location.href = '/';
+    });
+  }
   
   // Observateur pour détecter quelle section est visible lors du défilement
   const observer = new IntersectionObserver((entries) => {

@@ -1,3 +1,11 @@
+﻿---
+import paper from "../assets/paper.svg";
+import crossCircle from "../assets/cross-circle.svg";
+import circleCheck from "../assets/circle-check.svg";
+import trash from "../assets/trash.svg";
+import wait from "../assets/wait.svg";
+---
+
 <div
   class="min-h-screen mt-24 lg:bg-linear-to-br from-base-100 via-base-100 to-base-200 py-8 px-4 md:px-8 pt-4 md:pt-12"
 >
@@ -28,9 +36,14 @@
         >
           <span id="messageText"></span>
         </div>
-
-        
-
+        <form id="searchPendingForm" class="mb-4">
+          <input
+            id="searchPendingInput"
+            type="search"
+            placeholder="Rechercher par nom ou email"
+            class="input input-bordered w-full"
+          />
+        </form>
         <!-- Liste des utilisateurs en attente de vérification -->
         <div id="pendingUsers" class="space-y-4">
           <!-- Les utilisateurs seront chargés dynamiquement -->
@@ -41,61 +54,90 @@
           id="noPendingUsers"
           class="text-center py-12 text-base-content/60 hidden"
         >
-          <div class="text-6xl mb-4">📋</div>
+          <div class="text-6xl mb-4">
+            <img src={paper.src} alt="Icône papier" class="h-16 mx-auto mb-6" />
+          </div>
           <h3 class="text-xl font-semibold mb-2">Aucune demande en attente</h3>
           <p>Toutes les demandes d'adhésion ont été traitées.</p>
         </div>
       </div>
       <!-- Section des utilisateurs rejetés -->
-        <div class="mb-6">
-          <details
-            class="collapse collapse-arrow border border-base-300 bg-base-100"
+      <div class="mb-6 px-4">
+        <details
+          class="collapse collapse-arrow border border-base-300 bg-base-100"
+        >
+          <summary
+            class="collapse-title text-lg font-medium cursor-pointer flex items-center gap-2 w-full"
           >
-            <summary class="collapse-title text-lg font-medium cursor-pointer">
-              📋 Utilisateurs rejetés
-            </summary>
-            <div class="collapse-content">
-              <div id="rejectedUsersList" class="space-y-2 mt-4 mb-4">
-                <!-- Les utilisateurs rejetés seront chargés dynamiquement -->
-              </div>
-              <div
-                id="noRejectedUsers"
-                class="text-center py-4 text-base-content/60"
-              >
-                <p>Aucun utilisateur rejeté</p>
-              </div>
-              <button
-                id="deleteAllRejectedBtn"
-                class="btn btn-error btn-sm w-full"
-                disabled
-              >
-                🗑️ Supprimer tous les rejetés
-              </button>
+            <img src={crossCircle.src} alt="Icône de croix" class="h-8" /> Utilisateurs
+            rejetés
+          </summary>
+          <div class="collapse-content">
+            <form id="searchRejectedForm" class="mb-4">
+              <input
+                id="searchRejectedInput"
+                type="search"
+                placeholder="Rechercher un utilisateur rejeté"
+                class="input input-bordered w-full"
+              />
+            </form>
+            <div id="rejectedUsersList" class="space-y-2 mt-4 mb-4">
+              <!-- Les utilisateurs rejetés seront chargés dynamiquement -->
             </div>
-          </details>
-        </div>
+            <div
+              id="noRejectedUsers"
+              class="text-center py-4 text-base-content/60"
+            >
+              <p>Aucun utilisateur rejeté</p>
+            </div>
+            <button
+              id="deleteAllRejectedBtn"
+              class="btn btn-error w-full"
+              disabled
+            >
+              <img
+                src={trash.src}
+                alt="Icône de poubelle"
+                class="h-6"
+                style="filter: invert(1);"
+              /> Supprimer tous les rejetés
+            </button>
+          </div>
+        </details>
+      </div>
 
-        <!-- Section des utilisateurs vérifiés -->
-        <div class="mb-6">
-          <details
-            class="collapse collapse-arrow border border-base-300 bg-base-100"
+      <!-- Section des utilisateurs vérifiés -->
+      <div class="mb-6 px-4">
+        <details
+          class="collapse collapse-arrow border border-base-300 bg-base-100"
+        >
+          <summary
+            class="collapse-title text-lg font-medium cursor-pointer flex items-center gap-2 w-full"
           >
-            <summary class="collapse-title text-lg font-medium cursor-pointer">
-              ✅ Utilisateurs vérifiés
-            </summary>
-            <div class="collapse-content">
-              <div id="verifiedUsersList" class="space-y-2 mt-4 mb-4">
-                <!-- Les utilisateurs vérifiés seront chargés dynamiquement -->
-              </div>
-              <div
-                id="noVerifiedUsers"
-                class="text-center py-4 text-base-content/60"
-              >
-                <p>Aucun utilisateur vérifié</p>
-              </div>
+            <img src={circleCheck.src} alt="Icône de coche" class="h-8" /> Utilisateurs
+            vérifiés
+          </summary>
+          <div class="collapse-content">
+            <form id="searchVerifiedForm" class="mb-4">
+              <input
+                id="searchVerifiedInput"
+                type="search"
+                placeholder="Rechercher un utilisateur vérifié"
+                class="input input-bordered w-full"
+              />
+            </form>
+            <div id="verifiedUsersList" class="space-y-2 mt-4 mb-4">
+              <!-- Les utilisateurs vérifiés seront chargés dynamiquement -->
             </div>
-          </details>
-        </div>
+            <div
+              id="noVerifiedUsers"
+              class="text-center py-4 text-base-content/60"
+            >
+              <p>Aucun utilisateur vérifié</p>
+            </div>
+          </div>
+        </details>
+      </div>
 
       <!-- Contenu affiché si l'utilisateur n'est pas administrateur -->
       <div id="accessDenied" class="px-8 py-12 text-center hidden">
@@ -114,6 +156,9 @@
 <script>
   import { isUserAdmin } from "../lib/pocketbase.mjs";
   import { pb } from "../lib/pocketbase.mjs";
+  import wait from "../assets/wait.svg";
+  import circleCross from "../assets/cross-circle.svg";
+  import circleCheck from "../assets/circle-check.svg";
 
   const backArrowSrc =
     document
@@ -122,6 +167,127 @@
 
   let unverifiedUsers: any[] = [];
   let verifiedUsers: any[] = [];
+  let rejectedUsers: any[] = [];
+  let csrfToken: string | null = null;
+  let csrfTokenExpiry: number | null = null;
+  let currentUserId: string | null = null;
+
+  // Fonctions utilitaires
+  function findUserById(array: any[], id: string) {
+    return array.find((user) => user.id === id);
+  }
+
+  function moveUserBetweenLists(
+    fromList: any[],
+    toList: any[],
+    userId: string,
+  ) {
+    const userIndex = fromList.findIndex((user) => user.id === userId);
+    if (userIndex !== -1) {
+      const user = fromList.splice(userIndex, 1)[0];
+      toList.push(user);
+    }
+  }
+
+  function updateEmptyStates() {
+    if (noPendingUsersDiv) {
+      noPendingUsersDiv.classList.toggle("hidden", unverifiedUsers.length > 0);
+    }
+    if (noVerifiedUsersDiv) {
+      noVerifiedUsersDiv.classList.toggle("hidden", verifiedUsers.length > 0);
+    }
+    if (noRejectedUsersDiv) {
+      noRejectedUsersDiv.classList.toggle("hidden", rejectedUsers.length > 0);
+    }
+    if (deleteAllRejectedBtn) {
+      deleteAllRejectedBtn.disabled = rejectedUsers.length === 0;
+    }
+  }
+
+  function renderAll() {
+    // Vider les containers
+    if (pendingUsersDiv) pendingUsersDiv.innerHTML = "";
+    if (verifiedUsersDiv) verifiedUsersDiv.innerHTML = "";
+    if (rejectedUsersDiv) rejectedUsersDiv.innerHTML = "";
+
+    // Rendre pending
+    unverifiedUsers.forEach((user) => {
+      const card = createUserCard(user, "pending");
+      if (pendingUsersDiv) pendingUsersDiv.appendChild(card);
+    });
+
+    // Rendre verified
+    verifiedUsers.forEach((user) => {
+      const card = createVerifiedUserCard(user, "verified");
+      if (verifiedUsersDiv) verifiedUsersDiv.appendChild(card);
+    });
+
+    // Rendre rejected
+    rejectedUsers.forEach((user) => {
+      const item = createRejectedUserItem(user, "rejected");
+      if (rejectedUsersDiv) rejectedUsersDiv.appendChild(item);
+    });
+
+    // Appliquer le filtre initial si une valeur est présente
+    if (searchPendingInput?.value) {
+      filterUsers(
+        pendingUsersDiv,
+        searchPendingInput.value,
+        '[data-list="pending"]',
+      );
+    }
+    if (searchVerifiedInput?.value) {
+      filterUsers(
+        verifiedUsersDiv,
+        searchVerifiedInput.value,
+        '[data-list="verified"]',
+      );
+    }
+    if (searchRejectedInput?.value) {
+      filterUsers(
+        rejectedUsersDiv,
+        searchRejectedInput.value,
+        '[data-list="rejected"]',
+      );
+    }
+
+    updateEmptyStates();
+  }
+
+  // Fonction pour récupérer un token CSRF sécurisé depuis l'endpoint API
+  async function fetchCSRFToken() {
+    const now = Date.now();
+    if (csrfToken && csrfTokenExpiry && now < csrfTokenExpiry) {
+      return; // Token encore valide
+    }
+    try {
+      const response = await fetch("/api/csrf-token", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+          Authorization: `Bearer ${pb.authStore.token}`,
+        },
+        body: JSON.stringify({}),
+        credentials: "same-origin",
+        cache: "no-store",
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        csrfToken = data.csrfToken;
+        csrfTokenExpiry = now + 5 * 60 * 1000; // Expire dans 5 minutes
+      } else {
+        throw new Error("Échec de la récupération du token CSRF");
+      }
+    } catch (error) {
+      showMessage(
+        "Erreur de sécurité: Impossible de récupérer le token CSRF.",
+        "error",
+      );
+      throw error;
+    }
+  }
 
   async function fetchUnverifiedUsers() {
     const res = await fetch("/api/unverified-users", {
@@ -161,6 +327,87 @@
     verifiedUsers = Array.isArray(data.users) ? data.users : [];
   }
 
+  async function fetchRejectedUsers() {
+    const response = await fetch("/api/rejected-users", {
+      headers: {
+        Authorization: `Bearer ${pb.authStore.token}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error("Erreur lors du chargement des utilisateurs rejetés");
+    }
+
+    const data = await response.json();
+    rejectedUsers = data.users || [];
+  }
+
+  // Fonction de filtrage des utilisateurs
+  function filterUsers(
+    container: HTMLElement | null,
+    query: string,
+    selector: string,
+  ) {
+    if (!container) return;
+
+    const q = query.toLowerCase().trim();
+    const cards = container.querySelectorAll(selector);
+
+    if (!q) {
+      cards.forEach((card) => card.classList.remove("hidden"));
+      return;
+    }
+
+    cards.forEach((card) => {
+      const el = card as HTMLElement;
+
+      const searchText =
+        el.dataset.search || el.textContent?.toLowerCase() || "";
+
+      el.classList.toggle("hidden", !searchText.includes(q));
+    });
+  }
+
+  const searchPendingInput = document.getElementById(
+    "searchPendingInput",
+  ) as HTMLInputElement | null;
+  const searchVerifiedInput = document.getElementById(
+    "searchVerifiedInput",
+  ) as HTMLInputElement | null;
+  const searchRejectedInput = document.getElementById(
+    "searchRejectedInput",
+  ) as HTMLInputElement | null;
+
+  searchPendingInput?.addEventListener("input", () => {
+    filterUsers(
+      pendingUsersDiv,
+      searchPendingInput.value,
+      '[data-list="pending"]',
+    );
+  });
+
+  searchVerifiedInput?.addEventListener("input", () => {
+    filterUsers(
+      verifiedUsersDiv,
+      searchVerifiedInput.value,
+      '[data-list="verified"]',
+    );
+  });
+
+  searchRejectedInput?.addEventListener("input", () => {
+    filterUsers(
+      rejectedUsersDiv,
+      searchRejectedInput.value,
+      '[data-list="rejected"]',
+    );
+  });
+
+  // Empêcher la soumission du formulaire de recherche
+  ["searchForm", "searchVerifiedForm", "searchRejectedForm"].forEach((id) => {
+    const form = document.getElementById(id);
+    form?.addEventListener("submit", (e) => e.preventDefault());
+  });
+
   // Récupération des éléments DOM
   const adminContent = document.getElementById("adminContent");
   const accessDenied = document.getElementById("accessDenied");
@@ -175,39 +422,6 @@
   ) as HTMLButtonElement | null;
   const verifiedUsersDiv = document.getElementById("verifiedUsersList");
   const noVerifiedUsersDiv = document.getElementById("noVerifiedUsers");
-
-  // Variable pour stocker le token CSRF généré côté serveur
-  let csrfToken: string | null = null;
-
-  // Fonction pour récupérer un token CSRF sécurisé depuis l'endpoint API
-  // Cela remplace le fallback non sécurisé à pb.authStore.record?.id
-  async function fetchCSRFToken() {
-    try {
-      const response = await fetch("/api/csrf-token", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-          Authorization: `Bearer ${pb.authStore.token}`,
-        },
-        body: JSON.stringify({}),
-        credentials: "same-origin",
-        cache: "no-store",
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        csrfToken = data.csrfToken;
-      } else {
-        throw new Error("Échec de la récupération du token CSRF");
-      }
-    } catch (error) {
-      showMessage(
-        "Erreur de sécurité: Impossible de récupérer le token CSRF.",
-        "error",
-      );
-    }
-  }
 
   // Vérification des droits administrateur et chargement initial
   (async () => {
@@ -225,6 +439,7 @@
 
       const parsed = JSON.parse(authData);
       const userId = parsed?.record?.id;
+      currentUserId = userId;
 
       if (!userId) {
         if (accessDenied) accessDenied.classList.remove("hidden");
@@ -258,13 +473,14 @@
         if (adminContent) adminContent.classList.remove("hidden");
         if (accessDenied) accessDenied.classList.add("hidden");
 
-        // Récupération du token CSRF avant les opérations
+        // Chargement initial
         await fetchCSRFToken();
-        await fetchUnverifiedUsers();
-        await fetchVerifiedUsers();
-        await loadPendingUsers();
-        await loadRejectedUsers();
-        await loadVerifiedUsers();
+        await Promise.all([
+          fetchUnverifiedUsers(),
+          fetchVerifiedUsers(),
+          fetchRejectedUsers(),
+        ]);
+        renderAll();
 
         if (deleteAllRejectedBtn) {
           deleteAllRejectedBtn.addEventListener(
@@ -296,13 +512,19 @@
   }
 
   // Fonction pour créer une carte utilisateur de manière sécurisée
-  // ✅ CORRECTION: Utilisation de textContent et création d'éléments DOM au lieu d'innerHTML
-  // Cela prévient les attaques XSS en échappant automatiquement les données
-  function createUserCard(user: any) {
+  function createUserCard(user: any, list: string) {
     const card = document.createElement("div");
     card.className = "bg-base-100 rounded-xl p-6 border border-base-300";
+    card.setAttribute("data-user-id", user.id);
+    card.setAttribute("data-list", list);
 
-    // Création de la structure DOM de manière sécurisée
+    // Données utilisées pour la recherche (nom + email)
+    card.setAttribute(
+      "data-search",
+      `${user.name || ""} ${user.email || ""}`.toLowerCase(),
+    );
+
+    // Création de la structure DOM
     const contentDiv = document.createElement("div");
     contentDiv.className =
       "flex flex-col md:flex-row md:items-center md:justify-between gap-4";
@@ -313,16 +535,16 @@
 
     const nameElement = document.createElement("h3");
     nameElement.className = "text-lg font-semibold text-base-content";
-    nameElement.textContent = user.name || "Nom non spécifié"; // ✅ textContent échappe les données
+    nameElement.textContent = user.name || "Nom non spécifié";
 
     const emailElement = document.createElement("p");
     emailElement.className = "text-base-content/70";
-    emailElement.textContent = user.email; // ✅ Pas de risque XSS
+    emailElement.textContent = user.email;
 
     const dateElement = document.createElement("p");
     dateElement.className = "text-sm text-base-content/50";
     const createdDate = new Date(user.created).toLocaleDateString("fr-FR");
-    dateElement.textContent = `Inscrit le ${createdDate}`; // ✅ Date formatée de manière sécurisée
+    dateElement.textContent = `Inscrit le ${createdDate}`;
 
     infoDiv.appendChild(nameElement);
     infoDiv.appendChild(emailElement);
@@ -333,16 +555,34 @@
     buttonDiv.className = "flex gap-3";
 
     const approveBtn = document.createElement("button");
-    approveBtn.className = "btn btn-success btn-sm";
+    approveBtn.className = "btn btn-success btn-xs px-2 py-1 h-fit";
     approveBtn.setAttribute("data-user-id", user.id);
     approveBtn.setAttribute("data-action", "verify");
-    approveBtn.textContent = "✓ Approuver";
+    approveBtn.innerHTML = `
+    <div
+      class="w-6 h-6 bg-white inline mr-1"
+      style="mask-image: url(${circleCheck.src});
+             mask-repeat: no-repeat;
+             mask-position: center;
+             mask-size: contain;">
+    </div>
+    Approuver
+  `;
 
     const rejectBtn = document.createElement("button");
-    rejectBtn.className = "btn btn-error btn-sm";
+    rejectBtn.className = "btn btn-error btn-xs px-2 py-1 h-fit";
     rejectBtn.setAttribute("data-user-id", user.id);
     rejectBtn.setAttribute("data-action", "reject");
-    rejectBtn.textContent = "✗ Rejeter";
+    rejectBtn.innerHTML = `
+    <div
+      class="w-6 h-6 bg-white inline mr-1"
+      style="mask-image: url(${circleCross.src});
+             mask-repeat: no-repeat;
+             mask-position: center;
+             mask-size: contain;">
+    </div>
+    Rejeter
+  `;
 
     buttonDiv.appendChild(approveBtn);
     buttonDiv.appendChild(rejectBtn);
@@ -355,9 +595,11 @@
   }
 
   // Fonction pour créer une carte utilisateur vérifié de manière sécurisée
-  function createVerifiedUserCard(user: any) {
+  function createVerifiedUserCard(user: any, list: string) {
     const card = document.createElement("div");
     card.className = "bg-base-100 rounded-xl p-6 border border-base-300";
+    card.setAttribute("data-user-id", user.id);
+    card.setAttribute("data-list", list);
 
     // Création de la structure DOM de manière sécurisée
     const contentDiv = document.createElement("div");
@@ -370,16 +612,16 @@
 
     const nameElement = document.createElement("h3");
     nameElement.className = "text-lg font-semibold text-base-content";
-    nameElement.textContent = user.name || "Nom non spécifié"; // ✅ textContent échappe les données
+    nameElement.textContent = user.name || "Nom non spécifié";
 
     const emailElement = document.createElement("p");
     emailElement.className = "text-base-content/70";
-    emailElement.textContent = user.email; // ✅ Pas de risque XSS
+    emailElement.textContent = user.email;
 
     const dateElement = document.createElement("p");
     dateElement.className = "text-sm text-base-content/50";
     const createdDate = new Date(user.created).toLocaleDateString("fr-FR");
-    dateElement.textContent = `Inscrit le ${createdDate}`; // ✅ Date formatée de manière sécurisée
+    dateElement.textContent = `Inscrit le ${createdDate}`;
 
     infoDiv.appendChild(nameElement);
     infoDiv.appendChild(emailElement);
@@ -390,10 +632,16 @@
     buttonDiv.className = "flex gap-3";
 
     const unverifyBtn = document.createElement("button");
-    unverifyBtn.className = "btn btn-warning btn-sm";
+    unverifyBtn.className = "btn btn-warning btn-sm px-3 py-2 h-fit";
     unverifyBtn.setAttribute("data-user-id", user.id);
     unverifyBtn.setAttribute("data-action", "reset");
-    unverifyBtn.textContent = "⏪ Dévérifier";
+    unverifyBtn.innerHTML = `<div class="w-6 h-6 bg-white inline mr-1" style="mask-image: url(${circleCross.src}); mask-repeat: no-repeat; mask-position: center; mask-size: contain;"></div> Dévérifier`;
+
+    // Désactiver le bouton si c'est l'utilisateur actuel
+    if (user.id === currentUserId) {
+      unverifyBtn.disabled = true;
+      unverifyBtn.classList.add("btn-disabled");
+    }
 
     buttonDiv.appendChild(unverifyBtn);
 
@@ -404,88 +652,70 @@
     return card;
   }
 
-  // Fonction pour charger et afficher les utilisateurs en attente
-  async function loadPendingUsers() {
-    try {
-      if (pendingUsersDiv) {
-        pendingUsersDiv.innerHTML = "";
-      }
+  // Fonction pour créer un item utilisateur rejeté de manière sécurisée
+  function createRejectedUserItem(user: any, list: string) {
+    const item = document.createElement("div");
+    item.className =
+      "flex items-center justify-between p-3 bg-error/10 rounded-lg border border-error/20";
+    item.setAttribute("data-user-id", user.id);
+    item.setAttribute("data-list", list);
 
-      if (unverifiedUsers.length === 0) {
-        if (noPendingUsersDiv) {
-          noPendingUsersDiv.classList.remove("hidden");
-        }
-        return;
-      }
+    // Section d'informations utilisateur
+    const infoDiv = document.createElement("div");
+    infoDiv.className = "flex-1";
 
-      if (noPendingUsersDiv) {
-        noPendingUsersDiv.classList.add("hidden");
-      }
+    const nameElement = document.createElement("p");
+    nameElement.className = "font-semibold text-sm";
+    nameElement.textContent = user.name || "Nom non spécifié";
 
-      unverifiedUsers.forEach((user: any, index: number) => {
-        const card = createUserCard(user);
-        if (pendingUsersDiv) {
-          pendingUsersDiv.appendChild(card);
-        }
-      });
-    } catch (error) {
-      showMessage(
-        "Erreur lors du chargement des demandes d'adhésion.",
-        "error",
-      );
-    }
+    const emailElement = document.createElement("p");
+    emailElement.className = "text-xs text-base-content/60";
+    emailElement.textContent = user.email;
+
+    const rejectionDateElement = document.createElement("p");
+    rejectionDateElement.className = "text-xs text-base-content/50";
+    const rejectionDate = new Date(user.rejectionDate).toLocaleDateString(
+      "fr-FR",
+    );
+    rejectionDateElement.textContent = `Rejeté le ${rejectionDate}`;
+
+    infoDiv.appendChild(nameElement);
+    infoDiv.appendChild(emailElement);
+    infoDiv.appendChild(rejectionDateElement);
+
+    // Bouton d'annulation du rejet
+    const cancelBtn = document.createElement("button");
+    cancelBtn.className = "btn btn-warning btn-xs px-2 py-1 h-fit";
+    cancelBtn.setAttribute("data-user-id", user.id);
+    cancelBtn.setAttribute("data-action", "cancel-reject");
+    cancelBtn.innerHTML = `<div class="w-6 h-6 bg-white inline mr-1" style="mask-image: url(${wait.src}); mask-repeat: no-repeat; mask-position: center; mask-size: contain;"></div> Remettre en attente`;
+
+    item.appendChild(infoDiv);
+    item.appendChild(cancelBtn);
+
+    return item;
   }
 
-  // Fonction pour charger et afficher les utilisateurs vérifiés
-  async function loadVerifiedUsers() {
-    try {
-      if (verifiedUsersDiv) {
-        verifiedUsersDiv.innerHTML = "";
-      }
-
-      if (verifiedUsers.length === 0) {
-        if (noVerifiedUsersDiv) {
-          noVerifiedUsersDiv.classList.remove("hidden");
-        }
-        return;
-      }
-
-      if (noVerifiedUsersDiv) {
-        noVerifiedUsersDiv.classList.add("hidden");
-      }
-
-      verifiedUsers.forEach((user: any, index: number) => {
-        const card = createVerifiedUserCard(user);
-        if (verifiedUsersDiv) {
-          verifiedUsersDiv.appendChild(card);
-        }
-      });
-    } catch (error) {
-      showMessage(
-        "Erreur lors du chargement des utilisateurs vérifiés.",
-        "error",
-      );
-    }
-  }
-
-  // Gestionnaire pour les actions sur les utilisateurs (approuver/rejeter)
-  async function handleUserActionFromButton(button: HTMLButtonElement, originalText: string) {
+  // Gestionnaire pour les actions sur les utilisateurs
+  async function handleUserAction(button: HTMLButtonElement) {
     const userId = button.getAttribute("data-user-id");
     const action = button.getAttribute("data-action");
+    const list = button.closest("[data-list]")?.getAttribute("data-list");
 
-    if (!userId || !action) return;
+    if (!userId || !action || !list) return;
 
     const key = `${action}:${userId}`;
     if (inFlight.has(key)) return;
     inFlight.add(key);
 
-    // Le bouton est déjà désactivé et le texte changé dans l'event listener
+    button.disabled = true;
+    const originalText = button.textContent || "";
+    button.textContent = "Traitement...";
 
     try {
       const token = pb.authStore.token;
       if (!token) throw new Error("Non authentifié");
 
-      // Récupération d'un nouveau token CSRF pour chaque action
       await fetchCSRFToken();
       if (!csrfToken) throw new Error("Token CSRF manquant");
 
@@ -504,74 +734,35 @@
       if (!response.ok) {
         const err = await response.json().catch(() => null);
         if (response.status === 429) {
-          throw new Error("Trop de requêtes. Veuillez patienter une minute avant de réessayer.");
+          throw new Error(
+            "Trop de requêtes. Veuillez patienter une minute avant de réessayer.",
+          );
         }
         throw new Error(err?.error || "Erreur lors de l'action");
       }
 
-      if (action === "verify")
+      // Succès : déplacer dans les tableaux locaux
+      if (action === "verify") {
+        moveUserBetweenLists(unverifiedUsers, verifiedUsers, userId);
         showMessage("Utilisateur approuvé avec succès.", "success");
-        // Déplacer instantanément la carte
-        const card = button.closest(".bg-base-100") as HTMLElement | null;
-        if (card) {
-          // Mettre à jour les arrays locaux d'abord
-          const userIndex = unverifiedUsers.findIndex((u: any) => u.id === userId);
-          if (userIndex !== -1) {
-            const user = unverifiedUsers[userIndex];
-            unverifiedUsers.splice(userIndex, 1);
-            verifiedUsers.push(user);
-
-            // Créer la nouvelle carte immédiatement
-            const newCard = createVerifiedUserCard(user);
-            if (verifiedUsersDiv) {
-              // Ajouter la nouvelle carte avant de supprimer l'ancienne pour éviter le délai
-              verifiedUsersDiv.appendChild(newCard);
-              // Masquer le message "aucun vérifié" si visible
-              if (noVerifiedUsersDiv) noVerifiedUsersDiv.classList.add("hidden");
-            }
-            // Supprimer l'ancienne carte
-            card.remove();
-          }
-          // Recharger pour cohérence après un délai
-          setTimeout(() => {
-            loadPendingUsers();
-            loadVerifiedUsers();
-          }, 2000);
-        }
-      if (action === "reset") {
+      } else if (action === "reset") {
+        moveUserBetweenLists(verifiedUsers, unverifiedUsers, userId);
         showMessage("Utilisateur remis en attente de vérification.", "info");
-        // Déplacer instantanément la carte
-        const card = button.closest(".bg-base-100") as HTMLElement | null;
-        if (card) {
-          // Mettre à jour les arrays locaux d'abord
-          const userIndex = verifiedUsers.findIndex((u: any) => u.id === userId);
-          if (userIndex !== -1) {
-            const user = verifiedUsers[userIndex];
-            verifiedUsers.splice(userIndex, 1);
-            unverifiedUsers.push(user);
-
-            // Créer la nouvelle carte immédiatement
-            const newCard = createUserCard(user);
-            if (pendingUsersDiv) {
-              // Ajouter la nouvelle carte avant de supprimer l'ancienne pour éviter le délai
-              pendingUsersDiv.appendChild(newCard);
-              // Masquer le message "aucun en attente" si visible
-              if (noPendingUsersDiv) noPendingUsersDiv.classList.add("hidden");
-            }
-            // Supprimer l'ancienne carte
-            card.remove();
-          }
-          // Recharger pour cohérence après un délai
-          setTimeout(() => {
-            loadPendingUsers();
-            loadVerifiedUsers();
-          }, 2000);
-        }
-      }
-      if (action === "reject") {
+      } else if (action === "reject") {
+        moveUserBetweenLists(unverifiedUsers, rejectedUsers, userId);
         showMessage("Demande d'adhésion rejetée.", "warning");
-        setTimeout(() => loadRejectedUsers(), 300);
+      } else if (action === "cancel-reject") {
+        moveUserBetweenLists(rejectedUsers, unverifiedUsers, userId);
+        showMessage("Rejet annulé - utilisateur remis en attente.", "info");
       }
+
+      // Refetch pour synchroniser avec le serveur
+      await Promise.all([
+        fetchUnverifiedUsers(),
+        fetchVerifiedUsers(),
+        fetchRejectedUsers(),
+      ]);
+      renderAll();
     } catch (e) {
       showMessage("Une erreur est survenue lors du traitement.", "error");
       button.disabled = false;
@@ -581,7 +772,7 @@
     }
   }
 
-   const inFlight = new Set<string>();
+  const inFlight = new Set<string>();
 
   function getClosestButton(el: EventTarget | null, selector: string) {
     return (el as HTMLElement | null)?.closest(
@@ -589,24 +780,14 @@
     ) as HTMLButtonElement | null;
   }
 
+  // Délégation d'événements
   if (pendingUsersDiv) {
     pendingUsersDiv.addEventListener("click", (event) => {
       const btn = getClosestButton(
         event.target,
         "button[data-action][data-user-id]",
       );
-      if (!btn) return;
-
-      const action = btn.getAttribute("data-action");
-      if (action !== "verify" && action !== "reset" && action !== "reject") return;
-
-      // Désactiver immédiatement le bouton pour éviter les clics multiples
-      if (btn.disabled) return;
-      btn.disabled = true;
-      const originalText = btn.textContent || "";
-      btn.textContent = "Traitement...";
-
-      handleUserActionFromButton(btn, originalText);
+      if (btn) handleUserAction(btn);
     });
   }
 
@@ -614,17 +795,9 @@
     rejectedUsersDiv.addEventListener("click", (event) => {
       const btn = getClosestButton(
         event.target,
-        'button[data-action="cancel-reject"][data-user-id]',
+        "button[data-action][data-user-id]",
       );
-      if (!btn) return;
-
-      // Désactiver immédiatement le bouton pour éviter les clics multiples
-      if (btn.disabled) return;
-      btn.disabled = true;
-      const originalText = btn.textContent || "";
-      btn.textContent = "Traitement...";
-
-      handleRejectionCancelActionFromButton(btn, originalText);
+      if (btn) handleUserAction(btn);
     });
   }
 
@@ -634,157 +807,9 @@
         event.target,
         "button[data-action][data-user-id]",
       );
-      if (!btn) return;
-
-      const action = btn.getAttribute("data-action");
-      if (action !== "reset") return;
-
-      // Désactiver immédiatement le bouton pour éviter les clics multiples
-      if (btn.disabled) return;
-      btn.disabled = true;
-      const originalText = btn.textContent || "";
-      btn.textContent = "Traitement...";
-
-      handleUserActionFromButton(btn, originalText);
+      if (btn) handleUserAction(btn);
     });
   }
-
-  // Fonction pour charger les utilisateurs rejetés
-  async function loadRejectedUsers() {
-    try {
-      const response = await fetch("/api/rejected-users", {
-        headers: {
-          Authorization: `Bearer ${pb.authStore.token}`,
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error("Erreur lors du chargement des utilisateurs rejetés");
-      }
-
-      const data = await response.json();
-      const rejectedUsers = data.users || [];
-
-      // Vider la liste
-      if (rejectedUsersDiv) {
-        rejectedUsersDiv.innerHTML = "";
-      }
-
-      if (rejectedUsers.length === 0) {
-        if (noRejectedUsersDiv) {
-          noRejectedUsersDiv.classList.remove("hidden");
-        }
-        if (deleteAllRejectedBtn) {
-          deleteAllRejectedBtn.disabled = true;
-        }
-        return;
-      }
-
-      if (noRejectedUsersDiv) {
-        noRejectedUsersDiv.classList.add("hidden");
-      }
-
-      // Créer une ligne pour chaque utilisateur rejeté de manière sécurisée
-      // ✅ CORRECTION: Utilisation de textContent au lieu d'innerHTML pour prévenir les XSS
-      rejectedUsers.forEach((user: any) => {
-        const item = document.createElement("div");
-        item.className =
-          "flex items-center justify-between p-3 bg-error/10 rounded-lg border border-error/20";
-
-        // Section d'informations utilisateur
-        const infoDiv = document.createElement("div");
-        infoDiv.className = "flex-1";
-
-        const nameElement = document.createElement("p");
-        nameElement.className = "font-semibold text-sm";
-        nameElement.textContent = user.name || "Nom non spécifié"; // ✅ textContent échappe les données
-
-        const emailElement = document.createElement("p");
-        emailElement.className = "text-xs text-base-content/60";
-        emailElement.textContent = user.email; // ✅ Pas de risque XSS
-
-        const rejectionDateElement = document.createElement("p");
-        rejectionDateElement.className = "text-xs text-base-content/50";
-        const rejectionDate = new Date(user.rejectionDate).toLocaleDateString(
-          "fr-FR",
-        );
-        rejectionDateElement.textContent = `Rejeté le ${rejectionDate}`; // ✅ Date formatée de manière sécurisée
-
-        infoDiv.appendChild(nameElement);
-        infoDiv.appendChild(emailElement);
-        infoDiv.appendChild(rejectionDateElement);
-
-        // Bouton d'annulation du rejet
-        const cancelBtn = document.createElement("button");
-        cancelBtn.className = "btn btn-warning btn-xs";
-        cancelBtn.setAttribute("data-user-id", user.id);
-        cancelBtn.setAttribute("data-action", "cancel-reject");
-        cancelBtn.textContent = "⏳ Remettre en attente";
-
-        item.appendChild(infoDiv);
-        item.appendChild(cancelBtn);
-
-        if (rejectedUsersDiv) {
-          rejectedUsersDiv.appendChild(item);
-        }
-      });
-
-      // Activer le bouton de suppression
-      if (deleteAllRejectedBtn) {
-        deleteAllRejectedBtn.disabled = false;
-      }
-    } catch (error) {}
-  }
-
-  async function handleRejectionCancelActionFromButton(button: HTMLButtonElement, originalText: string) {
-  const userId = button.getAttribute("data-user-id");
-  if (!userId) return;
-
-  if (!confirm("Êtes-vous sûr de vouloir remettre cet utilisateur en attente de vérification ?")) return;
-
-  const key = `cancel-reject:${userId}`;
-  if (inFlight.has(key)) return;
-  inFlight.add(key);
-
-  // Le bouton est déjà désactivé et le texte changé dans l'event listener
-
-  try {
-    const token = pb.authStore.token;
-    if (!token) throw new Error("Non authentifié");
-
-    // Récupération d'un nouveau token CSRF pour chaque action
-    await fetchCSRFToken();
-    if (!csrfToken) throw new Error("Token CSRF manquant");
-
-    const response = await fetch("/api/verify-user", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({ userId, action: "cancel-reject", csrfToken }),
-      credentials: "same-origin",
-      cache: "no-store",
-    });
-
-    if (!response.ok) {
-      const err = await response.json().catch(() => null);
-      throw new Error(err?.error || "Erreur lors de l annulation");
-    }
-
-    showMessage("Rejet annulé - utilisateur remis en attente.", "info");
-    await loadRejectedUsers();
-    await loadPendingUsers();
-  } catch (e) {
-    showMessage("Une erreur est survenue lors de l'annulation du rejet.", "error");
-    button.disabled = false;
-    button.textContent = originalText;
-  } finally {
-    inFlight.delete(key);
-  }
-}
-
 
   // Gestionnaire pour supprimer tous les utilisateurs rejetés
   async function handleDeleteAllRejected() {
@@ -808,9 +833,7 @@
         throw new Error("Non authentifié");
       }
 
-      // Récupération d'un nouveau token CSRF pour chaque action
       await fetchCSRFToken();
-      // Utilisation du token CSRF généré côté serveur pour prévenir les attaques CSRF
       if (!csrfToken) {
         throw new Error("Token CSRF manquant - sécurité compromise");
       }
@@ -830,9 +853,11 @@
       }
 
       const result = await response.json();
-      showMessage(`✅ ${result.deleted} utilisateur(s) supprimé(s)`, "success");
+      showMessage(`✓ ${result.deleted} utilisateur(s) supprimé(s)`, "success");
 
-      await loadRejectedUsers();
+      // Refetch et rerender
+      await fetchRejectedUsers();
+      renderAll();
     } catch (error) {
       showMessage("Une erreur est survenue lors de la suppression.", "error");
       deleteAllRejectedBtn.disabled = false;

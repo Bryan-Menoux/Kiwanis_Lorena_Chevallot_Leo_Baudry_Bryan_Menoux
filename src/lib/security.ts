@@ -125,11 +125,16 @@ export async function verifyJWT(token: string, pbServer: PocketBase): Promise<an
       return null;
     }
 
+    console.log('Decoded payload:', decoded);
+
     // Vérification critique: L'ID du token doit exister et être valide dans la base de données
     if (!decoded || !decoded.id) return null;
 
     // Validation du format de l'ID
-    if (!isValidUserId(decoded.id)) return null;
+    if (!isValidUserId(decoded.id)) {
+      console.log('Invalid user id format:', decoded.id);
+      return null;
+    }
 
     // ✅ VÉRIFICATION ESSENTIELLE: Récupération de l'utilisateur depuis la base de données
     // Cela garantit que le token n'a pas été falsifié
@@ -137,6 +142,8 @@ export async function verifyJWT(token: string, pbServer: PocketBase): Promise<an
       const user = await pbServer.collection('users').getOne(decoded.id, {
         expand: '',
       });
+
+      console.log('User found:', user ? user.id : 'not found');
 
       // Vérification que l'utilisateur existe et correspond au token
       if (!user || user.id !== decoded.id) {
@@ -146,10 +153,12 @@ export async function verifyJWT(token: string, pbServer: PocketBase): Promise<an
       // Retour du payload déclaré + vérification que l'utilisateur existe
       return decoded;
     } catch (userError) {
+      console.log('Error fetching user:', userError);
       // L'utilisateur n'existe pas ou a été supprimé
       return null;
     }
   } catch (error) {
+    console.log('Error in verifyJWT:', error);
     return null;
   }
 }
