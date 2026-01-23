@@ -160,6 +160,9 @@ import wait from "../assets/wait.svg";
   import circleCross from "../assets/cross-circle.svg";
   import circleCheck from "../assets/circle-check.svg";
 
+  const ACTION_COOLDOWN_MS = 250; // 4 actions / seconde max
+  let lastActionAt = 0;
+
   const backArrowSrc =
     document
       .querySelector("script[data-back-arrow-src]")
@@ -715,6 +718,15 @@ import wait from "../assets/wait.svg";
     const userId = button.getAttribute("data-user-id");
     const action = button.getAttribute("data-action");
     const list = button.closest("[data-list]")?.getAttribute("data-list");
+
+    const now = Date.now();
+
+    if (now - lastActionAt < ACTION_COOLDOWN_MS) {
+      showMessage("Merci de ralentir légèrement.", "info");
+      return;
+    }
+
+    lastActionAt = now;
 
     if (!userId || !action || !list) return;
 

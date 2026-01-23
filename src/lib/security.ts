@@ -171,39 +171,40 @@ export async function verifyJWT(token: string, pbServer: PocketBase): Promise<an
  * @param ip - Adresse IP de la requête
  * @returns true si la requête est autorisée, false si trop de requêtes
  */
-export function checkRateLimit(ip: string): boolean {
-  if (!ip) ip = 'unknown';
+type RateLimitEntry = {
+  count: number;
+  expiresAt: number;
+};
 
+const rateLimitStore = new Map<string, RateLimitEntry>();
+
+export function checkRateLimit(
+  key: string,
+  maxRequests = 5,
+  windowMs = 10_000,
+): boolean {
   const now = Date.now();
-  const userCalls = rateLimitMap.get(ip) || [];
+  const entry = rateLimitStore.get(key);
 
-  // Filtre les appels en dehors de la fenêtre temporelle
-  const recentCalls = userCalls.filter((time) => now - time < RATE_LIMIT_WINDOW_MS);
+  // Première requête ou fenêtre expirée
+  if (!entry || now > entry.expiresAt) {
+    rateLimitStore.set(key, {
+      count: 1,
+      expiresAt: now + windowMs,
+    });
+    return true;
+  }
 
-  // Vérifie si la limite est dépassée
-  if (recentCalls.length >= RATE_LIMIT_MAX_REQUESTS) {
+  // Trop de requêtes
+  if (entry.count >= maxRequests) {
     return false;
   }
 
-  // Enregistre le nouvel appel
-  recentCalls.push(now);
-  rateLimitMap.set(ip, recentCalls);
-
-  // Nettoyage des anciennes entrées (toutes les 100 requêtes)
-  if (rateLimitMap.size > 1000) {
-    const now = Date.now();
-    for (const [key, times] of rateLimitMap.entries()) {
-      const recent = times.filter((t) => now - t < RATE_LIMIT_WINDOW_MS);
-      if (recent.length === 0) {
-        rateLimitMap.delete(key);
-      } else {
-        rateLimitMap.set(key, recent);
-      }
-    }
-  }
-
+  // Incrémenter le compteur
+  entry.count += 1;
   return true;
 }
+
 
 // ==================== FONCTIONS DE CSRF ====================
 
