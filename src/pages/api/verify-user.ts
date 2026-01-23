@@ -55,8 +55,10 @@ export const POST: APIRoute = async ({ request }) => {
     }
 
     // Vérification du rate limiting pour prévenir les abus
+    // Correction: clé dédiée à cet endpoint, par admin, pour éviter de faire exploser le quota à cause d'autres routes
     const clientIP = getClientIP(request);
-    if (!checkRateLimit(clientIP)) {
+    const rateLimitKey = `verify-user:${clientIP}:${decoded.id}`;
+    if (!checkRateLimit(rateLimitKey)) {
       return createErrorResponse('Trop de requêtes - veuillez réessayer plus tard', 429);
     }
 
@@ -116,9 +118,16 @@ export const POST: APIRoute = async ({ request }) => {
       }
 
       try {
-        const updatedUser = await pbServer.collection('users').update(userId, {
+        // Correction: vérifier doit aussi "nettoyer" un éventuel statut rejeté, sinon listes incohérentes
+        await pbServer.collection('users').update(userId, {
           verified: true,
+          rejected: false,
+          rejectionDate: null,
+          rejectedBy: null,
         });
+
+        // Correction: renvoyer l'utilisateur fraîchement relu (objet cohérent)
+        const updatedUser = await pbServer.collection('users').getOne(userId);
 
         return new Response(
           JSON.stringify({ success: true, message: 'Utilisateur approuvé', user: updatedUser }),
@@ -133,12 +142,14 @@ export const POST: APIRoute = async ({ request }) => {
       }
     } else if (action === 'reset') {
       try {
-        const resetUser = await pbServer.collection('users').update(userId, {
+        await pbServer.collection('users').update(userId, {
           verified: false,
           rejected: false,
           rejectionDate: null,
           rejectedBy: null,
         });
+
+        const resetUser = await pbServer.collection('users').getOne(userId);
 
         return new Response(
           JSON.stringify({
@@ -155,12 +166,14 @@ export const POST: APIRoute = async ({ request }) => {
       }
     } else if (action === 'reject') {
       try {
-        const rejectedUser = await pbServer.collection('users').update(userId, {
+        await pbServer.collection('users').update(userId, {
           verified: false,
           rejected: true,
           rejectionDate: new Date().toISOString(),
           rejectedBy: currentUser.id,
         });
+
+        const rejectedUser = await pbServer.collection('users').getOne(userId);
 
         return new Response(
           JSON.stringify({
@@ -177,12 +190,14 @@ export const POST: APIRoute = async ({ request }) => {
       }
     } else if (action === 'cancel-reject') {
       try {
-        const canceledUser = await pbServer.collection('users').update(userId, {
+        await pbServer.collection('users').update(userId, {
           verified: false,
           rejected: false,
           rejectionDate: null,
           rejectedBy: null,
         });
+
+        const canceledUser = await pbServer.collection('users').getOne(userId);
 
         return new Response(
           JSON.stringify({
@@ -196,7 +211,7 @@ export const POST: APIRoute = async ({ request }) => {
         const errorMsg =
           cancelError instanceof Error
             ? cancelError.message
-            : 'Erreur lors de l\'annulation du rejet';
+            : "Erreur lors de l'annulation du rejet";
         return createErrorResponse(errorMsg, 500, isDevelopment);
       }
     }

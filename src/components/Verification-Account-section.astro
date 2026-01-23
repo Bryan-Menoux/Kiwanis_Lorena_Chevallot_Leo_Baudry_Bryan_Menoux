@@ -301,6 +301,7 @@ import wait from "../assets/wait.svg";
     });
 
     if (!res.ok) {
+      const text = await res.text();
       throw new Error("Impossible de charger les utilisateurs en attente");
     }
 
@@ -473,14 +474,26 @@ import wait from "../assets/wait.svg";
         if (adminContent) adminContent.classList.remove("hidden");
         if (accessDenied) accessDenied.classList.add("hidden");
 
-        // Chargement initial
-        await fetchCSRFToken();
-        await Promise.all([
-          fetchUnverifiedUsers(),
-          fetchVerifiedUsers(),
-          fetchRejectedUsers(),
-        ]);
-        renderAll();
+        if (isAdmin && isVerified) {
+          if (adminContent) adminContent.classList.remove("hidden");
+          if (accessDenied) accessDenied.classList.add("hidden");
+
+          await fetchCSRFToken();
+
+          // 🔥 TU AVAIS SUPPRIMÉ ÇA
+          await fetchUnverifiedUsers();
+          await fetchVerifiedUsers();
+          await fetchRejectedUsers();
+
+          renderAll();
+
+          if (deleteAllRejectedBtn) {
+            deleteAllRejectedBtn.addEventListener(
+              "click",
+              handleDeleteAllRejected,
+            );
+          }
+        }
 
         if (deleteAllRejectedBtn) {
           deleteAllRejectedBtn.addEventListener(
@@ -697,6 +710,7 @@ import wait from "../assets/wait.svg";
   }
 
   // Gestionnaire pour les actions sur les utilisateurs
+  // Gestionnaire pour les actions sur les utilisateurs
   async function handleUserAction(button: HTMLButtonElement) {
     const userId = button.getAttribute("data-user-id");
     const action = button.getAttribute("data-action");
@@ -731,37 +745,38 @@ import wait from "../assets/wait.svg";
         cache: "no-store",
       });
 
+      // ✅ UNE SEULE lecture du body
+      const responseData = await response.json();
+
       if (!response.ok) {
-        const err = await response.json().catch(() => null);
         if (response.status === 429) {
           throw new Error(
             "Trop de requêtes. Veuillez patienter une minute avant de réessayer.",
           );
         }
-        throw new Error(err?.error || "Erreur lors de l'action");
+        throw new Error(responseData?.error || "Erreur lors de l'action");
       }
 
-      // Succès : déplacer dans les tableaux locaux
-      if (action === "verify") {
-        moveUserBetweenLists(unverifiedUsers, verifiedUsers, userId);
+      // ✅ UNE SEULE variable utilisateur
+      const updatedUser = responseData.user;
+
+      // 🔄 Nettoyer toutes les listes
+      unverifiedUsers = unverifiedUsers.filter((u) => u.id !== updatedUser.id);
+      verifiedUsers = verifiedUsers.filter((u) => u.id !== updatedUser.id);
+      rejectedUsers = rejectedUsers.filter((u) => u.id !== updatedUser.id);
+
+      // ➕ Réinjecter selon l'état réel
+      if (updatedUser.verified === true) {
+        verifiedUsers.push(updatedUser);
         showMessage("Utilisateur approuvé avec succès.", "success");
-      } else if (action === "reset") {
-        moveUserBetweenLists(verifiedUsers, unverifiedUsers, userId);
-        showMessage("Utilisateur remis en attente de vérification.", "info");
-      } else if (action === "reject") {
-        moveUserBetweenLists(unverifiedUsers, rejectedUsers, userId);
+      } else if (updatedUser.rejected === true) {
+        rejectedUsers.push(updatedUser);
         showMessage("Demande d'adhésion rejetée.", "warning");
-      } else if (action === "cancel-reject") {
-        moveUserBetweenLists(rejectedUsers, unverifiedUsers, userId);
-        showMessage("Rejet annulé - utilisateur remis en attente.", "info");
+      } else {
+        unverifiedUsers.push(updatedUser);
+        showMessage("Utilisateur remis en attente de vérification.", "info");
       }
 
-      // Refetch pour synchroniser avec le serveur
-      await Promise.all([
-        fetchUnverifiedUsers(),
-        fetchVerifiedUsers(),
-        fetchRejectedUsers(),
-      ]);
       renderAll();
     } catch (e) {
       showMessage("Une erreur est survenue lors du traitement.", "error");
