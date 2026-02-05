@@ -8,17 +8,9 @@ export default defineConfig({
     plugins: [tailwindcss()],
   },
 
-  site: "https://kiwanis-pays-de-montbeliard.bryan-menoux.fr",
 
   security: {
-    checkOrigin: true,
-    allowedDomains: [
-      {
-        hostname: "kiwanis-pays-de-montbeliard.bryan-menoux.fr",
-        protocol: "https",
-        port: "443",
-      },
-    ],
+    checkOrigin: false,
   },
 
   adapter: node({
