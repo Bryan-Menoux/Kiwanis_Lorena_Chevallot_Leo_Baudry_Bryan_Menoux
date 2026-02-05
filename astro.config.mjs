@@ -11,6 +11,14 @@ export default defineConfig({
     plugins: [tailwindcss()],
   },
 
+  // Origin for CSRF validation in SSR
+  site: "https://kiwanis-pays-de-montbeliard.bryan-menoux.fr",
+
+  // Explicit security configuration
+  security: {
+    checkOrigin: true,
+  },
+
   adapter: node({
     mode: "standalone",
   }),
