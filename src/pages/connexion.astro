@@ -91,7 +91,7 @@ if (isPostForm) {
       >
       </div>
 
-      <form method="post" enctype="application/x-www-form-urlencoded" class="flex flex-col w-full relative">
+      <form class="flex flex-col w-full relative">
         <div
           id="errorText"
           class="absolute left-0 right-0 text-sm text-start font-semibold opacity-0 pointer-events-none"
@@ -201,7 +201,33 @@ if (isPostForm) {
   }
 
   const form = document.querySelector("form");
-  form?.addEventListener("submit", () => {
+  form?.addEventListener("submit", async (e) => {
+    e.preventDefault();
     hideError();
+
+    const email = (form.querySelector('input[name="email"]') as HTMLInputElement)?.value || "";
+    const password = (form.querySelector('input[name="password"]') as HTMLInputElement)?.value || "";
+
+    try {
+      const formData = new URLSearchParams();
+      formData.append("email", email);
+      formData.append("password", password);
+
+      const response = await fetch(window.location.href, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: formData.toString(),
+      });
+
+      if (response.ok) {
+        window.location.href = "/";
+      } else {
+        showError("Échec de la connexion. Vérifiez vos identifiants.");
+      }
+    } catch (error) {
+      showError("Erreur lors de la connexion. Réessayez.");
+    }
   });
 </script>
