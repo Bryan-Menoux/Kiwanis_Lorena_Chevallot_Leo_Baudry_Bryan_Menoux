@@ -51,7 +51,7 @@ jobs:
           rm: false
           overwrite: true
 
-      - name: Install deps in dist and restart PM2
+      - name: Install deps in dist and restart PM2 (FORCE PORT 8085)
         uses: appleboy/ssh-action@v1.0.0
         with:
           host: ${{ secrets.HOST }}
@@ -61,18 +61,25 @@ jobs:
             set -e
 
             cd /var/www/kiwanis
-            ls -la
-            ls -la dist
             test -f dist/server/entry.mjs
 
-            cd /var/www/kiwanis/dist
+            cd dist
             npm ci --omit=dev
 
             cd /var/www/kiwanis
 
             pm2 delete kiwanis || true
-            pm2 start ./ecosystem.config.cjs --update-env
+
+            # 🔥 FORÇAGE EXPLICITE DU PORT ASTRO
+            PORT=8085 HOST=0.0.0.0 pm2 start dist/server/entry.mjs \
+              --name kiwanis \
+              --cwd /var/www/kiwanis \
+              --update-env
+
             pm2 save
 
+            echo "=== Vérification écoute port 8085 ==="
             ss -ltnp | grep 8085 || true
+
+            echo "=== Test HTTP local ==="
             curl -I http://127.0.0.1:8085/ || true
