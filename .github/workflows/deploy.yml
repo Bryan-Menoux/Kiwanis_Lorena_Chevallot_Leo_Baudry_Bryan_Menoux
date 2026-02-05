@@ -28,7 +28,7 @@ jobs:
           cp package-lock.json dist/
           test -f dist/server/entry.mjs
 
-      - name: Clean remote directory before deploy (keep only .env)
+      - name: Clean remote directory before deploy (keep only .env and ecosystem.config.cjs)
         uses: appleboy/ssh-action@v1.0.0
         with:
           host: ${{ secrets.HOST }}
@@ -37,7 +37,7 @@ jobs:
           script: |
             set -e
             cd /var/www/kiwanis
-            find . -mindepth 1 -maxdepth 1 ! -name '.env' -exec rm -rf {} +
+            find . -mindepth 1 -maxdepth 1 ! -name '.env' ! -name 'ecosystem.config.cjs' -exec rm -rf {} +
             ls -la
 
       - name: Upload dist to VPS
