@@ -91,7 +91,7 @@ if (isPostForm) {
       >
       </div>
 
-      <form class="flex flex-col w-full relative">
+      <form method="POST" class="flex flex-col w-full relative">
         <div
           id="errorText"
           class="absolute left-0 right-0 text-sm text-start font-semibold opacity-0 pointer-events-none"
@@ -147,7 +147,7 @@ if (isPostForm) {
   const errorText = document.getElementById("errorText");
   const flags = document.getElementById("auth-flags");
 
-  function showError(message:string, type = "error") {
+  function showError(message: string, type = "error") {
     if (!errorText) return;
 
     gsap.killTweensOf(errorText);
@@ -171,22 +171,7 @@ if (isPostForm) {
     });
   }
 
-  function hideError() {
-    if (!errorText) return;
-
-    gsap.to(errorText, {
-      opacity: 0,
-      y: -60,
-      duration: 0.3,
-      ease: "power2.in",
-      onComplete: () => {
-        if (!errorText) return;
-        errorText.style.pointerEvents = "none";
-        errorText.classList.remove("text-red-500", "text-secondary");
-      },
-    });
-  }
-
+  // Afficher les erreurs injectées par le serveur au chargement de la page
   if (flags) {
     const userVerificated = flags.dataset.userVerificated === "true";
     const message = flags.dataset.message || "";
@@ -199,35 +184,4 @@ if (isPostForm) {
       );
     }
   }
-
-  const form = document.querySelector("form");
-  form?.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    hideError();
-
-    const email = (form.querySelector('input[name="email"]') as HTMLInputElement)?.value || "";
-    const password = (form.querySelector('input[name="password"]') as HTMLInputElement)?.value || "";
-
-    try {
-      const formData = new URLSearchParams();
-      formData.append("email", email);
-      formData.append("password", password);
-
-      const response = await fetch(window.location.href, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded",
-        },
-        body: formData.toString(),
-      });
-
-      if (response.ok) {
-        window.location.href = "/";
-      } else {
-        showError("Échec de la connexion. Vérifiez vos identifiants.");
-      }
-    } catch (error) {
-      showError("Erreur lors de la connexion. Réessayez.");
-    }
-  });
 </script>
