@@ -1,4 +1,4 @@
-// @ts-check
+// astro.config.mjs
 import { defineConfig } from "astro/config";
 import tailwindcss from "@tailwindcss/vite";
 import node from "@astrojs/node";
@@ -8,9 +8,8 @@ export default defineConfig({
     plugins: [tailwindcss()],
   },
 
-
   security: {
-    checkOrigin: false,
+    checkOrigin: true,
   },
 
   adapter: node({
