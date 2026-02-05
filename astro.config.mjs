@@ -12,8 +12,8 @@ export default defineConfig({
     checkOrigin: true,
     allowedDomains: [
       {
-        hostname: "kiwanis-pays-de-montbeliard.bryan-menoux.fr",
         protocol: "https",
+        hostname: "kiwanis-pays-de-montbeliard.bryan-menoux.fr",
         port: "443",
       },
     ],
