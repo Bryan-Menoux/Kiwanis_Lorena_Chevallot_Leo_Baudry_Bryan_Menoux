@@ -1,0 +1,115 @@
+---
+import circleCheck from "../assets/circle-check.svg";
+import crossCircle from "../assets/cross-circle.svg";
+import wait from "../assets/wait.svg";
+
+type User = {
+  id: string;
+  name?: string;
+  email: string;
+  created: string;
+  verified: boolean;
+  rejected?: boolean;
+  rejectionDate?: string;
+};
+
+type CardType = 'pending' | 'rejected' | 'verified';
+
+interface Props {
+  user: User;
+  type: CardType;
+  currentUserId?: string;
+}
+
+const { user, type, currentUserId = '' } = Astro.props as Props;
+---
+
+<!-- Carte en attente -->
+{type === 'pending' && (
+  <div class="bg-base-100 rounded-xl p-6 border border-base-300" data-user-id={user.id} data-list-type="pending">
+    <div class="flex justify-between gap-4">
+      <div>
+        <h3 class="text-lg font-semibold">{user.name || 'Nom non spécifié'}</h3>
+        <p class="text-base-content/70">{user.email}</p>
+        <p class="text-sm text-base-content/50">Inscrit le {new Date(user.created).toLocaleDateString("fr-FR")}</p>
+      </div>
+      <div class="flex gap-3">
+        <form method="post">
+          <input type="hidden" name="formSource" value="verification" />
+          <input type="hidden" name="userId" value={user.id} />
+          <input type="hidden" name="userName" value={user.name || 'Nom non spécifié'} />
+          <input type="hidden" name="userEmail" value={user.email} />
+          <input type="hidden" name="userCreated" value={user.created} />
+          <input type="hidden" name="action" value="approve" />
+          <input type="hidden" name="listType" value="pending" />
+          <button class="btn btn-success btn-sm verify-action" type="submit" name="submitAction" value="approve">
+            <img src={circleCheck.src} class="w-5 h-5 invert" />
+            Approuver
+          </button>
+        </form>
+        <form method="post">
+          <input type="hidden" name="formSource" value="verification" />
+          <input type="hidden" name="userId" value={user.id} />
+          <input type="hidden" name="userName" value={user.name || 'Nom non spécifié'} />
+          <input type="hidden" name="userEmail" value={user.email} />
+          <input type="hidden" name="userCreated" value={user.created} />
+          <input type="hidden" name="action" value="reject" />
+          <input type="hidden" name="listType" value="pending" />
+          <button class="btn btn-error btn-sm verify-action" type="submit" name="submitAction" value="reject">
+            <img src={crossCircle.src} class="w-5 h-5 invert" />
+            Rejeter
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+)}
+
+<!-- Carte rejetée -->
+{type === 'rejected' && (
+  <div class="flex justify-between p-3 bg-error/10 rounded-lg border border-error/20" data-user-id={user.id} data-list-type="rejected">
+    <div>
+      <p class="font-semibold text-sm">{user.name || 'Nom non spécifié'}</p>
+      <p class="text-xs text-base-content/60">{user.email}</p>
+      <p class="text-xs text-base-content/50">Rejeté le {user.rejectionDate ? new Date(user.rejectionDate).toLocaleDateString("fr-FR") : "—"}</p>
+    </div>
+    <form method="post" class="inline">
+      <input type="hidden" name="formSource" value="verification" />
+      <input type="hidden" name="userId" value={user.id} />
+      <input type="hidden" name="userName" value={user.name || 'Nom non spécifié'} />
+      <input type="hidden" name="userEmail" value={user.email} />
+      <input type="hidden" name="userCreated" value={user.created} />
+      <input type="hidden" name="action" value="unreject" />
+      <input type="hidden" name="listType" value="rejected" />
+      <button class="btn btn-warning btn-sm verify-action" type="submit" name="submitAction" value="unreject">
+        <img src={wait.src} class="w-5 h-5 invert" />
+        Remettre en attente
+      </button>
+    </form>
+  </div>
+)}
+
+<!-- Carte vérifiée -->
+{type === 'verified' && (
+  <div class="flex justify-between items-center p-4 border border-success/20 rounded-xl" data-user-id={user.id} data-list-type="verified">
+    <div>
+      <p class="font-semibold">{user.name || 'Nom non spécifié'}</p>
+      <p class="text-sm text-base-content/70">{user.email}</p>
+    </div>
+    {user.id !== currentUserId && (
+      <form method="post" class="inline">
+        <input type="hidden" name="formSource" value="verification" />
+        <input type="hidden" name="userId" value={user.id} />
+        <input type="hidden" name="userName" value={user.name || 'Nom non spécifié'} />
+        <input type="hidden" name="userEmail" value={user.email} />
+        <input type="hidden" name="userCreated" value={user.created} />
+        <input type="hidden" name="action" value="unverify" />
+        <input type="hidden" name="listType" value="verified" />
+        <button class="btn btn-error btn-sm verify-action" type="submit" name="submitAction" value="unverify">
+          <img src={crossCircle.src} class="w-5 h-5 invert" />
+          Retirer
+        </button>
+      </form>
+    )}
+  </div>
+)}
