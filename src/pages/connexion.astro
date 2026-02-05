@@ -6,11 +6,59 @@ import logo from "../assets/logo-kiwanis-full.svg";
 import backArrow from "../assets/back-arrow.svg";
 import userIcon from "../assets/login-page/user.svg";
 import lockIcon from "../assets/login-page/lock.svg";
+
+// Si l'utilisateur est déjà connecté, le rediriger vers la page d'accueil
+if (Astro.locals.pb.authStore.isValid) {
+  Astro.response.status = 302;
+  Astro.response.headers.set("Location", "/");
+}
+
+
+let userVerificated = true;
+let serverMessage = "";
+
+const isPostForm =
+  Astro.request.method === "POST" &&
+  Astro.request.headers.get("content-type")?.includes("form");
+
+if (isPostForm) {
+  try {
+    const data = await Astro.request.formData();
+    const email = data.get("email")?.toString() ?? "";
+    const password = data.get("password")?.toString() ?? "";
+
+    await Astro.locals.pb.collection("users").authWithPassword(email, password);
+
+    const user = Astro.locals.pb.authStore.model;
+
+    if (!user?.verified) {
+      Astro.locals.pb.authStore.clear();
+      userVerificated = false;
+      serverMessage =
+        "Vous devez attendre la vérification de votre compte par un administrateur.";
+      throw new Error("not_verified");
+    }
+
+    Astro.response.headers.append(
+      "set-cookie",
+      Astro.locals.pb.authStore.exportToCookie(),
+    );
+    Astro.response.status = 302;
+    Astro.response.headers.set("Location", "/");
+  } catch (error) {
+    if (userVerificated === true) {
+      userVerificated = false;
+      serverMessage = "Échec de la connexion. Vérifiez vos identifiants.";
+    }
+  }
+}
 ---
 
 <Layout>
-  <div class="absolute top-8 left-8 flex items-center text-white hover:underline z-10">
-    <img src={backArrow.src} aria-hidden="true">
+  <div
+    class="absolute top-8 left-8 flex items-center text-white hover:underline z-10"
+  >
+    <img src={backArrow.src} aria-hidden="true" />
     <a href="/" class="text-white ml-2">Retour à l'accueil</a>
   </div>
   <img
@@ -35,11 +83,28 @@ import lockIcon from "../assets/login-page/lock.svg";
       class="md:w-[30dvw] lg:w-[15dvw]"
     />
     <div class="lg:max-w-[20dvw]">
-      <form class="flex flex-col w-full relative">
-        <div id="errorText" class="absolute left-0 right-0 text-sm text-start font-semibold opacity-0 pointer-events-none" style="bottom: calc(100% + 0.5rem);"></div>
-        
+      <div
+        id="auth-flags"
+        data-user-verificated={String(userVerificated)}
+        data-message={serverMessage}
+        class="hidden"
+      >
+      </div>
+
+      <form method="post" class="flex flex-col w-full relative">
+        <div
+          id="errorText"
+          class="absolute left-0 right-0 text-sm text-start font-semibold opacity-0 pointer-events-none"
+          style="bottom: calc(100% + 0.5rem);"
+        >
+        </div>
+
         <div class="relative my-2">
-          <img src={userIcon.src} alt="" class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 opacity-70">
+          <img
+            src={userIcon.src}
+            alt=""
+            class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 opacity-70"
+          />
           <input
             type="email"
             name="email"
@@ -48,7 +113,11 @@ import lockIcon from "../assets/login-page/lock.svg";
           />
         </div>
         <div class="relative my-2">
-          <img src={lockIcon.src} alt="" class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 opacity-70">
+          <img
+            src={lockIcon.src}
+            alt=""
+            class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 opacity-70"
+          />
           <input
             type="password"
             name="password"
@@ -56,10 +125,11 @@ import lockIcon from "../assets/login-page/lock.svg";
             class="input input-bordered w-full pl-10 bg-transparent border-gray-200 text-gray-200"
           />
         </div>
-        
+
         <button
           class="btn btn-primary rounded-lg! bg-white text-primary w-full mt-4"
-          >Se connecter</button>
+          >Se connecter</button
+        >
       </form>
       <div
         class="flex justify-between w-full mt-4 text-sm text-white gap-x-4 flex-wrap md:flex-row"
@@ -72,67 +142,66 @@ import lockIcon from "../assets/login-page/lock.svg";
 </Layout>
 
 <script>
-    import {authenticateUser} from '../lib/pocketbase.mjs';
-    import { gsap } from 'gsap';
-  
-  const form = document.querySelector("form");
-  const errorText = document.getElementById("errorText") as HTMLElement | null;
+  import { gsap } from "gsap";
 
-  function showError(message: string, type: string = "error") {
-    if (errorText) {
-      gsap.killTweensOf(errorText);
-      gsap.set(errorText, { opacity: 0, y: 60 });
-      
-      errorText.classList.remove("text-red-500", "text-secondary");
-      errorText.classList.add(type === "warning" ? "text-secondary" : "text-red-500");
-      
-      errorText.textContent = message;
-      errorText.style.pointerEvents = "auto";
-      
-      requestAnimationFrame(() => {
-        gsap.to(errorText, {
-          opacity: 1,
-          y: 0,
-          duration: 0.5,
-          ease: "power2.out"
-        });
+  const errorText = document.getElementById("errorText");
+  const flags = document.getElementById("auth-flags");
+
+  function showError(message:string, type = "error") {
+    if (!errorText) return;
+
+    gsap.killTweensOf(errorText);
+    gsap.set(errorText, { opacity: 0, y: 60 });
+
+    errorText.classList.remove("text-red-500", "text-secondary");
+    errorText.classList.add(
+      type === "warning" ? "text-secondary" : "text-red-500",
+    );
+
+    errorText.textContent = message;
+    errorText.style.pointerEvents = "auto";
+
+    requestAnimationFrame(() => {
+      gsap.to(errorText, {
+        opacity: 1,
+        y: 0,
+        duration: 0.5,
+        ease: "power2.out",
       });
-    }
+    });
   }
 
   function hideError() {
-    if (errorText) {
-      gsap.to(errorText, {
-        opacity: 0,
-        y: -60,
-        duration: 0.3,
-        ease: "power2.in",
-        onComplete: () => {
-          if (errorText) {
-            errorText.style.pointerEvents = "none";
-            errorText.classList.remove("text-red-500", "text-secondary");
-          }
-        }
-      });
+    if (!errorText) return;
+
+    gsap.to(errorText, {
+      opacity: 0,
+      y: -60,
+      duration: 0.3,
+      ease: "power2.in",
+      onComplete: () => {
+        if (!errorText) return;
+        errorText.style.pointerEvents = "none";
+        errorText.classList.remove("text-red-500", "text-secondary");
+      },
+    });
+  }
+
+  if (flags) {
+    const userVerificated = flags.dataset.userVerificated === "true";
+    const message = flags.dataset.message || "";
+
+    if (!userVerificated) {
+      showError(
+        message ||
+          "Veuillez vérifier votre adresse e-mail avant de vous connecter.",
+        "warning",
+      );
     }
   }
 
-  form?.addEventListener("submit", async (event) => {
-      event.preventDefault();
-      hideError();
-      
-      const formData = new FormData(form);
-      const email = formData.get("email") as string;
-      const password = formData.get("password") as string;
-      
-      try {
-          await authenticateUser(email, password);
-          console.log("Connexion réussie !");
-          window.location.href = "/";
-      } catch (error: any) {
-          const message = error.message || "Échec de la connexion. Veuillez vérifier vos identifiants et réessayer.";
-          const errorType = error.errorType || "error";
-          showError(message, errorType);
-      }
+  const form = document.querySelector("form");
+  form?.addEventListener("submit", () => {
+    hideError();
   });
 </script>

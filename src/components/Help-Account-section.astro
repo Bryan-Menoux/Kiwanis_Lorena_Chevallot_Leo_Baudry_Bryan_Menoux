@@ -1,6 +1,333 @@
+---
+// Import des ressources nécessaires
+import helpIcon from "../assets/help.svg";
+import userIcon from "../assets/user.svg";
+import circleCheckIcon from "../assets/circle-check.svg";
+import editIcon from "../assets/edit.svg";
+---
+
 <div
-  class="min-h-screen mt-24 lg: from-base-100 via-base-100 to-base-200 py-8 px-4 md:px-8 pt-4 md:pt-12"
+  class="min-h-screen mt-24 lg:bg-linear-to-br from-base-100 via-base-100 to-base-200 py-8 pb-64 px-4 md:px-8 pt-4 md:pt-12"
 >
-  <!-- Section d'aide pour le compte utilisateur -->
-  <h2>Aide</h2>
+  <div class="max-w-4xl mx-auto">
+    <!-- En-tête de la section d'aide -->
+    <div class="mb-12 text-center">
+      <h1
+        class="text-4xl md:text-5xl lg:text-7xl font-bold title font-merriweather mb-4"
+      >
+        Centre d'aide
+      </h1>
+      <p class="text-base-content/60 text-lg">
+        Guide simple pour utiliser votre compte Kiwanis
+      </p>
+    </div>
+
+    <!-- Carte principale contenant l'aide -->
+    <div class="bg-white rounded-2xl shadow-2xl overflow-hidden">
+      <div class="p-8 md:p-12">
+
+        <!-- Introduction -->
+        <div class="mb-12">
+          <h2 class="text-3xl font-bold text-base-content mb-6 flex items-center gap-3">
+            <img src={helpIcon.src} alt="Aide" class="h-8 w-8" />
+            Bienvenue dans votre espace personnel
+          </h2>
+          <p class="text-lg text-base-content/80 leading-relaxed mb-4">
+            Cette page vous permet de gérer votre compte Kiwanis en toute simplicité.
+            Vous trouverez ici toutes les informations et outils nécessaires pour votre utilisation quotidienne.
+          </p>
+          <div class="bg-blue-50 border-l-4 border-blue-400 p-4 rounded">
+            <p class="text-blue-800">
+              <strong>Conseil :</strong> Prenez le temps de lire ce guide tranquillement.
+              Chaque section est expliquée étape par étape.
+            </p>
+          </div>
+        </div>
+
+        <!-- Navigation principale -->
+        <div class="mb-12">
+          <h3 class="text-2xl font-bold text-base-content mb-6">Comment naviguer dans votre compte</h3>
+
+          <div class="grid md:grid-cols-2 gap-6 mb-8">
+            <!-- Mon compte -->
+            <div class="bg-base-100 p-6 rounded-lg border border-base-300">
+              <div class="flex items-center gap-3 mb-4">
+                <img src={userIcon.src} alt="Mon compte" class="h-6 w-6" />
+                <h4 class="text-xl font-semibold text-base-content">Mon compte</h4>
+              </div>
+              <p class="text-base-content/70 mb-3">
+                C'est votre page d'accueil personnelle. Ici, vous pouvez :
+              </p>
+              <ul class="list-disc list-inside text-base-content/70 space-y-1">
+                <li>Voir vos informations personnelles</li>
+                <li>Modifier votre mot de passe</li>
+                <li>Mettre à jour votre profil</li>
+                <li>Consulter vos paramètres</li>
+              </ul>
+            </div>
+
+            <!-- Vérifications (Admin seulement) -->
+            <div class="bg-base-100 p-6 rounded-lg border border-base-300">
+              <div class="flex items-center gap-3 mb-4">
+                <img src={circleCheckIcon.src} alt="Vérifications" class="h-6 w-6" />
+                <h4 class="text-xl font-semibold text-base-content">Vérifications</h4>
+              </div>
+              <p class="text-base-content/70 mb-3">
+                Section réservée aux administrateurs pour :
+              </p>
+              <ul class="list-disc list-inside text-base-content/70 space-y-1">
+                <li>Accepter de nouveaux membres</li>
+                <li>Refuser des inscriptions</li>
+                <li>Gérer les comptes en attente</li>
+                <li>Supprimer des comptes rejetés</li>
+              </ul>
+            </div>
+
+            <!-- Modifications (Admin seulement) -->
+            <div class="bg-base-100 p-6 rounded-lg border border-base-300">
+              <div class="flex items-center gap-3 mb-4">
+                <img src={editIcon.src} alt="Modifications" class="h-6 w-6" />
+                <h4 class="text-xl font-semibold text-base-content">Modifications</h4>
+              </div>
+              <p class="text-base-content/70 mb-3">
+                Section réservée aux administrateurs pour :
+              </p>
+              <ul class="list-disc list-inside text-base-content/70 space-y-1">
+                <li>Modifier les informations des membres</li>
+                <li>Changer les rôles (admin/utilisateur)</li>
+                <li>Rechercher des membres spécifiques</li>
+                <li>Mettre à jour les profils</li>
+              </ul>
+            </div>
+
+            <!-- Aide -->
+            <div class="bg-green-50 p-6 rounded-lg border border-green-300">
+              <div class="flex items-center gap-3 mb-4">
+                <img src={helpIcon.src} alt="Aide" class="h-6 w-6" />
+                <h4 class="text-xl font-semibold text-green-800">Aide (vous êtes ici)</h4>
+              </div>
+              <p class="text-green-700 mb-3">
+                Ce guide d'aide pour :
+              </p>
+              <ul class="list-disc list-inside text-green-700 space-y-1">
+                <li>Comprendre toutes les fonctionnalités</li>
+                <li>Apprendre à utiliser chaque section</li>
+                <li>Résoudre les problèmes courants</li>
+                <li>Obtenir des conseils pratiques</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded">
+            <h5 class="font-semibold text-yellow-800 mb-2">Comment changer de section :</h5>
+            <ol class="list-decimal list-inside text-yellow-800 space-y-1">
+              <li>Cliquez sur le bouton dans la barre de navigation à gauche</li>
+              <li>La page va doucement glisser vers la nouvelle section</li>
+              <li>L'indicateur bleu montre où vous êtes</li>
+            </ol>
+          </div>
+        </div>
+
+        <!-- Section Mon Compte en détail -->
+        <div class="mb-12">
+          <h3 class="text-2xl font-bold text-base-content mb-6">Guide détaillé : Mon compte</h3>
+
+          <div class="space-y-6">
+            <div class="bg-base-100 p-6 rounded-lg border border-base-300">
+              <h4 class="text-lg font-semibold text-base-content mb-4">Voir vos informations</h4>
+              <p class="text-base-content/70 mb-3">
+                Sur votre page personnelle, vous verrez toutes vos informations :
+              </p>
+              <ul class="list-disc list-inside text-base-content/70 space-y-1">
+                <li>Votre nom complet</li>
+                <li>Votre adresse email</li>
+                <li>Votre date d'inscription</li>
+                <li>Votre statut (membre ou administrateur)</li>
+              </ul>
+            </div>
+
+            <div class="bg-base-100 p-6 rounded-lg border border-base-300">
+              <h4 class="text-lg font-semibold text-base-content mb-4">Changer votre mot de passe</h4>
+              <p class="text-base-content/70 mb-3">
+                Pour changer votre mot de passe :
+              </p>
+              <ol class="list-decimal list-inside text-base-content/70 space-y-1">
+                <li>Cliquez sur le bouton "Modifier le mot de passe"</li>
+                <li>Remplissez l'ancien mot de passe</li>
+                <li>Choisissez un nouveau mot de passe fort</li>
+                <li>Confirmez le nouveau mot de passe</li>
+                <li>Cliquez sur "Enregistrer"</li>
+              </ol>
+              <div class="bg-red-50 border-l-4 border-red-400 p-3 mt-3 rounded">
+                <p class="text-red-800 text-sm">
+                  <strong>Important :</strong> Après le changement, vous serez déconnecté et devrez vous reconnecter.
+                </p>
+              </div>
+            </div>
+
+            <div class="bg-base-100 p-6 rounded-lg border border-base-300">
+              <h4 class="text-lg font-semibold text-base-content mb-4">Modifier votre profil</h4>
+              <p class="text-base-content/70 mb-3">
+                Pour mettre à jour vos informations :
+              </p>
+              <ol class="list-decimal list-inside text-base-content/70 space-y-1">
+                <li>Cliquez sur "Modifier le profil"</li>
+                <li>Changez votre nom ou prénom si nécessaire</li>
+                <li>Vérifiez votre adresse email</li>
+                <li>Cliquez sur "Enregistrer les modifications"</li>
+              </ol>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section Vérifications (Admin) -->
+        <div class="mb-12">
+          <h3 class="text-2xl font-bold text-base-content mb-6">Guide : Vérifications (Administrateurs)</h3>
+
+          <div class="bg-orange-50 border-l-4 border-orange-400 p-4 rounded mb-6">
+            <p class="text-orange-800">
+              <strong>Reservé aux administrateurs :</strong> Cette section n'est visible que si vous êtes administrateur.
+            </p>
+          </div>
+
+          <div class="space-y-6">
+            <div class="bg-base-100 p-6 rounded-lg border border-base-300">
+              <h4 class="text-lg font-semibold text-base-content mb-4">Gerer les nouveaux membres</h4>
+              <p class="text-base-content/70 mb-3">
+                Quand quelqu'un s'inscrit, vous verrez :
+              </p>
+              <ul class="list-disc list-inside text-base-content/70 space-y-1 mb-3">
+                <li>Une liste des personnes en attente</li>
+                <li>Leurs informations (nom, email, date)</li>
+                <li>Des boutons pour accepter ou refuser</li>
+              </ul>
+              <div class="grid md:grid-cols-2 gap-4">
+                <div class="bg-green-50 p-3 rounded">
+                  <p class="text-green-800 text-sm font-semibold">Accepter un membre :</p>
+                  <p class="text-green-700 text-sm">Cliquez sur "Vérifier" - la personne pourra se connecter</p>
+                </div>
+                <div class="bg-red-50 p-3 rounded">
+                  <p class="text-red-800 text-sm font-semibold">Refuser un membre :</p>
+                  <p class="text-red-700 text-sm">Cliquez sur "Rejeter" - le compte sera supprimé</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="bg-base-100 p-6 rounded-lg border border-base-300">
+              <h4 class="text-lg font-semibold text-base-content mb-4">Organiser les comptes</h4>
+              <p class="text-base-content/70 mb-3">
+                Les comptes sont organisés en 3 catégories :
+              </p>
+              <ul class="list-disc list-inside text-base-content/70 space-y-1">
+                <li><strong>Non vérifiés :</strong> Nouveaux membres en attente</li>
+                <li><strong>Vérifiés :</strong> Membres actifs acceptés</li>
+                <li><strong>Rejetés :</strong> Comptes refusés (à supprimer)</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section Modifications (Admin) -->
+        <div class="mb-12">
+          <h3 class="text-2xl font-bold text-base-content mb-6">Guide : Modifications (Administrateurs)</h3>
+
+          <div class="bg-orange-50 border-l-4 border-orange-400 p-4 rounded mb-6">
+            <p class="text-orange-800">
+              <strong>Reservé aux administrateurs :</strong> Cette section n'est visible que si vous êtes administrateur.
+            </p>
+          </div>
+
+          <div class="space-y-6">
+            <div class="bg-base-100 p-6 rounded-lg border border-base-300">
+              <h4 class="text-lg font-semibold text-base-content mb-4">Rechercher un membre</h4>
+              <p class="text-base-content/70 mb-3">
+                Pour trouver rapidement quelqu'un :
+              </p>
+              <ol class="list-decimal list-inside text-base-content/70 space-y-1">
+                <li>Utilisez le champ "Rechercher un utilisateur"</li>
+                <li>Tapez le nom, prénom ou email</li>
+                <li>La liste se met à jour automatiquement</li>
+                <li>Cliquez sur "Modifier" à côté du nom</li>
+              </ol>
+            </div>
+
+            <div class="bg-base-100 p-6 rounded-lg border border-base-300">
+              <h4 class="text-lg font-semibold text-base-content mb-4">Modifier un profil</h4>
+              <p class="text-base-content/70 mb-3">
+                Pour changer les informations d'un membre :
+              </p>
+              <ol class="list-decimal list-inside text-base-content/70 space-y-1">
+                <li>Trouvez le membre (avec la recherche)</li>
+                <li>Cliquez sur "Modifier"</li>
+                <li>Changez le prénom, nom ou email</li>
+                <li>Cochez/décochez "Administrateur" si besoin</li>
+                <li>Cliquez sur "Enregistrer"</li>
+              </ol>
+            </div>
+
+            <div class="bg-base-100 p-6 rounded-lg border border-base-300">
+              <h4 class="text-lg font-semibold text-base-content mb-4">Gerer les rôles</h4>
+              <p class="text-base-content/70 mb-3">
+                La case "Administrateur" permet de :
+              </p>
+              <ul class="list-disc list-inside text-base-content/70 space-y-1">
+                <li><strong>Cocher :</strong> Donner les droits d'administrateur</li>
+                <li><strong>Décocher :</strong> Retirer les droits d'administrateur</li>
+              </ul>
+              <div class="bg-yellow-50 border-l-4 border-yellow-400 p-3 mt-3 rounded">
+                <p class="text-yellow-800 text-sm">
+                  <strong>Attention :</strong> Seuls les administrateurs voient les sections Vérifications et Modifications.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Dépannage -->
+        <div class="mb-12">
+          <h3 class="text-2xl font-bold text-base-content mb-6">Dépannage - Problèmes courants</h3>
+
+          <div class="space-y-4">
+            <div class="bg-base-100 p-6 rounded-lg border border-base-300">
+              <h4 class="text-lg font-semibold text-base-content mb-3">Je ne vois pas les sections Admin</h4>
+              <p class="text-base-content/70 mb-2"><strong>Cause :</strong> Vous n'êtes pas administrateur</p>
+              <p class="text-base-content/70"><strong>Solution :</strong> Contactez un administrateur pour obtenir les droits nécessaires</p>
+            </div>
+
+            <div class="bg-base-100 p-6 rounded-lg border border-base-300">
+              <h4 class="text-lg font-semibold text-base-content mb-3">La page ne se charge pas</h4>
+              <p class="text-base-content/70 mb-2"><strong>Cause :</strong> Problème de connexion internet</p>
+              <p class="text-base-content/70"><strong>Solution :</strong> Vérifiez votre connexion et rechargez la page</p>
+            </div>
+
+            <div class="bg-base-100 p-6 rounded-lg border border-base-300">
+              <h4 class="text-lg font-semibold text-base-content mb-3">Je ne peux pas me connecter</h4>
+              <p class="text-base-content/70 mb-2"><strong>Cause :</strong> Mot de passe incorrect ou compte non vérifié</p>
+              <p class="text-base-content/70"><strong>Solution :</strong> Utilisez "Mot de passe oublié" ou contactez un administrateur</p>
+            </div>
+
+            <div class="bg-base-100 p-6 rounded-lg border border-base-300">
+              <h4 class="text-lg font-semibold text-base-content mb-3">Les modifications ne s'enregistrent pas</h4>
+              <p class="text-base-content/70 mb-2"><strong>Cause :</strong> Champs obligatoires vides ou format incorrect</p>
+              <p class="text-base-content/70"><strong>Solution :</strong> Vérifiez que tous les champs sont remplis correctement</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Contact -->
+        <div class="bg-blue-50 border border-blue-200 rounded-lg p-6">
+          <h3 class="text-xl font-bold text-blue-900 mb-4">Besoin d'aide supplémentaire ?</h3>
+          <p class="text-blue-800 mb-4">
+            Si vous rencontrez un problème non décrit ici ou si vous avez des questions,
+            n'hésitez pas à contacter un administrateur du système.
+          </p>
+          <div class="flex items-center gap-2 text-blue-700">
+            <span class="text-2xl">Contactez le support technique</span>
+            <span>Contactez le support technique pour obtenir de l'aide personnalisée.</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
 </div>
