@@ -4,7 +4,9 @@ import tailwindcss from "@tailwindcss/vite";
 import node from "@astrojs/node";
 
 export default defineConfig({
-  vite: { plugins: [tailwindcss()] },
+  vite: {
+    plugins: [tailwindcss()],
+  },
 
   site: "https://kiwanis-pays-de-montbeliard.bryan-menoux.fr",
 
@@ -12,13 +14,16 @@ export default defineConfig({
     checkOrigin: true,
     allowedDomains: [
       {
-        protocol: "https",
         hostname: "kiwanis-pays-de-montbeliard.bryan-menoux.fr",
+        protocol: "https",
         port: "443",
       },
     ],
   },
 
-  adapter: node({ mode: "standalone" }),
+  adapter: node({
+    mode: "standalone",
+  }),
+
   output: "server",
 });
