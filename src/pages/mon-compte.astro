@@ -1,5 +1,4 @@
 ---
-// Importation des composants et ressources nécessaires pour la page
 import Layout from "../layouts/Layout.astro";
 import AccountSection from "../components/Account-section.astro";
 import VerificationSection from "../components/Verification-Account-section.astro";
@@ -7,81 +6,296 @@ import HelpAccountSection from "../components/Help-Account-section.astro";
 import user from "../assets/user.svg";
 import circleCheck from "../assets/circle-check.svg";
 import help from "../assets/help.svg";
-import { getUnverifiedUsers } from "../lib/pocketbase.mjs";
+import edit from "../assets/edit.svg";
 
-// Récupération des utilisateurs non vérifiés pour la section admin
-let unverifiedUsers: any[] = [];
-try {
-  const users = await getUnverifiedUsers() as any[];
-  unverifiedUsers = users || [];
-} catch (error: unknown) {
-  unverifiedUsers = [];
+// Vérification de l'authentification utilisateur
+if (!Astro.locals.pb.authStore.isValid) {
+  return Astro.redirect("/connexion");
 }
 
-// Définition des éléments de navigation pour la page de compte
-// La visibilité de "verifications" est gérée dynamiquement côté client selon les permissions
+const currentUser = Astro.locals.pb.authStore.model;
+
+if (!currentUser || !currentUser.verified) {
+  Astro.locals.pb.authStore.clear();
+  return Astro.redirect("/connexion");
+}
+
+const isPostForm =
+  Astro.request.method === "POST" &&
+  Astro.request.headers.get("content-type")?.includes("form");
+
+// Fonction pour gérer les actions d'administration des utilisateurs
+async function handleVerificationAction(
+  userId: string,
+  action: string,
+  rejectedById: string,
+) {
+  switch (action) {
+    case "approve":
+      await Astro.locals.pb.collection("users").update(userId, {
+        verified: true,
+        rejected: false,
+        rejectionDate: null,
+        rejectedBy: null,
+      });
+      break;
+
+    case "reject":
+      const now = new Date().toISOString();
+      await Astro.locals.pb.collection("users").update(userId, {
+        verified: false,
+        rejected: true,
+        rejectionDate: now,
+        rejectedBy: rejectedById,
+      });
+
+      break;
+
+    case "unreject":
+      await Astro.locals.pb.collection("users").update(userId, {
+        verified: false,
+        rejected: false,
+        rejectionDate: null,
+        rejectedBy: null,
+      });
+      break;
+
+    case "unverify":
+      await Astro.locals.pb.collection("users").update(userId, {
+        verified: false,
+        rejected: false,
+        rejectionDate: null,
+        rejectedBy: null,
+      });
+      break;
+
+    default:
+      console.warn(`Action inconnue: ${action}`);
+  }
+}
+
+// Gestion des requêtes POST (mises à jour profil et actions admin)
+if (isPostForm) {
+  try {
+    const data = await Astro.request.formData();
+
+    const formSource = data.get("formSource") as string;
+
+    if (formSource === "verification") {
+      const userId = data.get("userId") as string;
+      const action = data.get("action") as string;
+      const userName = data.get("userName") as string;
+      const userEmail = data.get("userEmail") as string;
+
+      try {
+        await handleVerificationAction(userId, action, currentUser.id);
+
+        const isAjax =
+          Astro.request.headers.get("X-Requested-With") === "XMLHttpRequest";
+
+        if (isAjax) {
+          return new Response(
+            JSON.stringify({
+              success: true,
+              action,
+              userId,
+              message: `Action ${action} effectuée avec succès`,
+            }),
+            {
+              status: 200,
+              headers: { "Content-Type": "application/json" },
+            },
+          );
+        }
+
+        const baseUrl = new URL(Astro.request.url);
+        const cleanUrl = `${baseUrl.origin}${baseUrl.pathname}#verifications`;
+        return Astro.redirect(cleanUrl, 303);
+      } catch (error) {
+        console.error("Erreur lors de l'action de vérification:", error);
+
+        const isAjax =
+          Astro.request.headers.get("X-Requested-With") === "XMLHttpRequest";
+        if (isAjax) {
+          return new Response(
+            JSON.stringify({
+              success: false,
+              error: error instanceof Error ? error.message : "Erreur inconnue",
+            }),
+            {
+              status: 500,
+              headers: { "Content-Type": "application/json" },
+            },
+          );
+        }
+        throw error;
+      }
+    } else if (Astro.locals.pb.authStore.isValid && currentUser!.verified) {
+      const firstName = (data.get("firstName") as string) || "";
+      const lastName = (data.get("lastName") as string) || "";
+      const name = `${firstName} ${lastName}`.trim();
+      const email = (data.get("email") as string) || "";
+
+      const oldPassword = (data.get("oldPassword") as string) || "";
+      const newPassword = (data.get("newPassword") as string) || "";
+      const newPasswordConfirm =
+        (data.get("newPasswordConfirm") as string) || "";
+
+      if (oldPassword && newPassword && newPasswordConfirm) {
+        if (newPassword !== newPasswordConfirm) {
+          throw new Error(
+            "Le nouveau mot de passe et sa confirmation ne correspondent pas.",
+          );
+        }
+        try {
+          await Astro.locals.pb.collection("users").update(currentUser!.id, {
+            oldPassword: oldPassword,
+            password: newPassword,
+            passwordConfirm: newPasswordConfirm,
+          });
+        } catch (error) {
+          console.error(
+            "Erreur PocketBase lors de la mise à jour du mot de passe:",
+            error,
+          );
+          throw new Error("Échec de la mise à jour du mot de passe.");
+        }
+      }
+
+      const updateData: any = { name, email };
+      await Astro.locals.pb
+        .collection("users")
+        .update(currentUser!.id, updateData);
+
+      return Astro.redirect("/mon-compte?success=true", 303);
+    }
+  } catch (error) {
+    console.error("Erreur lors de la mise à jour du profil:", error);
+  }
+}
+
+const isAdmin = currentUser.administrateur === true;
+let users: any[] = [];
+
+if (isAdmin) {
+  users = await Astro.locals.pb.collection("users").getFullList();
+}
+
+const success = Astro.url.searchParams.get("success") === "true";
+
+// Configuration de la navigation
 const navItems = [
-  { id: "my-account", label: "Mon compte", icon: user, active: true, marginTop: false, show: true },
-  { id: "verifications", label: "Vérifications", icon: circleCheck, active: false, marginTop: false, show: false },
-  { id: "help", label: "Aide", icon: help, active: false, marginTop: true, show: true }
+  {
+    id: "my-account",
+    label: "Mon compte",
+    icon: user,
+    active: true,
+    marginTop: false,
+    show: true,
+  },
+  {
+    id: "verifications",
+    label: "Vérifications",
+    icon: circleCheck,
+    active: false,
+    marginTop: false,
+    show: isAdmin,
+  },
+  {
+    id: "modifications",
+    label: "Modifications",
+    icon: edit,
+    active: false,
+    marginTop: false,
+    show: isAdmin,
+  },
+  {
+    id: "help",
+    label: "Aide",
+    icon: help,
+    active: false,
+    marginTop: true,
+    show: true,
+  },
 ] as const;
 ---
+
 <Layout>
-  <!-- Navigation latérale fixe pour accéder aux différentes sections du compte -->
+  <!-- Navigation latérale du compte utilisateur -->
   <nav
     class="bg-white rounded-box p-6 fixed top-1/2 left-4 -translate-y-1/2 z-50 shadow-lg"
     aria-label="Navigation de compte"
   >
-    <ul class="flex flex-col gap-4 items-center relative">
-      <!-- Indicateur visuel qui suit l'élément actif dans la navigation -->
-      <div 
-        id="nav-indicator" 
-        class="btn btn-accent absolute h-13 rounded-box px-4 py-2 flex items-center" 
-        style="pointer-events: none; width: 190px; left: 0; top: 0;"
+    <ul class="flex flex-col gap-4 items-center relative w-full">
+      <div
+        id="nav-indicator"
+        class="btn btn-accent absolute rounded-box px-4 py-2 flex items-center"
+        style="pointer-events: none; width: 190px; left: 0; top: 0; height: 3.25rem;"
         aria-hidden="true"
-      ></div>
-      {navItems.map((item) => (
-        <li 
-          class:list={[
-            "flex items-center gap-4 min-w-full cursor-pointer transition-colors duration-300 px-4 relative nav-item h-13",
-            { "nav-item-active": item.active, "mt-8": item.marginTop },
-            item.show === false ? "hidden" : ""
-          ]}
-          role="tab"
-          aria-selected={item.active}
-          data-section={item.id}
-        >
-          {item.icon && <div class="w-10 h-10 icon-accent" style={`--icon-url: url(${item.icon.src})`}></div>}
-          <a href={`#${item.id}`}>{item.label}</a>
-        </li>
-      ))}
-      <!-- Bouton de déconnexion -->
-      <li class="flex items-center gap-4 min-w-full cursor-pointer transition-colors duration-300 px-4 relative nav-item h-13 mt-8 btn btn-accent rounded-md!">
+      >
+      </div>
+      {
+        navItems.map((item) => (
+          <li
+            class:list={[
+              "flex items-center gap-4 min-w-full cursor-pointer transition-colors duration-300 px-4 relative nav-item h-13",
+              { "nav-item-active": item.active, "mt-8": item.marginTop },
+              item.show === false ? "hidden" : "",
+            ]}
+            role="tab"
+            aria-selected={item.active}
+            data-section={item.id}
+          >
+            {item.icon && (
+              <div
+                class="w-10 h-10 icon-accent"
+                style={`--icon-url: url(${item.icon.src})`}
+              />
+            )}
+            <a href={`#${item.id}`}>{item.label}</a>
+          </li>
+        ))
+      }
+      <li
+        class="flex items-center gap-4 min-w-full cursor-pointer transition-colors duration-300 px-4 relative nav-item h-13 mt-8 btn btn-accent rounded-md!"
+      >
         <button id="logout-btn" class="w-full text-left">Déconnexion</button>
       </li>
     </ul>
   </nav>
-  <!-- Contenu principal avec défilement horizontal pour les sections -->
+  <!-- Contenu principal avec sections -->
   <main
     class="flex flex-1 w-full h-fit overflow-x-scroll scrollbar-hide scroll-smooth snap-x snap-mandatory"
     id="content-container"
     role="tabpanel"
   >
-    {navItems.map((item) => (
-      <section 
-        class:list={[
-          "min-w-full h-full snap-start",
-          item.show === false ? "hidden" : ""
-        ]}
-        id={item.id}
-      >
-        {item.id === "my-account" ? <AccountSection /> : item.id === "verifications" ? <VerificationSection unverifiedUsers={unverifiedUsers as any[]} /> : <HelpAccountSection />}
-      </section>
-    ))}
+    {
+      navItems.map((item) => (
+        <section
+          class:list={[
+            "min-w-full h-full snap-start",
+            item.show === false ? "hidden" : "",
+          ]}
+          id={item.id}
+        >
+          {item.id === "my-account" ? (
+            <AccountSection success={success} />
+          ) : item.id === "verifications" ? (
+            <VerificationSection
+              users={users as any[]}
+              isAdmin={isAdmin}
+              currentUserId={currentUser.id}
+            />
+          ) : (
+            <HelpAccountSection />
+          )}
+        </section>
+      ))
+    }
   </main>
 </Layout>
-<!-- Styles pour l'indicateur de navigation et les éléments actifs -->
 <style>
+  /* Styles pour la navigation */
   #nav-indicator {
     will-change: transform;
     z-index: 0;
@@ -97,214 +311,49 @@ const navItems = [
   }
 </style>
 <script>
-  // Importation de la bibliothèque d'animation GSAP
-  import gsap from 'gsap';
-  
-  // Récupération des éléments DOM nécessaires pour la navigation
-  const indicator = document.getElementById('nav-indicator');
-  const navList = indicator?.parentElement;
-  const navItems = document.querySelectorAll<HTMLElement>('.nav-item');
-  const contentContainer = document.getElementById('content-container');
-  const sections = document.querySelectorAll<HTMLElement>('main section');
-  
-  // Vérification que tous les éléments requis sont présents
-  if (!indicator || !navList || !contentContainer) throw new Error('Required elements not found');
-  
-  // Configuration des animations rapides pour l'indicateur
-  const quickTo = {
-    x: gsap.quickTo(indicator, 'x', { duration: 0.25, ease: 'power2.out' }),
-    y: gsap.quickTo(indicator, 'y', { duration: 0.25, ease: 'power2.out' }),
-    width: gsap.quickTo(indicator, 'width', { duration: 0.25, ease: 'power2.out' }),
-    height: gsap.quickTo(indicator, 'height', { duration: 0.25, ease: 'power2.out' })
-  };
-  
-  // Variables pour gérer l'état du défilement
-  let isScrolling = false;
-  let scrollTimeout: ReturnType<typeof setTimeout>;
-  
-  // Met à jour l'état actif des éléments de navigation
-  function updateActiveState(item: HTMLElement) {
-    navItems.forEach(nav => {
-      nav.classList.remove('nav-item-active');
-      nav.setAttribute('aria-selected', 'false');
-    });
-    item.classList.add('nav-item-active');
-    item.setAttribute('aria-selected', 'true');
-  }
-  
-  // Déplace l'indicateur vers l'élément de navigation spécifié
-  function moveIndicator(item: HTMLElement, instant = false) {
-    if (!navList) return;
-    const listRect = navList.getBoundingClientRect();
-    const itemRect = item.getBoundingClientRect();
-    const x = itemRect.left - listRect.left;
-    const y = itemRect.top - listRect.top;
-    if (instant) {
-      gsap.set(indicator, { x, y, width: itemRect.width, height: itemRect.height });
-    } else {
-      quickTo.x(x);
-      quickTo.y(y);
-      quickTo.width(itemRect.width);
-      quickTo.height(itemRect.height);
-    }
-    updateActiveState(item);
-  }
-  
-  // Gestion des clics sur les éléments de navigation
-  navItems.forEach(navItem => {
-    navItem.addEventListener('click', (e) => {
-      e.preventDefault();
-      const sectionId = navItem.dataset.section;
-      const section = sectionId && document.getElementById(sectionId);
-      if (section) {
-        isScrolling = true;
-        clearTimeout(scrollTimeout);
-        moveIndicator(navItem);
-        contentContainer.scrollTo({
-          left: section.offsetLeft,
-          behavior: 'smooth'
+  // Animation de la navigation
+  import gsap from "gsap";
+
+  const indicator = document.getElementById("nav-indicator");
+  const navItems = document.querySelectorAll(".nav-item");
+  const container = document.getElementById("content-container");
+
+  if (!indicator || !container || !navItems.length) {
+  } else {
+    const moveIndicator = (item: Element, instant = false) => {
+      const rect = item.getBoundingClientRect();
+      const parent = item.parentElement?.getBoundingClientRect();
+      if (!parent) return;
+      const x = rect.left - parent.left;
+      const y = rect.top - parent.top;
+
+      if (instant) {
+        gsap.set(indicator, { x, y, width: rect.width, height: rect.height });
+      } else {
+        gsap.to(indicator, {
+          x,
+          y,
+          width: rect.width,
+          height: rect.height,
+          duration: 0.25,
         });
-        scrollTimeout = setTimeout(() => { isScrolling = false; }, 800);
       }
-    });
-  });
-  
-  // Gestion du bouton de déconnexion
-  const logoutBtn = document.getElementById('logout-btn');
-  if (logoutBtn) {
-    logoutBtn.addEventListener('click', () => {
-      pb.authStore.clear();
-      localStorage.removeItem('pocketbase_auth');
-      window.location.href = '/';
-    });
-  }
-  
-  // Observateur pour détecter quelle section est visible lors du défilement
-  const observer = new IntersectionObserver((entries) => {
-    if (isScrolling) return;
-    const visibleEntries = entries.filter(entry => {
-      const section = entry.target as HTMLElement;
-      return !section.classList.contains('hidden') && entry.isIntersecting && entry.intersectionRatio > 0.8;
-    });
-    if (visibleEntries.length === 0) return;
-    let mostVisible = visibleEntries[0];
-    visibleEntries.forEach(entry => {
-      if (entry.intersectionRatio > mostVisible.intersectionRatio) {
-        mostVisible = entry;
-      }
-    });
-    const navItem = Array.from(navItems).find(
-      item => item.dataset.section === mostVisible.target.id
-    );
-    if (navItem && mostVisible.target.id !== 'my-account') {
-      moveIndicator(navItem);
-    }
-  }, { 
-    root: contentContainer, 
-    threshold: [0.8, 0.9, 1]
-  });
-  sections.forEach(section => observer.observe(section));
-  
-  // Initialisation de l'indicateur sur l'élément actif au chargement
-  setTimeout(() => {
-    const myAccountItem = document.querySelector<HTMLElement>('.nav-item[data-section="my-account"]');
-    if (myAccountItem) {
-      navItems.forEach(nav => {
-        nav.classList.remove('nav-item-active');
-        nav.setAttribute('aria-selected', 'false');
+
+      navItems.forEach((i) => i.classList.remove("nav-item-active"));
+      item.classList.add("nav-item-active");
+    };
+
+    navItems.forEach((item) => {
+      item.addEventListener("click", (e) => {
+        e.preventDefault();
+        const id = (item as HTMLElement).dataset.section;
+        if (!id) return;
+        const section = document.getElementById(id);
+        if (!section) return;
+
+        moveIndicator(item);
+        container.scrollTo({ left: section.offsetLeft, behavior: "smooth" });
       });
-      myAccountItem.classList.add('nav-item-active');
-      myAccountItem.setAttribute('aria-selected', 'true');
-      moveIndicator(myAccountItem, true);
-    }
-  }, 100);
-  
-  // Gestion du redimensionnement de la fenêtre pour ajuster l'indicateur
-  let resizeTimeout: ReturnType<typeof setTimeout>;
-  window.addEventListener('resize', () => {
-    clearTimeout(resizeTimeout);
-    resizeTimeout = setTimeout(() => {
-      const active = document.querySelector<HTMLElement>('.nav-item-active:not(.hidden)') || 
-                    document.querySelector<HTMLElement>('.nav-item:not(.hidden)') || 
-                    navItems[0];
-      moveIndicator(active, true);
-    }, 150);
-  });
-  
-  // Vérification des droits d'administrateur pour afficher la section de vérifications
-  import { pb } from "../lib/pocketbase.mjs";
-  
-  (async () => {
-    try {
-      // Attendez que PocketBase soit initialisé et que le DOM soit prêt
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      // Récupérez l'utilisateur depuis localStorage pour avoir l'ID
-      const authData = localStorage.getItem('pocketbase_auth');
-      
-      if (!authData) {
-        return;
-      }
-      
-      const parsed = JSON.parse(authData);
-      const userId = parsed?.record?.id;
-      
-      if (!userId) {
-        return;
-      }
-      
-      // Récupérez les données complètes de l'utilisateur via l'endpoint API serveur
-      try {
-        const response = await fetch('/api/get-user-full', {
-          method: 'POST',
-          headers: { 
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${pb.authStore.token}`
-          },
-          body: JSON.stringify({ userId }),
-        });
-
-        if (!response.ok) {
-          throw new Error('Erreur lors de la récupération du user');
-        }
-
-        const data = await response.json();
-        const fullUser = data.user;
-        
-        const isAdmin = fullUser.administrateur === true;
-        const isVerified = fullUser.verified === true;
-        
-        if (isAdmin && isVerified) {
-          const verifNavItem = document.querySelector<HTMLElement>('.nav-item[data-section="verifications"]');
-          const verificationSection = document.getElementById('verifications');
-          
-          if (verifNavItem && verifNavItem.classList.contains('hidden')) {
-            verifNavItem.classList.remove('hidden');
-            gsap.fromTo(verifNavItem, { opacity: 0, x: -20 }, { opacity: 1, x: 0, duration: 0.5, ease: 'power2.out' });
-          }
-          if (verificationSection && verificationSection.classList.contains('hidden')) {
-            verificationSection.classList.remove('hidden');
-            gsap.fromTo(verificationSection, { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.6, ease: 'power2.out', delay: 0.1 });
-          }
-        } else {
-          const verifNavItem = document.querySelector<HTMLElement>('.nav-item[data-section="verifications"]');
-          const verificationSection = document.getElementById('verifications');
-          if (verifNavItem) verifNavItem.classList.add('hidden');
-          if (verificationSection) verificationSection.classList.add('hidden');
-        }
-      } catch (apiError) {
-        // En cas d'erreur, masquer les éléments pour sécurité
-        const verifNavItem = document.querySelector<HTMLElement>('.nav-item[data-section="verifications"]');
-        const verificationSection = document.getElementById('verifications');
-        if (verifNavItem) verifNavItem.classList.add('hidden');
-        if (verificationSection) verificationSection.classList.add('hidden');
-      }
-    } catch (error) {
-      // En cas d'erreur, masquer les éléments de vérification pour sécurité
-      const verifNavItem = document.querySelector<HTMLElement>('.nav-item[data-section="verifications"]');
-      const verificationSection = document.getElementById('verifications');
-      if (verifNavItem) verifNavItem.classList.add('hidden');
-      if (verificationSection) verificationSection.classList.add('hidden');
-    }
-  })();
+    });
+  }
 </script>
