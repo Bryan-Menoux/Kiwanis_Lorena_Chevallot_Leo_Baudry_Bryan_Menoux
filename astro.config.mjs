@@ -17,6 +17,12 @@ export default defineConfig({
   // Explicit security configuration
   security: {
     checkOrigin: true,
+    allowedDomains: [
+      {
+        protocol: "https",
+        hostname: "kiwanis-pays-de-montbeliard.bryan-menoux.fr",
+      },
+    ],
   },
 
   adapter: node({
