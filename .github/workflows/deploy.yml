@@ -70,21 +70,8 @@ jobs:
 
             cd /var/www/kiwanis
 
-            export PORT=8085
-            export HOST=0.0.0.0
-            export NODE_OPTIONS="--dns-result-order=ipv4first"
-            export DOTENV_CONFIG_PATH=/var/www/kiwanis/.env
-
-            set -a && source .env && set +a
-
-            pm2 stop kiwanis || true
             pm2 delete kiwanis || true
-
-            pm2 start /var/www/kiwanis/dist/server/entry.mjs \
-              --name kiwanis \
-              --cwd /var/www/kiwanis \
-              --node-args="--dns-result-order=ipv4first"
-
+            pm2 start ecosystem.config.cjs --update-env
             pm2 save
 
             ss -ltnp | grep 8085 || true
