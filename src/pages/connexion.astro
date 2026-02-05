@@ -8,7 +8,10 @@ import userIcon from "../assets/login-page/user.svg";
 import lockIcon from "../assets/login-page/lock.svg";
 
 // Si l'utilisateur est déjà connecté, le rediriger vers la page d'accueil
+console.log("[CONNEXION] Vérification si utilisateur déjà connecté...");
+console.log("[CONNEXION] authStore.isValid:", Astro.locals.pb.authStore.isValid);
 if (Astro.locals.pb.authStore.isValid) {
+  console.log("[CONNEXION] Utilisateur déjà connecté, redirection vers /");
   Astro.response.status = 302;
   Astro.response.headers.set("Location", "/");
 }
@@ -21,17 +24,31 @@ const isPostForm =
   Astro.request.method === "POST" &&
   Astro.request.headers.get("content-type")?.includes("form");
 
+console.log("[CONNEXION] Méthode requête:", Astro.request.method);
+console.log("[CONNEXION] isPostForm:", isPostForm);
+
 if (isPostForm) {
+  console.log("[CONNEXION] ===== DÉBUT TENTATIVE CONNEXION =====");
   try {
     const data = await Astro.request.formData();
     const email = data.get("email")?.toString() ?? "";
     const password = data.get("password")?.toString() ?? "";
 
+    console.log("[CONNEXION] Email reçu:", email);
+    console.log("[CONNEXION] Mot de passe reçu: (longueur:", password.length, ")");
+    console.log("[CONNEXION] Tentative authWithPassword...");
+
     await Astro.locals.pb.collection("users").authWithPassword(email, password);
+    
+    console.log("[CONNEXION] ✓ Authentification réussie");
 
     const user = Astro.locals.pb.authStore.model;
+    console.log("[CONNEXION] Utilisateur récupéré:", user);
+    console.log("[CONNEXION] User ID:", user?.id);
+    console.log("[CONNEXION] User verified:", user?.verified);
 
     if (!user?.verified) {
+      console.log("[CONNEXION] ✗ Utilisateur non vérifié");
       Astro.locals.pb.authStore.clear();
       userVerificated = false;
       serverMessage =
@@ -39,18 +56,32 @@ if (isPostForm) {
       throw new Error("not_verified");
     }
 
+    console.log("[CONNEXION] ✓ Utilisateur vérifié");
+    console.log("[CONNEXION] Export du cookie d'authentification...");
+    const cookie = Astro.locals.pb.authStore.exportToCookie();
+    console.log("[CONNEXION] Cookie:", cookie);
+    
     Astro.response.headers.append(
       "set-cookie",
-      Astro.locals.pb.authStore.exportToCookie(),
+      cookie,
     );
+    console.log("[CONNEXION] ✓ Cookie défini dans les headers");
+    console.log("[CONNEXION] Redirection vers /");
+    
     Astro.response.status = 302;
     Astro.response.headers.set("Location", "/");
   } catch (error) {
+    console.log("[CONNEXION] ✗ ERREUR:", error);
+    console.log("[CONNEXION] Message erreur:", (error as Error).message);
+    console.log("[CONNEXION] Stack:", (error as Error).stack);
+    
     if (userVerificated === true) {
       userVerificated = false;
       serverMessage = "Échec de la connexion. Vérifiez vos identifiants.";
     }
+    console.log("[CONNEXION] Message final:", serverMessage);
   }
+  console.log("[CONNEXION] ===== FIN TENTATIVE CONNEXION =====");
 }
 ---
 
@@ -144,11 +175,20 @@ if (isPostForm) {
 <script>
   import { gsap } from "gsap";
 
+  console.log("[CONNEXION CLIENT] Script client chargé");
+
   const errorText = document.getElementById("errorText");
   const flags = document.getElementById("auth-flags");
 
+  console.log("[CONNEXION CLIENT] errorText element:", errorText);
+  console.log("[CONNEXION CLIENT] flags element:", flags);
+
   function showError(message: string, type = "error") {
-    if (!errorText) return;
+    console.log("[CONNEXION CLIENT] showError appelé - message:", message, "type:", type);
+    if (!errorText) {
+      console.log("[CONNEXION CLIENT] ✗ errorText est null, impossible d'afficher l'erreur");
+      return;
+    }
 
     gsap.killTweensOf(errorText);
     gsap.set(errorText, { opacity: 0, y: 60 });
@@ -161,6 +201,9 @@ if (isPostForm) {
     errorText.textContent = message;
     errorText.style.pointerEvents = "auto";
 
+    console.log("[CONNEXION CLIENT] Classes ajoutées:", errorText.className);
+    console.log("[CONNEXION CLIENT] Animation en cours...");
+
     requestAnimationFrame(() => {
       gsap.to(errorText, {
         opacity: 1,
@@ -168,6 +211,7 @@ if (isPostForm) {
         duration: 0.5,
         ease: "power2.out",
       });
+      console.log("[CONNEXION CLIENT] Animation terminée");
     });
   }
 
@@ -176,12 +220,31 @@ if (isPostForm) {
     const userVerificated = flags.dataset.userVerificated === "true";
     const message = flags.dataset.message || "";
 
+    console.log("[CONNEXION CLIENT] Flags détectés");
+    console.log("[CONNEXION CLIENT] userVerificated:", userVerificated);
+    console.log("[CONNEXION CLIENT] message:", message);
+
     if (!userVerificated) {
+      console.log("[CONNEXION CLIENT] Affichage de l'erreur de vérification");
       showError(
         message ||
           "Veuillez vérifier votre adresse e-mail avant de vous connecter.",
         "warning",
       );
     }
+  } else {
+    console.log("[CONNEXION CLIENT] Aucun flags détectés");
+  }
+
+  // Bonus: Logger les events du formulaire
+  const form = document.querySelector('form');
+  if (form) {
+    console.log("[CONNEXION CLIENT] Formulaire trouvé, ajout des listeners");
+    form.addEventListener('submit', (e) => {
+      const formData = new FormData(form);
+      const email = formData.get('email');
+      const password = formData.get('password');
+      console.log("[CONNEXION CLIENT] Formulaire soumis - email:", email, "password longueur:", (password as string).length);
+    });
   }
 </script>
