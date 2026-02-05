@@ -20,7 +20,11 @@ export const onRequest = defineMiddleware(
       console.log("  Reconstructed (X-Forwarded):", `${proto}://${host}`);
     }
 
-    locals.pb = new PocketBase("http://127.0.0.1:8090");
+    const pbUrl = import.meta.env.PROD 
+      ? "https://pb-kiwanis.bryan-menoux.fr"
+      : "http://127.0.0.1:8090";
+    
+    locals.pb = new PocketBase(pbUrl);
 
     if (!isPrerendered) {
       // load the store data from the request cookie string
