@@ -8,6 +8,7 @@ interface Props {
 const { success = false } = Astro.props;
 
 let user = Astro.locals.pb.authStore.record;
+const isAdmin = user?.administrateur === true;
 
 const { firstName, lastName } = splitUserName(user!.name);
 ---
@@ -99,7 +100,7 @@ const { firstName, lastName } = splitUserName(user!.name);
             </div>
           </div>
 
-          <!-- Champ email en lecture seule -->
+          <!-- Champ email -->
           <div class="form-control w-full mt-6">
             <label class="label pb-2">
               <span class="label-text font-semibold text-base-content"
@@ -110,10 +111,16 @@ const { firstName, lastName } = splitUserName(user!.name);
               type="email"
               id="email"
               name="email"
-              class="input input-bordered w-full bg-base-200"
+              class={`input input-bordered w-full ${!isAdmin ? 'bg-base-200' : ''}`}
               placeholder="votre.email@exemple.com"
               value={user?.email || ""}
+              disabled={!isAdmin}
             />
+            {!isAdmin && (
+              <p class="text-sm text-base-content/60 mt-2">
+                Seul un administrateur peut modifier votre adresse e-mail. Veuillez contacter un administrateur.
+              </p>
+            )}
           </div>
         </div>
 
@@ -366,7 +373,15 @@ const { firstName, lastName } = splitUserName(user!.name);
           if (newPasswordInput) newPasswordInput.value = "";
           if (confirmPasswordInput) confirmPasswordInput.value = "";
 
-          showSuccess(result.message || "✓ Vos modifications ont bien été enregistrées.");
+          // Si déconnexion requise (changement d'email ou mot de passe), rediriger vers connexion
+          if (result.logout) {
+            showSuccess("✓ Profil mis à jour. Veuillez vous reconnecter avec vos nouvelles informations.");
+            setTimeout(() => {
+              window.location.href = "/connexion";
+            }, 2000);
+          } else {
+            showSuccess(result.message || "✓ Vos modifications ont bien été enregistrées.");
+          }
         } else {
           // Rollback si erreur
           if (displayFirstName) displayFirstName.value = oldFirstName!;

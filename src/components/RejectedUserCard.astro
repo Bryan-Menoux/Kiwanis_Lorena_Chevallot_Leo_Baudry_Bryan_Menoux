@@ -15,11 +15,16 @@ const user = Astro.props.user as any as User;
 ---
 
 <div
-  class="flex justify-between p-3 bg-error/10 rounded-lg border border-error/20 transition-all duration-300"
+  class="flex items-center justify-between p-3 bg-error/10 rounded-lg border border-error/20 transition-all duration-300"
   data-user-id={user.id}
   data-list-type="rejected"
 >
-  <div>
+  <input
+    type="checkbox"
+    class="checkbox checkbox-error checkbox-reject mr-4"
+    data-user-id={user.id}
+  />
+  <div class="flex-1">
     <p class="font-semibold text-sm">
       {user.name ?? "Nom non spécifié"}
     </p>
@@ -33,7 +38,7 @@ const user = Astro.props.user as any as User;
   </div>
 
   <button
-    class="btn btn-warning btn-sm verify-action"
+    class="btn btn-warning btn-sm verify-action self-center"
     data-user-id={user.id}
     data-action="unreject"
     data-list-type="rejected"

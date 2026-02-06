@@ -8,7 +8,7 @@ import user from "../assets/user.svg";
 import circleCheck from "../assets/circle-check.svg";
 import help from "../assets/help.svg";
 import edit from "../assets/edit.svg";
-import { capitalizeName } from "../utils/utilitaires.js";
+import logout from "../assets/logout.svg";
 
 // Vérification de l'authentification utilisateur
 if (!Astro.locals.pb.authStore.isValid) {
@@ -107,7 +107,9 @@ const navItems = [
       <li
         class="flex items-center gap-4 min-w-full cursor-pointer transition-colors duration-300 px-4 relative nav-item h-13 mt-8 btn btn-accent rounded-md!"
       >
-        <button id="logout-btn" class="w-full text-left">Déconnexion</button>
+        <button id="logout-btn" class="w-full text-left flex items-center gap-4">
+          <img src={logout.src} aria-hidden="true" class="h-8 w-8 filter brightness-0 invert">
+          Déconnexion</button>
       </li>
     </ul>
   </nav>
@@ -164,6 +166,7 @@ const navItems = [
   // Animation de la navigation
   import gsap from "gsap";
   import { initVerifications } from "../scripts/verification-handlers.js";
+  import { initModifications } from "../scripts/modification-handlers.js";
 
   const indicator = document.getElementById("nav-indicator");
   const navItems = document.querySelectorAll(".nav-item");
@@ -225,22 +228,28 @@ const navItems = [
 
     // Observer pour détecter quand une section entre dans la vue lors du scroll manuel
     const lastReloaded = new Map<string, number>();
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach(async (entry) => {
-        if (entry.isIntersecting) {
-          const sectionId = entry.target.id;
-          const now = Date.now();
-          if (lastReloaded.has(sectionId) && now - lastReloaded.get(sectionId)! < 5000) {
-            return; // Éviter le rechargement en boucle
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach(async (entry) => {
+          if (entry.isIntersecting) {
+            const sectionId = entry.target.id;
+            const now = Date.now();
+            if (
+              lastReloaded.has(sectionId) &&
+              now - lastReloaded.get(sectionId)! < 5000
+            ) {
+              return; // Éviter le rechargement en boucle
+            }
+            lastReloaded.set(sectionId, now);
+            await reloadSection(sectionId);
           }
-          lastReloaded.set(sectionId, now);
-          await reloadSection(sectionId);
-        }
-      });
-    }, { root: container, threshold: 0.8 });
+        });
+      },
+      { root: container, threshold: 0.8 },
+    );
 
     // Observer toutes les sections initiales
-    document.querySelectorAll('section').forEach(section => {
+    document.querySelectorAll("section").forEach((section) => {
       observer.observe(section);
     });
 
@@ -248,20 +257,19 @@ const navItems = [
     async function reloadSection(sectionId: string) {
       try {
         const cachedHash = sessionStorage.getItem(`hash-${sectionId}`);
-        
+
         // Vérifier d'abord si les données ont changé
         const checkResponse = await fetch(
-          `/api/check-section?section=${sectionId}&hash=${cachedHash || ''}`
+          `/api/check-section?section=${sectionId}&hash=${cachedHash || ""}`,
         );
-        
+
         if (!checkResponse.ok) return;
-        
+
         const { hash, changed } = await checkResponse.json();
         sessionStorage.setItem(`hash-${sectionId}`, hash);
 
         // Seulement si changé, recharger la section
         if (!changed) {
-          console.log(`Section #${sectionId} inchangée, pas de rechargement.`);
           return;
         }
 
@@ -269,27 +277,54 @@ const navItems = [
         if (response.ok) {
           const html = await response.text();
           const parser = new DOMParser();
-          const doc = parser.parseFromString(html, 'text/html');
+          const doc = parser.parseFromString(html, "text/html");
           const newSection = doc.querySelector(`#${sectionId}`);
-          
+
           if (newSection) {
             const oldSection = document.querySelector(`#${sectionId}`);
             if (oldSection) {
               oldSection.replaceWith(newSection);
               observer.observe(newSection);
-              console.log(`Section #${sectionId} mise à jour.`);
-              if (sectionId === 'verifications') {
+              if (sectionId === "verifications") {
                 initVerifications();
+              }
+              if (sectionId === "modifications") {
+                initModifications();
               }
             }
           }
         }
       } catch (error) {
-        console.error(`Erreur lors du rechargement de la section ${sectionId}:`, error);
+        console.error(
+          `Erreur lors du rechargement de la section ${sectionId}:`,
+          error,
+        );
       }
     }
   }
 
   // Init verifications if present
   initVerifications();
+
+  // Gérer le bouton logout
+  const logoutBtn = document.getElementById("logout-btn");
+  if (logoutBtn) {
+    logoutBtn.addEventListener("click", async () => {
+      try {
+        const response = await fetch("/api/logout", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+
+        if (response.ok) {
+          window.location.href = "/connexion";
+        }
+      } catch (error) {
+        console.error("Erreur lors de la déconnexion:", error);
+      }
+    });
+  }
+
 </script>

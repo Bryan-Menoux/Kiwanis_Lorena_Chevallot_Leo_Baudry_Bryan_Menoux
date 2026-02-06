@@ -1,10 +1,5 @@
 ---
 import UserCard from "./UserCard.astro";
-const users = await Astro.locals.pb
-  .collection("users")
-  .getFullList({
-    filter: "verified = true && rejected = false",
-  });
 
 if (!Astro.locals.pb.authStore.isValid) {
   throw new Error("Utilisateur non authentifié");
@@ -13,12 +8,18 @@ if (!Astro.locals.pb.authStore.isValid) {
 const user = Astro.locals.pb.authStore.record;
 const isAdmin = user?.administrateur;
 
+// Récupérer tous les utilisateurs vérifiés
+const users = await Astro.locals.pb.collection("users").getFullList({
+  filter: "verified = true && rejected = false",
+});
+
 const perPage = 6;
 const pages = [];
 for (let i = 0; i < users.length; i += perPage) {
   pages.push(users.slice(i, i + perPage));
 }
-const totalPages = pages.length;
+const totalPages = pages.length || 1;
+---
 ---
 
 <div class="min-h-screen mt-24 py-8 px-4">
@@ -54,15 +55,21 @@ const totalPages = pages.length;
             id="carousel-inner"
           >
             {
-              pages.map((pageUsers, index) => (
-                <div class="carousel-slide shrink-0 w-full">
-                  <div class="flex flex-col gap-6">
-                    {pageUsers.map((user) => (
-                      <UserCard user={user} isAdmin={isAdmin} />
-                    ))}
+              users.length > 0 ? (
+                pages.map((pageUsers, index) => (
+                  <div class="carousel-slide shrink-0 w-full  mb-16">
+                    <div class="flex flex-col gap-6">
+                      {pageUsers.map((user) => (
+                        <UserCard user={user} isAdmin={isAdmin} />
+                      ))}
+                    </div>
                   </div>
+                ))
+              ) : (
+                <div class="carousel-slide shrink-0 w-full mb-16">
+                  <p class="text-center text-base-content/60 py-12">Aucun utilisateur vérifiée à modifier</p>
                 </div>
-              ))
+              )
             }
           </div>
         </div>
@@ -91,7 +98,7 @@ const totalPages = pages.length;
 </div>
 
 <!-- Fenêtre modale pour modifier les informations d'un utilisateur -->
-<div id="modify-modal" class="modal">
+<div id="modify-modal" class="modal" data-current-user-id={user?.id}>
   <div class="modal-box max-w-md bg-white shadow-2xl border border-gray-200">
     <div class="flex items-center gap-3 mb-4">
       <div
@@ -144,6 +151,19 @@ const totalPages = pages.length;
           required
         />
       </div>
+      <div class="form-control">
+        <label class="label cursor-pointer">
+          <span class="label-text font-semibold text-gray-700"
+            >Administrateur</span
+          >
+          <input
+            type="checkbox"
+            name="admin"
+            id="modal-admin"
+            class="toggle toggle-primary"
+          />
+        </label>
+      </div>
     </form>
     <div class="modal-action mt-6">
       <button class="btn btn-ghost cancel-btn">Annuler</button>
@@ -163,182 +183,28 @@ const totalPages = pages.length;
         Enregistrer
       </button>
     </div>
+    <div class="w-full flex justify-center items-center mt-8">
+      <button id="delete-btn" class="btn btn-error btn-sm flex flex-row items-center justify-between gap-4" style="display: none;">
+        <svg
+          class="w-4 h-4"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+        </svg>
+        Supprimer l'utilisateur
+      </button>
+    </div>
   </div>
 </div>
 
 <script>
-  let currentPage = 0;
-  const container = document.querySelector(
-    ".carousel-container",
-  ) as HTMLElement | null;
-  const inner = document.getElementById("carousel-inner") as HTMLElement | null;
-  const prevBtn = document.getElementById(
-    "prev-btn",
-  ) as HTMLButtonElement | null;
-  const nextBtn = document.getElementById(
-    "next-btn",
-  ) as HTMLButtonElement | null;
-  const indicator = document.getElementById(
-    "page-indicator",
-  ) as HTMLSpanElement | null;
-  const totalPages = parseInt(container?.dataset.totalPages || "1");
-  const isAdmin = container?.dataset.isAdmin === "true";
-
-  function updateButtons() {
-    if (prevBtn) prevBtn.disabled = currentPage === 0;
-    if (nextBtn) nextBtn.disabled = currentPage >= totalPages - 1;
-    if (indicator)
-      indicator.textContent = `Page ${currentPage + 1} sur ${totalPages}`;
-  }
-
-  function goToPage(page: number) {
-    currentPage = Math.max(0, Math.min(page, totalPages - 1));
-    if (inner) {
-      const slide = inner.children[0] as HTMLElement;
-      const slideWidth = slide?.offsetWidth || 0;
-      const computedStyle = getComputedStyle(inner);
-      const gapValue = computedStyle.gap;
-      const gap = parseFloat(gapValue) || 0;
-      const offset = currentPage * (slideWidth + gap);
-      inner.style.transform = `translateX(-${offset}px)`;
-    }
-    updateButtons();
-  }
-
-  if (prevBtn) {
-    prevBtn.addEventListener("click", () => goToPage(currentPage - 1));
-  }
-  if (nextBtn) {
-    nextBtn.addEventListener("click", () => goToPage(currentPage + 1));
-  }
-
-  // Gestion des interactions de modification des utilisateurs
-  let editingCard: HTMLElement | null = null; // Carte en cours de modification
-  const modal = document.getElementById("modify-modal") as HTMLElement;
-  const modalForm = document.getElementById("modify-form") as HTMLFormElement;
-  const modalUserId = document.getElementById(
-    "modal-user-id",
-  ) as HTMLInputElement;
-  const modalName = document.getElementById("modal-name") as HTMLInputElement;
-  const modalEmail = document.getElementById("modal-email") as HTMLInputElement;
-
-  // Écoute les clics sur le bouton Modifier
-  document.addEventListener("click", (e) => {
-    const btn = (e.target as Element).closest(".modify-btn");
-    if (btn) {
-      e.preventDefault();
-      const card = btn.closest(".user-card") as HTMLElement;
-      if (card) {
-        editingCard = card;
-        const userId = card.dataset.userId!;
-        const userName = card.dataset.userName!;
-        const userEmail = card.dataset.userEmail!;
-        // Remplit la modal avec les données actuelles
-        modalUserId.value = userId;
-        modalName.value = userName;
-        modalEmail.value = userEmail;
-        modal.classList.add("modal-open"); // Ouvre la modal
-      }
-    }
-
-    // Gère l'annulation
-    const cancelBtn = (e.target as Element).closest(".cancel-btn");
-    if (cancelBtn) {
-      modal.classList.remove("modal-open"); // Ferme la modal
-      editingCard = null;
-    }
-  });
-
-  // Gère la soumission du formulaire
-  modalForm.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const userId = modalUserId.value;
-    const name = modalName.value;
-    const email = modalEmail.value;
-
-    const submitBtn = modalForm.querySelector('button[type="submit"]') as HTMLButtonElement;
-    const originalText = submitBtn?.textContent;
-
-    if (submitBtn) {
-      submitBtn.disabled = true;
-      submitBtn.innerHTML = '<span class="loading loading-spinner loading-sm"></span> Enregistrement...';
-    }
-
-    try {
-      // Envoie la requête AJAX
-      const response = await fetch("/api/form-submit", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-Requested-With": "XMLHttpRequest",
-        },
-        body: JSON.stringify({
-          formType: "modification",
-          userId,
-          name,
-          email,
-        }),
-      });
-
-      const data = await response.json();
-      if (data.success && editingCard) {
-        // Met à jour la carte avec animation optimiste
-        const h3 = editingCard.querySelector("h3");
-        const p = editingCard.querySelector("p");
-        if (h3) h3.textContent = data.name;
-        if (p) p.textContent = data.email;
-        editingCard.dataset.userName = data.name;
-        editingCard.dataset.userEmail = data.email;
-        
-        // Ferme la modal
-        modal.classList.remove("modal-open");
-        editingCard = null;
-        
-        // Notification de succès
-        const toast = document.createElement('div');
-        toast.className = 'alert alert-success fixed top-4 right-4 z-50 max-w-md shadow-lg';
-        toast.setAttribute("role", "status");
-        toast.setAttribute("aria-live", "polite");
-        toast.innerHTML = `<span>${data.message || 'Utilisateur modifié avec succès'}</span>`;
-        document.body.appendChild(toast);
-        
-        setTimeout(() => {
-          toast.remove();
-        }, 5000);
-      } else {
-        alert("Erreur: " + (data.error || "Erreur inconnue"));
-        if (submitBtn && originalText) {
-          submitBtn.disabled = false;
-          submitBtn.textContent = originalText;
-        }
-      }
-    } catch (error) {
-      alert("Erreur de réseau");
-      if (submitBtn && originalText) {
-        submitBtn.disabled = false;
-        submitBtn.textContent = originalText;
-      }
-    }
-  });
-
-  const userSearchInput = document.getElementById(
-    "user-search",
-  ) as HTMLInputElement;
-  userSearchInput.addEventListener("input", () => {
-    const query = userSearchInput.value.toLowerCase();
-    const cards = document.querySelectorAll(
-      ".user-card",
-    ) as NodeListOf<HTMLElement>;
-    cards.forEach((card) => {
-      const name = card.dataset.userName?.toLowerCase() || "";
-      const email = card.dataset.userEmail?.toLowerCase() || "";
-      if (name.includes(query) || email.includes(query)) {
-        card.style.display = "";
-      } else {
-        card.style.display = "none";
-      }
-    });
-  });
-
-  updateButtons();
+  import { initModifications } from "../scripts/modification-handlers.js";
+  
+  initModifications();
 </script>

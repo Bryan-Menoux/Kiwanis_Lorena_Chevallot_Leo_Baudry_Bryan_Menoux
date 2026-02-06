@@ -38,7 +38,16 @@ export const POST: APIRoute = async ({ locals, request }) => {
 
         const updateData: any = {};
         if (capitalizedName) updateData.name = capitalizedName;
-        if (email) updateData.email = email;
+        if (email && email.trim()) {
+          // Seul un admin peut modifier l'email
+          if (!currentUser.administrateur) {
+            return new Response(
+              JSON.stringify({ success: false, error: 'Seul un administrateur peut modifier l\'adresse e-mail' }),
+              { status: 403, headers: { 'Content-Type': 'application/json' } }
+            );
+          }
+          updateData.email = email.trim();
+        }
         if (oldPassword && newPassword) {
           updateData.oldPassword = oldPassword;
           updateData.password = newPassword;
@@ -52,14 +61,25 @@ export const POST: APIRoute = async ({ locals, request }) => {
           );
         }
 
+        // Vérifier si l'email ou le mot de passe a changé
+        const emailChanged = email && email.trim() !== currentUser.email;
+        const passwordChanged = oldPassword && newPassword;
+
         await locals.pb.collection("users").update(currentUser.id, updateData);
+
+        // Si l'email ou le mot de passe a changé, déconnecter l'utilisateur
+        const shouldLogout = emailChanged || passwordChanged;
+        if (shouldLogout) {
+          locals.pb.authStore.clear();
+        }
 
         return new Response(
           JSON.stringify({ 
             success: true, 
             name: capitalizedName, 
             email: updateData.email || currentUser.email,
-            message: 'Profil mis à jour avec succès'
+            message: 'Profil mis à jour avec succès',
+            logout: shouldLogout
           }),
           { status: 200, headers: { 'Content-Type': 'application/json' } }
         );
@@ -135,7 +155,7 @@ export const POST: APIRoute = async ({ locals, request }) => {
 
       case 'modification':
         // Modification des infos d'un autre utilisateur
-        const { userId: modUserId, name: modName, email: modEmail } = formData;
+        const { userId: modUserId, name: modName, email: modEmail, admin: modAdmin } = formData;
         
         if (!currentUser.administrateur) {
           return new Response(
@@ -145,17 +165,61 @@ export const POST: APIRoute = async ({ locals, request }) => {
         }
 
         const capitalizedModName = capitalizeName(modName);
-        await locals.pb.collection("users").update(modUserId, { 
+        const updateDataMod: any = {
           name: capitalizedModName, 
-          email: modEmail 
-        });
+          email: modEmail
+        };
+        
+        // Ajouter le champ administrateur s'il est fourni
+        if (modAdmin !== undefined) {
+          updateDataMod.administrateur = modAdmin;
+        }
+        
+        await locals.pb.collection("users").update(modUserId, updateDataMod);
 
         return new Response(
           JSON.stringify({ 
             success: true, 
             name: capitalizedModName,
             email: modEmail,
+            administrateur: modAdmin,
             message: 'Utilisateur modifié avec succès'
+          }),
+          { status: 200, headers: { 'Content-Type': 'application/json' } }
+        );
+
+      case 'deletion':
+        // Suppression d'un utilisateur
+        const { userId: deleteUserId } = formData;
+        
+        if (!deleteUserId) {
+          return new Response(
+            JSON.stringify({ success: false, error: 'ID utilisateur manquant' }),
+            { status: 400, headers: { 'Content-Type': 'application/json' } }
+          );
+        }
+
+        if (!currentUser.administrateur) {
+          return new Response(
+            JSON.stringify({ success: false, error: 'Non autorisé' }),
+            { status: 403, headers: { 'Content-Type': 'application/json' } }
+          );
+        }
+
+        // Empêcher la suppression de soi-même
+        if (deleteUserId === currentUser.id) {
+          return new Response(
+            JSON.stringify({ success: false, error: 'Vous ne pouvez pas vous supprimer vous-même' }),
+            { status: 400, headers: { 'Content-Type': 'application/json' } }
+          );
+        }
+
+        await locals.pb.collection("users").delete(deleteUserId);
+
+        return new Response(
+          JSON.stringify({ 
+            success: true, 
+            message: 'Utilisateur supprimé avec succès'
           }),
           { status: 200, headers: { 'Content-Type': 'application/json' } }
         );

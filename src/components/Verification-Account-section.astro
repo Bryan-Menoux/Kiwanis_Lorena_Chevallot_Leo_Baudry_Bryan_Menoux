@@ -102,9 +102,43 @@ const verifiedCount = verifiedUsers.length;
             </search>
             {
               rejectedUsers.length > 0 ? (
-                rejectedUsers.map((user: User) => (
-                  <RejectedUserCard user={user} />
-                ))
+                <>
+                  <div class="flex items-center gap-3 p-3 mb-4 bg-base-200 rounded-lg">
+                    <input
+                      type="checkbox"
+                      id="select-all-rejected"
+                      class="checkbox checkbox-error"
+                    />
+                    <label for="select-all-rejected" class="cursor-pointer font-semibold text-sm">
+                      Sélectionner tous
+                    </label>
+                  </div>
+                  <div class="space-y-2">
+                    {rejectedUsers.map((user: User) => (
+                      <RejectedUserCard user={user} />
+                    ))}
+                  </div>
+                  <button
+                    id="reject-selected-btn"
+                    class="btn btn-error btn-sm w-full mt-4"
+                    disabled
+                  >
+                    <svg
+                      class="w-4 h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M6 18L18 6M6 6l12 12"
+                      ></path>
+                    </svg>
+                    Rejeter les utilisateurs sélectionnés
+                  </button>
+                </>
               ) : (
                 <p class="text-center text-base-content/60 py-4">
                   Aucun utilisateur rejeté
@@ -157,3 +191,133 @@ const verifiedCount = verifiedUsers.length;
     </div>
   </div>
 </div>
+
+<script>
+  // Gestion de la sélection des utilisateurs rejetés
+  function updateButtonState() {
+    const rejectBtn = document.getElementById('reject-selected-btn') as HTMLButtonElement | null;
+    if (rejectBtn) {
+      const selectedCount = document.querySelectorAll('.checkbox-reject:checked').length;
+      rejectBtn.disabled = selectedCount === 0;
+    }
+  }
+
+  // Délégation d'événements pour tous les checkboxes
+  document.addEventListener('change', function(e) {
+    const target = e.target as HTMLElement;
+    
+    // Gestion de "Sélectionner tous"
+    if (target.id === 'select-all-rejected') {
+      const isChecked = (target as HTMLInputElement).checked;
+      document.querySelectorAll('.checkbox-reject').forEach(checkbox => {
+        (checkbox as HTMLInputElement).checked = isChecked;
+      });
+      updateButtonState();
+      return;
+    }
+    
+    // Gestion des checkboxes individuelles
+    if (target.classList.contains('checkbox-reject')) {
+      const selectAllCheckbox = document.getElementById('select-all-rejected') as HTMLInputElement | null;
+      
+      // Mettre à jour la checkbox "Sélectionner tous"
+      if (selectAllCheckbox) {
+        const allCheckboxes = document.querySelectorAll('.checkbox-reject');
+        const checkedCheckboxes = document.querySelectorAll('.checkbox-reject:checked');
+        selectAllCheckbox.checked = allCheckboxes.length === checkedCheckboxes.length && allCheckboxes.length > 0;
+      }
+      
+      // Mettre à jour l'état du bouton
+      updateButtonState();
+    }
+  });
+
+  // Délégation d'événements pour le bouton de suppression
+  document.addEventListener('click', async function(e) {
+    const target = e.target as HTMLElement;
+    const rejectBtn = target.closest('#reject-selected-btn');
+    
+    if (!rejectBtn) {
+      return;
+    }
+
+    const selectedCheckboxes = document.querySelectorAll('.checkbox-reject:checked');
+    const userIds = Array.from(selectedCheckboxes).map(checkbox => {
+      return (checkbox as HTMLElement).getAttribute('data-user-id');
+    });
+
+    if (userIds.length === 0) {
+      alert('Aucun utilisateur sélectionné');
+      return;
+    }
+
+    if (!confirm(`Êtes-vous sûr de vouloir supprimer ${userIds.length} utilisateur(s) ?`)) {
+      return;
+    }
+
+    try {
+      // Effectuer les requêtes de suppression pour chaque utilisateur
+      const promises = userIds.map(userId =>
+        fetch('/api/form-submit', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest',
+          },
+          body: JSON.stringify({
+            formType: 'deletion',
+            userId: userId,
+          }),
+        })
+      );
+
+      const responses = await Promise.all(promises);
+      const allSuccess = responses.every(response => response.ok);
+
+      if (allSuccess) {
+        // Supprimer les cartes du DOM
+        selectedCheckboxes.forEach(checkbox => {
+          const card = (checkbox as HTMLElement).closest('[data-list-type="rejected"]');
+          if (card) {
+            card.remove();
+          }
+        });
+
+        // Vérifier s'il y a encore des utilisateurs rejetés
+        const remainingCards = document.querySelectorAll('[data-list-type="rejected"]');
+        const rejectedBadge = document.getElementById('rejected-badge');
+        
+        if (remainingCards.length === 0) {
+          // Si plus d'utilisateurs, masquer la section
+          const rejectedListContainer = document.getElementById('rejected-list');
+          if (rejectedListContainer && rejectedBadge) {
+            rejectedListContainer.innerHTML = '<p class="text-center text-base-content/60 py-4">Aucun utilisateur rejeté</p>';
+            rejectedBadge.style.display = 'none';
+          }
+        } else if (rejectedBadge) {
+          // Mettre à jour le compteur si des utilisateurs restent
+          rejectedBadge.textContent = remainingCards.length.toString();
+        }
+
+        // Réinitialiser les checkboxes
+        const selectAllCheckbox = document.getElementById('select-all-rejected');
+        if (selectAllCheckbox) {
+          (selectAllCheckbox as HTMLInputElement).checked = false;
+        }
+        updateButtonState();
+      } else {
+        alert('Erreur lors de la suppression de certains utilisateurs');
+      }
+    } catch (error) {
+      alert('Erreur réseau : ' + ((error as Error).message));
+    }
+  });
+
+  // Initialiser l'état du bouton au chargement
+  document.addEventListener('DOMContentLoaded', updateButtonState);
+  
+  // Initialiser aussi immédiatement si le DOM est déjà chargé
+  if (document.readyState === 'complete' || document.readyState === 'interactive') {
+    updateButtonState();
+  }
+</script>

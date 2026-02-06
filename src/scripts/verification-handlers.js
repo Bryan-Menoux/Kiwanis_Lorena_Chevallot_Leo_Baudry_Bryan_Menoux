@@ -4,12 +4,13 @@ let currentRejectedCount;
 let currentVerifiedCount;
 
 // Fonctions utilitaires
-function getTargetList(action) {
+function getTargetList(action, fromList = null) {
   switch (action) {
     case "approve":
       return "verified-list";
     case "reject":
-      return "rejected-list";
+      // Si on rejette depuis la liste vérifiée, retour en attente
+      return fromList === "verified-list" ? "pending-list" : "rejected-list";
     case "unreject":
     case "unverify":
       return "pending-list";
@@ -96,6 +97,18 @@ async function reloadUserLists() {
 
       // Réattachement des gestionnaires d'événements après mise à jour
       attachFormHandlers();
+      
+      // Réappliquer la pagination et les recherches après rechargement
+      const searches = [
+        ["pending-search", "pending-list"],
+        ["rejected-search", "rejected-list"],
+        ["verified-search", "verified-list"]
+      ];
+      listIds.forEach(id => {
+        setupPagination(id);
+        const searchConfig = searches.find(s => s[1] === id);
+        if (searchConfig) setupSearch(searchConfig[0], searchConfig[1]);
+      });
     }
   } catch (error) {
     console.error("Erreur lors du rechargement:", error);
@@ -104,10 +117,10 @@ async function reloadUserLists() {
 
 // Traitement des actions utilisateur
 // Gère l'animation et la suppression de la carte utilisateur lors d'une action
-async function processUserAction(userCard, action) {
+async function processUserAction(userCard, action, fromList = null) {
   // Identification des listes source et destination
-  const fromList = userCard.closest('#pending-list, #rejected-list, #verified-list')?.id;
-  const toList = getTargetList(action);
+  const actualFromList = fromList || userCard.closest('#pending-list, #rejected-list, #verified-list')?.id;
+  const toList = getTargetList(action, actualFromList);
 
   // Animation de disparition de la carte
   userCard.classList.add(
@@ -122,8 +135,8 @@ async function processUserAction(userCard, action) {
     userCard.remove();
     
     // Mise à jour des compteurs si les listes sont définies
-    if (fromList && toList) {
-      updateBadges(fromList, toList);
+    if (actualFromList && toList) {
+      updateBadges(actualFromList, toList);
     }
     
     // Rechargement des listes pour synchroniser l'état
@@ -292,6 +305,89 @@ function handleError(errorMessage, element, originalHTML) {
   }
 }
 
+// Configuration de la pagination
+// Met en place la pagination pour afficher 4 cartes par page
+function setupPagination(listId) {
+  const list = document.getElementById(listId);
+  if (!list) return;
+
+  const allCards = Array.from(list.querySelectorAll("div[data-user-id]"));
+  if (allCards.length <= 4) return; // Pas de pagination si 4 ou moins
+
+  // Masquer toutes les cartes originales
+  allCards.forEach(card => card.style.display = "none");
+
+  // Calcul du nombre de pages
+  const totalPages = Math.ceil(allCards.length / 4);
+
+  // Création du conteneur des pages
+  const paginationContainer = document.createElement("div");
+  paginationContainer.className = "pagination-container mt-4";
+  paginationContainer.id = `${listId}-pagination`;
+
+  // Création de chaque page
+  const pageButtons = [];
+  for (let page = 1; page <= totalPages; page++) {
+    const pageDiv = document.createElement("div");
+    pageDiv.className = "pagination-page";
+    pageDiv.id = `${listId}-page-${page}`;
+    pageDiv.style.display = page === 1 ? "flex" : "none";
+    pageDiv.style.flexDirection = "column";
+    pageDiv.style.gap = "1rem";
+
+    // Ajout des cartes pour cette page
+    const startIndex = (page - 1) * 4;
+    const endIndex = Math.min(startIndex + 4, allCards.length);
+    
+    for (let i = startIndex; i < endIndex; i++) {
+      const clonedCard = allCards[i].cloneNode(true);
+      clonedCard.style.display = "flex";
+      clonedCard.style.justifyContent = "space-between";
+      clonedCard.style.alignItems = "center";
+      clonedCard.style.width = "100%";
+      clonedCard.style.flexShrink = "0";
+      
+      // S'assurer que le div du texte prend tout l'espace
+      const textDiv = clonedCard.querySelector('div:first-child');
+      if (textDiv) {
+        textDiv.style.flex = "1";
+        textDiv.style.minWidth = "0";
+      }
+      
+      pageDiv.appendChild(clonedCard);
+    }
+
+    list.appendChild(pageDiv);
+
+    // Création du bouton pour cette page
+    const button = document.createElement("button");
+    button.className = `join-item btn btn-sm ${page === 1 ? "btn-active" : ""}`;
+    button.textContent = page;
+    button.dataset.page = page;
+    button.addEventListener("click", (e) => {
+      e.preventDefault();
+      // Masquer toutes les pages et désactiver tous les boutons
+      for (let p = 1; p <= totalPages; p++) {
+        document.getElementById(`${listId}-page-${p}`).style.display = "none";
+      }
+      pageButtons.forEach(btn => btn.classList.remove("btn-active"));
+      
+      // Afficher la page sélectionnée
+      document.getElementById(`${listId}-page-${page}`).style.display = "flex";
+      button.classList.add("btn-active");
+    });
+    pageButtons.push(button);
+  }
+
+  // Création du conteneur des boutons
+  const buttonContainer = document.createElement("div");
+  buttonContainer.className = "join flex gap-2 justify-center mt-4";
+  pageButtons.forEach(btn => buttonContainer.appendChild(btn));
+
+  paginationContainer.appendChild(buttonContainer);
+  list.appendChild(paginationContainer);
+}
+
 // Configuration de la recherche
 // Met en place la fonctionnalité de recherche pour filtrer les cartes utilisateur
 function setupSearch(searchInputId, listId) {
@@ -308,17 +404,135 @@ function setupSearch(searchInputId, listId) {
     const list = document.getElementById(listId);
     if (!list) return;
 
-    // Filtrage des cartes selon la requête de recherche
-    const cards = list.querySelectorAll("div[data-user-id]");
-    cards.forEach((card) => {
+    // Récupérer toutes les cartes originales (non pagéifiées)
+    const allCards = Array.from(list.querySelectorAll("div[data-user-id]")).filter(card => {
+      return !card.closest(".pagination-page");
+    });
+    
+    // Filtrer les cartes selon la requête
+    const visibleCards = allCards.filter(card => {
+      const text = card.textContent?.toLowerCase() || "";
+      return text.includes(query);
+    });
+
+    // Cacher/afficher les cartes originales
+    allCards.forEach(card => {
       const text = card.textContent?.toLowerCase() || "";
       if (text.includes(query)) {
-        card.classList.remove("hidden");
+        card.style.display = "block";
       } else {
-        card.classList.add("hidden");
+        card.style.display = "none";
       }
     });
+
+    // Supprimer la pagination existante et les pages
+    const paginationContainer = list.querySelector(`#${listId}-pagination`);
+    if (paginationContainer) paginationContainer.remove();
+    
+    const pageContainers = list.querySelectorAll(".pagination-page");
+    pageContainers.forEach(page => page.remove());
+
+    // Recréer la pagination avec les cartes filtrées (ou toutes si search vide)
+    if (visibleCards.length > 4) {
+      recreatePagination(listId, visibleCards);
+    } else if (query === "") {
+      // Si le search est vide, réafficher la pagination normale
+      setupPagination(listId);
+    }
   });
+}
+
+// Recréer la pagination avec des cartes filtrées
+function recreatePagination(listId, cards) {
+  const list = document.getElementById(listId);
+  if (!list) return;
+
+  const totalPages = Math.ceil(cards.length / 4);
+
+  // Création du conteneur des pages
+  const paginationContainer = document.createElement("div");
+  paginationContainer.className = "pagination-container mt-4";
+  paginationContainer.id = `${listId}-pagination`;
+
+  // Création de chaque page
+  const pageButtons = [];
+  for (let page = 1; page <= totalPages; page++) {
+    const pageDiv = document.createElement("div");
+    pageDiv.className = "pagination-page";
+    pageDiv.id = `${listId}-page-${page}`;
+    pageDiv.style.display = page === 1 ? "flex" : "none";
+    pageDiv.style.flexDirection = "column";
+    pageDiv.style.gap = "1rem";
+
+    // Ajout des cartes pour cette page
+    const startIndex = (page - 1) * 4;
+    const endIndex = Math.min(startIndex + 4, cards.length);
+    
+    for (let i = startIndex; i < endIndex; i++) {
+      const clonedCard = cards[i].cloneNode(true);
+      clonedCard.style.display = "flex";
+      clonedCard.style.justifyContent = "space-between";
+      clonedCard.style.alignItems = "center";
+      clonedCard.style.width = "100%";
+      clonedCard.style.flexShrink = "0";
+      
+      // S'assurer que le div du texte prend tout l'espace
+      const textDiv = clonedCard.querySelector('div:first-child');
+      if (textDiv) {
+        textDiv.style.flex = "1";
+        textDiv.style.minWidth = "0";
+      }
+      
+      pageDiv.appendChild(clonedCard);
+    }
+
+    list.appendChild(pageDiv);
+
+    // Création du bouton pour cette page
+    const button = document.createElement("button");
+    button.className = `join-item btn btn-sm ${page === 1 ? "btn-active" : ""}`;
+    button.textContent = page;
+    button.dataset.page = page;
+    button.addEventListener("click", (e) => {
+      e.preventDefault();
+      // Masquer toutes les pages et désactiver tous les boutons
+      for (let p = 1; p <= totalPages; p++) {
+        document.getElementById(`${listId}-page-${p}`).style.display = "none";
+      }
+      pageButtons.forEach(btn => btn.classList.remove("btn-active"));
+      
+      // Afficher la page sélectionnée
+      document.getElementById(`${listId}-page-${page}`).style.display = "flex";
+      button.classList.add("btn-active");
+    });
+    pageButtons.push(button);
+  }
+
+  // Création du conteneur des boutons
+  const buttonContainer = document.createElement("div");
+  buttonContainer.className = "join flex gap-2 justify-center mt-4";
+  pageButtons.forEach(btn => buttonContainer.appendChild(btn));
+
+  paginationContainer.appendChild(buttonContainer);
+  list.appendChild(paginationContainer);
+}
+
+// Mise à jour de l'affichage de la pagination
+function updatePaginationDisplay(listId, visibleCards = null) {
+  const list = document.getElementById(listId);
+  if (!list) return;
+
+  const pagination = list.querySelector(`#${listId}-pagination`);
+  if (!pagination) return;
+
+  // Récupérer les cartes visibles ou toutes les cartes
+  const allCards = visibleCards || Array.from(list.querySelectorAll("div[data-user-id]:not(.hidden)"));
+  
+  if (allCards.length <= 4) {
+    pagination.style.display = "none";
+  } else {
+    pagination.style.display = "block";
+  }
 }
 
 // Fonction d'initialisation principale
@@ -340,13 +554,16 @@ export function initVerifications() {
   attachButtonHandlers();
   attachFormHandlers();
   
-  // Configuration des recherches pour chaque liste
+  // Configuration des recherches et de la pagination pour chaque liste
   const searches = [
     ["pending-search", "pending-list"],
     ["rejected-search", "rejected-list"],
     ["verified-search", "verified-list"]
   ];
-  searches.forEach(([inputId, listId]) => setupSearch(inputId, listId));
+  searches.forEach(([inputId, listId]) => {
+    setupSearch(inputId, listId);
+    setupPagination(listId);
+  });
   
   // Mise à jour initiale des badges
   updateBadges();
