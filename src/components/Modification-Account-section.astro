@@ -252,31 +252,72 @@ const totalPages = pages.length;
   // Gère la soumission du formulaire
   modalForm.addEventListener("submit", async (e) => {
     e.preventDefault();
-    const formData = new FormData(modalForm);
-    formData.append("formSource", "modification");
+    const userId = modalUserId.value;
+    const name = modalName.value;
+    const email = modalEmail.value;
+
+    const submitBtn = modalForm.querySelector('button[type="submit"]') as HTMLButtonElement;
+    const originalText = submitBtn?.textContent;
+
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<span class="loading loading-spinner loading-sm"></span> Enregistrement...';
+    }
+
     try {
       // Envoie la requête AJAX
-      const response = await fetch("/mon-compte", {
+      const response = await fetch("/api/form-submit", {
         method: "POST",
-        body: formData,
-        headers: { "X-Requested-With": "XMLHttpRequest" },
+        headers: {
+          "Content-Type": "application/json",
+          "X-Requested-With": "XMLHttpRequest",
+        },
+        body: JSON.stringify({
+          formType: "modification",
+          userId,
+          name,
+          email,
+        }),
       });
+
       const data = await response.json();
       if (data.success && editingCard) {
-        // Met à jour la carte avec les nouvelles données
+        // Met à jour la carte avec animation optimiste
         const h3 = editingCard.querySelector("h3");
         const p = editingCard.querySelector("p");
         if (h3) h3.textContent = data.name;
         if (p) p.textContent = data.email;
         editingCard.dataset.userName = data.name;
         editingCard.dataset.userEmail = data.email;
-        modal.classList.remove("modal-open"); // Ferme la modal
+        
+        // Ferme la modal
+        modal.classList.remove("modal-open");
         editingCard = null;
+        
+        // Notification de succès
+        const toast = document.createElement('div');
+        toast.className = 'alert alert-success fixed top-4 right-4 z-50 max-w-md shadow-lg';
+        toast.setAttribute("role", "status");
+        toast.setAttribute("aria-live", "polite");
+        toast.innerHTML = `<span>${data.message || 'Utilisateur modifié avec succès'}</span>`;
+        document.body.appendChild(toast);
+        
+        setTimeout(() => {
+          toast.remove();
+        }, 5000);
       } else {
         alert("Erreur: " + (data.error || "Erreur inconnue"));
+        if (submitBtn && originalText) {
+          submitBtn.disabled = false;
+          submitBtn.textContent = originalText;
+        }
       }
     } catch (error) {
       alert("Erreur de réseau");
+      if (submitBtn && originalText) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalText;
+      }
     }
   });
 

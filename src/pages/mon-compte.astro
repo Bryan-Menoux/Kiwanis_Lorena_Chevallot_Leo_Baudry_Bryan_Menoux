@@ -22,211 +22,6 @@ if (!currentUser || !currentUser.verified) {
   return Astro.redirect("/connexion");
 }
 
-const isPostForm =
-  Astro.request.method === "POST" &&
-  Astro.request.headers.get("content-type")?.includes("form");
-
-// Fonction pour gérer les actions d'administration des utilisateurs
-async function handleVerificationAction(
-  userId: string,
-  action: string,
-  rejectedById: string,
-) {
-  switch (action) {
-    case "approve":
-      await Astro.locals.pb.collection("users").update(userId, {
-        verified: true,
-        rejected: false,
-        rejectionDate: null,
-        rejectedBy: null,
-      });
-      break;
-
-    case "reject":
-      const now = new Date().toISOString();
-      await Astro.locals.pb.collection("users").update(userId, {
-        verified: false,
-        rejected: true,
-        rejectionDate: now,
-        rejectedBy: rejectedById,
-      });
-
-      break;
-
-    case "unreject":
-      await Astro.locals.pb.collection("users").update(userId, {
-        verified: false,
-        rejected: false,
-        rejectionDate: null,
-        rejectedBy: null,
-      });
-      break;
-
-    case "unverify":
-      await Astro.locals.pb.collection("users").update(userId, {
-        verified: false,
-        rejected: false,
-        rejectionDate: null,
-        rejectedBy: null,
-      });
-      break;
-
-    default:
-      console.warn(`Action inconnue: ${action}`);
-  }
-}
-
-// Gestion des requêtes POST (mises à jour profil et actions admin)
-if (isPostForm) {
-  try {
-    const data = await Astro.request.formData();
-
-    const formSource = data.get("formSource") as string;
-
-    if (formSource === "verification") {
-      const userId = data.get("userId") as string;
-      const action = data.get("action") as string;
-
-      try {
-        await handleVerificationAction(userId, action, currentUser.id);
-
-        const isAjax =
-          Astro.request.headers.get("X-Requested-With") === "XMLHttpRequest";
-
-        if (isAjax) {
-          return new Response(
-            JSON.stringify({
-              success: true,
-              action,
-              userId,
-              message: `Action ${action} effectuée avec succès`,
-            }),
-            {
-              status: 200,
-              headers: { "Content-Type": "application/json" },
-            },
-          );
-        }
-
-        const baseUrl = new URL(Astro.request.url);
-        const cleanUrl = `${baseUrl.origin}${baseUrl.pathname}#verifications`;
-        return Astro.redirect(cleanUrl, 303);
-      } catch (error) {
-        console.error("Erreur lors de l'action de vérification:", error);
-
-        const isAjax =
-          Astro.request.headers.get("X-Requested-With") === "XMLHttpRequest";
-        if (isAjax) {
-          return new Response(
-            JSON.stringify({
-              success: false,
-              error: error instanceof Error ? error.message : "Erreur inconnue",
-            }),
-            {
-              status: 500,
-              headers: { "Content-Type": "application/json" },
-            },
-          );
-        }
-        throw error;
-      }
-    } else if (formSource === "modification") {
-      const userId = data.get("userId") as string;
-      const name = (data.get("name") as string) || "";
-      const email = (data.get("email") as string) || "";
-
-      // Met en majuscule la première lettre de chaque mot du nom
-      const capitalizedName = capitalizeName(name);
-
-      try {
-        await Astro.locals.pb.collection("users").update(userId, { name: capitalizedName, email });
-
-        const isAjax = Astro.request.headers.get("X-Requested-With") === "XMLHttpRequest";
-        if (isAjax) {
-          return new Response(
-            JSON.stringify({ success: true, name: capitalizedName, email }),
-            {
-              status: 200,
-              headers: { "Content-Type": "application/json" },
-            },
-          );
-        }
-      } catch (error) {
-        const isAjax = Astro.request.headers.get("X-Requested-With") === "XMLHttpRequest";
-        if (isAjax) {
-          return new Response(
-            JSON.stringify({
-              success: false,
-              error: error instanceof Error ? error.message : "Erreur inconnue",
-            }),
-            {
-              status: 500,
-              headers: { "Content-Type": "application/json" },
-            },
-          );
-        }
-        throw error;
-      }
-    } else if (Astro.locals.pb.authStore.isValid && currentUser!.verified) {
-      const firstName = (data.get("firstName") as string) || "";
-      const lastName = (data.get("lastName") as string) || "";
-      const name = `${firstName} ${lastName}`.trim();
-      const email = (data.get("email") as string) || "";
-
-      // Met en majuscule la première lettre de chaque mot du nom
-      const capitalizedName = capitalizeName(name);
-
-      const oldPassword = (data.get("oldPassword") as string) || "";
-      const newPassword = (data.get("newPassword") as string) || "";
-      const newPasswordConfirm =
-        (data.get("newPasswordConfirm") as string) || "";
-
-      const updateData: any = {};
-      if (capitalizedName) {
-        updateData.name = capitalizedName;
-      }
-      if (email) {
-        updateData.email = email;
-      }
-
-      let passwordChanged = false;
-      if (oldPassword && newPassword && newPasswordConfirm) {
-        if (newPassword !== newPasswordConfirm) {
-          throw new Error(
-            "Le nouveau mot de passe et sa confirmation ne correspondent pas.",
-          );
-        }
-        updateData.oldPassword = oldPassword;
-        updateData.password = newPassword;
-        updateData.passwordConfirm = newPasswordConfirm;
-        passwordChanged = true;
-      }
-
-      if (Object.keys(updateData).length > 0) {
-        try {
-          await Astro.locals.pb.collection("users").update(currentUser!.id, updateData);
-        } catch (error) {
-          console.error(
-            passwordChanged
-              ? "Erreur PocketBase lors de la mise à jour du mot de passe et/ou profil:"
-              : "Erreur PocketBase lors de la mise à jour du profil:",
-            error,
-          );
-          throw new Error(
-            passwordChanged
-              ? "Échec de la mise à jour du mot de passe et/ou profil."
-              : "Échec de la mise à jour du profil."
-          );
-        }
-      }
-
-      return Astro.redirect("/mon-compte?success=true", 303);
-    }
-  } catch (error) {
-    console.error("Erreur lors de la mise à jour du profil:", error);
-  }
-}
-
 const isAdmin = currentUser.administrateur === true;
 let users: any[] = [];
 
@@ -368,6 +163,7 @@ const navItems = [
 <script>
   // Animation de la navigation
   import gsap from "gsap";
+  import { initVerifications } from "../scripts/verification-handlers.js";
 
   const indicator = document.getElementById("nav-indicator");
   const navItems = document.querySelectorAll(".nav-item");
@@ -404,8 +200,19 @@ const navItems = [
         const id = (item as HTMLElement).dataset.section;
         if (!id) return;
 
-        // Recharger les données
-        await reloadAllSections();
+        const now = Date.now();
+        if (lastReloaded.has(id) && now - lastReloaded.get(id)! < 3000) {
+          // Aller directement à la section sans recharger
+          const section = document.getElementById(id);
+          if (!section) return;
+          moveIndicator(item);
+          container.scrollTo({ left: section.offsetLeft, behavior: "smooth" });
+          return;
+        }
+        lastReloaded.set(id, now);
+
+        // Recharger uniquement la section ciblée
+        await reloadSection(id);
 
         // Récupérer la section mise à jour
         const section = document.getElementById(id);
@@ -416,27 +223,73 @@ const navItems = [
       });
     });
 
-    // Fonction pour recharger toutes les sections
-    async function reloadAllSections() {
+    // Observer pour détecter quand une section entre dans la vue lors du scroll manuel
+    const lastReloaded = new Map<string, number>();
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(async (entry) => {
+        if (entry.isIntersecting) {
+          const sectionId = entry.target.id;
+          const now = Date.now();
+          if (lastReloaded.has(sectionId) && now - lastReloaded.get(sectionId)! < 5000) {
+            return; // Éviter le rechargement en boucle
+          }
+          lastReloaded.set(sectionId, now);
+          await reloadSection(sectionId);
+        }
+      });
+    }, { root: container, threshold: 0.8 });
+
+    // Observer toutes les sections initiales
+    document.querySelectorAll('section').forEach(section => {
+      observer.observe(section);
+    });
+
+    // Fonction pour recharger une section spécifique
+    async function reloadSection(sectionId: string) {
       try {
+        const cachedHash = sessionStorage.getItem(`hash-${sectionId}`);
+        
+        // Vérifier d'abord si les données ont changé
+        const checkResponse = await fetch(
+          `/api/check-section?section=${sectionId}&hash=${cachedHash || ''}`
+        );
+        
+        if (!checkResponse.ok) return;
+        
+        const { hash, changed } = await checkResponse.json();
+        sessionStorage.setItem(`hash-${sectionId}`, hash);
+
+        // Seulement si changé, recharger la section
+        if (!changed) {
+          console.log(`Section #${sectionId} inchangée, pas de rechargement.`);
+          return;
+        }
+
         const response = await fetch(window.location.pathname);
         if (response.ok) {
           const html = await response.text();
           const parser = new DOMParser();
           const doc = parser.parseFromString(html, 'text/html');
-          // Liste des IDs des sections
-          const sectionIds = ['my-account', 'verifications', 'modifications', 'help'];
-          sectionIds.forEach(id => {
-            const newSection = doc.querySelector(`#${id}`);
-            if (newSection) {
-              const oldSection = document.querySelector(`#${id}`);
-              if (oldSection) oldSection.replaceWith(newSection);
+          const newSection = doc.querySelector(`#${sectionId}`);
+          
+          if (newSection) {
+            const oldSection = document.querySelector(`#${sectionId}`);
+            if (oldSection) {
+              oldSection.replaceWith(newSection);
+              observer.observe(newSection);
+              console.log(`Section #${sectionId} mise à jour.`);
+              if (sectionId === 'verifications') {
+                initVerifications();
+              }
             }
-          });
+          }
         }
       } catch (error) {
-        console.error('Erreur lors du rechargement des sections:', error);
+        console.error(`Erreur lors du rechargement de la section ${sectionId}:`, error);
       }
     }
   }
+
+  // Init verifications if present
+  initVerifications();
 </script>

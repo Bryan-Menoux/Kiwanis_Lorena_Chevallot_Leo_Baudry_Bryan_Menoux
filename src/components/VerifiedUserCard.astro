@@ -20,32 +20,21 @@ interface Props {
 const { user, currentUserId = '', showUnverifyButton = true } = Astro.props as Props;
 ---
 
-<div class="flex justify-between items-center p-4 border border-success/20 rounded-xl" data-user-id={user.id} data-list-type="verified">
+<div class="flex justify-between items-center p-4 border border-success/20 rounded-xl transition-all duration-300" data-user-id={user.id} data-list-type="verified">
   <div>
     <p class="font-semibold">{user.name || 'Nom non spécifié'}</p>
     <p class="text-sm text-base-content/70">{user.email}</p>
   </div>
   {showUnverifyButton && user.id !== currentUserId && (
-    <form method="post" class="inline">
-      <input type="hidden" name="formSource" value="verification" />
-      <input type="hidden" name="userId" value={user.id} />
-      <input type="hidden" name="userName" value={user.name || 'Nom non spécifié'} />
-      <input type="hidden" name="userEmail" value={user.email} />
-      <input type="hidden" name="userCreated" value={user.created} />
-      <input type="hidden" name="action" value="unverify" />
-      <input type="hidden" name="listType" value="verified" />
-      <button
-        class="btn btn-error btn-sm verify-action"
-        data-user-id={user.id}
-        data-action="unverify"
-        data-list="verified"
-        type="submit"
-        name="submitAction"
-        value="unverify"
-      >
-        <img src={crossCircle.src} class="w-5 h-5 invert" />
-        Retirer
-      </button>
-    </form>
+    <button
+      class="btn btn-error btn-sm verify-action"
+      data-user-id={user.id}
+      data-action="unverify"
+      data-list-type="verified"
+      type="button"
+    >
+      <img src={crossCircle.src} class="w-5 h-5 invert" />
+      Retirer
+    </button>
   )}
 </div>

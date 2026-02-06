@@ -207,14 +207,24 @@ const { firstName, lastName } = splitUserName(user!.name);
   import { gsap } from "gsap";
 
   const successMessage = document.getElementById("successMessage");
+  const successMessageText = document.getElementById("successMessageText");
   const flag = document.getElementById("success-flag");
+  const profileForm = document.getElementById("profileForm");
+  const submitBtn = profileForm?.querySelector('button[type="submit"]') as HTMLButtonElement;
+  const submitText = document.getElementById("submitText");
+  const loadingSpinner = document.getElementById("loadingSpinner");
+  const messageDiv = document.getElementById("message");
+  const messageText = document.getElementById("messageText");
+  const passwordMessage = document.getElementById("passwordMessage");
+  const passwordMessageText = document.getElementById("passwordMessageText");
 
-  function showSuccess() {
+  function showSuccess(text = "✓ Vos modifications ont bien été enregistrées.") {
     if (!successMessage) return;
 
     gsap.killTweensOf(successMessage);
     gsap.set(successMessage, { opacity: 0, y: -20 });
 
+    if (successMessageText) successMessageText.textContent = text;
     successMessage.classList.remove("hidden");
     successMessage.style.pointerEvents = "auto";
 
@@ -227,7 +237,6 @@ const { firstName, lastName } = splitUserName(user!.name);
       });
     });
 
-    // Masquer automatiquement après 5 secondes
     setTimeout(() => {
       gsap.to(successMessage, {
         opacity: 0,
@@ -241,10 +250,143 @@ const { firstName, lastName } = splitUserName(user!.name);
     }, 5000);
   }
 
+  function showError(text: string, isPasswordError = false) {
+    const container = isPasswordError ? passwordMessage : messageDiv;
+    const textElement = isPasswordError ? passwordMessageText : messageText;
+    
+    if (!container) return;
+
+    gsap.killTweensOf(container);
+    gsap.set(container, { opacity: 0, y: -20 });
+
+    if (textElement) textElement.textContent = text;
+    container.classList.remove("hidden", "alert-success");
+    container.classList.add("alert-error");
+    container.style.pointerEvents = "auto";
+
+    requestAnimationFrame(() => {
+      gsap.to(container, {
+        opacity: 1,
+        y: 0,
+        duration: 0.5,
+        ease: "power2.out",
+      });
+    });
+
+    setTimeout(() => {
+      gsap.to(container, {
+        opacity: 0,
+        y: -20,
+        duration: 0.3,
+        ease: "power2.in",
+        onComplete: () => {
+          container.classList.add("hidden");
+        },
+      });
+    }, 5000);
+  }
+
+  // Afficher le succès du rechargement si présent
   if (flag) {
     const success = flag.dataset.success === "true";
     if (success) {
       showSuccess();
     }
+  }
+
+  // Intercepter la soumission du formulaire
+  if (profileForm) {
+    (profileForm as HTMLFormElement).addEventListener("submit", async (e: Event) => {
+      e.preventDefault();
+
+      if (!submitBtn || !loadingSpinner || !submitText) return;
+
+      // Récupérer les données du formulaire
+      const formData = new FormData(profileForm as HTMLFormElement);
+      const firstName = (formData.get("firstName") as string) || "";
+      const lastName = (formData.get("lastName") as string) || "";
+      const email = (formData.get("email") as string) || "";
+      const oldPassword = (formData.get("oldPassword") as string) || "";
+      const newPassword = (formData.get("newPassword") as string) || "";
+      const newPasswordConfirm = (formData.get("newPasswordConfirm") as string) || "";
+
+      // Validation simple
+      if (!firstName.trim()) {
+        showError("Le prénom est requis");
+        return;
+      }
+
+      // Affichage optimiste immédiat
+      const displayFirstName = document.querySelector(`input[name="firstName"]`) as HTMLInputElement;
+      const displayLastName = document.querySelector(`input[name="lastName"]`) as HTMLInputElement;
+      const displayEmail = document.querySelector(`input[name="email"]`) as HTMLInputElement;
+
+      // État avant optimistic update (pour rollback si erreur)
+      const oldFirstName = displayFirstName?.value;
+      const oldLastName = displayLastName?.value;
+      const oldEmail = displayEmail?.value;
+
+      // Optimistic UI: afficher immédiatement
+      submitBtn.disabled = true;
+      submitText.textContent = "Enregistrement...";
+      loadingSpinner.classList.remove("hidden");
+
+      try {
+        const response = await fetch("/api/form-submit", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Requested-With": "XMLHttpRequest",
+          },
+          body: JSON.stringify({
+            formType: "profile",
+            firstName,
+            lastName,
+            email,
+            oldPassword,
+            newPassword,
+            newPasswordConfirm,
+          }),
+        });
+
+        const result = await response.json();
+
+        if (response.ok && result.success) {
+          // Mettre à jour les champs avec les données retournées
+          if (displayFirstName) displayFirstName.value = firstName;
+          if (displayLastName) displayLastName.value = lastName;
+          if (displayEmail) displayEmail.value = result.email;
+          
+          // Réinitialiser les champs de mot de passe
+          const oldPasswordInput = profileForm.querySelector(`input[name="oldPassword"]`) as HTMLInputElement;
+          const newPasswordInput = profileForm.querySelector(`input[name="newPassword"]`) as HTMLInputElement;
+          const confirmPasswordInput = profileForm.querySelector(`input[name="newPasswordConfirm"]`) as HTMLInputElement;
+          
+          if (oldPasswordInput) oldPasswordInput.value = "";
+          if (newPasswordInput) newPasswordInput.value = "";
+          if (confirmPasswordInput) confirmPasswordInput.value = "";
+
+          showSuccess(result.message || "✓ Vos modifications ont bien été enregistrées.");
+        } else {
+          // Rollback si erreur
+          if (displayFirstName) displayFirstName.value = oldFirstName!;
+          if (displayLastName) displayLastName.value = oldLastName!;
+          if (displayEmail) displayEmail.value = oldEmail!;
+          
+          showError(result.error || "Erreur lors de la mise à jour", newPassword ? true : false);
+        }
+      } catch (error) {
+        // Rollback en cas d'erreur réseau
+        if (displayFirstName) displayFirstName.value = oldFirstName!;
+        if (displayLastName) displayLastName.value = oldLastName!;
+        if (displayEmail) displayEmail.value = oldEmail!;
+        
+        showError("Erreur de connexion au serveur");
+      } finally {
+        submitBtn.disabled = false;
+        submitText.textContent = "Enregistrer";
+        loadingSpinner.classList.add("hidden");
+      }
+    });
   }
 </script>

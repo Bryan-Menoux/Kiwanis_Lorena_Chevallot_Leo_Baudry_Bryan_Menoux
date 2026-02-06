@@ -7,7 +7,7 @@ import PendingUserCard from "./PendingUserCard.astro";
 import RejectedUserCard from "./RejectedUserCard.astro";
 import VerifiedUserCard from "./VerifiedUserCard.astro";
 
-/* types */
+// Définition des types TypeScript
 type User = {
   id: string;
   name?: string;
@@ -18,385 +18,142 @@ type User = {
   rejectionDate?: string;
 };
 
-/* propriétés */
+// Propriétés passées au composant
 const users: User[] = Astro.props.users ?? [];
 const isAdmin: boolean = Astro.props.isAdmin ?? false;
-const currentUserId: string = Astro.props.currentUserId ?? '';
+const currentUserId: string = Astro.props.currentUserId ?? "";
 
-/* état */
+// Statuts des utilisateurs
 const pendingUsers = users.filter(
   (u: User) => !u.verified && u.rejected !== true,
 );
 const rejectedUsers = users.filter((u: User) => u.rejected === true);
 const verifiedUsers = users.filter((u: User) => u.verified === true);
+
+// Initialisation des compteurs pour chaque catégorie d'utilisateurs
+const pendingCount = pendingUsers.length;
+const rejectedCount = rejectedUsers.length;
+const verifiedCount = verifiedUsers.length;
 ---
 
-<div class="min-h-screen mt-24 py-8 px-4">
+<div
+  class="min-h-screen mt-24 lg:bg-linear-to-br from-base-100 via-base-100 to-base-200 py-8 px-4 md:px-8 pt-4 md:pt-12"
+>
   <div class="max-w-4xl mx-auto">
-
-    <!-- en-tête -->
+    <!-- Section d'en-tête -->
     <div class="mb-12 text-center">
-      <h1 class="text-5xl font-bold mb-4">
+      <h1
+        class="text-4xl md:text-5xl lg:text-7xl font-bold title font-merriweather mb-4"
+      >
         Vérifications
       </h1>
-      <p class="text-base-content/60">
-        Gérer les demandes d'adhésion
-      </p>
+      <p class="text-base-content/60 text-lg">Gérer les demandes d'adhésion</p>
     </div>
 
-    <div class="bg-white rounded-2xl shadow-2xl overflow-hidden">
-
-      <!-- en attente -->
+    <div class="bg-white rounded-2xl shadow-2xl overflow-hidden" id="verifications">
+      <!-- Section des demandes en attente -->
       <div class="px-8 py-8">
         <h2 class="text-2xl font-bold mb-6 flex items-center gap-3">
           <img src={wait.src} class="h-8 opacity-70" />
           Demandes en attente
-          {pendingUsers.length > 0 && (
-            <span class="badge badge-warning">
-              {pendingUsers.length}
-            </span>
-          )}
+          <span class="badge badge-warning" id="pending-badge" style={pendingUsers.length > 0 ? '' : 'display: none'}>{pendingUsers.length}</span>
         </h2>
 
         <search>
-            <input type="text" id="pending-search" placeholder="Rechercher par nom ou email..." class="input input-bordered input-primary w-full mb-4 focus:input-primary-focus" />
+          <input
+            type="text"
+            id="pending-search"
+            placeholder="Rechercher par nom ou email..."
+            class="input input-bordered input-primary w-full mb-4 focus:input-primary-focus"
+          />
         </search>
 
         <div class="space-y-4" id="pending-list">
-          {pendingUsers.length > 0 ? (
-            pendingUsers.map((user: User) => (
-              <PendingUserCard user={user} />
-            ))
-          ) : (
-            <div class="text-center py-12 text-base-content/60">
-              <img src={paper.src} class="h-16 mx-auto mb-4 opacity-50" />
-              <p>Aucune demande en attente</p>
-            </div>
-          )}
+          {
+            pendingUsers.length > 0 ? (
+              pendingUsers.map((user: User) => <PendingUserCard user={user} />)
+            ) : (
+              <div class="text-center py-12 text-base-content/60">
+                <img src={paper.src} class="h-16 mx-auto mb-4 opacity-50" />
+                <p>Aucune demande en attente</p>
+              </div>
+            )
+          }
         </div>
       </div>
 
-      <!-- rejetés -->
+      <!-- Section des utilisateurs rejetés -->
       <div class="px-8 pb-8">
         <details class="collapse collapse-arrow border border-base-300">
           <summary class="collapse-title flex items-center gap-2">
             <img src={crossCircle.src} class="h-8" />
             Utilisateurs rejetés
-            {rejectedUsers.length > 0 && (
-              <span class="badge badge-error ml-auto">
-                {rejectedUsers.length}
-              </span>
-            )}
+            <span class="badge badge-error ml-auto" id="rejected-badge" style={rejectedUsers.length > 0 ? '' : 'display: none'}>{rejectedUsers.length}</span>
           </summary>
 
           <div class="collapse-content space-y-2" id="rejected-list">
             <search>
-                <input type="text" id="rejected-search" placeholder="Rechercher par nom ou email..." class="input input-bordered input-primary w-full my-4 focus:input-primary-focus" />
+              <input
+                type="text"
+                id="rejected-search"
+                placeholder="Rechercher par nom ou email..."
+                class="input input-bordered input-primary w-full my-4 focus:input-primary-focus"
+              />
             </search>
-            {rejectedUsers.length > 0 ? (
-              rejectedUsers.map((user: User) => (
-                <RejectedUserCard user={user} />
-              ))
-            ) : (
-              <p class="text-center text-base-content/60 py-4">
-                Aucun utilisateur rejeté
-              </p>
-            )}
+            {
+              rejectedUsers.length > 0 ? (
+                rejectedUsers.map((user: User) => (
+                  <RejectedUserCard user={user} />
+                ))
+              ) : (
+                <p class="text-center text-base-content/60 py-4">
+                  Aucun utilisateur rejeté
+                </p>
+              )
+            }
           </div>
         </details>
       </div>
 
-      <!-- validés -->
+      <!-- Section des utilisateurs vérifiés -->
       <div class="px-8 pb-8">
         <details class="collapse collapse-arrow border border-base-300">
           <summary class="collapse-title flex items-center gap-2">
             <img src={circleCheck.src} class="h-8" />
             Utilisateurs vérifiés
-            {verifiedUsers.length > 0 && (
-              <span class="badge badge-success ml-auto">
-                {verifiedUsers.length}
-              </span>
-            )}
+            <span class="badge badge-success ml-auto" id="verified-badge" style={verifiedUsers.length > 0 ? '' : 'display: none'}>{verifiedUsers.length}</span>
           </summary>
           <div class="collapse-content space-y-2" id="verified-list">
             <search>
-                <input type="text" id="verified-search" placeholder="Rechercher par nom ou email..." class="input input-bordered input-primary w-full my-4 ml-auto focus:input-primary-focus" />
+              <input
+                type="text"
+                id="verified-search"
+                placeholder="Rechercher par nom ou email..."
+                class="input input-bordered input-primary w-full my-4 ml-auto focus:input-primary-focus"
+              />
             </search>
-            {verifiedUsers.length > 0 ? (
-              verifiedUsers.map((user: User) => (
-                <VerifiedUserCard user={user} currentUserId={currentUserId} />
-              ))
-            ) : (
-              <p class="text-center py-4 text-base-content/60">
-                Aucun utilisateur vérifié
-              </p>
-            )}
+            {
+              verifiedUsers.length > 0 ? (
+                verifiedUsers.map((user: User) => (
+                  <VerifiedUserCard user={user} currentUserId={currentUserId} />
+                ))
+              ) : (
+                <p class="text-center py-4 text-base-content/60">
+                  Aucun utilisateur vérifié
+                </p>
+              )
+            }
           </div>
         </details>
       </div>
 
-      {!isAdmin && (
-        <div class="text-center py-12">
-          <h3 class="text-xl font-semibold text-error">
-            Accès refusé
-          </h3>
-        </div>
-      )}
+      {
+        !isAdmin && (
+          <div class="text-center py-12">
+            <h3 class="text-xl font-semibold text-error">Accès refusé</h3>
+          </div>
+        )
+      }
     </div>
   </div>
 </div>
-
-<script>
-  // définition du type utilisateur
-  interface User {
-    id: string;
-    name?: string;
-    email: string;
-    created: string;
-    verified: boolean;
-    rejected?: boolean;
-    rejectionDate?: string;
-  }
-
-  // utilitaires
-
-  /**
-   * Obtient l'ID de la liste de destination selon l'action
-   */
-  function getTargetList(action: string): string | null {
-    switch (action) {
-      case 'approve':
-        return 'verified-list';
-      case 'reject':
-        return 'rejected-list';
-      case 'unreject':
-      case 'unverify':
-        return 'pending-list';
-      default:
-        return null;
-    }
-  }
-
-  /**
-   * Obtient le type de liste selon l'ID de la liste
-   */
-  function getListType(listId: string): 'pending' | 'rejected' | 'verified' | null {
-    switch (listId) {
-      case 'pending-list':
-        return 'pending';
-      case 'rejected-list':
-        return 'rejected';
-      case 'verified-list':
-        return 'verified';
-      default:
-        return null;
-    }
-  }
-
-  /**
-   * Récupère tous les utilisateurs à partir du DOM pour mettre à jour les badges
-   */
-  function updateBadges() {
-    const pendingCount = document.querySelectorAll('[data-list-type="pending"]').length;
-    const rejectedCount = document.querySelectorAll('[data-list-type="rejected"]').length;
-    const verifiedCount = document.querySelectorAll('[data-list-type="verified"]').length;
-
-    const pendingBadge = document.querySelector('#pending-list')?.parentElement?.querySelector('.badge-warning');
-    const rejectedBadge = document.querySelector('#rejected-list')?.parentElement?.parentElement?.querySelector('.badge-error');
-    const verifiedBadge = document.querySelector('#verified-list')?.parentElement?.parentElement?.querySelector('.badge-success');
-
-    if (pendingBadge) {
-      if (pendingCount === 0) {
-        pendingBadge.remove();
-      } else {
-        pendingBadge.textContent = pendingCount.toString();
-      }
-    }
-
-    if (rejectedBadge) {
-      if (rejectedCount === 0) {
-        rejectedBadge.remove();
-      } else {
-        rejectedBadge.textContent = rejectedCount.toString();
-      }
-    }
-
-    if (verifiedBadge) {
-      if (verifiedCount === 0) {
-        verifiedBadge.remove();
-      } else {
-        verifiedBadge.textContent = verifiedCount.toString();
-      }
-    }
-  }
-
-  /**
-   * Recharge la page pour mettre à jour l'affichage avec les dernières données du serveur
-   */
-  async function reloadUserLists() {
-    try {
-      const response = await fetch(window.location.pathname);
-      if (response.ok) {
-        const html = await response.text();
-        // Extraire les nouvelles listes du HTML retourné
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(html, 'text/html');
-
-        // Remplacer les listes
-        const newPendingList = doc.querySelector('#pending-list');
-        const newRejectedList = doc.querySelector('#rejected-list');
-        const newVerifiedList = doc.querySelector('#verified-list');
-
-        if (newPendingList) {
-          const oldPendingList = document.querySelector('#pending-list');
-          if (oldPendingList) oldPendingList.replaceWith(newPendingList);
-        }
-
-        if (newRejectedList) {
-          const oldRejectedList = document.querySelector('#rejected-list');
-          if (oldRejectedList) oldRejectedList.replaceWith(newRejectedList);
-        }
-
-        if (newVerifiedList) {
-          const oldVerifiedList = document.querySelector('#verified-list');
-          if (oldVerifiedList) oldVerifiedList.replaceWith(newVerifiedList);
-        }
-
-        // Réattacher les handlers
-        attachFormHandlers();
-        updateBadges();
-      }
-    } catch (error) {
-      console.error('Erreur lors du rechargement:', error);
-    }
-  }
-
-  // gestion des formulaires
-
-  /**
-   * Attache les event listeners aux formulaires de vérification
-   */
-  function attachFormHandlers() {
-    document.querySelectorAll('form').forEach((form) => {
-      const formSource = form.querySelector('input[name="formSource"]');
-
-      if (formSource && (formSource as HTMLInputElement).value === 'verification') {
-        // Éviter de réattacher plusieurs fois
-        if (form.dataset.handlerAttached) return;
-        form.dataset.handlerAttached = 'true';
-
-        form.addEventListener('submit', handleFormSubmit);
-      }
-    });
-  }
-
-  /**
-   * Gère la soumission des formulaires de vérification
-   */
-  async function handleFormSubmit(e: Event) {
-    e.preventDefault();
-
-    const form = e.target as HTMLFormElement;
-    const submitButton = form.querySelector('button[type="submit"]') as HTMLButtonElement;
-    const originalHTML = submitButton?.innerHTML;
-
-    // État de chargement
-    if (submitButton) {
-      submitButton.disabled = true;
-      submitButton.innerHTML = '<span class="loading loading-spinner loading-sm"></span> Traitement...';
-    }
-
-    const formData = new FormData(form);
-
-    try {
-      const response = await fetch(window.location.pathname, {
-        method: 'POST',
-        headers: {
-          'X-Requested-With': 'XMLHttpRequest',
-        },
-        body: formData,
-      });
-
-      if (response.ok) {
-        const result = await response.json();
-
-        if (result.success) {
-          // Récupérer les infos de la carte à déplacer
-          const userCard = form.closest('[data-user-id]') as HTMLElement;
-
-          if (userCard) {
-            // Animation de disparition
-            userCard.classList.add('opacity-0', 'scale-95', 'transition-all', 'duration-300');
-
-            setTimeout(async () => {
-              userCard.remove();
-              // Recharger les listes pour afficher la carte à sa nouvelle place
-              await reloadUserLists();
-            }, 300);
-          }
-        } else {
-          handleError(result.error, submitButton, originalHTML);
-        }
-      } else {
-        handleError(`HTTP ${response.status}`, submitButton, originalHTML);
-      }
-    } catch (error) {
-      handleError('Erreur réseau', submitButton, originalHTML);
-      console.error('Erreur:', error);
-    }
-  }
-
-  /**
-   * Gère les erreurs lors de la soumission
-   */
-  function handleError(errorMessage: string, submitButton: HTMLButtonElement | null, originalHTML: string | undefined) {
-    console.error('Erreur:', errorMessage);
-    alert(`Une erreur est survenue: ${errorMessage}`);
-
-    if (submitButton && originalHTML) {
-      submitButton.disabled = false;
-      submitButton.innerHTML = originalHTML;
-    }
-  }
-
-  // initialisation
-
-  // Initialiser les handlers au chargement
-  document.addEventListener('DOMContentLoaded', () => {
-    attachFormHandlers();
-  });
-
-  // Si le DOM est déjà chargé (cas où le script s'exécute après)
-  if (document.readyState !== 'loading') {
-    attachFormHandlers();
-  }
-
-  // Recherche dans une liste d'utilisateurs
-  function setupSearch(searchInputId: string, listId: string) {
-    const searchInput = document.getElementById(searchInputId) as HTMLInputElement;
-    if (!searchInput) return;
-
-    searchInput.addEventListener('input', () => {
-      const query = searchInput.value.toLowerCase();
-      const list = document.getElementById(listId);
-      if (!list) return;
-
-      const cards = list.querySelectorAll('div[data-user-id]'); // Sélectionner uniquement les divs des cartes, pas les boutons
-      cards.forEach(card => {
-        const htmlCard = card as HTMLElement;
-        const text = htmlCard.textContent?.toLowerCase() || '';
-        if (text.includes(query)) {
-          htmlCard.classList.remove('hidden');
-        } else {
-          htmlCard.classList.add('hidden');
-        }
-      });
-    });
-  }
-
-  // Initialiser les recherches
-  setupSearch('pending-search', 'pending-list');
-  setupSearch('rejected-search', 'rejected-list');
-  setupSearch('verified-search', 'verified-list');
-  
-</script>

@@ -16,7 +16,7 @@ const user = Astro.props.user as any as User;
 ---
 
 <div
-  class="bg-base-100 rounded-xl p-6 border border-base-300"
+  class="bg-base-100 rounded-xl p-6 border border-base-300 transition-all duration-300"
   data-user-id={user.id}
   data-list-type="pending"
 >
@@ -32,50 +32,28 @@ const user = Astro.props.user as any as User;
       </p>
     </div>
 
-    <div class="flex gap-3">
-      <form method="post">
-        <input type="hidden" name="formSource" value="verification" />
-        <input type="hidden" name="userId" value={user.id} />
-        <input type="hidden" name="userName" value={user.name ?? "Nom non spécifié"} />
-        <input type="hidden" name="userEmail" value={user.email} />
-        <input type="hidden" name="userCreated" value={user.created} />
-        <input type="hidden" name="action" value="approve" />
-        <input type="hidden" name="listType" value="pending" />
-        <button
-          class="btn btn-success btn-sm verify-action"
-          data-user-id={user.id}
-          data-action="approve"
-          data-list="pending"
-          type="submit"
-          name="submitAction"
-          value="approve"
-        >
-          <img src={circleCheck.src} class="w-5 h-5 invert" />
-          Approuver
-        </button>
-      </form>
+    <div class="flex gap-3 action-buttons">
+      <button
+        class="btn btn-success btn-sm verify-action"
+        data-user-id={user.id}
+        data-action="approve"
+        data-list-type="pending"
+        type="button"
+      >
+        <img src={circleCheck.src} class="w-5 h-5 invert" />
+        Approuver
+      </button>
 
-      <form method="post">
-        <input type="hidden" name="formSource" value="verification" />
-        <input type="hidden" name="userId" value={user.id} />
-        <input type="hidden" name="userName" value={user.name ?? "Nom non spécifié"} />
-        <input type="hidden" name="userEmail" value={user.email} />
-        <input type="hidden" name="userCreated" value={user.created} />
-        <input type="hidden" name="action" value="reject" />
-        <input type="hidden" name="listType" value="pending" />
-        <button
-          class="btn btn-error btn-sm verify-action"
-          data-user-id={user.id}
-          data-action="reject"
-          data-list="pending"
-          type="submit"
-          name="submitAction"
-          value="reject"
-        >
-          <img src={crossCircle.src} class="w-5 h-5 invert" />
-          Rejeter
-        </button>
-      </form>
+      <button
+        class="btn btn-error btn-sm verify-action"
+        data-user-id={user.id}
+        data-action="reject"
+        data-list-type="pending"
+        type="button"
+      >
+        <img src={crossCircle.src} class="w-5 h-5 invert" />
+        Rejeter
+      </button>
     </div>
   </div>
 </div>

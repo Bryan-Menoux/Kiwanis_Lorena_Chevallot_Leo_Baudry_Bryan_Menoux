@@ -15,7 +15,7 @@ const user = Astro.props.user as any as User;
 ---
 
 <div
-  class="flex justify-between p-3 bg-error/10 rounded-lg border border-error/20"
+  class="flex justify-between p-3 bg-error/10 rounded-lg border border-error/20 transition-all duration-300"
   data-user-id={user.id}
   data-list-type="rejected"
 >
@@ -32,25 +32,14 @@ const user = Astro.props.user as any as User;
     </p>
   </div>
 
-  <form method="post" class="inline">
-    <input type="hidden" name="formSource" value="verification" />
-    <input type="hidden" name="userId" value={user.id} />
-    <input type="hidden" name="userName" value={user.name ?? "Nom non spécifié"} />
-    <input type="hidden" name="userEmail" value={user.email} />
-    <input type="hidden" name="userCreated" value={user.created} />
-    <input type="hidden" name="action" value="unreject" />
-    <input type="hidden" name="listType" value="rejected" />
-    <button
-      class="btn btn-warning btn-sm verify-action"
-      data-user-id={user.id}
-      data-action="unreject"
-      data-list="rejected"
-      type="submit"
-      name="submitAction"
-      value="unreject"
-    >
-      <img src={wait.src} class="w-5 h-5 invert" />
-      Remettre en attente
-    </button>
-  </form>
+  <button
+    class="btn btn-warning btn-sm verify-action"
+    data-user-id={user.id}
+    data-action="unreject"
+    data-list-type="rejected"
+    type="button"
+  >
+    <img src={wait.src} class="w-5 h-5 invert" />
+    Remettre en attente
+  </button>
 </div>
