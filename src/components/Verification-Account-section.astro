@@ -58,6 +58,10 @@ const verifiedUsers = users.filter((u: User) => u.verified === true);
           )}
         </h2>
 
+        <search>
+            <input type="text" id="pending-search" placeholder="Rechercher par nom ou email..." class="input input-bordered input-primary w-full mb-4 focus:input-primary-focus" />
+        </search>
+
         <div class="space-y-4" id="pending-list">
           {pendingUsers.length > 0 ? (
             pendingUsers.map((user: User) => (
@@ -86,6 +90,9 @@ const verifiedUsers = users.filter((u: User) => u.verified === true);
           </summary>
 
           <div class="collapse-content space-y-2" id="rejected-list">
+            <search>
+                <input type="text" id="rejected-search" placeholder="Rechercher par nom ou email..." class="input input-bordered input-primary w-full my-4 focus:input-primary-focus" />
+            </search>
             {rejectedUsers.length > 0 ? (
               rejectedUsers.map((user: User) => (
                 <RejectedUserCard user={user} />
@@ -112,6 +119,9 @@ const verifiedUsers = users.filter((u: User) => u.verified === true);
             )}
           </summary>
           <div class="collapse-content space-y-2" id="verified-list">
+            <search>
+                <input type="text" id="verified-search" placeholder="Rechercher par nom ou email..." class="input input-bordered input-primary w-full my-4 ml-auto focus:input-primary-focus" />
+            </search>
             {verifiedUsers.length > 0 ? (
               verifiedUsers.map((user: User) => (
                 <VerifiedUserCard user={user} currentUserId={currentUserId} />
@@ -360,4 +370,33 @@ const verifiedUsers = users.filter((u: User) => u.verified === true);
   if (document.readyState !== 'loading') {
     attachFormHandlers();
   }
+
+  // Recherche dans une liste d'utilisateurs
+  function setupSearch(searchInputId: string, listId: string) {
+    const searchInput = document.getElementById(searchInputId) as HTMLInputElement;
+    if (!searchInput) return;
+
+    searchInput.addEventListener('input', () => {
+      const query = searchInput.value.toLowerCase();
+      const list = document.getElementById(listId);
+      if (!list) return;
+
+      const cards = list.querySelectorAll('div[data-user-id]'); // Sélectionner uniquement les divs des cartes, pas les boutons
+      cards.forEach(card => {
+        const htmlCard = card as HTMLElement;
+        const text = htmlCard.textContent?.toLowerCase() || '';
+        if (text.includes(query)) {
+          htmlCard.classList.remove('hidden');
+        } else {
+          htmlCard.classList.add('hidden');
+        }
+      });
+    });
+  }
+
+  // Initialiser les recherches
+  setupSearch('pending-search', 'pending-list');
+  setupSearch('rejected-search', 'rejected-list');
+  setupSearch('verified-search', 'verified-list');
+  
 </script>

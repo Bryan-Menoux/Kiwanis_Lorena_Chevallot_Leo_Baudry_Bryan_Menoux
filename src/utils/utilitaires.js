@@ -19,4 +19,13 @@ export function splitUserName(fullName) {
   };
 }
 
+// Capitalise la première lettre de chaque mot du nom
+export function capitalizeName(name) {
+  if (!name || typeof name !== "string") return "";
+
+  return name.split(' ').map(word =>
+    word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+  ).join(' ');
+}
+
 

@@ -3,10 +3,12 @@ import Layout from "../layouts/Layout.astro";
 import AccountSection from "../components/Account-section.astro";
 import VerificationSection from "../components/Verification-Account-section.astro";
 import HelpAccountSection from "../components/Help-Account-section.astro";
+import ModificationSection from "../components/Modification-Account-section.astro";
 import user from "../assets/user.svg";
 import circleCheck from "../assets/circle-check.svg";
 import help from "../assets/help.svg";
 import edit from "../assets/edit.svg";
+import { capitalizeName } from "../utils/utilitaires.js";
 
 // Vérification de l'authentification utilisateur
 if (!Astro.locals.pb.authStore.isValid) {
@@ -84,8 +86,6 @@ if (isPostForm) {
     if (formSource === "verification") {
       const userId = data.get("userId") as string;
       const action = data.get("action") as string;
-      const userName = data.get("userName") as string;
-      const userEmail = data.get("userEmail") as string;
 
       try {
         await handleVerificationAction(userId, action, currentUser.id);
@@ -130,11 +130,51 @@ if (isPostForm) {
         }
         throw error;
       }
+    } else if (formSource === "modification") {
+      const userId = data.get("userId") as string;
+      const name = (data.get("name") as string) || "";
+      const email = (data.get("email") as string) || "";
+
+      // Met en majuscule la première lettre de chaque mot du nom
+      const capitalizedName = capitalizeName(name);
+
+      try {
+        await Astro.locals.pb.collection("users").update(userId, { name: capitalizedName, email });
+
+        const isAjax = Astro.request.headers.get("X-Requested-With") === "XMLHttpRequest";
+        if (isAjax) {
+          return new Response(
+            JSON.stringify({ success: true, name: capitalizedName, email }),
+            {
+              status: 200,
+              headers: { "Content-Type": "application/json" },
+            },
+          );
+        }
+      } catch (error) {
+        const isAjax = Astro.request.headers.get("X-Requested-With") === "XMLHttpRequest";
+        if (isAjax) {
+          return new Response(
+            JSON.stringify({
+              success: false,
+              error: error instanceof Error ? error.message : "Erreur inconnue",
+            }),
+            {
+              status: 500,
+              headers: { "Content-Type": "application/json" },
+            },
+          );
+        }
+        throw error;
+      }
     } else if (Astro.locals.pb.authStore.isValid && currentUser!.verified) {
       const firstName = (data.get("firstName") as string) || "";
       const lastName = (data.get("lastName") as string) || "";
       const name = `${firstName} ${lastName}`.trim();
       const email = (data.get("email") as string) || "";
+
+      // Met en majuscule la première lettre de chaque mot du nom
+      const capitalizedName = capitalizeName(name);
 
       const oldPassword = (data.get("oldPassword") as string) || "";
       const newPassword = (data.get("newPassword") as string) || "";
@@ -142,8 +182,8 @@ if (isPostForm) {
         (data.get("newPasswordConfirm") as string) || "";
 
       const updateData: any = {};
-      if (name) {
-        updateData.name = name;
+      if (capitalizedName) {
+        updateData.name = capitalizedName;
       }
       if (email) {
         updateData.email = email;
@@ -299,6 +339,8 @@ const navItems = [
               isAdmin={isAdmin}
               currentUserId={currentUser.id}
             />
+          ) : item.id === "modifications" ? (
+            <ModificationSection />
           ) : (
             <HelpAccountSection />
           )}
@@ -357,10 +399,15 @@ const navItems = [
     };
 
     navItems.forEach((item) => {
-      item.addEventListener("click", (e) => {
+      item.addEventListener("click", async (e) => {
         e.preventDefault();
         const id = (item as HTMLElement).dataset.section;
         if (!id) return;
+
+        // Recharger les données
+        await reloadAllSections();
+
+        // Récupérer la section mise à jour
         const section = document.getElementById(id);
         if (!section) return;
 
@@ -368,5 +415,28 @@ const navItems = [
         container.scrollTo({ left: section.offsetLeft, behavior: "smooth" });
       });
     });
+
+    // Fonction pour recharger toutes les sections
+    async function reloadAllSections() {
+      try {
+        const response = await fetch(window.location.pathname);
+        if (response.ok) {
+          const html = await response.text();
+          const parser = new DOMParser();
+          const doc = parser.parseFromString(html, 'text/html');
+          // Liste des IDs des sections
+          const sectionIds = ['my-account', 'verifications', 'modifications', 'help'];
+          sectionIds.forEach(id => {
+            const newSection = doc.querySelector(`#${id}`);
+            if (newSection) {
+              const oldSection = document.querySelector(`#${id}`);
+              if (oldSection) oldSection.replaceWith(newSection);
+            }
+          });
+        }
+      } catch (error) {
+        console.error('Erreur lors du rechargement des sections:', error);
+      }
+    }
   }
 </script>

@@ -1,0 +1,303 @@
+---
+import UserCard from "./UserCard.astro";
+const users = await Astro.locals.pb
+  .collection("users")
+  .getFullList({
+    filter: "verified = true && rejected = false",
+  });
+
+if (!Astro.locals.pb.authStore.isValid) {
+  throw new Error("Utilisateur non authentifié");
+}
+
+const user = Astro.locals.pb.authStore.record;
+const isAdmin = user?.administrateur;
+
+const perPage = 6;
+const pages = [];
+for (let i = 0; i < users.length; i += perPage) {
+  pages.push(users.slice(i, i + perPage));
+}
+const totalPages = pages.length;
+---
+
+<div class="min-h-screen mt-24 py-8 px-4">
+  <div class="max-w-4xl mx-auto">
+    <!-- en-tête -->
+    <div class="mb-12 text-center">
+      <h1 class="text-5xl font-bold mb-4">Modifications</h1>
+      <p class="text-base-content/60">
+        Modifier les informations des utilisateurs
+      </p>
+    </div>
+
+    <div class="bg-white rounded-2xl shadow-2xl overflow-hidden">
+      <div class="px-8 py-8">
+        <h2 class="text-2xl font-bold mb-6 flex items-center gap-3">
+          Utilisateurs
+        </h2>
+        <search>
+          <input
+            type="text"
+            id="user-search"
+            placeholder="Rechercher par nom ou email..."
+            class="input input-bordered input-primary w-full mb-8 focus:input-primary-focus"
+          />
+        </search>
+        <div
+          class="carousel-container overflow-hidden relative"
+          data-total-pages={totalPages}
+          data-is-admin={isAdmin}
+        >
+          <div
+            class="carousel-inner flex gap-16 transition-transform duration-300 ease-in-out"
+            id="carousel-inner"
+          >
+            {
+              pages.map((pageUsers, index) => (
+                <div class="carousel-slide shrink-0 w-full">
+                  <div class="flex flex-col gap-6">
+                    {pageUsers.map((user) => (
+                      <UserCard user={user} isAdmin={isAdmin} />
+                    ))}
+                  </div>
+                </div>
+              ))
+            }
+          </div>
+        </div>
+        {
+          totalPages > 1 && (
+            <div class="flex justify-center items-center gap-4 mt-8">
+              <button id="prev-btn" class="btn btn-outline" disabled>
+                Précédent
+              </button>
+              <span id="page-indicator" class="text-sm">
+                Page 1 sur {totalPages}
+              </span>
+              <button
+                id="next-btn"
+                class="btn btn-outline"
+                disabled={totalPages <= 1}
+              >
+                Suivant
+              </button>
+            </div>
+          )
+        }
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Fenêtre modale pour modifier les informations d'un utilisateur -->
+<div id="modify-modal" class="modal">
+  <div class="modal-box max-w-md bg-white shadow-2xl border border-gray-200">
+    <div class="flex items-center gap-3 mb-4">
+      <div
+        class="w-10 h-10 bg-primary rounded-full flex items-center justify-center"
+      >
+        <svg
+          class="w-5 h-5 text-white"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+          ></path>
+        </svg>
+      </div>
+      <h3 class="font-bold text-xl text-gray-800">Modifier l'utilisateur</h3>
+    </div>
+    <form id="modify-form" class="space-y-4">
+      <input type="hidden" name="userId" id="modal-user-id" />
+      <div class="form-control">
+        <label class="label">
+          <span class="label-text font-semibold text-gray-700">Nom complet</span
+          >
+        </label>
+        <input
+          type="text"
+          name="name"
+          id="modal-name"
+          placeholder="Entrez le nom complet"
+          class="input input-bordered input-primary focus:input-primary-focus"
+          required
+        />
+      </div>
+      <div class="form-control">
+        <label class="label">
+          <span class="label-text font-semibold text-gray-700"
+            >Adresse email</span
+          >
+        </label>
+        <input
+          type="email"
+          name="email"
+          id="modal-email"
+          placeholder="Entrez l'email"
+          class="input input-bordered input-primary focus:input-primary-focus"
+          required
+        />
+      </div>
+    </form>
+    <div class="modal-action mt-6">
+      <button class="btn btn-ghost cancel-btn">Annuler</button>
+      <button type="submit" form="modify-form" class="btn btn-primary btn-wide">
+        <svg
+          class="w-4 h-4 mr-2"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M5 13l4 4L19 7"></path>
+        </svg>
+        Enregistrer
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+  let currentPage = 0;
+  const container = document.querySelector(
+    ".carousel-container",
+  ) as HTMLElement | null;
+  const inner = document.getElementById("carousel-inner") as HTMLElement | null;
+  const prevBtn = document.getElementById(
+    "prev-btn",
+  ) as HTMLButtonElement | null;
+  const nextBtn = document.getElementById(
+    "next-btn",
+  ) as HTMLButtonElement | null;
+  const indicator = document.getElementById(
+    "page-indicator",
+  ) as HTMLSpanElement | null;
+  const totalPages = parseInt(container?.dataset.totalPages || "1");
+  const isAdmin = container?.dataset.isAdmin === "true";
+
+  function updateButtons() {
+    if (prevBtn) prevBtn.disabled = currentPage === 0;
+    if (nextBtn) nextBtn.disabled = currentPage >= totalPages - 1;
+    if (indicator)
+      indicator.textContent = `Page ${currentPage + 1} sur ${totalPages}`;
+  }
+
+  function goToPage(page: number) {
+    currentPage = Math.max(0, Math.min(page, totalPages - 1));
+    if (inner) {
+      const slide = inner.children[0] as HTMLElement;
+      const slideWidth = slide?.offsetWidth || 0;
+      const computedStyle = getComputedStyle(inner);
+      const gapValue = computedStyle.gap;
+      const gap = parseFloat(gapValue) || 0;
+      const offset = currentPage * (slideWidth + gap);
+      inner.style.transform = `translateX(-${offset}px)`;
+    }
+    updateButtons();
+  }
+
+  if (prevBtn) {
+    prevBtn.addEventListener("click", () => goToPage(currentPage - 1));
+  }
+  if (nextBtn) {
+    nextBtn.addEventListener("click", () => goToPage(currentPage + 1));
+  }
+
+  // Gestion des interactions de modification des utilisateurs
+  let editingCard: HTMLElement | null = null; // Carte en cours de modification
+  const modal = document.getElementById("modify-modal") as HTMLElement;
+  const modalForm = document.getElementById("modify-form") as HTMLFormElement;
+  const modalUserId = document.getElementById(
+    "modal-user-id",
+  ) as HTMLInputElement;
+  const modalName = document.getElementById("modal-name") as HTMLInputElement;
+  const modalEmail = document.getElementById("modal-email") as HTMLInputElement;
+
+  // Écoute les clics sur le bouton Modifier
+  document.addEventListener("click", (e) => {
+    const btn = (e.target as Element).closest(".modify-btn");
+    if (btn) {
+      e.preventDefault();
+      const card = btn.closest(".user-card") as HTMLElement;
+      if (card) {
+        editingCard = card;
+        const userId = card.dataset.userId!;
+        const userName = card.dataset.userName!;
+        const userEmail = card.dataset.userEmail!;
+        // Remplit la modal avec les données actuelles
+        modalUserId.value = userId;
+        modalName.value = userName;
+        modalEmail.value = userEmail;
+        modal.classList.add("modal-open"); // Ouvre la modal
+      }
+    }
+
+    // Gère l'annulation
+    const cancelBtn = (e.target as Element).closest(".cancel-btn");
+    if (cancelBtn) {
+      modal.classList.remove("modal-open"); // Ferme la modal
+      editingCard = null;
+    }
+  });
+
+  // Gère la soumission du formulaire
+  modalForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const formData = new FormData(modalForm);
+    formData.append("formSource", "modification");
+    try {
+      // Envoie la requête AJAX
+      const response = await fetch("/mon-compte", {
+        method: "POST",
+        body: formData,
+        headers: { "X-Requested-With": "XMLHttpRequest" },
+      });
+      const data = await response.json();
+      if (data.success && editingCard) {
+        // Met à jour la carte avec les nouvelles données
+        const h3 = editingCard.querySelector("h3");
+        const p = editingCard.querySelector("p");
+        if (h3) h3.textContent = data.name;
+        if (p) p.textContent = data.email;
+        editingCard.dataset.userName = data.name;
+        editingCard.dataset.userEmail = data.email;
+        modal.classList.remove("modal-open"); // Ferme la modal
+        editingCard = null;
+      } else {
+        alert("Erreur: " + (data.error || "Erreur inconnue"));
+      }
+    } catch (error) {
+      alert("Erreur de réseau");
+    }
+  });
+
+  const userSearchInput = document.getElementById(
+    "user-search",
+  ) as HTMLInputElement;
+  userSearchInput.addEventListener("input", () => {
+    const query = userSearchInput.value.toLowerCase();
+    const cards = document.querySelectorAll(
+      ".user-card",
+    ) as NodeListOf<HTMLElement>;
+    cards.forEach((card) => {
+      const name = card.dataset.userName?.toLowerCase() || "";
+      const email = card.dataset.userEmail?.toLowerCase() || "";
+      if (name.includes(query) || email.includes(query)) {
+        card.style.display = "";
+      } else {
+        card.style.display = "none";
+      }
+    });
+  });
+
+  updateButtons();
+</script>
