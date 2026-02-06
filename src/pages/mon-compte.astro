@@ -141,31 +141,44 @@ if (isPostForm) {
       const newPasswordConfirm =
         (data.get("newPasswordConfirm") as string) || "";
 
+      const updateData: any = {};
+      if (name) {
+        updateData.name = name;
+      }
+      if (email) {
+        updateData.email = email;
+      }
+
+      let passwordChanged = false;
       if (oldPassword && newPassword && newPasswordConfirm) {
         if (newPassword !== newPasswordConfirm) {
           throw new Error(
             "Le nouveau mot de passe et sa confirmation ne correspondent pas.",
           );
         }
-        try {
-          await Astro.locals.pb.collection("users").update(currentUser!.id, {
-            oldPassword: oldPassword,
-            password: newPassword,
-            passwordConfirm: newPasswordConfirm,
-          });
-        } catch (error) {
-          console.error(
-            "Erreur PocketBase lors de la mise à jour du mot de passe:",
-            error,
-          );
-          throw new Error("Échec de la mise à jour du mot de passe.");
-        }
+        updateData.oldPassword = oldPassword;
+        updateData.password = newPassword;
+        updateData.passwordConfirm = newPasswordConfirm;
+        passwordChanged = true;
       }
 
-      const updateData: any = { name, email };
-      await Astro.locals.pb
-        .collection("users")
-        .update(currentUser!.id, updateData);
+      if (Object.keys(updateData).length > 0) {
+        try {
+          await Astro.locals.pb.collection("users").update(currentUser!.id, updateData);
+        } catch (error) {
+          console.error(
+            passwordChanged
+              ? "Erreur PocketBase lors de la mise à jour du mot de passe et/ou profil:"
+              : "Erreur PocketBase lors de la mise à jour du profil:",
+            error,
+          );
+          throw new Error(
+            passwordChanged
+              ? "Échec de la mise à jour du mot de passe et/ou profil."
+              : "Échec de la mise à jour du profil."
+          );
+        }
+      }
 
       return Astro.redirect("/mon-compte?success=true", 303);
     }
@@ -264,7 +277,7 @@ const navItems = [
     </ul>
   </nav>
   <!-- Contenu principal avec sections -->
-  <main
+  <div
     class="flex flex-1 w-full h-fit overflow-x-scroll scrollbar-hide scroll-smooth snap-x snap-mandatory"
     id="content-container"
     role="tabpanel"
@@ -292,7 +305,7 @@ const navItems = [
         </section>
       ))
     }
-  </main>
+  </div>
 </Layout>
 <style>
   /* Styles pour la navigation */
