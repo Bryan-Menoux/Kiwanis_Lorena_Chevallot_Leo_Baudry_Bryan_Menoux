@@ -48,9 +48,11 @@ export const GET: APIRoute = async ({ locals, url }) => {
 
   const hash = crypto.createHash('md5').update(dataToHash).digest('hex');
   
-  // Pour my-account, ne jamais recharger (mises à jour via AJAX avec UI optimiste)
+  // Pour my-account, permettre le rechargement si les données ont changé
+  // (utile quand on revient sur la section après des modifications)
   if (sectionId === 'my-account') {
-    return new Response(JSON.stringify({ hash, changed: false }), {
+    const changed = hash !== lastHash;
+    return new Response(JSON.stringify({ hash, changed }), {
       status: 200,
       headers: {
         'Content-Type': 'application/json',

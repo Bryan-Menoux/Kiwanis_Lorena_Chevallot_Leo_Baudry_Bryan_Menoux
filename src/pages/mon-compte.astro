@@ -204,7 +204,7 @@ const navItems = [
         if (!id) return;
 
         const now = Date.now();
-        if (lastReloaded.has(id) && now - lastReloaded.get(id)! < 3000) {
+        if (lastReloaded.has(id) && now - lastReloaded.get(id)! < 500) {
           // Aller directement à la section sans recharger
           const section = document.getElementById(id);
           if (!section) return;
@@ -233,10 +233,14 @@ const navItems = [
         entries.forEach(async (entry) => {
           if (entry.isIntersecting) {
             const sectionId = entry.target.id;
+            // Ne pas recharger automatiquement la section aide
+            if (sectionId === "help") {
+              return;
+            }
             const now = Date.now();
             if (
               lastReloaded.has(sectionId) &&
-              now - lastReloaded.get(sectionId)! < 5000
+              now - lastReloaded.get(sectionId)! < 500
             ) {
               return; // Éviter le rechargement en boucle
             }
@@ -245,7 +249,7 @@ const navItems = [
           }
         });
       },
-      { root: container, threshold: 0.8 },
+      { root: container, threshold: 1.0 },
     );
 
     // Observer toutes les sections initiales
@@ -255,6 +259,11 @@ const navItems = [
 
     // Fonction pour recharger une section spécifique
     async function reloadSection(sectionId: string) {
+      // Ne pas recharger la section aide
+      if (sectionId === "help") {
+        return;
+      }
+
       try {
         const cachedHash = sessionStorage.getItem(`hash-${sectionId}`);
 
