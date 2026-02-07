@@ -11,6 +11,9 @@ export default defineConfig({
   security: {
     checkOrigin: true,
   },
+  devToolbar: {
+    enabled: false
+  },
 
   adapter: node({
     mode: "standalone",
