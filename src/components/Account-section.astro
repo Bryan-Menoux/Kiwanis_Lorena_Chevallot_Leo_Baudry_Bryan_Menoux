@@ -34,7 +34,12 @@ const { firstName, lastName } = splitUserName(user!.name);
       <!-- Formulaire de mise à jour du profil -->
       <form method="post" id="profileForm" class="px-8 py-8 space-y-8">
         <!-- Flag pour le succès -->
-        <div id="success-flag" data-success={success ? "true" : "false"} class="hidden"></div>
+        <div
+          id="success-flag"
+          data-success={success ? "true" : "false"}
+          class="hidden"
+        >
+        </div>
 
         <!-- Zone d'affichage du message de succès -->
         <div
@@ -44,7 +49,9 @@ const { firstName, lastName } = splitUserName(user!.name);
           aria-live="polite"
           aria-atomic="true"
         >
-          <span id="successMessageText">✓ Vos modifications ont bien été enregistrées.</span>
+          <span id="successMessageText"
+            >✓ Vos modifications ont bien été enregistrées.</span
+          >
         </div>
 
         <!-- Zone d'affichage des messages de statut -->
@@ -111,16 +118,19 @@ const { firstName, lastName } = splitUserName(user!.name);
               type="email"
               id="email"
               name="email"
-              class={`input input-bordered w-full ${!isAdmin ? 'bg-base-200' : ''}`}
+              class={`input input-bordered w-full ${!isAdmin ? "bg-base-200" : ""}`}
               placeholder="votre.email@exemple.com"
               value={user?.email || ""}
               disabled={!isAdmin}
             />
-            {!isAdmin && (
-              <p class="text-sm text-base-content/60 mt-2">
-                Seul un administrateur peut modifier votre adresse e-mail. Veuillez contacter un administrateur.
-              </p>
-            )}
+            {
+              !isAdmin && (
+                <p class="text-sm text-base-content/60 mt-2">
+                  Seul un administrateur peut modifier votre adresse e-mail.
+                  Veuillez contacter un administrateur.
+                </p>
+              )
+            }
           </div>
         </div>
 
@@ -191,19 +201,19 @@ const { firstName, lastName } = splitUserName(user!.name);
         </div>
 
         <!-- Section des actions du formulaire -->
-        <div
-          class="flex flex-col sm:flex-row gap-4 pt-8 border-t border-base-300"
-        >
+        <div class="flex flex-row gap-4 pt-8 border-t border-base-300">
+          <a href="/" class="btn btn-outline btn-lg rounded-full min-h-full">
+            Retour
+          </a>
           <button
             type="submit"
-            class="btn btn-primary btn-lg flex-1 rounded-full gap-2"
+            class="btn btn-primary btn-lg flex-1 rounded-full gap-2 min-h-full"
           >
             <span id="submitText">Enregistrer</span>
             <span
               id="loadingSpinner"
               class="loading loading-spinner loading-sm hidden"></span>
           </button>
-          <a href="/" class="btn btn-outline btn-lg rounded-full"> Retour </a>
         </div>
       </form>
     </div>
@@ -217,7 +227,9 @@ const { firstName, lastName } = splitUserName(user!.name);
   const successMessageText = document.getElementById("successMessageText");
   const flag = document.getElementById("success-flag");
   const profileForm = document.getElementById("profileForm");
-  const submitBtn = profileForm?.querySelector('button[type="submit"]') as HTMLButtonElement;
+  const submitBtn = profileForm?.querySelector(
+    'button[type="submit"]',
+  ) as HTMLButtonElement;
   const submitText = document.getElementById("submitText");
   const loadingSpinner = document.getElementById("loadingSpinner");
   const messageDiv = document.getElementById("message");
@@ -225,7 +237,9 @@ const { firstName, lastName } = splitUserName(user!.name);
   const passwordMessage = document.getElementById("passwordMessage");
   const passwordMessageText = document.getElementById("passwordMessageText");
 
-  function showSuccess(text = "✓ Vos modifications ont bien été enregistrées.") {
+  function showSuccess(
+    text = "✓ Vos modifications ont bien été enregistrées.",
+  ) {
     if (!successMessage) return;
 
     gsap.killTweensOf(successMessage);
@@ -260,7 +274,7 @@ const { firstName, lastName } = splitUserName(user!.name);
   function showError(text: string, isPasswordError = false) {
     const container = isPasswordError ? passwordMessage : messageDiv;
     const textElement = isPasswordError ? passwordMessageText : messageText;
-    
+
     if (!container) return;
 
     gsap.killTweensOf(container);
@@ -303,105 +317,129 @@ const { firstName, lastName } = splitUserName(user!.name);
 
   // Intercepter la soumission du formulaire
   if (profileForm) {
-    (profileForm as HTMLFormElement).addEventListener("submit", async (e: Event) => {
-      e.preventDefault();
+    (profileForm as HTMLFormElement).addEventListener(
+      "submit",
+      async (e: Event) => {
+        e.preventDefault();
 
-      if (!submitBtn || !loadingSpinner || !submitText) return;
+        if (!submitBtn || !loadingSpinner || !submitText) return;
 
-      // Récupérer les données du formulaire
-      const formData = new FormData(profileForm as HTMLFormElement);
-      const firstName = (formData.get("firstName") as string) || "";
-      const lastName = (formData.get("lastName") as string) || "";
-      const email = (formData.get("email") as string) || "";
-      const oldPassword = (formData.get("oldPassword") as string) || "";
-      const newPassword = (formData.get("newPassword") as string) || "";
-      const newPasswordConfirm = (formData.get("newPasswordConfirm") as string) || "";
+        // Récupérer les données du formulaire
+        const formData = new FormData(profileForm as HTMLFormElement);
+        const firstName = (formData.get("firstName") as string) || "";
+        const lastName = (formData.get("lastName") as string) || "";
+        const email = (formData.get("email") as string) || "";
+        const oldPassword = (formData.get("oldPassword") as string) || "";
+        const newPassword = (formData.get("newPassword") as string) || "";
+        const newPasswordConfirm =
+          (formData.get("newPasswordConfirm") as string) || "";
 
-      // Validation simple
-      if (!firstName.trim()) {
-        showError("Le prénom est requis");
-        return;
-      }
+        // Validation simple
+        if (!firstName.trim()) {
+          showError("Le prénom est requis");
+          return;
+        }
 
-      // Affichage optimiste immédiat
-      const displayFirstName = document.querySelector(`input[name="firstName"]`) as HTMLInputElement;
-      const displayLastName = document.querySelector(`input[name="lastName"]`) as HTMLInputElement;
-      const displayEmail = document.querySelector(`input[name="email"]`) as HTMLInputElement;
+        // Affichage optimiste immédiat
+        const displayFirstName = document.querySelector(
+          `input[name="firstName"]`,
+        ) as HTMLInputElement;
+        const displayLastName = document.querySelector(
+          `input[name="lastName"]`,
+        ) as HTMLInputElement;
+        const displayEmail = document.querySelector(
+          `input[name="email"]`,
+        ) as HTMLInputElement;
 
-      // État avant optimistic update (pour rollback si erreur)
-      const oldFirstName = displayFirstName?.value;
-      const oldLastName = displayLastName?.value;
-      const oldEmail = displayEmail?.value;
+        // État avant optimistic update (pour rollback si erreur)
+        const oldFirstName = displayFirstName?.value;
+        const oldLastName = displayLastName?.value;
+        const oldEmail = displayEmail?.value;
 
-      // Optimistic UI: afficher immédiatement
-      submitBtn.disabled = true;
-      submitText.textContent = "Enregistrement...";
-      loadingSpinner.classList.remove("hidden");
+        // Optimistic UI: afficher immédiatement
+        submitBtn.disabled = true;
+        submitText.textContent = "Enregistrement...";
+        loadingSpinner.classList.remove("hidden");
 
-      try {
-        const response = await fetch("/api/form-submit", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "X-Requested-With": "XMLHttpRequest",
-          },
-          body: JSON.stringify({
-            formType: "profile",
-            firstName,
-            lastName,
-            email,
-            oldPassword,
-            newPassword,
-            newPasswordConfirm,
-          }),
-        });
+        try {
+          const response = await fetch("/api/form-submit", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "X-Requested-With": "XMLHttpRequest",
+            },
+            body: JSON.stringify({
+              formType: "profile",
+              firstName,
+              lastName,
+              email,
+              oldPassword,
+              newPassword,
+              newPasswordConfirm,
+            }),
+          });
 
-        const result = await response.json();
+          const result = await response.json();
 
-        if (response.ok && result.success) {
-          // Mettre à jour les champs avec les données retournées
-          if (displayFirstName) displayFirstName.value = firstName;
-          if (displayLastName) displayLastName.value = lastName;
-          if (displayEmail) displayEmail.value = result.email;
-          
-          // Réinitialiser les champs de mot de passe
-          const oldPasswordInput = profileForm.querySelector(`input[name="oldPassword"]`) as HTMLInputElement;
-          const newPasswordInput = profileForm.querySelector(`input[name="newPassword"]`) as HTMLInputElement;
-          const confirmPasswordInput = profileForm.querySelector(`input[name="newPasswordConfirm"]`) as HTMLInputElement;
-          
-          if (oldPasswordInput) oldPasswordInput.value = "";
-          if (newPasswordInput) newPasswordInput.value = "";
-          if (confirmPasswordInput) confirmPasswordInput.value = "";
+          if (response.ok && result.success) {
+            // Mettre à jour les champs avec les données retournées
+            if (displayFirstName) displayFirstName.value = firstName;
+            if (displayLastName) displayLastName.value = lastName;
+            if (displayEmail) displayEmail.value = result.email;
 
-          // Si déconnexion requise (changement d'email ou mot de passe), rediriger vers connexion
-          if (result.logout) {
-            showSuccess("✓ Profil mis à jour. Veuillez vous reconnecter avec vos nouvelles informations.");
-            setTimeout(() => {
-              window.location.href = "/connexion";
-            }, 2000);
+            // Réinitialiser les champs de mot de passe
+            const oldPasswordInput = profileForm.querySelector(
+              `input[name="oldPassword"]`,
+            ) as HTMLInputElement;
+            const newPasswordInput = profileForm.querySelector(
+              `input[name="newPassword"]`,
+            ) as HTMLInputElement;
+            const confirmPasswordInput = profileForm.querySelector(
+              `input[name="newPasswordConfirm"]`,
+            ) as HTMLInputElement;
+
+            if (oldPasswordInput) oldPasswordInput.value = "";
+            if (newPasswordInput) newPasswordInput.value = "";
+            if (confirmPasswordInput) confirmPasswordInput.value = "";
+
+            // Si déconnexion requise (changement d'email ou mot de passe), rediriger vers connexion
+            if (result.logout) {
+              showSuccess(
+                "✓ Profil mis à jour. Veuillez vous reconnecter avec vos nouvelles informations.",
+              );
+              setTimeout(() => {
+                window.location.href = "/connexion";
+              }, 2000);
+            } else {
+              showSuccess(
+                result.message ||
+                  "✓ Vos modifications ont bien été enregistrées.",
+              );
+            }
           } else {
-            showSuccess(result.message || "✓ Vos modifications ont bien été enregistrées.");
+            // Rollback si erreur
+            if (displayFirstName) displayFirstName.value = oldFirstName!;
+            if (displayLastName) displayLastName.value = oldLastName!;
+            if (displayEmail) displayEmail.value = oldEmail!;
+
+            showError(
+              result.error || "Erreur lors de la mise à jour",
+              newPassword ? true : false,
+            );
           }
-        } else {
-          // Rollback si erreur
+        } catch (error) {
+          // Rollback en cas d'erreur réseau
           if (displayFirstName) displayFirstName.value = oldFirstName!;
           if (displayLastName) displayLastName.value = oldLastName!;
           if (displayEmail) displayEmail.value = oldEmail!;
-          
-          showError(result.error || "Erreur lors de la mise à jour", newPassword ? true : false);
+
+          showError("Erreur de connexion au serveur");
+        } finally {
+          submitBtn.disabled = false;
+          submitText.textContent = "Enregistrer";
+          loadingSpinner.classList.add("hidden");
         }
-      } catch (error) {
-        // Rollback en cas d'erreur réseau
-        if (displayFirstName) displayFirstName.value = oldFirstName!;
-        if (displayLastName) displayLastName.value = oldLastName!;
-        if (displayEmail) displayEmail.value = oldEmail!;
-        
-        showError("Erreur de connexion au serveur");
-      } finally {
-        submitBtn.disabled = false;
-        submitText.textContent = "Enregistrer";
-        loadingSpinner.classList.add("hidden");
-      }
-    });
+      },
+    );
   }
 </script>

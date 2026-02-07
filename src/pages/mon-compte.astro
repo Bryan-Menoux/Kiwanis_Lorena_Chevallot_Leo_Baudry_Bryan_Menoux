@@ -1,4 +1,4 @@
----
+s---
 import Layout from "../layouts/Layout.astro";
 import AccountSection from "../components/Account-section.astro";
 import VerificationSection from "../components/Verification-Account-section.astro";
@@ -112,6 +112,7 @@ const navItems = [
   import gsap from "gsap";
   import { initVerifications } from "../scripts/verification-handlers.js";
   import { initModifications } from "../scripts/modification-handlers.js";
+  import type { ActionAPIContext } from "astro:actions";
 
   const container = document.getElementById("content-container");
   const navLinks = document.querySelectorAll(".nav-link");
@@ -161,19 +162,74 @@ const navItems = [
 
   // Gérer les clics sur les liens de navigation pour scroller vers la section
   [...navLinks, ...navLinksMobile].forEach((link, i) => {
-    link.addEventListener("click", (e) => {
+    link.addEventListener("click", async (e) => {
       e.preventDefault();
       const sectionId = (link as HTMLElement).dataset.section;
       const section = document.getElementById(sectionId!);
       if (section && container) {
-        // Scroller vers le haut de la page pour éviter de perdre l'utilisateur
+        // Scroller immédiatement vers le haut et la section
         window.scrollTo({ top: 0, behavior: "smooth" });
-        // Scroller horizontalement vers la section
         container.scrollTo({ left: section.offsetLeft, behavior: "smooth" });
         setActive(i % navLinks.length);
+        
+        // Actualiser la section en arrière-plan (sans attendre)
+        refreshSection(sectionId!);
       }
     });
   });
+
+  // Fonction pour actualiser le contenu d'une section
+  async function refreshSection(sectionId: string) {
+    // Ne pas recharger la section aide
+    if (sectionId === "help") {
+      return;
+    }
+
+    try {
+      const cachedHash = sessionStorage.getItem(`hash-${sectionId}`);
+
+      // Vérifier d'abord si les données ont changé
+      const checkResponse = await fetch(
+        `/api/check-section?section=${sectionId}&hash=${cachedHash || ""}`,
+      );
+
+      if (!checkResponse.ok) return;
+
+      const { hash, changed } = await checkResponse.json();
+      sessionStorage.setItem(`hash-${sectionId}`, hash);
+
+      // Seulement si changé, recharger la section
+      if (!changed) {
+        return;
+      }
+
+      const response = await fetch(window.location.pathname);
+      if (response.ok) {
+        const html = await response.text();
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, "text/html");
+        const newSection = doc.querySelector(`#${sectionId}`);
+
+        if (newSection) {
+          const oldSection = document.querySelector(`#${sectionId}`);
+          if (oldSection) {
+            oldSection.replaceWith(newSection);
+            if (sectionId === "verifications") {
+              initVerifications();
+            }
+            if (sectionId === "modifications") {
+              initModifications();
+            }
+          }
+        }
+      }
+    } catch (error) {
+      console.error(
+        `Erreur lors du rechargement de la section ${sectionId}:`,
+        error,
+      );
+    }
+  }
 
   // Détecter le scroll manuel et mettre à jour la section active
   if (container) {
@@ -193,4 +249,25 @@ const navItems = [
 
   initVerifications();
 
-  // Gérer la déconnexion
+  // Gérer le bouton logout
+  const logoutBtn = document.getElementById("logout-btn");
+  if (logoutBtn) {
+    logoutBtn.addEventListener("click", async () => {
+      try {
+        const response = await fetch("/api/logout", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+
+        if (response.ok) {
+          window.location.href = "/connexion";
+        }
+      } catch (error) {
+        console.error("Erreur lors de la déconnexion:", error);
+      }
+    });
+  }
+
+</script>
