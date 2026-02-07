@@ -193,12 +193,41 @@ const verifiedCount = verifiedUsers.length;
 </div>
 
 <script>
+  import { initVerifications } from "../scripts/verification-handlers.js";
+  
   // Gestion de la sélection des utilisateurs rejetés
   function updateButtonState() {
     const rejectBtn = document.getElementById('reject-selected-btn') as HTMLButtonElement | null;
     if (rejectBtn) {
       const selectedCount = document.querySelectorAll('.checkbox-reject:checked').length;
       rejectBtn.disabled = selectedCount === 0;
+    }
+  }
+
+  // Fonction pour recharger les listes
+  async function reloadUserLists() {
+    try {
+      const response = await fetch(window.location.pathname);
+      if (response.ok) {
+        const html = await response.text();
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, "text/html");
+
+        const listIds = ["pending-list", "rejected-list", "verified-list"];
+        
+        listIds.forEach(id => {
+          const newList = doc.querySelector(`#${id}`);
+          if (newList) {
+            const oldList = document.querySelector(`#${id}`);
+            if (oldList) oldList.replaceWith(newList);
+          }
+        });
+
+        // Réinitialiser la page
+        initVerifications();
+      }
+    } catch (error) {
+      console.error("Erreur lors du rechargement:", error);
     }
   }
 
@@ -275,36 +304,8 @@ const verifiedCount = verifiedUsers.length;
       const allSuccess = responses.every(response => response.ok);
 
       if (allSuccess) {
-        // Supprimer les cartes du DOM
-        selectedCheckboxes.forEach(checkbox => {
-          const card = (checkbox as HTMLElement).closest('[data-list-type="rejected"]');
-          if (card) {
-            card.remove();
-          }
-        });
-
-        // Vérifier s'il y a encore des utilisateurs rejetés
-        const remainingCards = document.querySelectorAll('[data-list-type="rejected"]');
-        const rejectedBadge = document.getElementById('rejected-badge');
-        
-        if (remainingCards.length === 0) {
-          // Si plus d'utilisateurs, masquer la section
-          const rejectedListContainer = document.getElementById('rejected-list');
-          if (rejectedListContainer && rejectedBadge) {
-            rejectedListContainer.innerHTML = '<p class="text-center text-base-content/60 py-4">Aucun utilisateur rejeté</p>';
-            rejectedBadge.style.display = 'none';
-          }
-        } else if (rejectedBadge) {
-          // Mettre à jour le compteur si des utilisateurs restent
-          rejectedBadge.textContent = remainingCards.length.toString();
-        }
-
-        // Réinitialiser les checkboxes
-        const selectAllCheckbox = document.getElementById('select-all-rejected');
-        if (selectAllCheckbox) {
-          (selectAllCheckbox as HTMLInputElement).checked = false;
-        }
-        updateButtonState();
+        // Recharger les listes complètement
+        await reloadUserLists();
       } else {
         alert('Erreur lors de la suppression de certains utilisateurs');
       }

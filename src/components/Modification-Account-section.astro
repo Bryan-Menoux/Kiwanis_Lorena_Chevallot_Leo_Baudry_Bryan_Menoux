@@ -76,18 +76,18 @@ const totalPages = pages.length || 1;
         {
           totalPages > 1 && (
             <div class="flex justify-center items-center gap-4 mt-8">
-              <button id="prev-btn" class="btn btn-outline" disabled>
-                Précédent
+              <button id="prev-btn" class="btn btn-sm">
+                ← Précédent
               </button>
-              <span id="page-indicator" class="text-sm">
+              <span id="page-indicator" class="flex items-center px-3">
                 Page 1 sur {totalPages}
               </span>
               <button
                 id="next-btn"
-                class="btn btn-outline"
+                class="btn btn-sm"
                 disabled={totalPages <= 1}
               >
-                Suivant
+                Suivant →
               </button>
             </div>
           )

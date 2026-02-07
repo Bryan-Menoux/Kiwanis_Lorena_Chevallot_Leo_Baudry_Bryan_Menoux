@@ -1,7 +1,12 @@
 // Initialisation des compteurs de vérification
-let currentPendingCount;
-let currentRejectedCount;
-let currentVerifiedCount;
+// Les compteurs sont maintenant calculés à la volée depuis le DOM
+
+// État de recherche persistant par liste
+const searchState = {
+  'pending-list': { query: '', filteredCards: null },
+  'rejected-list': { query: '', filteredCards: null },
+  'verified-list': { query: '', filteredCards: null }
+};
 
 // Fonctions utilitaires
 function getTargetList(action, fromList = null) {
@@ -30,43 +35,27 @@ function setElementLoading(element, loading, originalHTML = null) {
   }
 }
 
-// Mise à jour des badges et compteurs
-// Cette fonction ajuste les compteurs en fonction des mouvements entre listes
-// et met à jour l'affichage des badges correspondants
-function updateBadges(fromList = null, toList = null) {
-  // Ajustement des compteurs selon les listes source et destination
-  if (fromList && toList) {
-    if (fromList === 'pending-list') {
-      currentPendingCount = Math.max(0, currentPendingCount - 1);
-    } else if (fromList === 'rejected-list') {
-      currentRejectedCount = Math.max(0, currentRejectedCount - 1);
-    } else if (fromList === 'verified-list') {
-      currentVerifiedCount = Math.max(0, currentVerifiedCount - 1);
-    }
+// Mise à jour des badges - compte directement dans le DOM
+function updateBadges() {
+  // Compter les cartes originales (pas celles dans pagination-page)
+  const pendingCount = getOriginalCards('pending-list', 'pending').length;
+  const rejectedCount = getOriginalCards('rejected-list', 'rejected').length;
+  const verifiedCount = getOriginalCards('verified-list', 'verified').length;
 
-    if (toList === 'pending-list') {
-      currentPendingCount++;
-    } else if (toList === 'rejected-list') {
-      currentRejectedCount++;
-    } else if (toList === 'verified-list') {
-      currentVerifiedCount++;
-    }
-  }
-
-  // Configuration des badges avec leurs compteurs respectifs
+  // Mettre à jour les badges
   const badges = [
-    { id: 'pending-badge', count: currentPendingCount },
-    { id: 'rejected-badge', count: currentRejectedCount },
-    { id: 'verified-badge', count: currentVerifiedCount }
+    { id: 'pending-badge', count: pendingCount },
+    { id: 'rejected-badge', count: rejectedCount },
+    { id: 'verified-badge', count: verifiedCount }
   ];
 
-  // Mise à jour de l'affichage de chaque badge
   badges.forEach(({ id, count }) => {
     const badge = document.getElementById(id);
     if (badge) {
+      badge.textContent = count.toString();
       if (count > 0) {
-        badge.textContent = count.toString();
-        badge.style.display = '';
+        badge.style.display = 'inline-block';
+        badge.style.visibility = 'visible';
       } else {
         badge.style.display = 'none';
       }
@@ -82,11 +71,22 @@ async function reloadUserLists() {
     const response = await fetch(window.location.pathname);
     if (response.ok) {
       const html = await response.text();
+      
       const parser = new DOMParser();
       const doc = parser.parseFromString(html, "text/html");
 
       // Mise à jour de chaque liste avec le nouveau contenu
       const listIds = ["pending-list", "rejected-list", "verified-list"];
+      
+      // Réinitialiser l'état de recherche
+      listIds.forEach(id => {
+        if (searchState[id]) {
+          searchState[id].query = '';
+          searchState[id].filteredCards = null;
+        }
+      });
+      
+      // Remplacer les listes
       listIds.forEach(id => {
         const newList = doc.querySelector(`#${id}`);
         if (newList) {
@@ -95,20 +95,30 @@ async function reloadUserLists() {
         }
       });
 
-      // Réattachement des gestionnaires d'événements après mise à jour
+      // Réattachement des gestionnaires d'événements de formulaires seulement
       attachFormHandlers();
       
-      // Réappliquer la pagination et les recherches après rechargement
+      // Faire exactement le même calcul qu'au chargement initial
       const searches = [
         ["pending-search", "pending-list"],
         ["rejected-search", "rejected-list"],
         ["verified-search", "verified-list"]
       ];
-      listIds.forEach(id => {
-        setupPagination(id);
-        const searchConfig = searches.find(s => s[1] === id);
-        if (searchConfig) setupSearch(searchConfig[0], searchConfig[1]);
+      searches.forEach(([inputId, listId]) => {
+        // Nettoyer la pagination avant de recréer
+        cleanupPagination(listId);
+        // Réinitialiser le flag de recherche
+        const searchInput = document.getElementById(inputId);
+        if (searchInput) {
+          searchInput.removeAttribute('data-search-attached');
+        }
+        // Recréer les composants
+        setupSearch(inputId, listId);
+        setupPagination(listId);
       });
+      
+      // Mise à jour des badges
+      updateBadges();
     }
   } catch (error) {
     console.error("Erreur lors du rechargement:", error);
@@ -118,10 +128,6 @@ async function reloadUserLists() {
 // Traitement des actions utilisateur
 // Gère l'animation et la suppression de la carte utilisateur lors d'une action
 async function processUserAction(userCard, action, fromList = null) {
-  // Identification des listes source et destination
-  const actualFromList = fromList || userCard.closest('#pending-list, #rejected-list, #verified-list')?.id;
-  const toList = getTargetList(action, actualFromList);
-
   // Animation de disparition de la carte
   userCard.classList.add(
     "opacity-0",
@@ -130,15 +136,8 @@ async function processUserAction(userCard, action, fromList = null) {
     "duration-300",
   );
 
-  // Suppression de la carte après l'animation et mise à jour des données
+  // Attendre la fin de l'animation puis recharger
   setTimeout(async () => {
-    userCard.remove();
-    
-    // Mise à jour des compteurs si les listes sont définies
-    if (actualFromList && toList) {
-      updateBadges(actualFromList, toList);
-    }
-    
     // Rechargement des listes pour synchroniser l'état
     await reloadUserLists();
   }, 300);
@@ -175,7 +174,11 @@ function attachFormHandlers() {
   container.querySelectorAll("form").forEach((form) => {
     const formSource = form.querySelector('input[name="formSource"]');
     if (formSource && formSource.value === "verification") {
-      form.addEventListener("submit", handleFormSubmit);
+      // Éviter l'ajout multiple d'event listeners
+      if (!form.hasAttribute('data-form-handler-attached')) {
+        form.setAttribute('data-form-handler-attached', 'true');
+        form.addEventListener("submit", handleFormSubmit);
+      }
     }
   });
 }
@@ -311,29 +314,49 @@ function setupPagination(listId) {
   const list = document.getElementById(listId);
   if (!list) return;
 
-  const allCards = Array.from(list.querySelectorAll("div[data-user-id]"));
-  if (allCards.length <= 4) return; // Pas de pagination si 4 ou moins
+  // Nettoyer complètement avant de recréer
+  cleanupPagination(listId);
+
+  // Extraire le type de liste (pending, rejected, verified) depuis l'ID
+  const listType = listId.replace("-list", "");
+  
+  // Déterminer quelles cartes utiliser
+  let allCards;
+  const state = searchState[listId];
+  
+  if (state?.query && state?.filteredCards) {
+    // Utiliser les cartes filtrées stockées dans l'état
+    allCards = state.filteredCards;
+  } else {
+    // Récupérer toutes les cartes originales
+    allCards = getOriginalCards(listId, listType);
+  }
+  
+  if (allCards.length <= 4) {
+    // Pas de pagination nécessaire, s'assurer que toutes les cartes sont visibles
+    allCards.forEach(card => card.style.display = "");
+    return;
+  }
 
   // Masquer toutes les cartes originales
-  allCards.forEach(card => card.style.display = "none");
+  const originalCards = getOriginalCards(listId, listType);
+  originalCards.forEach(card => card.style.display = "none");
 
   // Calcul du nombre de pages
   const totalPages = Math.ceil(allCards.length / 4);
+  let currentPage = 1;
 
   // Création du conteneur des pages
   const paginationContainer = document.createElement("div");
   paginationContainer.className = "pagination-container mt-4";
   paginationContainer.id = `${listId}-pagination`;
 
-  // Création de chaque page
-  const pageButtons = [];
+  // Créer toutes les pages
   for (let page = 1; page <= totalPages; page++) {
     const pageDiv = document.createElement("div");
-    pageDiv.className = "pagination-page";
+    pageDiv.className = "pagination-page space-y-4";
     pageDiv.id = `${listId}-page-${page}`;
-    pageDiv.style.display = page === 1 ? "flex" : "none";
-    pageDiv.style.flexDirection = "column";
-    pageDiv.style.gap = "1rem";
+    pageDiv.style.display = page === 1 ? "block" : "none";
 
     // Ajout des cartes pour cette page
     const startIndex = (page - 1) * 4;
@@ -341,51 +364,147 @@ function setupPagination(listId) {
     
     for (let i = startIndex; i < endIndex; i++) {
       const clonedCard = allCards[i].cloneNode(true);
-      clonedCard.style.display = "flex";
-      clonedCard.style.justifyContent = "space-between";
-      clonedCard.style.alignItems = "center";
-      clonedCard.style.width = "100%";
-      clonedCard.style.flexShrink = "0";
-      
-      // S'assurer que le div du texte prend tout l'espace
-      const textDiv = clonedCard.querySelector('div:first-child');
-      if (textDiv) {
-        textDiv.style.flex = "1";
-        textDiv.style.minWidth = "0";
-      }
-      
+      clonedCard.style.display = "";
       pageDiv.appendChild(clonedCard);
     }
 
     list.appendChild(pageDiv);
-
-    // Création du bouton pour cette page
-    const button = document.createElement("button");
-    button.className = `join-item btn btn-sm ${page === 1 ? "btn-active" : ""}`;
-    button.textContent = page;
-    button.dataset.page = page;
-    button.addEventListener("click", (e) => {
-      e.preventDefault();
-      // Masquer toutes les pages et désactiver tous les boutons
-      for (let p = 1; p <= totalPages; p++) {
-        document.getElementById(`${listId}-page-${p}`).style.display = "none";
-      }
-      pageButtons.forEach(btn => btn.classList.remove("btn-active"));
-      
-      // Afficher la page sélectionnée
-      document.getElementById(`${listId}-page-${page}`).style.display = "flex";
-      button.classList.add("btn-active");
-    });
-    pageButtons.push(button);
   }
 
   // Création du conteneur des boutons
   const buttonContainer = document.createElement("div");
-  buttonContainer.className = "join flex gap-2 justify-center mt-4";
-  pageButtons.forEach(btn => buttonContainer.appendChild(btn));
+  buttonContainer.className = "flex gap-2 justify-center mt-4";
+
+  // Si 2 pages ou plus, utiliser flèches prev/next
+  if (totalPages >= 2) {
+    const prevBtn = document.createElement("button");
+    prevBtn.className = "btn btn-sm";
+    prevBtn.textContent = "← Précédent";
+    prevBtn.disabled = true;
+    prevBtn.addEventListener("click", () => {
+      if (currentPage > 1) {
+        document.getElementById(`${listId}-page-${currentPage}`).style.display = "none";
+        currentPage--;
+        document.getElementById(`${listId}-page-${currentPage}`).style.display = "block";
+        prevBtn.disabled = currentPage === 1;
+        nextBtn.disabled = currentPage === totalPages;
+        pageIndicator.innerHTML = `<span class="hidden md:inline">Page </span>${currentPage}/${totalPages}`;
+      }
+    });
+
+    const pageIndicator = document.createElement("span");
+    pageIndicator.className = "flex items-center px-3";
+    pageIndicator.innerHTML = `<span class="hidden md:inline">Page </span>1/${totalPages}`;
+
+    const nextBtn = document.createElement("button");
+    nextBtn.className = "btn btn-sm";
+    nextBtn.textContent = "Suivant →";
+    nextBtn.disabled = totalPages === 1;
+    nextBtn.addEventListener("click", () => {
+      if (currentPage < totalPages) {
+        document.getElementById(`${listId}-page-${currentPage}`).style.display = "none";
+        currentPage++;
+        document.getElementById(`${listId}-page-${currentPage}`).style.display = "block";
+        prevBtn.disabled = currentPage === 1;
+        nextBtn.disabled = currentPage === totalPages;
+        pageIndicator.innerHTML = `<span class="hidden md:inline">Page </span>${currentPage}/${totalPages}`;
+      }
+    });
+
+    buttonContainer.appendChild(prevBtn);
+    buttonContainer.appendChild(pageIndicator);
+    buttonContainer.appendChild(nextBtn);
+  }
 
   paginationContainer.appendChild(buttonContainer);
+  
+  // Chercher et déplacer le bouton de rejet avant la pagination (pour la liste rejetée)
+  const rejectBtn = list.querySelector("#reject-selected-btn");
+  if (rejectBtn) {
+    rejectBtn.parentNode?.removeChild(rejectBtn);
+    list.appendChild(rejectBtn);
+  }
+  
   list.appendChild(paginationContainer);
+}
+
+// Nettoie complètement la pagination d'une liste
+function cleanupPagination(listId) {
+  const list = document.getElementById(listId);
+  if (!list) return;
+  
+  // Supprimer toutes les pages de pagination
+  const existingPages = list.querySelectorAll(".pagination-page");
+  existingPages.forEach(page => page.remove());
+  
+  // Supprimer le conteneur de pagination
+  const existingPagination = list.querySelector(`#${listId}-pagination`);
+  if (existingPagination) existingPagination.remove();
+  
+  // Réafficher toutes les cartes originales
+  const listType = listId.replace("-list", "");
+  const originalCards = getOriginalCards(listId, listType);
+  originalCards.forEach(card => {
+    card.style.display = "";
+  });
+}
+
+// Fonction utilitaire pour récupérer les cartes originales (hors pagination)
+function getOriginalCards(listId, listType) {
+  const list = document.getElementById(listId);
+  if (!list) return [];
+  
+  const allCards = [];
+  const candidateCards = list.querySelectorAll(`div[data-user-id][data-list-type="${listType}"]`);
+  
+  for (const card of candidateCards) {
+    // Vérifier que la carte n'est pas dans une pagination-page
+    let isInPaginationPage = false;
+    let parent = card.parentElement;
+    
+    while (parent && parent !== list) {
+      if (parent.classList.contains('pagination-page')) {
+        isInPaginationPage = true;
+        break;
+      }
+      parent = parent.parentElement;
+    }
+    
+    // Ajouter uniquement si pas dans une page de pagination
+    if (!isInPaginationPage) {
+      allCards.push(card);
+    }
+  }
+  
+  return allCards;
+}
+
+// Applique le filtre de recherche à une liste (sans interaction utilisateur)
+function applySearchFilter(listId) {
+  const state = searchState[listId];
+  if (!state || !state.query) return; // Pas de recherche active
+  
+  const listType = listId.replace("-list", "");
+  const allCards = getOriginalCards(listId, listType);
+  
+  // Filtrer selon la query stockée
+  const filteredCards = allCards.filter(card => {
+    const text = card.textContent?.toLowerCase() || "";
+    return text.includes(state.query.toLowerCase());
+  });
+  
+  // Mettre à jour l'état
+  state.filteredCards = filteredCards;
+  
+  // Appliquer la visibilité
+  allCards.forEach(card => {
+    const text = card.textContent?.toLowerCase() || "";
+    if (text.includes(state.query.toLowerCase())) {
+      card.style.display = "block";
+    } else {
+      card.style.display = "none";
+    }
+  });
 }
 
 // Configuration de la recherche
@@ -398,123 +517,69 @@ function setupSearch(searchInputId, listId) {
   if (searchInput.hasAttribute('data-search-attached')) return;
   searchInput.setAttribute('data-search-attached', 'true');
 
+  // Restaurer la valeur de recherche depuis l'état si elle existe
+  const state = searchState[listId];
+  if (state && state.query) {
+    searchInput.value = state.query;
+  }
+
   // Gestionnaire d'événements pour la saisie dans le champ de recherche
   searchInput.addEventListener("input", () => {
     const query = searchInput.value.toLowerCase();
     const list = document.getElementById(listId);
     if (!list) return;
 
-    // Récupérer toutes les cartes originales (non pagéifiées)
-    const allCards = Array.from(list.querySelectorAll("div[data-user-id]")).filter(card => {
-      return !card.closest(".pagination-page");
-    });
-    
-    // Filtrer les cartes selon la requête
-    const visibleCards = allCards.filter(card => {
-      const text = card.textContent?.toLowerCase() || "";
-      return text.includes(query);
-    });
+    // Mettre à jour l'état de recherche pour cette liste
+    searchState[listId].query = query;
 
-    // Cacher/afficher les cartes originales
-    allCards.forEach(card => {
-      const text = card.textContent?.toLowerCase() || "";
-      if (text.includes(query)) {
-        card.style.display = "block";
-      } else {
-        card.style.display = "none";
+    // Extraire le type de liste (pending, rejected, verified) depuis l'ID
+    const listType = listId.replace("-list", "");
+
+    // Nettoyer complètement la pagination avant de recalculer
+    cleanupPagination(listId);
+
+    // Récupérer UNIQUEMENT les cartes originales (pas celles dans les pages de pagination)
+    const allCards = getOriginalCards(listId, listType);
+    
+    if (query === "") {
+      // Recherche vide : réinitialiser l'état
+      searchState[listId].filteredCards = null;
+      allCards.forEach(card => card.style.display = "");
+      
+      // Recréer la pagination avec toutes les cartes si nécessaire
+      if (allCards.length > 4) {
+        setupPagination(listId);
       }
-    });
+    } else {
+      // Filtrer les cartes selon la requête
+      const filteredCards = allCards.filter(card => {
+        const text = card.textContent?.toLowerCase() || "";
+        return text.includes(query);
+      });
 
-    // Supprimer la pagination existante et les pages
-    const paginationContainer = list.querySelector(`#${listId}-pagination`);
-    if (paginationContainer) paginationContainer.remove();
-    
-    const pageContainers = list.querySelectorAll(".pagination-page");
-    pageContainers.forEach(page => page.remove());
+      // Stocker les cartes filtrées dans l'état
+      searchState[listId].filteredCards = filteredCards;
 
-    // Recréer la pagination avec les cartes filtrées (ou toutes si search vide)
-    if (visibleCards.length > 4) {
-      recreatePagination(listId, visibleCards);
-    } else if (query === "") {
-      // Si le search est vide, réafficher la pagination normale
-      setupPagination(listId);
+      // Appliquer la visibilité sur les cartes originales
+      allCards.forEach(card => {
+        const text = card.textContent?.toLowerCase() || "";
+        card.style.display = text.includes(query) ? "block" : "none";
+      });
+
+      // Recréer la pagination avec les cartes filtrées si nécessaire
+      if (filteredCards.length > 4) {
+        setupPagination(listId);
+      }
     }
   });
 }
 
 // Recréer la pagination avec des cartes filtrées
+// Note: Cette fonction est maintenant obsolète car setupPagination() gère tout
 function recreatePagination(listId, cards) {
-  const list = document.getElementById(listId);
-  if (!list) return;
-
-  const totalPages = Math.ceil(cards.length / 4);
-
-  // Création du conteneur des pages
-  const paginationContainer = document.createElement("div");
-  paginationContainer.className = "pagination-container mt-4";
-  paginationContainer.id = `${listId}-pagination`;
-
-  // Création de chaque page
-  const pageButtons = [];
-  for (let page = 1; page <= totalPages; page++) {
-    const pageDiv = document.createElement("div");
-    pageDiv.className = "pagination-page";
-    pageDiv.id = `${listId}-page-${page}`;
-    pageDiv.style.display = page === 1 ? "flex" : "none";
-    pageDiv.style.flexDirection = "column";
-    pageDiv.style.gap = "1rem";
-
-    // Ajout des cartes pour cette page
-    const startIndex = (page - 1) * 4;
-    const endIndex = Math.min(startIndex + 4, cards.length);
-    
-    for (let i = startIndex; i < endIndex; i++) {
-      const clonedCard = cards[i].cloneNode(true);
-      clonedCard.style.display = "flex";
-      clonedCard.style.justifyContent = "space-between";
-      clonedCard.style.alignItems = "center";
-      clonedCard.style.width = "100%";
-      clonedCard.style.flexShrink = "0";
-      
-      // S'assurer que le div du texte prend tout l'espace
-      const textDiv = clonedCard.querySelector('div:first-child');
-      if (textDiv) {
-        textDiv.style.flex = "1";
-        textDiv.style.minWidth = "0";
-      }
-      
-      pageDiv.appendChild(clonedCard);
-    }
-
-    list.appendChild(pageDiv);
-
-    // Création du bouton pour cette page
-    const button = document.createElement("button");
-    button.className = `join-item btn btn-sm ${page === 1 ? "btn-active" : ""}`;
-    button.textContent = page;
-    button.dataset.page = page;
-    button.addEventListener("click", (e) => {
-      e.preventDefault();
-      // Masquer toutes les pages et désactiver tous les boutons
-      for (let p = 1; p <= totalPages; p++) {
-        document.getElementById(`${listId}-page-${p}`).style.display = "none";
-      }
-      pageButtons.forEach(btn => btn.classList.remove("btn-active"));
-      
-      // Afficher la page sélectionnée
-      document.getElementById(`${listId}-page-${page}`).style.display = "flex";
-      button.classList.add("btn-active");
-    });
-    pageButtons.push(button);
-  }
-
-  // Création du conteneur des boutons
-  const buttonContainer = document.createElement("div");
-  buttonContainer.className = "join flex gap-2 justify-center mt-4";
-  pageButtons.forEach(btn => buttonContainer.appendChild(btn));
-
-  paginationContainer.appendChild(buttonContainer);
-  list.appendChild(paginationContainer);
+  // Cette fonction est conservée pour compatibilité mais n'est plus utilisée
+  // setupPagination() gère maintenant toute la logique de pagination
+  console.warn('recreatePagination() est obsolète, utilisez setupPagination() à la place');
 }
 
 // Mise à jour de l'affichage de la pagination
@@ -541,15 +606,6 @@ export function initVerifications() {
   const verifications = document.querySelector('#verifications');
   if (!verifications) return;
 
-  // Initialisation des compteurs depuis les badges existants
-  const pendingBadge = document.getElementById('pending-badge');
-  const rejectedBadge = document.getElementById('rejected-badge');
-  const verifiedBadge = document.getElementById('verified-badge');
-
-  currentPendingCount = pendingBadge ? parseInt(pendingBadge.textContent || '0') : 0;
-  currentRejectedCount = rejectedBadge ? parseInt(rejectedBadge.textContent || '0') : 0;
-  currentVerifiedCount = verifiedBadge ? parseInt(verifiedBadge.textContent || '0') : 0;
-
   // Attachement des gestionnaires d'événements
   attachButtonHandlers();
   attachFormHandlers();
@@ -565,6 +621,6 @@ export function initVerifications() {
     setupPagination(listId);
   });
   
-  // Mise à jour initiale des badges
+  // Mise à jour initiale des badges depuis le DOM
   updateBadges();
 }
