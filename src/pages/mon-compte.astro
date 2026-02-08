@@ -1,4 +1,4 @@
-s---
+---
 import Layout from "../layouts/Layout.astro";
 import AccountSection from "../components/Account-section.astro";
 import VerificationSection from "../components/Verification-Account-section.astro";
@@ -9,15 +9,17 @@ import circleCheck from "../assets/circle-check.svg";
 import help from "../assets/help.svg";
 import edit from "../assets/edit.svg";
 import logout from "../assets/logout.svg";
+import arrow from "../assets/arrow-previous-small.svg";
 
-// Vérifier si l'utilisateur est authentifié, sinon rediriger vers la connexion
+// Redirige vers la page de connexion si l'utilisateur n'est pas authentifié
 if (!Astro.locals.pb.authStore.isValid) {
   return Astro.redirect("/connexion");
 }
 
+// Récupère l'utilisateur courant depuis PocketBase
 const currentUser = Astro.locals.pb.authStore.model;
 
-// Si l'utilisateur n'existe pas ou n'est pas vérifié, nettoyer la session et rediriger
+// Si l'utilisateur est absent ou non vérifié, nettoie la session et redirige
 if (!currentUser || !currentUser.verified) {
   Astro.locals.pb.authStore.clear();
   return Astro.redirect("/connexion");
@@ -26,66 +28,109 @@ if (!currentUser || !currentUser.verified) {
 const isAdmin = currentUser.administrateur === true;
 let users: any[] = [];
 
-// Si admin, récupérer la liste complète des utilisateurs pour les vérifications
+// Si l'utilisateur est admin, récupérer la liste complète des utilisateurs
 if (isAdmin) {
   users = await Astro.locals.pb.collection("users").getFullList();
 }
 
 const success = Astro.url.searchParams.get("success") === "true";
 
-// Construire les éléments de navigation selon le rôle de l'utilisateur
+// Construction du menu en fonction du rôle (admin voit plus d'items)
 const navItems = [
   { id: "my-account", label: "Mon compte", icon: user },
-  ...(isAdmin ? [
-    { id: "verifications", label: "Vérifications", icon: circleCheck },
-    { id: "modifications", label: "Modifications", icon: edit },
-  ] : []),
+  ...(isAdmin
+    ? [
+        { id: "verifications", label: "Vérifications", icon: circleCheck },
+        { id: "modifications", label: "Modifications", icon: edit },
+      ]
+    : []),
   { id: "help", label: "Aide", icon: help },
 ];
 ---
 
 <Layout>
-  <nav class="hidden lg:block bg-white rounded-box p-4 fixed top-1/2 w-56 left-4 -translate-y-1/2 z-50 shadow-lg">
-    <ul class="space-y-2">
+  <!-- Navigation desktop (visible sur grands écrans) -->
+  <nav
+    id="desktop-nav"
+    class="hidden lg:flex flex-col bg-white rounded-box fixed top-1/2 left-4 -translate-y-1/2 z-50 shadow-lg w-56 p-4"
+  >
+    <button
+      id="nav-toggle"
+      class="nav-item-desktop w-full flex items-center gap-4 px-4 h-12 mb-2 rounded-lg hover:bg-base-200 transition-colors"
+      aria-label="Réduire la navigation"
+      type="button"
+    >
+      <span id="nav-toggle-icon-wrapper" class="flex items-center justify-center w-6 h-6 flex-none transition-transform duration-200 min-w-[1.5rem] min-h-[1.5rem] max-w-[1.5rem] max-h-[1.5rem]">
+        <img id="nav-toggle-icon" src={arrow.src} alt="Ouvrir/fermer le menu" class="w-6 h-6 flex-none object-contain min-w-[1.5rem] min-h-[1.5rem] max-w-[1.5rem] max-h-[1.5rem]" />
+      </span>
+      <span id="nav-toggle-label" class="nav-label whitespace-nowrap flex-1 text-left self-center pl-1">Fermer le menu</span>
+    </button>
+
+    <ul class="space-y-2 flex-1">
       {navItems.map((item, i) => (
         <li>
           <a
             href={`#${item.id}`}
-            class={`nav-link flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${i === 0 ? 'bg-accent text-white' : 'hover:bg-base-200'}`}
+            class={`nav-link nav-item-desktop flex items-center justify-start gap-4 px-4 h-12 rounded-lg transition-colors transition-transform duration-200 ease-[cubic-bezier(0.2,0.8,0.2,1)] text-sm ${
+              i === 0 ? "bg-accent text-white" : "hover:bg-base-200"
+            }`}
             data-section={item.id}
           >
-            <img src={item.icon.src} class={`w-6 h-6 ${i === 0 ? 'filter brightness-0 invert' : ''}`} />
-            <span>{item.label}</span>
+            <img
+              src={item.icon.src}
+              class={`nav-icon w-6 h-6 transition-transform duration-[260ms] ease-[cubic-bezier(0.2,0.8,0.2,1)] ${i === 0 ? "filter brightness-0 invert" : ""}`}
+            />
+            <span class="nav-label whitespace-nowrap flex-1 text-left self-center pl-1">{item.label}</span>
           </a>
         </li>
       ))}
+
       <li class="pt-4 border-t">
-        <button id="logout-btn" class="w-full flex items-center gap-3 px-4 py-3 rounded-lg bg-accent text-white hover:bg-accent-focus transition-colors">
-          <img src={logout.src} class="w-6 h-6 filter brightness-0 invert" />
-          <span>Déconnexion</span>
+        <button
+          id="logout-btn"
+          type="button"
+          class="nav-item-desktop w-full flex items-center justify-start gap-4 px-4 h-12 rounded-lg bg-accent text-white hover:bg-accent-focus transition-colors transition-transform duration-200 ease-[cubic-bezier(0.2,0.8,0.2,1)] text-sm"
+        >
+          <img src={logout.src} class="nav-icon w-6 h-6 transition-transform duration-[260ms] ease-[cubic-bezier(0.2,0.8,0.2,1)] filter brightness-0 invert" />
+          <span class="nav-label whitespace-nowrap flex-1 text-left self-center pl-1">Déconnexion</span>
         </button>
       </li>
     </ul>
   </nav>
 
+  <!-- Navigation mobile (barre en bas pour petits écrans) -->
   <nav class="lg:hidden bg-white fixed bottom-0 left-0 w-full z-50 shadow-lg border-t">
     <ul class="flex justify-around py-2 relative">
-      <div id="mobile-indicator" class="absolute bottom-0 h-1 bg-accent rounded-t-full transition-all duration-300" style={`width: ${100 / navItems.length}%; left: 0;`}></div>
+      <div
+        id="mobile-indicator"
+        class="absolute bottom-0 h-1 bg-accent rounded-t-full transition-all duration-300"
+        style={`width: ${100 / navItems.length}%; left: 0;`}
+      ></div>
+
       {navItems.map((item, i) => (
         <li class="flex-1">
           <a
             href={`#${item.id}`}
-            class={`nav-link-mobile flex flex-col items-center gap-1 p-2 ${i === 0 ? 'text-accent' : 'text-base-content'}`}
+            class={`nav-link-mobile flex flex-col items-center gap-1 p-2 ${
+              i === 0 ? "text-accent" : "text-base-content"
+            }`}
             data-section={item.id}
           >
-            <img src={item.icon.src} class={`w-6 h-6 ${i === 0 ? 'opacity-100' : 'opacity-60'}`} />
+            <img
+              src={item.icon.src}
+              class={`w-6 h-6 ${i === 0 ? "opacity-100" : "opacity-60"}`}
+            />
           </a>
         </li>
       ))}
     </ul>
   </nav>
 
-  <div class="flex flex-1 w-full overflow-x-auto snap-x snap-mandatory scroll-smooth" id="content-container">
+  <!-- Sections : chaque section occupe toute la largeur et est scrollée horizontalement -->
+  <div
+    class="flex flex-1 w-full overflow-x-auto snap-x snap-mandatory scroll-smooth"
+    id="content-container"
+  >
     {navItems.map((item) => (
       <section class="min-w-full snap-start" id={item.id}>
         {item.id === "my-account" ? (
@@ -100,45 +145,45 @@ const navItems = [
       </section>
     ))}
   </div>
-</Layout>
-<style>
-  #content-container {
-    scroll-behavior: smooth;
-    -webkit-overflow-scrolling: touch;
-  }
-</style>
+
 
 <script>
   import gsap from "gsap";
   import { initVerifications } from "../scripts/verification-handlers.js";
   import { initModifications } from "../scripts/modification-handlers.js";
-  import type { ActionAPIContext } from "astro:actions";
+
+  gsap.defaults({ duration: 0.35, ease: "power2.inOut" });
 
   const container = document.getElementById("content-container");
   const navLinks = document.querySelectorAll(".nav-link");
   const navLinksMobile = document.querySelectorAll(".nav-link-mobile");
   const mobileIndicator = document.getElementById("mobile-indicator");
   let currentSection = 0;
+  const COLLAPSED_WIDTH = 88;
+  const EXPANDED_WIDTH = 224;
 
-  // Met à jour la position de l'indicateur mobile selon l'index de la section
   function updateMobileIndicator(index: number) {
+    // Ne rien faire si l'indicateur n'existe pas ou s'il n'y a pas d'items
     if (!mobileIndicator || navLinksMobile.length === 0) return;
+    // L'indicateur occupe une fraction de 100% égale à 1 / nombre d'items
     const itemWidth = 100 / navLinksMobile.length;
     mobileIndicator.style.width = `${itemWidth}%`;
+    // On positionne l'indicateur selon l'index
     mobileIndicator.style.left = `${itemWidth * index}%`;
   }
 
-  // Définit la section active en mettant à jour les styles pour desktop et mobile
+  // Définit la section active, styles desktop + mobile et indicateur mobile
   function setActive(index: number) {
     currentSection = index;
     updateMobileIndicator(index);
-    
-    // Appliquer les styles pour la navigation desktop
+
+    // En desktop met en évidence l'item actif et adapte l'icône visuellement
     navLinks.forEach((link, i) => {
       const isActive = i === index;
       link.classList.toggle("bg-accent", isActive);
       link.classList.toggle("text-white", isActive);
       link.classList.toggle("hover:bg-base-200", !isActive);
+
       const img = link.querySelector("img");
       if (img) {
         img.classList.toggle("filter", isActive);
@@ -147,11 +192,12 @@ const navItems = [
       }
     });
 
-    // Appliquer les styles pour la navigation mobile
+    // En mobile met en évidence l'item actif et adapte l'icône visuellement
     navLinksMobile.forEach((link, i) => {
       const isActive = i === index;
       link.classList.toggle("text-accent", isActive);
       link.classList.toggle("text-base-content", !isActive);
+
       const img = link.querySelector("img");
       if (img) {
         img.classList.toggle("opacity-100", isActive);
@@ -160,35 +206,32 @@ const navItems = [
     });
   }
 
-  // Gérer les clics sur les liens de navigation pour scroller vers la section
+  // Clic sur un item -> scroller vers la section et rafraîchir son contenu si nécessaire
   [...navLinks, ...navLinksMobile].forEach((link, i) => {
     link.addEventListener("click", async (e) => {
       e.preventDefault();
+
       const sectionId = (link as HTMLElement).dataset.section;
       const section = document.getElementById(sectionId!);
+
       if (section && container) {
-        // Scroller immédiatement vers le haut et la section
         window.scrollTo({ top: 0, behavior: "smooth" });
         container.scrollTo({ left: section.offsetLeft, behavior: "smooth" });
         setActive(i % navLinks.length);
-        
-        // Actualiser la section en arrière-plan (sans attendre)
+
         refreshSection(sectionId!);
       }
     });
   });
 
-  // Fonction pour actualiser le contenu d'une section
+  // Vérifie côté serveur si la section a changé (optimisation via hash) et remplace le HTML local uniquement quand nécessaire, pour limiter les rechargements.
   async function refreshSection(sectionId: string) {
-    // Ne pas recharger la section aide
-    if (sectionId === "help") {
-      return;
-    }
+    if (sectionId === "help") return;
 
     try {
+      // Vérifier le hash côté client (cache) pour éviter les fetch inutiles
       const cachedHash = sessionStorage.getItem(`hash-${sectionId}`);
 
-      // Vérifier d'abord si les données ont changé
       const checkResponse = await fetch(
         `/api/check-section?section=${sectionId}&hash=${cachedHash || ""}`,
       );
@@ -196,13 +239,12 @@ const navItems = [
       if (!checkResponse.ok) return;
 
       const { hash, changed } = await checkResponse.json();
+      // Mettre à jour le hash en cache
       sessionStorage.setItem(`hash-${sectionId}`, hash);
 
-      // Seulement si changé, recharger la section
-      if (!changed) {
-        return;
-      }
+      if (!changed) return; // rien à faire si pas de changement
 
+      // Récupérer la page complète et extraire la section mise à jour
       const response = await fetch(window.location.pathname);
       if (response.ok) {
         const html = await response.text();
@@ -214,24 +256,20 @@ const navItems = [
           const oldSection = document.querySelector(`#${sectionId}`);
           if (oldSection) {
             oldSection.replaceWith(newSection);
-            if (sectionId === "verifications") {
-              initVerifications();
-            }
-            if (sectionId === "modifications") {
-              initModifications();
-            }
+
+            // Réinitialiser les handlers spécifiques si nécessaire
+            if (sectionId === "verifications") initVerifications();
+            if (sectionId === "modifications") initModifications();
           }
         }
       }
     } catch (error) {
-      console.error(
-        `Erreur lors du rechargement de la section ${sectionId}:`,
-        error,
-      );
+      console.error(`Erreur lors du rechargement de la section ${sectionId}:`, error);
     }
   }
 
-  // Détecter le scroll manuel et mettre à jour la section active
+  // Surveille le scroll horizontal pour mettre à jour la section active.
+  // On utilise un délai court (100ms) pour limiter les calculs pendant le scroll.
   if (container) {
     let timeout: number;
     container.addEventListener("scroll", () => {
@@ -249,7 +287,8 @@ const navItems = [
 
   initVerifications();
 
-  // Gérer le bouton logout
+  // Déconnexion : appel POST pour supprimer la session côté serveur
+  // et redirection vers la page de connexion en cas de succès
   const logoutBtn = document.getElementById("logout-btn");
   if (logoutBtn) {
     logoutBtn.addEventListener("click", async () => {
@@ -270,4 +309,152 @@ const navItems = [
     });
   }
 
+  // Références DOM pour la navigation desktop et ses éléments
+  const desktopNav = document.getElementById("desktop-nav");
+  const navToggle = document.getElementById("nav-toggle");
+  const navToggleIconWrapper = document.getElementById("nav-toggle-icon-wrapper");
+  const navToggleIcon = document.getElementById("nav-toggle-icon");
+  const navToggleLabel = document.getElementById("nav-toggle-label");
+  const navLabels = document.querySelectorAll(".nav-label");
+  const navItemsDesktop = document.querySelectorAll(".nav-item-desktop");
+
+  let navCollapsed = false;
+  let navAnimating = false;
+
+  const navIcons = document.querySelectorAll("#desktop-nav .nav-icon");
+
+  // Centre visuellement chaque icône dans la nav réduite.
+  // Utilise une fonction x(i, target) pour calculer la translation de chaque icône
+  // en évitant de créer un double par élément manuellement
+  // killTweensOf empêche les animations concurrentes de s'accumuler.
+  function animateIconsToCollapsed(duration = gsap.defaults().duration) {
+    if (!desktopNav || !navIcons || navIcons.length === 0) return;
+    gsap.killTweensOf(navIcons);
+
+    gsap.to(navIcons, {
+      // calcule la translation horizontale pour centrer l'icône
+      x(i, target) {
+        const navRect = desktopNav.getBoundingClientRect();
+        const targetCenter = navRect.left + COLLAPSED_WIDTH / 2;
+        const iconRect = target.getBoundingClientRect();
+        const currentCenter = iconRect.left + iconRect.width / 2;
+        return targetCenter - currentCenter;
+      },
+      duration,
+    });
+  }
+
+  // Applique l'alignement vertical des items et marque l'état 'collapsed'
+  function setCollapsedLayout(collapsed: boolean) {
+    navItemsDesktop.forEach((el) => {
+      el.classList.add("items-center");
+      el.classList.remove("items-start");
+    });
+
+    if (desktopNav) {
+      desktopNav.classList.toggle("collapsed", collapsed);
+    }
+  }
+
+  setCollapsedLayout(navCollapsed);
+  // Assurer que l'icône et le libellé du toggle reflètent l'état initial
+  if (navToggleIconWrapper) {
+    // Définit la rotation initiale via GSAP (évite les conflits entre transforms inline et classes)
+    gsap.set(navToggleIconWrapper, { rotation: navCollapsed ? 180 : 0 });
+  }
+  if (navToggleLabel) {
+    if (navCollapsed) navToggleLabel.classList.add("hidden");
+    else navToggleLabel.classList.remove("hidden");
+  }
+  if (navToggle) {
+    navToggle.setAttribute("aria-expanded", String(!navCollapsed));
+  }
+
+  if (desktopNav && navToggle) {
+    navToggle.addEventListener("click", () => {
+      if (navAnimating) return;
+      navCollapsed = !navCollapsed;
+
+      if (navCollapsed) {
+        const collapseTl = gsap.timeline({
+          onStart: () => {
+            // Verrouille l'animation et lance l'animation de rotation du toggle via GSAP
+            navAnimating = true;
+            if (navToggleIconWrapper) gsap.to(navToggleIconWrapper, { rotation: 180, duration: 0.35 });
+          },
+          onComplete: () => {
+            setCollapsedLayout(true);
+            desktopNav.classList.add("collapsed");
+            navAnimating = false;
+          },
+        });
+
+        // cible : tous les labels + le label du toggle (si présent)
+        const allLabels = navToggleLabel ? [...navLabels, navToggleLabel] : navLabels;
+
+        collapseTl
+          // 1. animer la disparition visuelle des labels (incl. toggle)
+          .to(allLabels, { opacity: 0, x: -8, duration: 0.18 })
+          // 2. cacher définitivement les labels et mettre aria-expanded=false
+          .add(() => {
+            navLabels.forEach((el) => el.classList.add("hidden"));
+            if (navToggleLabel) navToggleLabel.classList.add("hidden");
+            if (navToggle) navToggle.setAttribute("aria-expanded", "false");
+          })
+          // 3. réduire la largeur du conteneur (ensuite on calculera les translations exactes)
+          .to(desktopNav, { width: COLLAPSED_WIDTH })
+          // 4. une fois la largeur atteinte, calculer et animer les translations des icônes
+          .add(() => {
+            // calculer la position cible (centre du conteneur réduit)
+            const navRect = desktopNav.getBoundingClientRect();
+            const targetCenter = navRect.left + COLLAPSED_WIDTH / 2;
+
+            // animer les icônes pour les centrer (GSAP gère la liste)
+            gsap.to(navIcons, {
+              x(i, target) {
+                const iconRect = target.getBoundingClientRect();
+                const currentCenter = iconRect.left + iconRect.width / 2;
+                return targetCenter - currentCenter;
+              },
+              duration: 0.35,
+            });
+
+            // s'assurer que l'icône du toggle reste à sa position d'origine
+            if (navToggleIcon) {
+              gsap.set(navToggleIcon, { x: 0 });
+            }
+          });
+      } else {
+        navLabels.forEach((el) => el.classList.add("hidden"));
+
+        const expandTl = gsap.timeline({
+          onStart: () => {
+            // Retirer la rotation du toggle au début de l'ouverture (GSAP assure la transition)
+            navAnimating = true;
+            if (navToggleIconWrapper) gsap.to(navToggleIconWrapper, { rotation: 0, duration: 0.35 });
+            // ramener le toggle à sa position d'origine (image interne)
+            if (navToggleIcon) gsap.to(navToggleIcon, { x: 0, duration: 0.35 });
+          },
+          onComplete: () => {
+            desktopNav.classList.remove("collapsed");
+            setCollapsedLayout(false);
+
+            gsap.set(navIcons, { clearProps: "transform" });
+
+            // Réafficher tous les labels (incl. toggle) en même temps
+            if (navToggleLabel) navToggleLabel.classList.remove("hidden");
+            navLabels.forEach((el) => el.classList.remove("hidden"));
+            const showLabels = navToggleLabel ? [...navLabels, navToggleLabel] : navLabels;
+            gsap.fromTo(showLabels, { opacity: 0, x: -8 }, { opacity: 1, x: 0, duration: 0.22 });
+
+            if (navToggle) navToggle.setAttribute("aria-expanded", "true");
+
+            navAnimating = false;
+          },
+        });
+
+        expandTl.to(navIcons, { x: 0 }, 0).to(desktopNav, { width: EXPANDED_WIDTH }, 0);
+      }
+    });
+  }
 </script>

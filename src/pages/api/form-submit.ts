@@ -10,7 +10,7 @@ export const POST: APIRoute = async ({ locals, request }) => {
     return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
   }
 
-  const currentUser = locals.pb.authStore.model;
+  const currentUser = locals.pb.authStore.record;
   if (!currentUser || !currentUser.verified) {
     return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
   }
