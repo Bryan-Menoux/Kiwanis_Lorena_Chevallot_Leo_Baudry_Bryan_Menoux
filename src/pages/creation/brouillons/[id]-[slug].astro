@@ -1,0 +1,12 @@
+---
+import Layout from "../../../layouts/Layout-back-office.astro"
+
+const id = Astro.params.id;
+const brouillon = await Astro.locals.pb.collection('brouillons').getOne(id!);
+
+console.log(brouillon);
+---
+
+<Layout>
+    <h1>{brouillon.titre}</h1>
+</Layout>

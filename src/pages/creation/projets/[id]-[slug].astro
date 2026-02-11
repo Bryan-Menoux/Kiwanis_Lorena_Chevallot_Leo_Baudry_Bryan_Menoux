@@ -1,0 +1,12 @@
+---
+import Layout from "../../../layouts/Layout-back-office.astro"
+
+const id = Astro.params.id;
+const projet = await Astro.locals.pb.collection('projets').getOne(id!);
+
+console.log(projet);
+---
+
+<Layout>
+    <h1>{projet.titre}</h1>
+</Layout>

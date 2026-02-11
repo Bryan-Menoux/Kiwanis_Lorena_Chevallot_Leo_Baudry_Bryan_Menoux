@@ -1,0 +1,12 @@
+---
+import Layout from "../../../layouts/Layout-back-office.astro"
+
+const id = Astro.params.id;
+const action = await Astro.locals.pb.collection('actions').getOne(id!);
+
+console.log(action);
+---
+
+<Layout>
+    <h1>{action.titre}</h1>
+</Layout>
