@@ -38,6 +38,19 @@ export const onRequest = defineMiddleware(
         // clear the auth store on failed refresh
         locals.pb.authStore.clear();
       }
+
+      // Redirect non-authenticated or non-admin requests for protected routes (back-office)
+      const url = new URL(request.url);
+      const protectedPrefixes = ["/creation"];
+      if (protectedPrefixes.some((p) => url.pathname.startsWith(p))) {
+        const userRecord = locals.pb.authStore.record;
+        const isAuthenticated = Boolean(locals.pb.authStore.isValid && userRecord);
+        const isAdmin = userRecord?.administrateur === true;
+        if (!isAuthenticated || !isAdmin) {
+          const redirectUrl = new URL("/connexion", request.url).toString();
+          return Response.redirect(redirectUrl, 302);
+        }
+      }
     }
 
     const response = await next();

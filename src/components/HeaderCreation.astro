@@ -1,0 +1,173 @@
+---
+import Logo from "../assets/logo-kiwanis-full.svg";
+import userIcon from "../assets/user.svg";
+
+---
+
+<header class="flex items-center justify-center gap-8 py-6">
+  <a href="/">
+    <img src={Logo.src} alt="Kiwanis Logo" class="w-14 h-14 object-fit" />
+  </a>
+  <div
+    class="w-full h-14 max-w-[80dvw] flex items-center justify-between gap-4 bg-accent rounded-xl px-4"
+  >
+    <div class="flex items-center gap-4 text-white">
+      <div class="relative w-fit group text-white">
+        <button
+          class="flex w-full items-center justify-between gap-4 h-12 px-6 rounded-lg text-sm text-slate-900 transition"
+          aria-haspopup="listbox"
+          type="button"
+        >
+          <span class="text-white">Ajouter du contenu</span>
+          <svg
+            class="w-4 h-4 text-slate-500 transition-transform duration-200 group-hover:-rotate-180"
+            viewBox="0 0 20 20"
+            fill="none"
+            stroke="currentColor"
+          >
+            <path
+              d="M6 8l4 4 4-4"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"></path>
+          </svg>
+        </button>
+        <ul
+          class="absolute inset-x-0 top-full z-10 mt-2 rounded-lg bg-white shadow-lg ring-1 ring-black/5 opacity-0 invisible pointer-events-none group-hover:visible group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-150"
+          role="listbox"
+        >
+          <li>
+            <a
+              class="block px-6 py-2 text-sm text-slate-700 hover:bg-slate-100"
+              href="#actions"
+            >
+              Actions
+            </a>
+          </li>
+          <li>
+            <a
+              class="block px-6 py-2 text-sm text-slate-700 hover:bg-slate-100"
+              href="#projects"
+            >
+              Projets
+            </a>
+          </li>
+          <li>
+            <a
+              class="block px-6 py-2 text-sm text-slate-700 hover:bg-slate-100"
+              href="#products"
+            >
+              Produits
+            </a>
+          </li>
+        </ul>
+      </div>
+      <span>|</span>
+      <div class="relative w-fit group text-white">
+        <button
+          class="flex w-full items-center justify-between gap-4 h-12 px-6 rounded-lg text-sm text-slate-900 transition"
+          aria-haspopup="listbox"
+          type="button"
+        >
+          <span class="text-white">Supprimer du contenu</span>
+          <svg
+            class="w-4 h-4 text-slate-500 transition-transform duration-200 group-hover:-rotate-180"
+            viewBox="0 0 20 20"
+            fill="none"
+            stroke="currentColor"
+          >
+            <path
+              d="M6 8l4 4 4-4"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"></path>
+          </svg>
+        </button>
+        <ul
+          class="absolute inset-x-0 top-full z-10 mt-2 rounded-lg bg-white shadow-lg ring-1 ring-black/5 opacity-0 invisible pointer-events-none group-hover:visible group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-150"
+          role="listbox"
+        >
+          <li>
+            <a
+              class="block px-6 py-2 text-sm text-slate-700 hover:bg-slate-100"
+              href="#actions"
+            >
+              Actions
+            </a>
+          </li>
+          <li>
+            <a
+              class="block px-6 py-2 text-sm text-slate-700 hover:bg-slate-100"
+              href="#projects"
+            >
+              Projets
+            </a>
+          </li>
+          <li>
+            <a
+              class="block px-6 py-2 text-sm text-slate-700 hover:bg-slate-100"
+              href="#products"
+            >
+              Produits
+            </a>
+          </li>
+        </ul>
+      </div>
+      <span>|</span>
+      <div class="relative w-fit group text-white">
+        <button
+          class="flex w-full items-center justify-between gap-4 h-12 px-6 rounded-lg text-sm text-slate-900 transition"
+          aria-haspopup="listbox"
+          type="button"
+        >
+          <span class="text-white">Modifier du contenu</span>
+          <svg
+            class="w-4 h-4 text-slate-500 transition-transform duration-200 group-hover:-rotate-180"
+            viewBox="0 0 20 20"
+            fill="none"
+            stroke="currentColor"
+          >
+            <path
+              d="M6 8l4 4 4-4"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"></path>
+          </svg>
+        </button>
+        <ul
+          class="absolute inset-x-0 top-full z-10 mt-2 rounded-lg bg-white shadow-lg ring-1 ring-black/5 opacity-0 invisible pointer-events-none group-hover:visible group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-150"
+          role="listbox"
+        >
+          <li>
+            <a
+              class="block px-6 py-2 text-sm text-slate-700 hover:bg-slate-100"
+              href="#actions"
+            >
+              Actions
+            </a>
+          </li>
+          <li>
+            <a
+              class="block px-6 py-2 text-sm text-slate-700 hover:bg-slate-100"
+              href="#projects"
+            >
+              Projets
+            </a>
+          </li>
+          <li>
+            <a
+              class="block px-6 py-2 text-sm text-slate-700 hover:bg-slate-100"
+              href="#products"
+            >
+              Produits
+            </a>
+          </li>
+        </ul>
+      </div>
+    </div>
+    <a href="/mon-compte" class="flex items-center gap-4">
+        <span class="text-sm text-white">Mon compte</span>
+      <img src={userIcon.src} alt="User Icon" class="w-8 h-8 rounded-full invert " />
+    </a>
+  </div>
+</header>

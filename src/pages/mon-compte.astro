@@ -13,7 +13,7 @@ import arrow from "../assets/arrow-previous-small.svg";
 
 // Redirige vers la page de connexion si l'utilisateur n'est pas authentifié
 if (!Astro.locals.pb.authStore.isValid) {
-  return Astro.redirect("/connexion");
+  throw Astro.redirect("/connexion");
 }
 
 // Récupère l'utilisateur courant depuis PocketBase
@@ -22,7 +22,7 @@ const currentUser = Astro.locals.pb.authStore.model;
 // Si l'utilisateur est absent ou non vérifié, nettoie la session et redirige
 if (!currentUser || !currentUser.verified) {
   Astro.locals.pb.authStore.clear();
-  return Astro.redirect("/connexion");
+  throw Astro.redirect("/connexion");
 }
 
 const isAdmin = currentUser.administrateur === true;
@@ -60,8 +60,8 @@ const navItems = [
       aria-label="Réduire la navigation"
       type="button"
     >
-      <span id="nav-toggle-icon-wrapper" class="flex items-center justify-center w-6 h-6 flex-none transition-transform duration-200 min-w-[1.5rem] min-h-[1.5rem] max-w-[1.5rem] max-h-[1.5rem]">
-        <img id="nav-toggle-icon" src={arrow.src} alt="Ouvrir/fermer le menu" class="w-6 h-6 flex-none object-contain min-w-[1.5rem] min-h-[1.5rem] max-w-[1.5rem] max-h-[1.5rem]" />
+      <span id="nav-toggle-icon-wrapper" class="flex items-center justify-center w-6 h-6 flex-none transition duration-200 min-w-6 min-h-6 max-w-6 max-h-6">
+        <img id="nav-toggle-icon" src={arrow.src} alt="Ouvrir/fermer le menu" class="w-6 h-6 flex-none object-contain min-w-6 min-h-6 max-w-6 max-h-6" />
       </span>
       <span id="nav-toggle-label" class="nav-label whitespace-nowrap flex-1 text-left self-center pl-1">Fermer le menu</span>
     </button>
@@ -71,14 +71,14 @@ const navItems = [
         <li>
           <a
             href={`#${item.id}`}
-            class={`nav-link nav-item-desktop flex items-center justify-start gap-4 px-4 h-12 rounded-lg transition-colors transition-transform duration-200 ease-[cubic-bezier(0.2,0.8,0.2,1)] text-sm ${
+            class={`nav-link nav-item-desktop flex items-center justify-start gap-4 px-4 h-12 rounded-lg transition duration-200 ease-[cubic-bezier(0.2,0.8,0.2,1)] text-sm ${
               i === 0 ? "bg-accent text-white" : "hover:bg-base-200"
-            }`}
+            }`} 
             data-section={item.id}
           >
             <img
               src={item.icon.src}
-              class={`nav-icon w-6 h-6 transition-transform duration-[260ms] ease-[cubic-bezier(0.2,0.8,0.2,1)] ${i === 0 ? "filter brightness-0 invert" : ""}`}
+              class={`nav-icon w-6 h-6 transition duration-260 ease-[cubic-bezier(0.2,0.8,0.2,1)] ${i === 0 ? "filter brightness-0 invert" : ""}`}
             />
             <span class="nav-label whitespace-nowrap flex-1 text-left self-center pl-1">{item.label}</span>
           </a>
@@ -89,9 +89,9 @@ const navItems = [
         <button
           id="logout-btn"
           type="button"
-          class="nav-item-desktop w-full flex items-center justify-start gap-4 px-4 h-12 rounded-lg bg-accent text-white hover:bg-accent-focus transition-colors transition-transform duration-200 ease-[cubic-bezier(0.2,0.8,0.2,1)] text-sm"
+          class="nav-item-desktop w-full flex items-center justify-start gap-4 px-4 h-12 rounded-lg bg-accent text-white hover:bg-accent-focus transition duration-200 ease-[cubic-bezier(0.2,0.8,0.2,1)] text-sm"
         >
-          <img src={logout.src} class="nav-icon w-6 h-6 transition-transform duration-[260ms] ease-[cubic-bezier(0.2,0.8,0.2,1)] filter brightness-0 invert" />
+          <img src={logout.src} class="nav-icon w-6 h-6 transition duration-260 ease-[cubic-bezier(0.2,0.8,0.2,1)] filter brightness-0 invert" />
           <span class="nav-label whitespace-nowrap flex-1 text-left self-center pl-1">Déconnexion</span>
         </button>
       </li>

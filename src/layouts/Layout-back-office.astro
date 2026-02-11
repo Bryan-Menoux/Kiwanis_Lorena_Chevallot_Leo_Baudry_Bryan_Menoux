@@ -1,5 +1,7 @@
 ---
 import "../styles/global.css";
+import HeaderCreation from "../components/HeaderCreation.astro";
+
 ---
 
 <!doctype html>
@@ -52,7 +54,8 @@ import "../styles/global.css";
 
     <title>Kiwanis Pays de Montbéliard</title>
   </head>
-  <body class="overflow-hidden bg-accent">
+  <body class="overflow-hidden">
+    <HeaderCreation></HeaderCreation>
     <slot />
   </body>
 </html>
