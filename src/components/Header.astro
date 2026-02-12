@@ -83,6 +83,20 @@ const brandBlue = "bg-[oklch(0.2903_0.0643_289.42)]";
         class="hover:text-blue-900 transition-colors uppercase whitespace-nowrap"
         >Faire un don</a
       >
+      {
+        Astro.locals.pb.authStore.isValid && (
+          <>
+            <div class="h-4 xl:h-6 w-px bg-gray-300" />
+
+            <a
+              href="/creation"
+              class="hover:text-blue-900 transition-colors uppercase whitespace-nowrap"
+            >
+              Espace création
+            </a>
+          </>
+        )
+      }
     </nav>
 
     <div class="flex items-center gap-3">
