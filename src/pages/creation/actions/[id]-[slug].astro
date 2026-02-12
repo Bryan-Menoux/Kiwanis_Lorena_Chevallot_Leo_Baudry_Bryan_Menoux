@@ -1,12 +1,20 @@
 ---
-import Layout from "../../../layouts/Layout-back-office.astro"
+import Layout from "../../../layouts/Layout-back-office.astro";
 
 const id = Astro.params.id;
-const action = await Astro.locals.pb.collection('actions').getOne(id!);
-
-console.log(action);
+const action = await Astro.locals.pb.collection("actions").getOne(id!);
 ---
 
 <Layout>
-    <h1>{action.titre}</h1>
+  <div class="w-full max-w-7xl mx-auto font-merriweather">
+    <h1 class="font-merriweather">{action.titre}</h1>
+    <div>
+      <p>{action.sous_titre}</p>
+      <div>
+        {
+            action.date_debut ? `${new Date(action.date_debut).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })}` : "" } { action.date_fin ? ` au ${new Date(action.date_fin).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })}` : ""
+        }
+      </div>
+    </div>
+  </div>
 </Layout>

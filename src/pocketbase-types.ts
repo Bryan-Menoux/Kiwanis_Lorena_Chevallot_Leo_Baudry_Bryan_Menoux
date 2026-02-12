@@ -101,7 +101,8 @@ export type ActionsRecord = {
 	beneficiaire?: string
 	chiffre?: number
 	created: IsoAutoDateString
-	date?: IsoDateString
+	date_debut?: IsoDateString
+	date_fin?: IsoDateString
 	description_hero?: string
 	description_photo_partie_1?: string
 	description_photo_partie_2?: string

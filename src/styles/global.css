@@ -57,7 +57,6 @@
 
 /* Appliquer les polices */
 
-h1,
 h2,
 h3,
 h4,
@@ -68,12 +67,20 @@ a {
   font-family: "poppins", serif;
 }
 
+h1 {
+  font-family: "Merriweather", serif;
+}
+
 .nav-item {
   font-family: "poppins", serif;
 }
 
 .font-merriweather {
   font-family: "Merriweather", serif;
+}
+
+.font-poppins {
+  font-family: "Poppins" !important, serif;
 }
 
 h1 {
