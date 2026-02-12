@@ -11,6 +11,10 @@ export enum Collections {
 	Mfas = "_mfas",
 	Otps = "_otps",
 	Superusers = "_superusers",
+	Actions = "actions",
+	Brouillons = "brouillons",
+	Produits = "produits",
+	Projets = "projets",
 	Users = "users",
 }
 
@@ -92,6 +96,58 @@ export type SuperusersRecord = {
 	verified?: boolean
 }
 
+export type ActionsRecord = {
+	adresse_lieu?: string
+	beneficiaire?: string
+	chiffre?: number
+	created: IsoAutoDateString
+	date?: IsoDateString
+	description_hero?: string
+	description_photo_partie_1?: string
+	description_photo_partie_2?: string
+	description_photo_partie_3?: string
+	description_remerciement?: string
+	galerie_photos?: FileNameString[]
+	hero?: FileNameString
+	id: string
+	lien_lieu?: string
+	nom_lieu?: string
+	photo_partie_1?: FileNameString
+	photo_partie_2?: FileNameString
+	photo_partie_3?: FileNameString
+	sous_titre?: string
+	texte_partie_1?: string
+	texte_partie_2?: string
+	texte_partie_3?: string
+	titre?: string
+	titre_partie_1?: string
+	titre_partie_2?: string
+	titre_partie_3?: string
+	titre_remerciement?: string
+	updated: IsoAutoDateString
+}
+
+export type BrouillonsRecord = {
+	created: IsoAutoDateString
+	id: string
+	titre?: string
+	updated: IsoAutoDateString
+}
+
+export type ProduitsRecord = {
+	created: IsoAutoDateString
+	id: string
+	titre?: string
+	updated: IsoAutoDateString
+}
+
+export type ProjetsRecord = {
+	created: IsoAutoDateString
+	id: string
+	titre?: string
+	updated: IsoAutoDateString
+}
+
 export type UsersRecord = {
 	administrateur?: boolean
 	avatar?: FileNameString
@@ -115,6 +171,10 @@ export type ExternalauthsResponse<Texpand = unknown> = Required<ExternalauthsRec
 export type MfasResponse<Texpand = unknown> = Required<MfasRecord> & BaseSystemFields<Texpand>
 export type OtpsResponse<Texpand = unknown> = Required<OtpsRecord> & BaseSystemFields<Texpand>
 export type SuperusersResponse<Texpand = unknown> = Required<SuperusersRecord> & AuthSystemFields<Texpand>
+export type ActionsResponse<Texpand = unknown> = Required<ActionsRecord> & BaseSystemFields<Texpand>
+export type BrouillonsResponse<Texpand = unknown> = Required<BrouillonsRecord> & BaseSystemFields<Texpand>
+export type ProduitsResponse<Texpand = unknown> = Required<ProduitsRecord> & BaseSystemFields<Texpand>
+export type ProjetsResponse<Texpand = unknown> = Required<ProjetsRecord> & BaseSystemFields<Texpand>
 export type UsersResponse<Texpand = unknown> = Required<UsersRecord> & AuthSystemFields<Texpand>
 
 // Types containing all Records and Responses, useful for creating typing helper functions
@@ -125,6 +185,10 @@ export type CollectionRecords = {
 	_mfas: MfasRecord
 	_otps: OtpsRecord
 	_superusers: SuperusersRecord
+	actions: ActionsRecord
+	brouillons: BrouillonsRecord
+	produits: ProduitsRecord
+	projets: ProjetsRecord
 	users: UsersRecord
 }
 
@@ -134,6 +198,10 @@ export type CollectionResponses = {
 	_mfas: MfasResponse
 	_otps: OtpsResponse
 	_superusers: SuperusersResponse
+	actions: ActionsResponse
+	brouillons: BrouillonsResponse
+	produits: ProduitsResponse
+	projets: ProjetsResponse
 	users: UsersResponse
 }
 

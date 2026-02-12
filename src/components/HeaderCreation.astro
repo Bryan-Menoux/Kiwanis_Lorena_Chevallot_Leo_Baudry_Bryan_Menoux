@@ -12,13 +12,12 @@ import userIcon from "../assets/user.svg";
     class="w-full h-14 max-w-[80dvw] flex items-center justify-between gap-4 bg-accent rounded-xl px-4"
   >
     <div class="flex items-center gap-4 text-white">
-      <div class="relative w-fit group text-white">
-        <button
-          class="flex w-full items-center justify-between gap-4 h-12 px-6 rounded-lg text-sm text-slate-900 transition"
-          aria-haspopup="listbox"
-          type="button"
+      <a href="/creation">Tableau de bord</a>
+      <div class="relative w-fit text-white group">
+        <summary
+          class="flex w-full items-center justify-between gap-4 h-12 px-6 rounded-lg text-sm text-white cursor-pointer list-none transition hover:bg-white/10"
         >
-          <span class="text-white">Ajouter du contenu</span>
+          <span>Ajouter du contenu</span>
           <svg
             class="w-4 h-4 text-slate-500 transition-transform duration-200 group-hover:-rotate-180"
             viewBox="0 0 20 20"
@@ -31,31 +30,31 @@ import userIcon from "../assets/user.svg";
               stroke-linecap="round"
               stroke-linejoin="round"></path>
           </svg>
-        </button>
+        </summary>
         <ul
-          class="absolute inset-x-0 top-full z-10 mt-2 rounded-lg bg-white shadow-lg ring-1 ring-black/5 opacity-0 invisible pointer-events-none group-hover:visible group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-150"
+          class="absolute inset-x-0 top-full z-10 rounded-lg bg-white shadow-lg ring-1 ring-black/5 opacity-0 invisible pointer-events-none group-hover:visible group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-150"
           role="listbox"
         >
           <li>
             <a
-              class="block px-6 py-2 text-sm text-slate-700 hover:bg-slate-100"
-              href="#actions"
+              class="block px-6 py-2 text-sm text-slate-700 hover:bg-slate-100 rounded-lg"
+              href="/creation/actions/nouveau"
             >
               Actions
             </a>
           </li>
           <li>
             <a
-              class="block px-6 py-2 text-sm text-slate-700 hover:bg-slate-100"
-              href="#projects"
+              class="block px-6 py-2 text-sm text-slate-700 hover:bg-slate-100 rounded-lg"
+              href="/creation/projets/nouveau"
             >
               Projets
             </a>
           </li>
           <li>
             <a
-              class="block px-6 py-2 text-sm text-slate-700 hover:bg-slate-100"
-              href="#products"
+              class="block px-6 py-2 text-sm text-slate-700 hover:bg-slate-100 rounded-lg"
+              href="/creation/produits/nouveau"
             >
               Produits
             </a>
@@ -63,13 +62,11 @@ import userIcon from "../assets/user.svg";
         </ul>
       </div>
       <span>|</span>
-      <div class="relative w-fit group text-white">
-        <button
-          class="flex w-full items-center justify-between gap-4 h-12 px-6 rounded-lg text-sm text-slate-900 transition"
-          aria-haspopup="listbox"
-          type="button"
+      <div class="relative w-fit text-white group">
+        <div
+          class="flex w-full items-center justify-between gap-4 h-12 px-6 rounded-lg text-sm text-white cursor-pointer transition hover:bg-white/10"
         >
-          <span class="text-white">Supprimer du contenu</span>
+          <span>Supprimer du contenu</span>
           <svg
             class="w-4 h-4 text-slate-500 transition-transform duration-200 group-hover:-rotate-180"
             viewBox="0 0 20 20"
@@ -82,31 +79,31 @@ import userIcon from "../assets/user.svg";
               stroke-linecap="round"
               stroke-linejoin="round"></path>
           </svg>
-        </button>
+        </div>
         <ul
-          class="absolute inset-x-0 top-full z-10 mt-2 rounded-lg bg-white shadow-lg ring-1 ring-black/5 opacity-0 invisible pointer-events-none group-hover:visible group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-150"
+          class="absolute inset-x-0 top-full z-10 rounded-lg bg-white shadow-lg ring-1 ring-black/5 opacity-0 invisible pointer-events-none group-hover:visible group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-150"
           role="listbox"
         >
           <li>
             <a
-              class="block px-6 py-2 text-sm text-slate-700 hover:bg-slate-100"
-              href="#actions"
+              class="block px-6 py-2 text-sm text-slate-700 hover:bg-slate-100 rounded-lg"
+              href="/creation/actions"
             >
               Actions
             </a>
           </li>
           <li>
             <a
-              class="block px-6 py-2 text-sm text-slate-700 hover:bg-slate-100"
-              href="#projects"
+              class="block px-6 py-2 text-sm text-slate-700 hover:bg-slate-100 rounded-lg"
+              href="/creation/projets"
             >
               Projets
             </a>
           </li>
           <li>
             <a
-              class="block px-6 py-2 text-sm text-slate-700 hover:bg-slate-100"
-              href="#products"
+              class="block px-6 py-2 text-sm text-slate-700 hover:bg-slate-100 rounded-lg"
+              href="/creation/produits"
             >
               Produits
             </a>
@@ -114,13 +111,11 @@ import userIcon from "../assets/user.svg";
         </ul>
       </div>
       <span>|</span>
-      <div class="relative w-fit group text-white">
-        <button
-          class="flex w-full items-center justify-between gap-4 h-12 px-6 rounded-lg text-sm text-slate-900 transition"
-          aria-haspopup="listbox"
-          type="button"
+      <div class="relative w-fit text-white group">
+        <div
+          class="flex w-full items-center justify-between gap-4 h-12 px-6 rounded-lg text-sm text-white cursor-pointer transition hover:bg-white/10"
         >
-          <span class="text-white">Modifier du contenu</span>
+          <span>Modifier du contenu</span>
           <svg
             class="w-4 h-4 text-slate-500 transition-transform duration-200 group-hover:-rotate-180"
             viewBox="0 0 20 20"
@@ -133,31 +128,31 @@ import userIcon from "../assets/user.svg";
               stroke-linecap="round"
               stroke-linejoin="round"></path>
           </svg>
-        </button>
+        </div>
         <ul
-          class="absolute inset-x-0 top-full z-10 mt-2 rounded-lg bg-white shadow-lg ring-1 ring-black/5 opacity-0 invisible pointer-events-none group-hover:visible group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-150"
+          class="absolute inset-x-0 top-full z-10 rounded-lg bg-white shadow-lg ring-1 ring-black/5 opacity-0 invisible pointer-events-none group-hover:visible group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-150"
           role="listbox"
         >
           <li>
             <a
-              class="block px-6 py-2 text-sm text-slate-700 hover:bg-slate-100"
-              href="#actions"
+              class="block px-6 py-2 text-sm text-slate-700 hover:bg-slate-100 rounded-lg"
+              href="/creation/actions"
             >
               Actions
             </a>
           </li>
           <li>
             <a
-              class="block px-6 py-2 text-sm text-slate-700 hover:bg-slate-100"
-              href="#projects"
+              class="block px-6 py-2 text-sm text-slate-700 hover:bg-slate-100 rounded-lg"
+              href="/creation/projets"
             >
               Projets
             </a>
           </li>
           <li>
             <a
-              class="block px-6 py-2 text-sm text-slate-700 hover:bg-slate-100"
-              href="#products"
+              class="block px-6 py-2 text-sm text-slate-700 hover:bg-slate-100 rounded-lg"
+              href="/creation/produits"
             >
               Produits
             </a>
