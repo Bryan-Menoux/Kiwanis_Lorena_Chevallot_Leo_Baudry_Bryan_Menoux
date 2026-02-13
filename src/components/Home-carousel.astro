@@ -1,5 +1,4 @@
 ---
-import { Image } from 'astro:assets';
 import type { ImageMetadata } from 'astro';
 
 const imageModules = import.meta.glob<{ default: ImageMetadata }>('/src/assets/home-carousel/*.webp', { eager: true });
@@ -51,15 +50,17 @@ const duplicatedImages = [...images, ...images];
   const carousel = document.querySelector('.home-carousel-inner') as HTMLElement;
   const container = document.querySelector('.home-carousel-container') as HTMLElement;
 
-  // Prevent manual scrolling (wheel / touch) while preserving overflow for programmatic animation
+  // Empêche le scroll horizontal via la molette ou le touch, mais permet au script de faire défiler
   if (container) {
     container.addEventListener('wheel', (e) => {
-      // Prevent horizontal scroll from wheel
-      e.preventDefault();
+      // Empêche le scroll horizontal mais permet au script de faire défiler
+      if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) {
+        e.preventDefault();
+      }
     }, { passive: false });
 
     container.addEventListener('touchmove', (e) => {
-      // Prevent touch swipe scrolling
+      // Empêche le scroll tactile mais permet au script de faire défiler
       e.preventDefault();
     }, { passive: false });
   }
@@ -67,7 +68,7 @@ const duplicatedImages = [...images, ...images];
   if (carousel) {
     let startTime: number | null = null;
     let position = 0;
-    const speed = 50; // pixels per second
+    const speed = 50; // pixels par secondes
 
     function animate(currentTime: number) {
       if (startTime === null) {
