@@ -96,6 +96,10 @@ export type SuperusersRecord = {
 	verified?: boolean
 }
 
+export enum ActionsTypeDeChiffreOptions {
+	"dépenses" = "dépenses",
+	"récoltes" = "récoltes",
+}
 export type ActionsRecord = {
 	adresse_lieu?: string
 	beneficiaire?: string
@@ -107,7 +111,7 @@ export type ActionsRecord = {
 	description_photo_partie_1?: string
 	description_photo_partie_2?: string
 	description_photo_partie_3?: string
-	description_remerciement?: string
+	description_remerciements?: string
 	galerie_photos?: FileNameString[]
 	hero?: FileNameString
 	id: string
@@ -124,7 +128,8 @@ export type ActionsRecord = {
 	titre_partie_1?: string
 	titre_partie_2?: string
 	titre_partie_3?: string
-	titre_remerciement?: string
+	titre_remerciements?: string
+	type_de_chiffre?: ActionsTypeDeChiffreOptions
 	updated: IsoAutoDateString
 }
 

@@ -1,7 +1,7 @@
 ---
-import Layout from "../../../layouts/Layout.astro";
-import diagArrow from "../../../assets/diag-arrow.svg";
-import backArrow from "../../../assets/back-arrow.svg";
+import Layout from "../../layouts/Layout.astro";
+import diagArrow from "../../assets/diag-arrow.svg";
+import backArrow from "../../assets/back-arrow.svg";
 
 const id = Astro.params.id;
 const action = await Astro.locals.pb.collection("actions").getOne(id!);
@@ -281,7 +281,8 @@ const partie3Img = Astro.locals.pb.files.getURL(action, action.photo_partie_3);
         >
       </div>
     </div>
-  </div>
+
+</div>
 </Layout>
 
-<script src="../../../scripts/gallery.js"></script>
+<script src="../../scripts/gallery.js"></script>
