@@ -1,10 +1,63 @@
 ---
+// Fichier modifié : explication des changements en français
+// - Ajout d'un objet `previewPlaceholder` pour afficher des valeurs par défaut
+//   côté serveur afin que la prévisualisation montre un exemple immédiatement.
+// - Injection du placeholder dans `window.__previewData` (script inline)
+//   pour garantir l'ordre d'exécution avant le module client `preview.js`.
+// - Chargement du script client via `import ...?url` (Vite) : cela évite
+//   de laisser un fichier dans `public/` tout en servant le module
+//   comme ressource externe (même comportement que précédemment).
 import Layout from "../../../layouts/Layout-back-office.astro";
-import Action from "../../../components/Action.astro";
+import ActionContent from "../../../components/ActionContent.astro";
 import slugify from "slugify";
+import previewUrl from "../../../scripts/preview.js?url";
+import { ActionsTypeDeChiffreOptions } from "../../../pocketbase-types";
 
 const id = Astro.locals.pb.authStore.record?.id;
 let error: string = "";
+
+// Récupérer les options : priorité aux valeurs utilisées en base, sinon fallback sur l'enum générée.
+let typeDeChiffreOptions: string[] = Object.values(ActionsTypeDeChiffreOptions);
+try {
+  const records: any[] = await Astro.locals.pb.collection("actions").getFullList(100);
+  const values = Array.from(new Set(records.map((r: any) => r?.type_de_chiffre).filter(Boolean)));
+  if (values.length > 0) typeDeChiffreOptions = values;
+} catch (e) {
+  // probable manque de permissions : on laisse le fallback sur l'enum
+}
+
+
+// Placeholder utilisé pour rendre toutes les sections côté serveur afin que le client puisse hydrater la prévisualisation
+const placeholderImg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='800' height='400'><rect width='100%' height='100%' fill='%23e5e7eb'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='%23888' font-size='24'>Image</text></svg>";
+const previewPlaceholder: any = {
+  titre: "Titre de l'action — Exemple: Nettoyage de parc",
+  sous_titre: "Sous-titre d'exemple pour présenter rapidement l'action",
+  date_debut: "2026-03-01",
+  date_fin: "2026-03-02",
+  description_hero: "Une courte description de l'image hero.",
+  hero: placeholderImg,
+  titre_partie_1: "Présentation",
+  texte_partie_1: "Court paragraphe d'exemple expliquant la première partie.\nDeuxième ligne d'exemple.",
+  photo_partie_1: placeholderImg,
+  description_photo_partie_1: "Description de la photo partie 1",
+  nom_lieu: "Salle communautaire Exemple",
+  adresse_lieu: "12 rue Exemple, 75000 Ville",
+  lien_lieu: "https://maps.google.com/",
+  chiffre: "150",
+  type_de_chiffre: typeDeChiffreOptions[0] ?? "dépenses",
+  beneficiaire: "Association Exemple",
+  titre_partie_2: "Activités",
+  texte_partie_2: "Texte d'exemple pour la partie 2.",
+  photo_partie_2: placeholderImg,
+  description_photo_partie_2: "Description photo partie 2",
+  titre_partie_3: "Résultats",
+  texte_partie_3: "Texte d'exemple pour la partie 3.",
+  photo_partie_3: placeholderImg,
+  description_photo_partie_3: "Description photo partie 3",
+  titre_remerciements: "Remerciements",
+  description_remerciements: "Merci aux bénévoles et partenaires.",
+  galerie_photos: [placeholderImg, placeholderImg, placeholderImg],
+};
 
 // Gestion de la soumission du formulaire côté serveur
 if (Astro.request.method === "POST") {
@@ -70,42 +123,135 @@ if (Astro.request.method === "POST") {
 
 <Layout>
   <div class="flex h-fit w-full">
-    <div class="h-screen w-1/3 bg-accent sticky left-0 top-0 flex items-center justify-center">
-      <div class="text-white text-center px-4">
-        <h1 class="text-3xl font-bold mb-4">Créer une nouvelle action</h1>
-        <p class="mb-6">
-          Remplissez le formulaire pour créer une nouvelle action.
-        </p>
-        
-        <div class="text-left">
-          <h3 class="text-lg font-semibold mb-3">Guide rapide :</h3>
-          <ul class="space-y-2 text-sm">
-            <li><strong>1. Titre et date :</strong> Commencez par le titre principal et la date.</li>
-            <li><strong>2. Image hero :</strong> Ajoutez une belle image d'en-tête.</li>
-            <li><strong>3. Contenu :</strong> Rédigez les 3 sections avec textes et photos.</li>
-            <li><strong>4. Détails :</strong> Lieu, chiffres et bénéficiaires.</li>
-            <li><strong>5. Remerciements :</strong> Section de remerciements.</li>
-            <li><strong>6. Galerie :</strong> Photos supplémentaires.</li>
-            <li><strong>7. Publier :</strong> Cliquez sur "Créer l'action".</li>
-          </ul>
-        </div>
+    <div class="w-1/3">
+      <div class="h-screen bg-accent sticky left-0 top-0 overflow-auto p-6">
+        <form id="leftForm" class="space-y-4 text-white" method="POST" enctype="multipart/form-data">
+          <h1 class="text-3xl font-bold mb-4 mt-32">Créer une nouvelle action</h1>
+          {error && <p class="text-red-300 mb-4">{error}</p>}
 
-        <div class="text-left mt-6 px-4">
-          <h3 class="text-lg font-semibold mb-2">Astuces</h3>
-          <p class="text-sm mb-1">
-            Vous n'êtes pas obligé de remplir tous les champs.
-          </p>
-          <p class="text-sm">
-            Seuls les champs remplis seront enregistrés, les autres seront
-            ignorés.
-          </p>
-        </div>
+          <div>
+            <label class="block text-sm font-medium mb-1">Titre</label>
+            <input data-prop="titre" id="input_titre" name="titre_local" class="w-full border rounded px-2 py-1 text-black bg-base-100" placeholder="Titre de l'action" />
+            <input type="hidden" name="titre" id="hidden_titre" />
+          </div>
 
-        {error && <p class="text-red-300 mb-4 mt-4">{error}</p>}
+          <div>
+            <label class="block text-sm font-medium mb-1">Sous-titre</label>
+            <input data-prop="sous_titre" id="input_sous_titre" class="w-full border rounded px-2 py-1 text-black bg-base-100" placeholder="Sous-titre" />
+            <input type="hidden" name="sous_titre" id="hidden_sous_titre" />
+          </div>
+
+          <div class="flex gap-2">
+            <div>
+              <label class="text-sm">Date début</label>
+              <input data-prop="date_debut" id="input_date_debut" type="date" class="border rounded px-2 py-1 text-black bg-base-100" />
+              <input type="hidden" name="date_debut" id="hidden_date_debut" />
+            </div>
+            <div>
+              <label class="text-sm">Date fin</label>
+              <input data-prop="date_fin" id="input_date_fin" type="date" class="border rounded px-2 py-1 text-black bg-base-100" />
+              <input type="hidden" name="date_fin" id="hidden_date_fin" />
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium mb-1">Image hero</label>
+            <input data-prop-file="hero" type="file" name="hero" id="input_hero_file" accept="image/*" class="block bg-base-100" />
+            <label class="block text-sm font-medium mt-2 mb-1">Description image hero</label>
+            <textarea data-prop="description_hero" id="input_description_hero" class="w-full border rounded px-2 py-1 text-black bg-base-100" rows="2"></textarea>
+            <input type="hidden" name="description_hero" id="hidden_description_hero" />
+          </div>
+
+          <div>
+            <h4 class="font-semibold">Partie 1</h4>
+            <input data-prop="titre_partie_1" id="input_titre_partie_1" class="w-full border rounded px-2 py-1 mt-2 text-black bg-base-100" placeholder="Titre partie 1" />
+            <input type="hidden" name="titre_partie_1" id="hidden_titre_partie_1" />
+            <label class="block text-sm font-medium mt-2">Texte partie 1</label>
+            <textarea data-prop="texte_partie_1" id="input_texte_partie_1" class="w-full border rounded px-2 py-1 text-black bg-base-100" rows="4"></textarea>
+            <input type="hidden" name="texte_partie_1" id="hidden_texte_partie_1" />
+            <label class="block text-sm font-medium mt-2">Photo partie 1</label>
+            <input data-prop-file="photo_partie_1" type="file" name="photo_partie_1" id="input_photo_partie_1" accept="image/*" class="block bg-base-100" />
+            <label class="block text-sm font-medium mt-2">Description photo partie 1</label>
+            <input data-prop="description_photo_partie_1" id="input_description_photo_partie_1" class="w-full border rounded px-2 py-1 text-black bg-base-100" />
+            <input type="hidden" name="description_photo_partie_1" id="hidden_description_photo_partie_1" />
+          </div>
+
+          <div>
+            <h4 class="font-semibold">Lieu / Chiffres / Bénéficiaires</h4>
+            <label class="block text-sm font-medium mt-2">Nom du lieu (max 30 caractères)</label>
+            <input data-prop="nom_lieu" id="input_nom_lieu" name="nom_lieu_local" maxlength="30" class="w-full border rounded px-2 py-1 mt-2 text-black bg-base-100" placeholder="Nom du lieu" />
+            <input type="hidden" name="nom_lieu" id="hidden_nom_lieu" />
+            <label class="block text-sm font-medium mt-2">Adresse du lieu (max 30 caractères)</label>
+            <input data-prop="adresse_lieu" id="input_adresse_lieu" maxlength="30" class="w-full border rounded px-2 py-1 mt-2 text-black bg-base-100" placeholder="Adresse" />
+            <input type="hidden" name="adresse_lieu" id="hidden_adresse_lieu" />
+            <input data-prop="lien_lieu" id="input_lien_lieu" class="w-full border rounded px-2 py-1 mt-2 text-black bg-base-100" placeholder="Lien Google Maps" />
+            <input type="hidden" name="lien_lieu" id="hidden_lien_lieu" />
+            <div class="flex gap-2 mt-2">
+              <input data-prop="chiffre" id="input_chiffre" type="number" class="border rounded px-2 py-1 w-1/2 text-black bg-base-100" placeholder="Chiffre" />
+              <select data-prop="type_de_chiffre" id="input_type_de_chiffre" class="border rounded px-2 py-1 w-1/2 text-black bg-base-100">
+                <option value="">Type</option>
+                {typeDeChiffreOptions.map((opt) => (
+                  <option value={opt}>{opt}</option>
+                ))}
+              </select>
+            </div>
+            <input type="hidden" name="chiffre" id="hidden_chiffre" />
+            <input type="hidden" name="type_de_chiffre" id="hidden_type_de_chiffre" />
+            <input data-prop="beneficiaire" id="input_beneficiaire" class="w-full border rounded px-2 py-1 mt-2 text-black bg-base-100" placeholder="Bénéficiaire" />
+            <input type="hidden" name="beneficiaire" id="hidden_beneficiaire" />
+          </div>
+
+          <div>
+            <h4 class="font-semibold">Partie 2</h4>
+            <input data-prop="titre_partie_2" id="input_titre_partie_2" class="w-full border rounded px-2 py-1 mt-2 text-black bg-base-100" placeholder="Titre partie 2" />
+            <input type="hidden" name="titre_partie_2" id="hidden_titre_partie_2" />
+            <label class="block text-sm font-medium mt-2">Texte partie 2</label>
+            <textarea data-prop="texte_partie_2" id="input_texte_partie_2" class="w-full border rounded px-2 py-1 text-black bg-base-100" rows="4"></textarea>
+            <input type="hidden" name="texte_partie_2" id="hidden_texte_partie_2" />
+            <label class="block text-sm font-medium mt-2">Photo partie 2</label>
+            <input data-prop-file="photo_partie_2" type="file" name="photo_partie_2" id="input_photo_partie_2" accept="image/*" class="block bg-base-100" />
+            <input data-prop="description_photo_partie_2" id="input_description_photo_partie_2" class="w-full border rounded px-2 py-1 mt-2 text-black bg-base-100" />
+            <input type="hidden" name="description_photo_partie_2" id="hidden_description_photo_partie_2" />
+          </div>
+
+          <div>
+            <h4 class="font-semibold">Partie 3</h4>
+            <input data-prop="titre_partie_3" id="input_titre_partie_3" class="w-full border rounded px-2 py-1 mt-2 text-black bg-base-100" placeholder="Titre partie 3" />
+            <input type="hidden" name="titre_partie_3" id="hidden_titre_partie_3" />
+            <label class="block text-sm font-medium mt-2">Texte partie 3</label>
+            <textarea data-prop="texte_partie_3" id="input_texte_partie_3" class="w-full border rounded px-2 py-1 text-black bg-base-100" rows="4"></textarea>
+            <input type="hidden" name="texte_partie_3" id="hidden_texte_partie_3" />
+            <label class="block text-sm font-medium mt-2">Photo partie 3</label>
+            <input data-prop-file="photo_partie_3" type="file" name="photo_partie_3" id="input_photo_partie_3" accept="image/*" class="block bg-base-100" />
+            <input data-prop="description_photo_partie_3" id="input_description_photo_partie_3" class="w-full border rounded px-2 py-1 mt-2 text-black bg-base-100" />
+            <input type="hidden" name="description_photo_partie_3" id="hidden_description_photo_partie_3" />
+          </div>
+
+          <div>
+            <h4 class="font-semibold">Remerciements</h4>
+            <input data-prop="titre_remerciement" id="input_titre_remerciement" class="w-full border rounded px-2 py-1 mt-2 text-black bg-base-100" placeholder="Titre remerciements" />
+            <input type="hidden" name="titre_remerciement" id="hidden_titre_remerciement" />
+            <label class="block text-sm font-medium mt-2">Description remerciements</label>
+            <textarea data-prop="description_remerciement" id="input_description_remerciement" class="w-full border rounded px-2 py-1 text-black bg-base-100" rows="3"></textarea>
+            <input type="hidden" name="description_remerciement" id="hidden_description_remerciement" />
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium mb-1">Galerie (max 8)</label>
+            <input data-prop-file="galerie_photos" type="file" name="galerie_photos" id="input_galerie_photos" accept="image/*" multiple class="block bg-base-100" />
+          </div>
+
+          <div class="pt-4">
+            <button type="submit" class="bg-base-100 text-accent px-4 py-2 rounded">Créer l'action</button>
+          </div>
+        </form>
       </div>
     </div>
-    <div class="max-w-2/3 ml-auto p-8">
-      <Action />
+
+    <div class="w-2/3 px-8">
+      <ActionContent action={previewPlaceholder} />
     </div>
   </div>
+    <script set:html={"window.__previewData = "+ JSON.stringify(previewPlaceholder).replace(/</g, "\\u003c") + ";"}></script>
+  <script type="module" src={previewUrl}></script>
 </Layout>

@@ -4,11 +4,11 @@ import { ActionsTypeDeChiffreOptions } from '../pocketbase-types';
 
 <form id="actionForm" method="POST" enctype="multipart/form-data" class="w-full max-w-7xl mx-auto mt-32 lg:mt-48 relative px-4 md:px-8">
   <!-- Section titre -->
-  <h1 contenteditable="true" class="uppercase w-full text-3xl md:text-4xl lg:text-5xl outline-none border border-gray-400/40 rounded px-1" data-name="titre">Titre de l'action</h1>
+  <h1 class="uppercase w-full text-3xl md:text-4xl lg:text-5xl outline-none border border-gray-400/40 rounded px-1" data-name="titre">Titre de l'action</h1>
   <input type="hidden" name="titre" />
 
   <div class="flex flex-col md:flex-row items-start md:items-center mt-4 md:mt-0 w-full justify-between">
-    <p contenteditable="true" class="outline-none border border-gray-400/40 rounded px-1" data-name="sous_titre">Sous-titre</p>
+    <p class="outline-none border border-gray-400/40 rounded px-1" data-name="sous_titre">Sous-titre</p>
     <input type="hidden" name="sous_titre" />
     <div class="flex gap-4">
       <div class="flex flex-col">
@@ -40,17 +40,17 @@ import { ActionsTypeDeChiffreOptions } from '../pocketbase-types';
         </div>
       </label>
     </div>
-    <p contenteditable="true" class="text-sm md:text-base mt-4 outline-none border border-gray-400/40 rounded px-1" data-name="description_hero">Description de l'image hero</p>
+    <p class="text-sm md:text-base mt-4 outline-none border border-gray-400/40 rounded px-1" data-name="description_hero">Description de l'image hero</p>
     <input type="hidden" name="description_hero" />
   </div>
 
   <!-- Section Partie 1 -->
   <div class="flex flex-col max-w-7xl mx-auto my-16 md:my-32 gap-4 px-4 md:px-8">
-    <h2 contenteditable="true" class="text-2xl md:text-3xl outline-none border border-gray-400/40 rounded px-1" data-name="titre_partie_1">Titre partie 1</h2>
+    <h2 class="text-2xl md:text-3xl outline-none border border-gray-400/40 rounded px-1" data-name="titre_partie_1">Titre partie 1</h2>
     <input type="hidden" name="titre_partie_1" />
     <div class="grid grid-cols-1 lg:grid-cols-[1fr_1fr] gap-8 lg:gap-16 min-h-[40dvh]">
       <div class="flex flex-col gap-8">
-        <div contenteditable="true" class="flex flex-col gap-4 outline-none border border-gray-400/40 rounded px-1 py-1 h-full" data-name="texte_partie_1">Texte partie 1</div>
+        <div class="flex flex-col gap-4 outline-none border border-gray-400/40 rounded px-1 py-1 h-full" data-name="texte_partie_1">Texte partie 1</div>
         <input type="hidden" name="texte_partie_1" />
       </div>
       <div class="flex flex-col items-end w-full mx-auto max-h-[50dvh] lg:max-w-full">
@@ -62,7 +62,7 @@ import { ActionsTypeDeChiffreOptions } from '../pocketbase-types';
             </div>
           </label>
         </div>
-        <p contenteditable="true" class="text-sm mt-4 outline-none border border-gray-400/40 rounded px-1" data-name="description_photo_partie_1">Description photo partie 1</p>
+        <p class="text-sm mt-4 outline-none border border-gray-400/40 rounded px-1" data-name="description_photo_partie_1">Description photo partie 1</p>
         <input type="hidden" name="description_photo_partie_1" />
       </div>
     </div>
@@ -130,9 +130,9 @@ import { ActionsTypeDeChiffreOptions } from '../pocketbase-types';
   <!-- Section Partie 2 -->
   <div class="grid grid-cols-1 lg:grid-cols-[1fr_1fr] gap-6 md:gap-8 lg:gap-16 min-h-[40dvh] my-16 md:my-32 px-4 md:px-0">
     <div class="flex flex-col gap-8">
-      <h2 contenteditable="true" class="uppercase font-light! text-2xl md:text-3xl outline-none border border-gray-400/40 rounded px-1" data-name="titre_partie_2">Titre partie 2</h2>
+      <h2 class="uppercase font-light! text-2xl md:text-3xl outline-none border border-gray-400/40 rounded px-1" data-name="titre_partie_2">Titre partie 2</h2>
       <input type="hidden" name="titre_partie_2" />
-      <div contenteditable="true" class="flex flex-col gap-4 outline-none border border-gray-400/40 rounded px-1 py-1 h-full" data-name="texte_partie_2">Texte partie 2</div>
+      <div class="flex flex-col gap-4 outline-none border border-gray-400/40 rounded px-1 py-1 h-full" data-name="texte_partie_2">Texte partie 2</div>
       <input type="hidden" name="texte_partie_2" />
     </div>
     <div class="flex flex-col items-end w-full mx-auto max-h-[50dvh] lg:max-w-full">
@@ -144,7 +144,7 @@ import { ActionsTypeDeChiffreOptions } from '../pocketbase-types';
           </div>
         </label>
       </div>
-      <p contenteditable="true" class="text-sm mt-4 outline-none border border-gray-400/40 rounded px-1" data-name="description_photo_partie_2">Description photo partie 2</p>
+      <p class="text-sm mt-4 outline-none border border-gray-400/40 rounded px-1" data-name="description_photo_partie_2">Description photo partie 2</p>
       <input type="hidden" name="description_photo_partie_2" />
     </div>
   </div>
@@ -160,22 +160,22 @@ import { ActionsTypeDeChiffreOptions } from '../pocketbase-types';
           </div>
         </label>
       </div>
-      <p contenteditable="true" class="text-sm mt-4 self-end lg:self-auto outline-none border border-gray-400/40 rounded px-1" data-name="description_photo_partie_3">Description photo partie 3</p>
+      <p class="text-sm mt-4 self-end lg:self-auto outline-none border border-gray-400/40 rounded px-1" data-name="description_photo_partie_3">Description photo partie 3</p>
       <input type="hidden" name="description_photo_partie_3" />
     </div>
     <div class="flex flex-col gap-8">
-      <h2 contenteditable="true" class="uppercase font-light! text-2xl md:text-3xl outline-none border border-gray-400/40 rounded px-1" data-name="titre_partie_3">Titre partie 3</h2>
+      <h2 class="uppercase font-light! text-2xl md:text-3xl outline-none border border-gray-400/40 rounded px-1" data-name="titre_partie_3">Titre partie 3</h2>
       <input type="hidden" name="titre_partie_3" />
-      <div contenteditable="true" class="flex flex-col gap-4 outline-none border border-gray-400/40 rounded px-1 py-1 h-full" data-name="texte_partie_3">Texte partie 3</div>
+      <div class="flex flex-col gap-4 outline-none border border-gray-400/40 rounded px-1 py-1 h-full" data-name="texte_partie_3">Texte partie 3</div>
       <input type="hidden" name="texte_partie_3" />
     </div>
   </div>
 
   <!-- Section Remerciements -->
   <div class="flex flex-col max-w-full md:max-w-1/2 px-4 md:px-0 gap-4 md:gap-8 my-16 md:my-32">
-    <h2 contenteditable="true" class="uppercase font-light! text-2xl md:text-3xl outline-none border border-gray-400/40 rounded px-1" data-name="titre_remerciement">Titre remerciements</h2>
+    <h2 class="uppercase font-light! text-2xl md:text-3xl outline-none border border-gray-400/40 rounded px-1" data-name="titre_remerciement">Titre remerciements</h2>
     <input type="hidden" name="titre_remerciement" />
-    <div contenteditable="true" class="flex flex-col gap-4 outline-none border border-gray-400/40 rounded px-1 py-1" data-name="description_remerciement">Description remerciements</div>
+    <div class="flex flex-col gap-4 outline-none border border-gray-400/40 rounded px-1 py-1" data-name="description_remerciement">Description remerciements</div>
     <input type="hidden" name="description_remerciement" />
   </div>
 

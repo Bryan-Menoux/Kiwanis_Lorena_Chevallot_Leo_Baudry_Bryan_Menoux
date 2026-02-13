@@ -4,7 +4,22 @@ import ActionContent from "../../components/ActionContent.astro";
 import backArrow from "../../assets/back-arrow.svg";
 
 const id = Astro.params.id;
-const action = await Astro.locals.pb.collection("actions").getOne(id!);
+let action = null;
+try {
+  action = await Astro.locals.pb.collection("actions").getOne(id!);
+} catch (err) {
+  // Si l'API renvoie 404, on ne veut pas lever une erreur serveur complète.
+  // On capture et on rend une page utilisateur (thème sombre) indiquant que l'action est introuvable.
+  const isNotFound = (
+    (err instanceof Error && err.message?.includes("The requested resource wasn't found")) ||
+    ((err as any)?.response?.status === 404)
+  );
+  if (isNotFound) {
+    const message = 'Action introuvable (identifiant: ' + id + ')';
+    return new Response(`<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Action introuvable</title><style>body{background:#0b1220;color:#e6eef8;font-family:system-ui,-apple-system,Segoe UI,Roboto,'Helvetica Neue',Arial;padding:40px}a{color:#9fe7c4}</style></head><body><h1>Action introuvable</h1><p>${message}</p><p><a href="/actions">Retour aux actions</a></p></body></html>`, { status: 404, headers: { 'Content-Type': 'text/html' } });
+  }
+  throw err;
+}
 ---
 
 <Layout>
@@ -18,7 +33,7 @@ const action = await Astro.locals.pb.collection("actions").getOne(id!);
       class="inline-block mr-2 invert w-4 h-4 md:w-5 md:h-5"
     />Retour aux actions</a
   >
-  <a href="/actions" class="flex lg:hidden items-center text-sm mb-8">
+  <a href="/actions" class="flex lg:hidden items-center text-sm mb-8 mt-32">
     <img
       src={backArrow.src}
       alt="Retour aux actions"

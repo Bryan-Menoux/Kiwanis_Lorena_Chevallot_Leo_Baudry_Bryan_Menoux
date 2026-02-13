@@ -1,4 +1,11 @@
 ---
+// Composant `ActionContent` : rendu unique de la preview
+// Modifications apportées :
+// - Ajout d'un `id="actionPreview"` sur le conteneur pour permettre au
+//   script client de cibler précisément la zone de prévisualisation.
+// - Ajout d'attributs `data-field` sur les éléments pour que le script mette
+//   à jour le contenu sans dupliquer le markup.
+
 import diagArrow from "../assets/diag-arrow.svg";
 export interface Props {
   action: any;
@@ -6,17 +13,23 @@ export interface Props {
 
 const { action } = Astro.props;
 
-const heroImg = Astro.locals.pb.files.getURL(action, action.hero);
-const partie1Img = Astro.locals.pb.files.getURL(action, action.photo_partie_1);
-const partie2Img = Astro.locals.pb.files.getURL(action, action.photo_partie_2);
-const partie3Img = Astro.locals.pb.files.getURL(action, action.photo_partie_3);
+// Helper pour vérifier si une valeur est une URL de données ou un blob (pour les images)
+const isDataUrl = (v: unknown): v is string => {
+  if (typeof v !== 'string') return false;
+  return v.startsWith('data:') || v.startsWith('blob:');
+};
+// Préparation des URLs d'images : si c'est une URL de données, on l'utilise directement, sinon on génère l'URL via `Astro.locals.pb.files.getURL`
+const heroImg = action && action.hero ? (isDataUrl(action.hero) ? action.hero : Astro.locals.pb.files.getURL(action, action.hero)) : null;
+const partie1Img = action && action.photo_partie_1 ? (isDataUrl(action.photo_partie_1) ? action.photo_partie_1 : Astro.locals.pb.files.getURL(action, action.photo_partie_1)) : null;
+const partie2Img = action && action.photo_partie_2 ? (isDataUrl(action.photo_partie_2) ? action.photo_partie_2 : Astro.locals.pb.files.getURL(action, action.photo_partie_2)) : null;
+const partie3Img = action && action.photo_partie_3 ? (isDataUrl(action.photo_partie_3) ? action.photo_partie_3 : Astro.locals.pb.files.getURL(action, action.photo_partie_3)) : null;
 ---
 
-<div class="w-full max-w-7xl mx-auto mt-32 lg:mt-48 relative px-4 md:px-8">
+<div id="actionPreview" class="w-full max-w-7xl mx-auto lg:mt-48 relative px-4 md:px-8">
   <!-- Section titre -->
   {
-    action.titre && (
-      <h1 class="uppercase w-full text-3xl md:text-4xl lg:text-5xl">
+    Object.prototype.hasOwnProperty.call(action, 'titre') && (
+      <h1 data-field="titre" class="uppercase w-full text-3xl md:text-4xl lg:text-5xl">
         {action.titre}
       </h1>
     )
@@ -25,8 +38,8 @@ const partie3Img = Astro.locals.pb.files.getURL(action, action.photo_partie_3);
   <div
     class="flex flex-col md:flex-row items-start md:items-center mt-4 md:mt-0 w-full justify-between"
   >
-    {action.sous_titre && <p>{action.sous_titre}</p>}
-    <div>
+    {Object.prototype.hasOwnProperty.call(action, 'sous_titre') && <p data-field="sous_titre">{action.sous_titre}</p>}
+    <div data-field="dates">
       {
         action.date_debut
           ? `${new Date(action.date_debut).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })}`
@@ -42,30 +55,33 @@ const partie3Img = Astro.locals.pb.files.getURL(action, action.photo_partie_3);
 
   <!-- Section Hero -->
   {
-    action.hero && (
+    Object.prototype.hasOwnProperty.call(action, 'hero') && (
       <div class="flex flex-col items-end my-12 md:my-32">
         <img
+          data-field="hero"
           src={heroImg}
           alt={action.description_hero}
+          loading="lazy"
+          decoding="async"
           class="w-full min-h-[30dvh] object-cover object-center rounded-lg"
         />
-        <p class="text-sm md:text-base mt-4">{action.description_hero}</p>
+        <p data-field="description_hero" class="text-sm md:text-base mt-4">{action.description_hero}</p>
       </div>
     )
   }
 
   <!-- Section Partie 1 -->
   {
-    (action.titre_partie_1 ||
-      action.texte_partie_1 ||
-      action.photo_partie_1) && (
+    (Object.prototype.hasOwnProperty.call(action, 'titre_partie_1') ||
+      Object.prototype.hasOwnProperty.call(action, 'texte_partie_1') ||
+      Object.prototype.hasOwnProperty.call(action, 'photo_partie_1')) && (
       <div class="flex flex-col max-w-7xl mx-auto my-16 md:my-32 gap-4 px-4 md:px-8">
-        {action.titre_partie_1 && (
-          <h2 class="text-2xl md:text-3xl">{action.titre_partie_1}</h2>
+        {Object.prototype.hasOwnProperty.call(action, 'titre_partie_1') && (
+          <h2 data-field="titre_partie_1" class="text-2xl md:text-3xl">{action.titre_partie_1}</h2>
         )}
         <div class="grid grid-cols-1 lg:grid-cols-[1fr_1fr] gap-8 lg:gap-16 min-h-[40dvh]">
-          {action.texte_partie_1 && (
-            <div class="flex flex-col gap-8">
+          {Object.prototype.hasOwnProperty.call(action, 'texte_partie_1') && (
+            <div data-field="texte_partie_1" class="flex flex-col gap-8">
               <div class="flex flex-col gap-4">
                 {action.texte_partie_1.split("\n").map((line: string) => (
                   <p>{line}</p>
@@ -73,14 +89,17 @@ const partie3Img = Astro.locals.pb.files.getURL(action, action.photo_partie_3);
               </div>
             </div>
           )}
-          {action.photo_partie_1 && (
+          {Object.prototype.hasOwnProperty.call(action, 'photo_partie_1') && (
             <div class="flex flex-col items-end w-full mx-auto max-h-[50dvh] lg:max-w-full">
               <img
+                data-field="photo_partie_1"
                 src={partie1Img}
                 alt={action.description_photo_partie_1}
+                loading="lazy"
+                decoding="async"
                 class="w-full h-full flex-1 object-cover rounded-lg"
               />
-              <p class="text-sm mt-4">{action.description_photo_partie_1}</p>
+              <p data-field="description_photo_partie_1" class="text-sm mt-4">{action.description_photo_partie_1}</p>
             </div>
           )}
         </div>
@@ -90,22 +109,27 @@ const partie3Img = Astro.locals.pb.files.getURL(action, action.photo_partie_3);
 
   <!-- Section Lieu, Chiffres, Bénéficiaires -->
   {
-    (action.nom_lieu ||
-      action.adresse_lieu ||
-      action.chiffre ||
-      action.beneficiaire) && (
-      <div class="flex flex-col lg:flex-row justify-between gap-6 md:gap-8 w-full h-auto mx-auto lg:h-48 my-16 md:my-32 px-4 md:px-0">
-        {action.nom_lieu || action.adresse_lieu ? (
-          <div class="bg-accent text-base-100 w-full h-full rounded-2xl px-6 md:px-8 py-4 md:py-6 flex flex-col justify-between min-h-30 md:min-h-48">
-            <div class="flex flex-col">
-              {action.nom_lieu && (
-                <h2 class="text-lg md:text-xl">
+    (Object.prototype.hasOwnProperty.call(action, 'nom_lieu') ||
+      Object.prototype.hasOwnProperty.call(action, 'adresse_lieu') ||
+      Object.prototype.hasOwnProperty.call(action, 'chiffre') ||
+      Object.prototype.hasOwnProperty.call(action, 'beneficiaire')) && (
+      <div class="flex flex-col lg:flex-row justify-between gap-6 md:gap-8 w-full h-auto mx-auto my-16 md:my-32 px-4 md:px-0">
+        {Object.prototype.hasOwnProperty.call(action, 'nom_lieu') || Object.prototype.hasOwnProperty.call(action, 'adresse_lieu') ? (
+          <div class="bg-accent text-base-100 w-full lg:min-w-1/3 lg:max-w-fit h-fit rounded-2xl px-6 md:px-8 py-4 md:py-6 flex flex-col gap-4 justify-between min-h-30 md:min-h-48">
+            <div class="flex flex-col gap-2 min-w-fit max-w-fit">
+              {Object.prototype.hasOwnProperty.call(action, 'nom_lieu') && (
+                <h2
+                  data-field="nom_lieu"
+                  class="text-lg md:text-xl leading-tight min-w-fit max-w-fit md:whitespace-nowrap"
+                  title={action.nom_lieu}
+                  style={`display:-webkit-box;-webkit-box-orient:vertical;overflow:hidden;-webkit-line-clamp:3;`}
+                >
                   {action.nom_lieu}
                   {action.adresse_lieu ? "," : ""}
                 </h2>
               )}
-              {action.adresse_lieu && (
-                <p class="text-lg md:text-2xl!">{action.adresse_lieu}</p>
+              {Object.prototype.hasOwnProperty.call(action, 'adresse_lieu') && (
+                <p data-field="adresse_lieu" class="text-lg md:text-2xl! min-w-fit max-w-fit md:whitespace-nowrap">{action.adresse_lieu}</p>
               )}
             </div>
             <div class="flex items-center justify-between w-full">
@@ -120,11 +144,11 @@ const partie3Img = Astro.locals.pb.files.getURL(action, action.photo_partie_3);
             </div>
           </div>
         ) : null}
-        {action.chiffre && (
-          <div class="bg-accent text-base-100 w-full h-full rounded-2xl px-6 md:px-8 py-4 md:py-6 flex flex-col justify-between min-h-30 md:min-h-48">
-            <h2 class="text-5xl! md:text-7xl!">{action.chiffre} {action.type_de_chiffre === 'euros' ? '€' : ''}</h2>
-            {action.type_de_chiffre ? (
-              <p class="text-base md:text-xl! uppercase self-end">
+        {Object.prototype.hasOwnProperty.call(action, 'chiffre') && (
+          <div class="bg-accent text-base-100 w-full lg:w-1/3 lg:min-w-0 lg:grow-0 rounded-2xl px-6 md:px-8 py-4 md:py-6 flex flex-col justify-between min-h-30 md:min-h-48">
+            <h2 data-field="chiffre" class="text-5xl! md:text-7xl!">{action.chiffre} € </h2>
+            {Object.prototype.hasOwnProperty.call(action, 'type_de_chiffre') && action.type_de_chiffre ? (
+              <p data-field="type_de_chiffre" class="text-base md:text-xl! uppercase self-end">
                 {action.type_de_chiffre}
               </p>
             ) : (
@@ -134,9 +158,9 @@ const partie3Img = Astro.locals.pb.files.getURL(action, action.photo_partie_3);
             )}
           </div>
         )}
-        {action.beneficiaire && (
-          <div class="bg-accent text-base-100 w-full h-full rounded-2xl px-6 md:px-8 py-4 md:py-6 flex flex-col justify-between min-h-30 md:min-h-48">
-            <h2 class="text-lg md:text-xl">{action.beneficiaire}</h2>
+        {Object.prototype.hasOwnProperty.call(action, 'beneficiaire') && (
+          <div class="bg-accent text-base-100 w-full lg:w-1/3 lg:min-w-0 lg:grow-0 rounded-2xl px-6 md:px-8 py-4 md:py-6 flex flex-col justify-between min-h-30 md:min-h-48">
+            <h2 data-field="beneficiaire" class="text-lg md:text-xl">{action.beneficiaire}</h2>
             <p class="text-base md:text-xl! uppercase self-end">
               bénéficiaires
             </p>
@@ -148,19 +172,19 @@ const partie3Img = Astro.locals.pb.files.getURL(action, action.photo_partie_3);
 
   <!-- Section Partie 2 -->
   {
-    (action.titre_partie_2 ||
-      action.texte_partie_2 ||
-      action.photo_partie_2) && (
+    (Object.prototype.hasOwnProperty.call(action, 'titre_partie_2') ||
+      Object.prototype.hasOwnProperty.call(action, 'texte_partie_2') ||
+      Object.prototype.hasOwnProperty.call(action, 'photo_partie_2')) && (
       <div class="grid grid-cols-1 lg:grid-cols-[1fr_1fr] gap-6 md:gap-8 lg:gap-16 min-h-[40dvh] my-16 md:my-32 px-4 md:px-0">
         <div class="flex flex-col gap-8">
-          {action.titre_partie_2 && (
-            <h2 class="uppercase font-light! text-2xl md:text-3xl">
+          {Object.prototype.hasOwnProperty.call(action, 'titre_partie_2') && (
+            <h2 data-field="titre_partie_2" class="uppercase font-light! text-2xl md:text-3xl">
               {action.titre_partie_2}
             </h2>
           )}
 
-          {action.texte_partie_2 && (
-            <div class="flex flex-col gap-8">
+          {Object.prototype.hasOwnProperty.call(action, 'texte_partie_2') && (
+            <div data-field="texte_partie_2" class="flex flex-col gap-8">
               <div class="flex flex-col gap-4">
                 {action.texte_partie_2.split("\n").map((line: string) => (
                   <p>{line}</p>
@@ -172,11 +196,14 @@ const partie3Img = Astro.locals.pb.files.getURL(action, action.photo_partie_3);
         {action.photo_partie_2 && (
           <div class="flex flex-col items-end w-full mx-auto max-h-[50dvh] lg:max-w-full">
             <img
+              data-field="photo_partie_2"
               src={partie2Img}
               alt={action.description_photo_partie_2}
+              loading="lazy"
+              decoding="async"
               class="w-full h-full flex-1 object-cover rounded-lg"
             />
-            <p class="text-sm mt-4">{action.description_photo_partie_2}</p>
+            <p data-field="description_photo_partie_2" class="text-sm mt-4">{action.description_photo_partie_2}</p>
           </div>
         )}
       </div>
@@ -185,31 +212,34 @@ const partie3Img = Astro.locals.pb.files.getURL(action, action.photo_partie_3);
 
   <!-- Section Partie 3 -->
   {
-    (action.titre_partie_3 ||
-      action.texte_partie_3 ||
-      action.photo_partie_3) && (
+    (Object.prototype.hasOwnProperty.call(action, 'titre_partie_3') ||
+      Object.prototype.hasOwnProperty.call(action, 'texte_partie_3') ||
+      Object.prototype.hasOwnProperty.call(action, 'photo_partie_3')) && (
       <div class="flex flex-col-reverse lg:grid lg:grid-cols-[1fr_1fr] gap-6 md:gap-8 lg:gap-16 min-h-[40dvh] mt-16 mb-16 md:mt-16 md:mb-32 px-4 md:px-0">
-        {action.photo_partie_3 && (
+        {Object.prototype.hasOwnProperty.call(action, 'photo_partie_3') && (
           <div class="flex flex-col w-full mx-auto max-h-[50dvh] lg:max-w-full">
             <img
+              data-field="photo_partie_3"
               src={partie3Img}
               alt={action.description_photo_partie_3}
+              loading="lazy"
+              decoding="async"
               class="w-full h-full flex-1 object-cover rounded-lg"
             />
-            <p class="text-sm mt-4 self-end lg:self-auto">
+            <p data-field="description_photo_partie_3" class="text-sm mt-4 self-end lg:self-auto">
               {action.description_photo_partie_3}
             </p>
           </div>
         )}
         <div class="flex flex-col gap-8">
-          {action.titre_partie_3 && (
-            <h2 class="uppercase font-light! text-2xl md:text-3xl">
+          {Object.prototype.hasOwnProperty.call(action, 'titre_partie_3') && (
+            <h2 data-field="titre_partie_3" class="uppercase font-light! text-2xl md:text-3xl">
               {action.titre_partie_3}
             </h2>
           )}
 
-          {action.texte_partie_3 && (
-            <div class="flex flex-col gap-8">
+          {Object.prototype.hasOwnProperty.call(action, 'texte_partie_3') && (
+            <div data-field="texte_partie_3" class="flex flex-col gap-8">
               <div class="flex flex-col gap-4">
                 {action.texte_partie_3.split("\n").map((line: string) => (
                   <p>{line}</p>
@@ -224,14 +254,14 @@ const partie3Img = Astro.locals.pb.files.getURL(action, action.photo_partie_3);
 
   <!-- Section Remerciements -->
   {
-    action.description_remerciements && (
+    Object.prototype.hasOwnProperty.call(action, 'description_remerciements') && (
       <div class="flex flex-col max-w-full md:max-w-1/2 px-4 md:px-0 gap-4 md:gap-8 my-16 md:my-32">
         {action.titre_remerciements && (
-          <h2 class="uppercase font-light! text-2xl md:text-3xl">
+          <h2 data-field="titre_remerciements" class="uppercase font-light! text-2xl md:text-3xl">
             {action.titre_remerciements}
           </h2>
         )}
-        <div class="flex flex-col gap-4">
+        <div data-field="description_remerciements" class="flex flex-col gap-4">
           {action.description_remerciements.split("\n").map((line: string) => (
             <p>{line}</p>
           ))}
@@ -242,7 +272,7 @@ const partie3Img = Astro.locals.pb.files.getURL(action, action.photo_partie_3);
 
   <!-- Section Galerie Photo -->
   {
-    action.galerie_photos && action.galerie_photos.length > 0 && (
+    Object.prototype.hasOwnProperty.call(action, 'galerie_photos') && (
       <div class="flex flex-col gap-6 md:gap-8 my-16 md:my-32 px-4 md:px-0">
         <div class="bg-accent text-base-100 uppercase w-full h-fit rounded-box">
           <h2 class="text-2xl md:text-3xl! px-6 md:px-8 py-4 md:py-6">
@@ -254,8 +284,8 @@ const partie3Img = Astro.locals.pb.files.getURL(action, action.photo_partie_3);
           class="grid gap-4 h-[90dvh] md:h-[50dvh] lg:h-[80dvh] opacity-0 transition-opacity"
           data-photo-count={action.galerie_photos.length}
         >
-          {action.galerie_photos.map((photo: string, index: number) => {
-            const photoURL = Astro.locals.pb.files.getURL(action, photo);
+          {action.galerie_photos && action.galerie_photos.map((photo: string, index: number) => {
+            const photoURL = (typeof photo === 'string' && (photo.startsWith('data:') || photo.startsWith('blob:') || photo.startsWith('http'))) ? photo : Astro.locals.pb.files.getURL(action, photo);
 
             return (
               <div
@@ -277,7 +307,7 @@ const partie3Img = Astro.locals.pb.files.getURL(action, action.photo_partie_3);
 
   <!-- Modal pour afficher l'image en grand -->
   {
-    action.galerie_photos && action.galerie_photos.length > 0 && (
+    Object.prototype.hasOwnProperty.call(action, 'galerie_photos') && action.galerie_photos && action.galerie_photos.length > 0 && (
       <div
         id="imageModal"
         class="fixed inset-0 bg-accent/60 items-center justify-center z-50 hidden lg:mt-16"
