@@ -206,14 +206,13 @@ import { ActionsTypeDeChiffreOptions } from '../pocketbase-types';
 </form>
 
 <script>
-  import { setGridStyles } from '../utils/gallery';
-
   document.addEventListener('DOMContentLoaded', () => {
     //Synchronisation des éléments contenteditable avec les inputs cachés correspondants
-    document.querySelectorAll('[contenteditable="true"]').forEach(el => {
+    Array.from(document.querySelectorAll('[contenteditable="true"]')).forEach((el) => {
       const htmlEl = el as HTMLElement;
-      const name = htmlEl.dataset.name;
-      const hidden = document.querySelector(`input[name="${name}"]`) as HTMLInputElement;
+      const name = htmlEl.dataset?.name;
+      if (!name) return;
+      const hidden = document.querySelector(`input[name="${name}"]`) as HTMLInputElement | null;
       if (hidden) {
         htmlEl.addEventListener('input', () => {
           hidden.value = htmlEl.textContent?.trim() || '';
@@ -224,17 +223,18 @@ import { ActionsTypeDeChiffreOptions } from '../pocketbase-types';
     });
 
     // Aperçu de l'image pour les inputs de type file
-    document.querySelectorAll('input[type="file"]').forEach(input => {
+    Array.from(document.querySelectorAll('input[type="file"]')).forEach((input) => {
       input.addEventListener('change', (e) => {
-        const fileInput = e.target as HTMLInputElement;
-        const file = fileInput.files?.[0];
+        const fileInput = e.target as HTMLInputElement | null;
+        if (!fileInput) return;
+        const file = fileInput.files?.[0] ?? null;
         if (file && !fileInput.multiple) {
           const reader = new FileReader();
-          reader.onload = (e) => {
-            const label = fileInput.parentElement as HTMLLabelElement;
-            const div = label.querySelector('div');
+          reader.onload = (ev) => {
+            const label = fileInput.parentElement as HTMLElement | null;
+            const div = label ? label.querySelector('div') as HTMLElement | null : null;
             if (div) {
-              div.style.backgroundImage = `url(${e.target?.result})`;
+              div.style.backgroundImage = `url(${(ev.target as FileReader).result})`;
               div.style.backgroundSize = 'cover';
               div.style.backgroundPosition = 'center';
               div.textContent = '';
@@ -244,12 +244,12 @@ import { ActionsTypeDeChiffreOptions } from '../pocketbase-types';
           reader.readAsDataURL(file);
         } else if (fileInput.multiple && fileInput.id === 'galleryInput') {
           // Gestion de la galerie — minimal et rapide : createObjectURL + DocumentFragment + decode
-          let files = fileInput.files && Array.from(fileInput.files) as File[] | undefined;
+          let files = fileInput.files ? Array.from(fileInput.files) as File[] : [];
           if (!files || files.length === 0) return;
 
           // Limiter à 8 images au total
-          const galleryImages = document.getElementById('galleryImages') as HTMLElement | null;
-          const photoGrid = document.getElementById('photoGrid') as HTMLElement | null;
+          const galleryImages = document.getElementById('galleryImages');
+          const photoGrid = document.getElementById('photoGrid');
           if (!photoGrid) return;
           const existingCount = parseInt(photoGrid.dataset.photoCount || '0');
           const MAX_IMAGES = 8;
@@ -270,7 +270,7 @@ import { ActionsTypeDeChiffreOptions } from '../pocketbase-types';
 
           const createdUrls: string[] = [];
           const frag = document.createDocumentFragment();
-          files.forEach((file) => {
+          files.forEach((file: File) => {
             const url = URL.createObjectURL(file);
             createdUrls.push(url);
             const div = document.createElement('div');
@@ -292,7 +292,9 @@ import { ActionsTypeDeChiffreOptions } from '../pocketbase-types';
           // attendre que toutes les images du grid soient décodées, puis appliquer les styles et révéler
           const imgs = Array.from(photoGrid.querySelectorAll('img')) as HTMLImageElement[];
           Promise.all(imgs.map((i) => i.decode().catch(() => {}))).then(() => {
-            setGridStyles(photoGrid);
+            if (typeof window !== 'undefined' && typeof (window as any).setGridStyles === 'function') {
+              try { (window as any).setGridStyles(); } catch (e) {}
+            }
             photoGrid.classList.remove('opacity-0');
             // révoquer uniquement les object URLs créées
             createdUrls.forEach((u) => URL.revokeObjectURL(u));
@@ -304,7 +306,11 @@ import { ActionsTypeDeChiffreOptions } from '../pocketbase-types';
     // Initialiser les styles de la grille
     const grid = document.getElementById('photoGrid');
     if (grid) {
-      window.addEventListener('resize', () => setGridStyles(grid));
+      window.addEventListener('resize', () => {
+        if (typeof (window as any).setGridStyles === 'function') {
+          try { (window as any).setGridStyles(); } catch (e) {}
+        }
+      });
     }
   });
 

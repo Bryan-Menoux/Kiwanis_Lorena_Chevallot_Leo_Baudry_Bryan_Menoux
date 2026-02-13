@@ -65,9 +65,12 @@ function renderGallery(arr) {
   const photoGrid = root.querySelector('#photoGrid');
   if (!photoGrid) return;
   photoGrid.innerHTML = '';
-  arr.forEach((url) => {
+  arr.forEach((url, idx) => {
     const div = document.createElement('div');
     div.className = 'relative w-full h-full overflow-hidden rounded-box cursor-pointer';
+    div.setAttribute('data-photo-index', String(idx));
+    div.setAttribute('data-photo-url', url);
+
     const img = document.createElement('img');
     img.alt = 'Photo de la galerie';
     img.className = 'absolute inset-0 w-full h-full object-center object-cover';
@@ -75,10 +78,54 @@ function renderGallery(arr) {
     img.loading = 'lazy';
     img.decoding = 'async';
     div.appendChild(img);
+
     photoGrid.appendChild(div);
   });
   photoGrid.dataset.photoCount = String(arr.length);
-  photoGrid.classList.remove('opacity-0');
+
+  // Wait for images to load then apply grid styles (to avoid layout flash)
+  const imgs = photoGrid.querySelectorAll('img');
+  let loaded = 0;
+  const applyAndReveal = () => {
+    // If gallery.js is loaded as a plain script it exposes a global `setGridStyles`.
+    if (typeof window !== 'undefined' && typeof window.setGridStyles === 'function') {
+      try { window.setGridStyles(); } catch (e) {}
+    }
+    photoGrid.classList.remove('opacity-0');
+
+    if (!photoGrid.__previewBound) {
+      photoGrid.addEventListener('click', function (e) {
+        const photoEl = e.target.closest && e.target.closest('[data-photo-index]') ? e.target.closest('[data-photo-index]') : null;
+        if (photoEl) {
+          const url = photoEl.getAttribute('data-photo-url');
+          if (url && typeof window !== 'undefined' && typeof window.openModal === 'function') {
+            try { window.openModal(url); } catch (err) {}
+          }
+        }
+      });
+      photoGrid.__previewBound = true;
+    }
+  };
+
+  if (imgs.length === 0) {
+    applyAndReveal();
+  } else {
+    imgs.forEach((img) => {
+      if (img.complete) {
+        loaded += 1;
+        if (loaded === imgs.length) applyAndReveal();
+      } else {
+        img.addEventListener('load', () => {
+          loaded += 1;
+          if (loaded === imgs.length) applyAndReveal();
+        });
+        img.addEventListener('error', () => {
+          loaded += 1;
+          if (loaded === imgs.length) applyAndReveal();
+        });
+      }
+    });
+  }
 }
 
 function updateHidden(prop) {
@@ -86,6 +133,68 @@ function updateHidden(prop) {
   if (!hid) return;
   const val = previewState[prop];
   hid.value = Array.isArray(val) ? JSON.stringify(val) : (val ?? '');
+}
+
+function renderFormGalleryThumbnails(input, dataUrls) {
+  const container = document.getElementById('gallerySelected');
+  if (!container) return;
+  container.innerHTML = '';
+  dataUrls.forEach((url, idx) => {
+    const wrap = document.createElement('div');
+    wrap.className = 'relative overflow-hidden rounded-md';
+    wrap.style.paddingBottom = '100%';
+
+    const img = document.createElement('img');
+    img.src = url;
+    img.alt = 'Miniature';
+    img.className = 'absolute inset-0 w-full h-full object-cover';
+    wrap.appendChild(img);
+
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'absolute top-1 right-1 bg-black/60 text-white rounded-full w-6 h-6 flex items-center justify-center';
+    btn.setAttribute('data-index', String(idx));
+    btn.innerHTML = '×';
+    wrap.appendChild(btn);
+
+    container.appendChild(wrap);
+  });
+
+  // bind click handler once per input
+  if (!container.__boundInputId || container.__boundInputId !== (input && input.id)) {
+    container.addEventListener('click', function (e) {
+      const btn = e.target.closest && e.target.closest('[data-index]');
+      if (!btn) return;
+      const idx = parseInt(btn.getAttribute('data-index'), 10);
+      if (Number.isNaN(idx)) return;
+
+      const oldDt = input.__dt || new DataTransfer();
+      const filesArr = Array.from(oldDt.files);
+      filesArr.splice(idx, 1);
+      const newDt = new DataTransfer();
+      filesArr.forEach((f) => newDt.items.add(f));
+      input.__dt = newDt;
+      input.files = newDt.files;
+
+      const readPromises = Array.from(newDt.files).map((f) => new Promise((res) => {
+        const r = new FileReader();
+        r.onload = (ev) => res(ev.target.result);
+        r.readAsDataURL(f);
+      }));
+
+      Promise.all(readPromises).then((dataUrls) => {
+        previewState.galerie_photos = dataUrls;
+        renderGallery(dataUrls);
+        updateHidden('galerie_photos');
+        renderFormGalleryThumbnails(input, dataUrls);
+      }).catch(() => {
+        previewState.galerie_photos = [];
+        renderGallery([]);
+        renderFormGalleryThumbnails(input, []);
+      });
+    });
+    container.__boundInputId = input.id;
+  }
 }
 
 function handleInputElement(el) {
@@ -112,23 +221,36 @@ function handleFileElement(el) {
   const files = el.files;
   if (!files || files.length === 0) return;
   if (prop === 'galerie_photos') {
-    const arr = [];
-    const max = Math.min(files.length, 8);
-    let read = 0;
-    for (let i = 0; i < max; i++) {
-      const f = files[i];
-      const r = new FileReader();
-      r.onload = (ev) => {
-        arr.push(ev.target.result);
-        read += 1;
-        if (read === max) {
-          previewState.galerie_photos = arr;
-          renderGallery(arr);
-          updateHidden('galerie_photos');
-        }
-      };
-      r.readAsDataURL(f);
+    const input = el;
+    if (!input.__dt) input.__dt = new DataTransfer();
+    const dt = input.__dt;
+    const currentCount = dt.files.length;
+    const remaining = Math.max(0, 8 - currentCount);
+    if (remaining === 0) return;
+    const toAdd = Math.min(files.length, remaining);
+    for (let i = 0; i < toAdd; i++) {
+      dt.items.add(files[i]);
     }
+    input.files = dt.files;
+
+    const fileList = Array.from(dt.files);
+    const readPromises = fileList.map((f) => new Promise((res) => {
+      const r = new FileReader();
+      r.onload = (ev) => res(ev.target.result);
+      r.readAsDataURL(f);
+    }));
+
+    Promise.all(readPromises).then((dataUrls) => {
+      previewState.galerie_photos = dataUrls;
+      renderGallery(dataUrls);
+      updateHidden('galerie_photos');
+      renderFormGalleryThumbnails(input, dataUrls);
+    }).catch(() => {
+      previewState.galerie_photos = [];
+      renderGallery([]);
+      renderFormGalleryThumbnails(input, []);
+    });
+
     return;
   }
   // image unique
@@ -171,7 +293,16 @@ function initPreview() {
 
   // initial sync: populate hidden inputs from previewState so server receives values
   if (form) {
-    Object.keys(previewState).forEach((k) => updateHidden(k));
+    // populate hidden inputs from previewState, but DO NOT populate the gallery hidden input
+    // because placeholder images should not be counted as user-selected files.
+    Object.keys(previewState).forEach((k) => {
+      if (k === 'galerie_photos') return;
+      updateHidden(k);
+    });
+
+    // ensure gallery hidden input is empty at start (only user selections populate it)
+    const hidGallery = document.getElementById('hidden_galerie_photos');
+    if (hidGallery) hidGallery.value = '';
   }
 
   // brancher les écouteurs d'événements

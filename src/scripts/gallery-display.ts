@@ -1,69 +1,33 @@
 /**
- * Script de galerie pour la page d'affichage (lecture seule)
- * Utilise les utilitaires centralisés de gallery.ts
+ * Minimal gallery display script: wait for images, then call window.setGridStyles()
+ * and reveal the grid. No layout logic here; resize & click are handled in gallery.js.
  */
 
-import {
-  setGridStyles,
-  openModal,
-  setupModalHandlers,
-} from "../utils/gallery";
-
 document.addEventListener("DOMContentLoaded", () => {
-  // Initialiser les styles de la grille
   const grid = document.getElementById("photoGrid");
-  if (grid) {
-    // Applique les styles puis révèle la grille pour éviter un flash
-    const applyStylesAndReveal = () => {
-      setGridStyles(grid);
-      grid.classList.remove("opacity-0");
-    };
+  if (!grid) return;
 
-    // Attendre que toutes les images soient chargées
-    const imgs = grid.querySelectorAll("img");
-    let loadedCount = 0;
+  const imgs = Array.from(grid.querySelectorAll('img')) as HTMLImageElement[];
 
-    if (imgs.length === 0) {
-      applyStylesAndReveal();
-    } else {
-      imgs.forEach((img) => {
-        if (img.complete) {
-          loadedCount++;
-          if (loadedCount === imgs.length) {
-            applyStylesAndReveal();
-          }
-        } else {
-          img.addEventListener("load", () => {
-            loadedCount++;
-            if (loadedCount === imgs.length) {
-              applyStylesAndReveal();
-            }
-          });
-        }
-      });
+  const reveal = () => {
+    if (typeof (window as any) !== 'undefined' && typeof (window as any).setGridStyles === 'function') {
+      (window as any).setGridStyles();
     }
+    grid.classList.remove('opacity-0');
+  };
 
-    // Réappliquer les styles au redimensionnement
-    window.addEventListener("resize", () => setGridStyles(grid));
+  if (imgs.length === 0) {
+    reveal();
+    return;
   }
 
-  // Initialiser le modal et les événements
-  setupModalHandlers();
-
-  // Délégation d'événement pour les clics sur les photos
-  const photoGrid = document.getElementById("photoGrid");
-  if (photoGrid) {
-    photoGrid.addEventListener("click", function (e) {
-      const target = (e.target as HTMLElement).closest(
-        "[data-photo-url]"
-      ) as HTMLElement;
-      if (target) {
-        const photos = Array.from(photoGrid.querySelectorAll("[data-photo-url]"));
-        const index = photos.indexOf(target);
-        if (index !== -1) {
-          openModal(index);
-        }
-      }
-    });
-  }
+  let loaded = 0;
+  imgs.forEach((img) => {
+    if (img.complete && img.naturalWidth) {
+      loaded++;
+      if (loaded === imgs.length) reveal();
+    } else {
+      img.addEventListener('load', () => { loaded++; if (loaded === imgs.length) reveal(); }, { once: true });
+    }
+  });
 });
