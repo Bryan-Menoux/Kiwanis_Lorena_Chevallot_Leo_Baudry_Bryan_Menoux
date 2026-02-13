@@ -1,19 +1,20 @@
 ---
 import Layout from "../../../layouts/Layout-back-office.astro";
-import slugify from 'slugify';
+import Action from "../../../components/Action.astro";
+import slugify from "slugify";
 
 const id = Astro.locals.pb.authStore.record?.id;
-let error: string = '';
+let error: string = "";
 
 // Gestion de la soumission du formulaire côté serveur
-if (Astro.request.method === 'POST') {
+if (Astro.request.method === "POST") {
   try {
     const formData = await Astro.request.formData();
 
     // Vérifier que le titre est fourni
-    const titre = formData.get('titre')?.toString();
-    if (!titre || titre.trim() === '') {
-      throw new Error('Le titre est obligatoire');
+    const titre = formData.get("titre")?.toString();
+    if (!titre || titre.trim() === "") {
+      throw new Error("Le titre est obligatoire");
     }
 
     // Générer le slug
@@ -25,8 +26,9 @@ if (Astro.request.method === 'POST') {
     // Récupérer tous les champs texte du formulaire
     for (const [key, value] of formData.entries()) {
       if (value instanceof File) continue; // Gérer les fichiers séparément
-      if (value !== '') {
-        data[key] = value;
+      const stringValue = value.toString().trim();
+      if (stringValue !== "") {
+        data[key] = stringValue;
       }
     }
 
@@ -34,280 +36,76 @@ if (Astro.request.method === 'POST') {
     const files: any = {};
     for (const [key, value] of formData.entries()) {
       if (value instanceof File && value.size > 0) {
-        files[key] = value;
+        if (key === "galerie_photos") {
+          // Pour la galerie, collecter tous les fichiers dans un tableau
+          if (!files[key]) {
+            files[key] = [];
+          }
+          files[key].push(value);
+        } else {
+          // Pour les autres fichiers (images uniques)
+          files[key] = value;
+        }
       }
     }
 
     // Créer l'action dans PocketBase
-    const newAction = await Astro.locals.pb.collection('actions').create({
+    const newAction = await Astro.locals.pb.collection("actions").create({
       ...data,
-      ...files
+      ...files,
     });
 
     // Rediriger vers la page d'édition avec un message de succès
-    return Astro.redirect(`/creation/actions/${newAction.id}-${slug}?success=Action créée avec succès`);
-
+    return Astro.redirect(
+      `/creation/actions/${newAction.id}-${slug}?success=Action créée avec succès`,
+    );
   } catch (err) {
-    console.error('Erreur lors de la création:', err);
+    console.error("Erreur lors de la création:", err);
     // En cas d'erreur, on continue et affiche le formulaire avec l'erreur
-    error = err instanceof Error ? err.message : 'Une erreur inconnue est survenue';
+    error =
+      err instanceof Error ? err.message : "Une erreur inconnue est survenue";
   }
 }
 ---
 
 <Layout>
-  {typeof error !== 'undefined' && (
-    <div class="alert alert-error max-w-4xl mx-auto mb-6">
-      <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
-      </svg>
-      <span>{error}</span>
-    </div>
-  )}
-
-  <form
-    id="action-form"
-    method="POST"
-    enctype="multipart/form-data"
-    class="max-w-4xl mx-auto p-6 bg-base-100 rounded-lg shadow-lg"
-  >
-    <h2 class="text-2xl font-bold mb-6">Créer une Nouvelle Action</h2>
-
-    <!-- Informations générales -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-      <div class="form-control">
-        <label class="label">
-          <span class="label-text">Titre</span>
-        </label>
-        <input
-          type="text"
-          name="titre"
-          class="input input-bordered"
-          placeholder="Titre de l'action"
-          required
-        />
-      </div>
-
-      <div class="form-control">
-        <label class="label">
-          <span class="label-text">Sous-titre</span>
-        </label>
-        <input
-          type="text"
-          name="sous_titre"
-          class="input input-bordered"
-          placeholder="Sous-titre"
-        />
-      </div>
-
-      <div class="form-control">
-        <label class="label">
-          <span class="label-text">Bénéficiaire</span>
-        </label>
-        <input
-          type="text"
-          name="beneficiaire"
-          class="input input-bordered"
-          placeholder="Bénéficiaire de l'action"
-        />
-      </div>
-
-      <div class="form-control">
-        <label class="label">
-          <span class="label-text">Chiffre</span>
-        </label>
-        <input
-          type="number"
-          name="chiffre"
-          class="input input-bordered"
-          placeholder="Montant ou chiffre clé"
-        />
-      </div>
-
-      <div class="form-control">
-        <label class="label">
-          <span class="label-text">Date</span>
-        </label>
-        <input type="date" name="date" class="input input-bordered" />
-      </div>
-    </div>
-
-    <!-- Section Hero -->
-    <div class="mb-8">
-      <h3 class="text-xl font-semibold mb-4">Section Hero</h3>
-      <div class="form-control mb-4">
-        <label class="label">
-          <span class="label-text">Description Hero</span>
-        </label>
-        <textarea
-          name="description_hero"
-          class="textarea textarea-bordered h-24"
-          placeholder="Description de la section hero"></textarea>
-      </div>
-
-      <div class="form-control">
-        <label class="label">
-          <span class="label-text">Image Hero</span>
-        </label>
-        <input
-          type="file"
-          name="hero"
-          class="file-input file-input-bordered"
-          accept="image/*"
-        />
-      </div>
-    </div>
-
-    <!-- Sections de contenu -->
-    {
-      [1, 2, 3].map((num) => (
-        <div class="mb-8">
-          <h3 class="text-xl font-semibold mb-4">Partie {num}</h3>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div class="form-control">
-              <label class="label">
-                <span class="label-text">Titre Partie {num}</span>
-              </label>
-              <input
-                type="text"
-                name={`titre_partie_${num}`}
-                class="input input-bordered"
-                placeholder={`Titre de la partie ${num}`}
-              />
-            </div>
-
-            <div class="form-control">
-              <label class="label">
-                <span class="label-text">Description Photo Partie {num}</span>
-              </label>
-              <input
-                type="text"
-                name={`description_photo_partie_${num}`}
-                class="input input-bordered"
-                placeholder={`Description de la photo ${num}`}
-              />
-            </div>
-
-            <div class="form-control md:col-span-2">
-              <label class="label">
-                <span class="label-text">Texte Partie {num}</span>
-              </label>
-              <textarea
-                name={`texte_partie_${num}`}
-                class="textarea textarea-bordered h-32"
-                placeholder={`Contenu de la partie ${num}`}
-              />
-            </div>
-
-            <div class="form-control">
-              <label class="label">
-                <span class="label-text">Photo Partie {num}</span>
-              </label>
-              <input
-                type="file"
-                name={`photo_partie_${num}`}
-                class="file-input file-input-bordered"
-                accept="image/*"
-              />
-            </div>
-          </div>
-        </div>
-      ))
-    }
-
-    <!-- Section Remerciement -->
-    <div class="mb-8">
-      <h3 class="text-xl font-semibold mb-4">Section Remerciement</h3>
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div class="form-control">
-          <label class="label">
-            <span class="label-text">Titre Remerciement</span>
-          </label>
-          <input
-            type="text"
-            name="titre_remerciement"
-            class="input input-bordered"
-            placeholder="Titre de la section remerciement"
-          />
+  <div class="flex h-fit w-full">
+    <div class="h-screen w-1/3 bg-accent sticky left-0 top-0 flex items-center justify-center">
+      <div class="text-white text-center px-4">
+        <h1 class="text-3xl font-bold mb-4">Créer une nouvelle action</h1>
+        <p class="mb-6">
+          Remplissez le formulaire pour créer une nouvelle action.
+        </p>
+        
+        <div class="text-left">
+          <h3 class="text-lg font-semibold mb-3">Guide rapide :</h3>
+          <ul class="space-y-2 text-sm">
+            <li><strong>1. Titre et date :</strong> Commencez par le titre principal et la date.</li>
+            <li><strong>2. Image hero :</strong> Ajoutez une belle image d'en-tête.</li>
+            <li><strong>3. Contenu :</strong> Rédigez les 3 sections avec textes et photos.</li>
+            <li><strong>4. Détails :</strong> Lieu, chiffres et bénéficiaires.</li>
+            <li><strong>5. Remerciements :</strong> Section de remerciements.</li>
+            <li><strong>6. Galerie :</strong> Photos supplémentaires.</li>
+            <li><strong>7. Publier :</strong> Cliquez sur "Créer l'action".</li>
+          </ul>
         </div>
 
-        <div class="form-control md:col-span-2">
-          <label class="label">
-            <span class="label-text">Description Remerciement</span>
-          </label>
-          <textarea
-            name="description_remerciement"
-            class="textarea textarea-bordered h-24"
-            placeholder="Texte de remerciement"></textarea>
+        <div class="text-left mt-6 px-4">
+          <h3 class="text-lg font-semibold mb-2">Astuces</h3>
+          <p class="text-sm mb-1">
+            Vous n'êtes pas obligé de remplir tous les champs.
+          </p>
+          <p class="text-sm">
+            Seuls les champs remplis seront enregistrés, les autres seront
+            ignorés.
+          </p>
         </div>
+
+        {error && <p class="text-red-300 mb-4 mt-4">{error}</p>}
       </div>
     </div>
-
-    <!-- Informations sur le lieu -->
-    <div class="mb-8">
-      <h3 class="text-xl font-semibold mb-4">Informations sur le Lieu</h3>
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div class="form-control">
-          <label class="label">
-            <span class="label-text">Nom du Lieu</span>
-          </label>
-          <input
-            type="text"
-            name="nom_lieu"
-            class="input input-bordered"
-            placeholder="Nom du lieu"
-          />
-        </div>
-
-        <div class="form-control">
-          <label class="label">
-            <span class="label-text">Adresse du Lieu</span>
-          </label>
-          <input
-            type="text"
-            name="adresse_lieu"
-            class="input input-bordered"
-            placeholder="Adresse complète"
-          />
-        </div>
-
-        <div class="form-control md:col-span-2">
-          <label class="label">
-            <span class="label-text">Lien du Lieu</span>
-          </label>
-          <input
-            type="url"
-            name="lien_lieu"
-            class="input input-bordered"
-            placeholder="https://..."
-          />
-        </div>
-      </div>
+    <div class="max-w-2/3 ml-auto p-8">
+      <Action />
     </div>
-
-    <!-- Galerie Photos -->
-    <div class="mb-8">
-      <h3 class="text-xl font-semibold mb-4">Galerie Photos</h3>
-      <div class="form-control">
-        <label class="label">
-          <span class="label-text"
-            >Photos de la Galerie (plusieurs fichiers possibles)</span
-          >
-        </label>
-        <input
-          type="file"
-          name="galerie_photos"
-          class="file-input file-input-bordered"
-          accept="image/*"
-          multiple
-        />
-      </div>
-    </div>
-
-    <!-- Boutons d'action -->
-    <div class="flex justify-end gap-4">
-      <a href="/creation" class="btn btn-ghost">Annuler</a>
-      <button type="submit" class="btn btn-primary">Créer l'Action</button>
-    </div>
-  </form>
+  </div>
 </Layout>

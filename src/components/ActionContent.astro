@@ -122,7 +122,7 @@ const partie3Img = Astro.locals.pb.files.getURL(action, action.photo_partie_3);
         ) : null}
         {action.chiffre && (
           <div class="bg-accent text-base-100 w-full h-full rounded-2xl px-6 md:px-8 py-4 md:py-6 flex flex-col justify-between min-h-30 md:min-h-48">
-            <h2 class="text-5xl! md:text-7xl!">{action.chiffre} €</h2>
+            <h2 class="text-5xl! md:text-7xl!">{action.chiffre} {action.type_de_chiffre === 'euros' ? '€' : ''}</h2>
             {action.type_de_chiffre ? (
               <p class="text-base md:text-xl! uppercase self-end">
                 {action.type_de_chiffre}
@@ -315,6 +315,6 @@ const partie3Img = Astro.locals.pb.files.getURL(action, action.photo_partie_3);
 
 {
   action.galerie_photos && action.galerie_photos.length > 0 && (
-    <script src="../scripts/gallery.js" />
+    <script src="../scripts/gallery-display.ts" />
   )
 }
