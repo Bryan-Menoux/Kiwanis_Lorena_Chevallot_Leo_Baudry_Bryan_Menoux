@@ -251,7 +251,7 @@ const partie3Img = Astro.locals.pb.files.getURL(action, action.photo_partie_3);
         </div>
         <div
           id="photoGrid"
-          class="grid gap-4 h-[90dvh] md:h-[50dvh] lg:h-[80dvh]"
+          class="grid gap-4 h-[90dvh] md:h-[50dvh] lg:h-[80dvh] opacity-0 transition-opacity"
           data-photo-count={action.galerie_photos.length}
         >
           {action.galerie_photos.map((photo: string, index: number) => {

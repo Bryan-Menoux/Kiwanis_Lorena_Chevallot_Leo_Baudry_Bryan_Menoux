@@ -10,23 +10,36 @@ import { ActionsTypeDeChiffreOptions } from '../pocketbase-types';
   <div class="flex flex-col md:flex-row items-start md:items-center mt-4 md:mt-0 w-full justify-between">
     <p contenteditable="true" class="outline-none border border-gray-400/40 rounded px-1" data-name="sous_titre">Sous-titre</p>
     <input type="hidden" name="sous_titre" />
-    <div>
-      <input
-        type="date"
-        name="date"
-        class="border-none bg-transparent outline-none"
-      />
+    <div class="flex gap-4">
+      <div class="flex flex-col">
+        <label class="text-sm text-gray-600">Date début</label>
+        <input
+          type="date"
+          name="date"
+          class="border border-gray-400/40 rounded px-1 bg-transparent outline-none"
+        />
+      </div>
+      <div class="flex flex-col">
+        <label class="text-sm text-gray-600">Date fin</label>
+        <input
+          type="date"
+          name="date_fin"
+          class="border border-gray-400/40 rounded px-1 bg-transparent outline-none"
+        />
+      </div>
     </div>
   </div>
 
   <!-- Section Hero -->
   <div class="flex flex-col items-end my-12 md:my-32">
     <input type="file" name="hero" accept="image/*" class="hidden" id="heroInput" />
-    <label for="heroInput" class="cursor-pointer w-full">
-      <div class="bg-gray-300 w-full min-h-[30dvh] object-cover object-center rounded-lg flex items-center justify-center text-gray-500">
-        Cliquez pour ajouter l'image hero
-      </div>
-    </label>
+    <div class="relative w-full">
+      <label for="heroInput" class="cursor-pointer w-full">
+        <div class="bg-gray-300 w-full min-h-[50dvh] object-cover object-center rounded-lg flex items-center justify-center text-gray-500 relative group">
+          Cliquez pour ajouter l'image hero
+        </div>
+      </label>
+    </div>
     <p contenteditable="true" class="text-sm md:text-base mt-4 outline-none border border-gray-400/40 rounded px-1" data-name="description_hero">Description de l'image hero</p>
     <input type="hidden" name="description_hero" />
   </div>
@@ -42,11 +55,13 @@ import { ActionsTypeDeChiffreOptions } from '../pocketbase-types';
       </div>
       <div class="flex flex-col items-end w-full mx-auto max-h-[50dvh] lg:max-w-full">
         <input type="file" name="photo_partie_1" accept="image/*" class="hidden" id="partie1Input" />
-        <label for="partie1Input" class="cursor-pointer w-full h-full">
-          <div class="bg-gray-300 w-full h-full flex-1 object-cover rounded-lg flex items-center justify-center text-gray-500">
-            Cliquez pour ajouter la photo partie 1
-          </div>
-        </label>
+        <div class="relative w-full h-full">
+          <label for="partie1Input" class="cursor-pointer w-full h-full">
+            <div class="bg-gray-300 w-full h-full flex-1 object-cover rounded-lg flex items-center justify-center text-gray-500 relative group">
+              Cliquez pour ajouter la photo partie 1
+            </div>
+          </label>
+        </div>
         <p contenteditable="true" class="text-sm mt-4 outline-none border border-gray-400/40 rounded px-1" data-name="description_photo_partie_1">Description photo partie 1</p>
         <input type="hidden" name="description_photo_partie_1" />
       </div>
@@ -122,11 +137,13 @@ import { ActionsTypeDeChiffreOptions } from '../pocketbase-types';
     </div>
     <div class="flex flex-col items-end w-full mx-auto max-h-[50dvh] lg:max-w-full">
       <input type="file" name="photo_partie_2" accept="image/*" class="hidden" id="partie2Input" />
-      <label for="partie2Input" class="cursor-pointer w-full h-full">
-        <div class="bg-gray-300 w-full h-full flex-1 object-cover rounded-lg flex items-center justify-center text-gray-500">
-          Cliquez pour ajouter la photo partie 2
-        </div>
-      </label>
+      <div class="relative w-full h-full">
+        <label for="partie2Input" class="cursor-pointer w-full h-full">
+          <div class="bg-gray-300 w-full h-full flex-1 object-cover rounded-lg flex items-center justify-center text-gray-500 relative group">
+            Cliquez pour ajouter la photo partie 2
+          </div>
+        </label>
+      </div>
       <p contenteditable="true" class="text-sm mt-4 outline-none border border-gray-400/40 rounded px-1" data-name="description_photo_partie_2">Description photo partie 2</p>
       <input type="hidden" name="description_photo_partie_2" />
     </div>
@@ -136,11 +153,13 @@ import { ActionsTypeDeChiffreOptions } from '../pocketbase-types';
   <div class="flex flex-col-reverse lg:grid lg:grid-cols-[1fr_1fr] gap-6 md:gap-8 lg:gap-16 min-h-[40dvh] mt-16 mb-16 md:mt-16 md:mb-32 px-4 md:px-0">
     <div class="flex flex-col w-full mx-auto max-h-[50dvh] lg:max-w-full">
       <input type="file" name="photo_partie_3" accept="image/*" class="hidden" id="partie3Input" />
-      <label for="partie3Input" class="cursor-pointer w-full h-full">
-        <div class="bg-gray-300 w-full h-full flex-1 object-cover rounded-lg flex items-center justify-center text-gray-500">
-          Cliquez pour ajouter la photo partie 3
-        </div>
-      </label>
+      <div class="relative w-full h-full">
+        <label for="partie3Input" class="cursor-pointer w-full h-full">
+          <div class="bg-gray-300 w-full h-full flex-1 object-cover rounded-lg flex items-center justify-center text-gray-500 relative group">
+            Cliquez pour ajouter la photo partie 3
+          </div>
+        </label>
+      </div>
       <p contenteditable="true" class="text-sm mt-4 self-end lg:self-auto outline-none border border-gray-400/40 rounded px-1" data-name="description_photo_partie_3">Description photo partie 3</p>
       <input type="hidden" name="description_photo_partie_3" />
     </div>
@@ -166,7 +185,7 @@ import { ActionsTypeDeChiffreOptions } from '../pocketbase-types';
       <h2 class="text-2xl md:text-3xl! px-6 md:px-8 py-4 md:py-6">Galerie photo</h2>
     </div>
     <!-- Container pour les images de la galerie -->
-    <div id="galleryImages" class="hidden flex flex-col gap-4">
+    <div id="galleryImages" class="hidden gap-4">
       <div id="photoGrid" class="grid gap-4 min-h-[80dvh]" data-photo-count="0"></div>
     </div>
     <!-- Zone de drop toujours visible -->
@@ -178,39 +197,6 @@ import { ActionsTypeDeChiffreOptions } from '../pocketbase-types';
     </label>
   </div>
 
-  <!-- Modal pour afficher l'image en grand -->
-  <div
-    id="imageModal"
-    class="fixed inset-0 bg-accent/60 items-center justify-center z-50 hidden lg:mt-16"
-  >
-    <div class="relative max-w-full max-h-full p-2 md:p-4">
-      <img
-        id="modalImage"
-        src=""
-        alt="Image agrandie"
-        class="max-w-full max-h-[80dvh] w-auto h-auto object-contain"
-      />
-      <button
-        id="closeButton"
-        class="absolute top-2 right-2 md:top-4 md:right-4 text-xl! bg-base-100 bg-opacity-80 rounded-full w-8 h-8 md:w-10 md:h-10 flex items-center justify-center"
-      >
-        ×
-      </button>
-      <button
-        id="prevButton"
-        class="absolute left-2 md:left-4 top-1/2 transform -translate-y-1/2 text-xl! bg-base-100 bg-opacity-80 rounded-full w-8 h-8 md:w-10 md:h-10 flex items-center justify-center"
-      >
-        ‹
-      </button>
-      <button
-        id="nextButton"
-        class="absolute right-2 md:right-4 top-1/2 transform -translate-y-1/2 text-xl! bg-base-100 bg-opacity-80 rounded-full w-8 h-8 md:w-10 md:h-10 flex items-center justify-center"
-      >
-        ›
-      </button>
-    </div>
-  </div>
-
   <!-- Bouton de soumission -->
   <div class="flex justify-center my-16">
     <button type="submit" class="bg-accent text-base-100 px-8 py-4 rounded-lg uppercase">
@@ -220,10 +206,10 @@ import { ActionsTypeDeChiffreOptions } from '../pocketbase-types';
 </form>
 
 <script>
-  import { setGridStyles, openModal, closeModal, navigate, setupModalHandlers } from '../utils/gallery';
+  import { setGridStyles } from '../utils/gallery';
 
   document.addEventListener('DOMContentLoaded', () => {
-    // Sync contenteditable to hidden inputs
+    //Synchronisation des éléments contenteditable avec les inputs cachés correspondants
     document.querySelectorAll('[contenteditable="true"]').forEach(el => {
       const htmlEl = el as HTMLElement;
       const name = htmlEl.dataset.name;
@@ -232,12 +218,12 @@ import { ActionsTypeDeChiffreOptions } from '../pocketbase-types';
         htmlEl.addEventListener('input', () => {
           hidden.value = htmlEl.textContent?.trim() || '';
         });
-        // Initial sync
+        // Synchroniser initialement le contenu des éléments contenteditable avec les inputs cachés
         hidden.value = htmlEl.textContent?.trim() || '';
       }
     });
 
-    // Image preview for file inputs
+    // Aperçu de l'image pour les inputs de type file
     document.querySelectorAll('input[type="file"]').forEach(input => {
       input.addEventListener('change', (e) => {
         const fileInput = e.target as HTMLInputElement;
@@ -257,67 +243,71 @@ import { ActionsTypeDeChiffreOptions } from '../pocketbase-types';
           };
           reader.readAsDataURL(file);
         } else if (fileInput.multiple && fileInput.id === 'galleryInput') {
-          // Gestion de la galerie
-          const files = fileInput.files;
-          if (files && files.length > 0) {
-            const galleryImages = document.getElementById('galleryImages') as HTMLElement;
-            const photoGrid = document.getElementById('photoGrid') as HTMLElement;
-            
-            // Afficher le conteneur des images
-            if (galleryImages) {
-              galleryImages.classList.remove('hidden');
-            }
-            
-            if (photoGrid) {
-              // Ajouter les nouvelles images aux existantes
-              const existingCount = parseInt(photoGrid.dataset.photoCount || '0');
-              const newCount = existingCount + files.length;
-              photoGrid.setAttribute('data-photo-count', newCount.toString());
-              
-              let loadedCount = existingCount;
-              Array.from(files).forEach((file, i) => {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                  const div = document.createElement('div');
-                  div.className = 'relative w-full h-full overflow-hidden rounded-box cursor-pointer';
-                  div.setAttribute('data-photo-url', e.target?.result as string);
-                  div.addEventListener('click', () => openModal(existingCount + i));
-                  const img = document.createElement('img');
-                  img.alt = 'Photo de la galerie';
-                  img.className = 'absolute inset-0 w-full h-full object-center object-cover';
-                  
-                  // Définir onload AVANT de set src pour éviter que la data URL se charge trop vite
-                  img.onload = () => {
-                    loadedCount++;
-                    if (loadedCount === newCount) {
-                      // Attendre un peu plus pour que toutes les images soient bien chargées
-                      setTimeout(() => {
-                        setGridStyles(photoGrid);
-                      }, 100);
-                    }
-                  };
-                  
-                  // Puis set la source
-                  img.src = e.target?.result as string;
-                  div.appendChild(img);
-                  photoGrid.appendChild(div);
-                };
-                reader.readAsDataURL(file);
-              });
-            }
+          // Gestion de la galerie — minimal et rapide : createObjectURL + DocumentFragment + decode
+          let files = fileInput.files && Array.from(fileInput.files) as File[] | undefined;
+          if (!files || files.length === 0) return;
+
+          // Limiter à 8 images au total
+          const galleryImages = document.getElementById('galleryImages') as HTMLElement | null;
+          const photoGrid = document.getElementById('photoGrid') as HTMLElement | null;
+          if (!photoGrid) return;
+          const existingCount = parseInt(photoGrid.dataset.photoCount || '0');
+          const MAX_IMAGES = 8;
+          const remaining = MAX_IMAGES - existingCount;
+          if (remaining <= 0) {
+            alert('Vous ne pouvez pas ajouter plus de 8 images.');
+            return;
           }
+          if (files.length > remaining) {
+            files = files.slice(0, remaining);
+            alert(`Seules ${remaining} image(s) seront ajoutée(s) (maximum ${MAX_IMAGES}).`);
+          }
+
+          if (galleryImages) {
+            galleryImages.classList.remove('hidden');
+            galleryImages.classList.add('flex', 'flex-col');
+          }
+
+          const createdUrls: string[] = [];
+          const frag = document.createDocumentFragment();
+          files.forEach((file) => {
+            const url = URL.createObjectURL(file);
+            createdUrls.push(url);
+            const div = document.createElement('div');
+            div.className = 'relative w-full h-full overflow-hidden rounded-box cursor-pointer';
+            div.setAttribute('data-photo-url', url);
+            const img = document.createElement('img');
+            img.alt = 'Photo de la galerie';
+            img.className = 'absolute inset-0 w-full h-full object-center object-cover';
+            img.src = url;
+            div.appendChild(img);
+            frag.appendChild(div);
+          });
+
+          photoGrid.appendChild(frag);
+          // mettre à jour le compteur
+          const existing = parseInt(photoGrid.dataset.photoCount || '0');
+          photoGrid.dataset.photoCount = String(existing + files.length);
+
+          // attendre que toutes les images du grid soient décodées, puis appliquer les styles et révéler
+          const imgs = Array.from(photoGrid.querySelectorAll('img')) as HTMLImageElement[];
+          Promise.all(imgs.map((i) => i.decode().catch(() => {}))).then(() => {
+            setGridStyles(photoGrid);
+            photoGrid.classList.remove('opacity-0');
+            // révoquer uniquement les object URLs créées
+            createdUrls.forEach((u) => URL.revokeObjectURL(u));
+          });
         }
       });
     });
 
-    // Setup modal and gallery handlers
-    setupModalHandlers();
-    
-    // Initialize grid styles
+    // Initialiser les styles de la grille
     const grid = document.getElementById('photoGrid');
     if (grid) {
       window.addEventListener('resize', () => setGridStyles(grid));
     }
   });
+
+
 </script></content>
 <parameter name="filePath">

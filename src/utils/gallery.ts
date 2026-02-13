@@ -16,75 +16,97 @@ export interface GalleryConfig {
 export function setGridStyles(grid: HTMLElement): void {
   if (!grid) return;
 
-  const count = parseInt(grid.dataset.photoCount || "0");
+  const count = Math.max(0, parseInt(grid.dataset.photoCount || "0"));
+  const items = Array.from(grid.children).filter((c): c is HTMLElement => c instanceof HTMLElement);
+
+  // Classes to remove from grid (only these, keep others intact)
+  const gridClassesToRemove = [
+    "md:grid-cols-1",
+    "md:grid-cols-2",
+    "md:grid-rows-2",
+    "md:grid-rows-3",
+  ];
+  gridClassesToRemove.forEach((c) => grid.classList.remove(c));
+
+  // Classes to remove from items
+  const itemClassesToRemove = [
+    "md:row-span-2",
+    "md:col-span-2",
+    "md:col-start-2",
+    "md:col-start-1",
+    "md:row-start-1",
+    "md:row-start-2",
+  ];
+  items.forEach((it) => itemClassesToRemove.forEach((c) => it.classList.remove(c)));
+
   if (count === 0) return;
 
-  const imgs = grid.querySelectorAll("img");
-  const orientations = Array.from(imgs).map((img) => {
-    return img.naturalHeight > img.naturalWidth ? "portrait" : "landscape";
-  });
-
-  const divs = grid.querySelectorAll(".relative");
-
-  // Configuration pour desktop (>= 768px)
+  // Desktop behavior only: add md: classes based on count
   if (window.innerWidth >= 768) {
-    grid.style.gridTemplateColumns = "1fr 1fr";
-    grid.style.gridTemplateRows = count <= 2 ? "1fr" : "1fr 1fr";
-
-    let areas: string[] = [];
-    let template = "";
-
     if (count === 1) {
-      areas = ["a"];
-      template = '"a"';
-    } else if (count === 2) {
-      areas = ["a", "b"];
-      template = '"a b"';
-    } else if (count === 3) {
-      const portraitIndex = orientations.findIndex((o) => o === "portrait");
-      if (portraitIndex !== -1) {
-        areas = new Array(3);
-        areas[portraitIndex] = "c";
-        let letterIdx = 0;
-        for (let i = 0; i < 3; i++) {
-          if (i !== portraitIndex) {
-            areas[i] = String.fromCharCode(97 + letterIdx++);
-          }
-        }
-      } else {
-        areas = ["a", "b", "c"];
-      }
-      template = '"a c" "b c"';
-    } else if (count === 4) {
-      areas = ["a", "b", "c", "d"];
-      template = '"a b" "c d"';
-    } else {
-      // 5+ images : afficher 2x2 + reste
-      areas = Array.from({ length: count }, (_, i) =>
-        String.fromCharCode(97 + i)
-      );
-      template = '"a b" "c d"';
+      grid.classList.add("md:grid-cols-1");
+      return;
     }
 
-    grid.style.gridTemplateAreas = template;
-    divs.forEach((div, i) => {
-      (div as HTMLElement).style.gridArea = areas[i] || "";
-    });
-  } else {
-    // Configuration pour mobile (< 768px)
-    grid.style.gridTemplateColumns = "1fr";
-    grid.style.gridTemplateRows = `repeat(${count}, 1fr)`;
+    if (count === 2) {
+      grid.classList.add("md:grid-cols-2");
+      return;
+    }
 
-    const areas = Array.from(
-      { length: count },
-      (_, i) => String.fromCharCode(97 + i)
-    );
-    const template = areas.map((a) => `"${a}"`).join(" ");
+    if (count === 3) {
+      grid.classList.add("md:grid-cols-2", "md:grid-rows-2");
 
-    grid.style.gridTemplateAreas = template;
-    divs.forEach((div, i) => {
-      (div as HTMLElement).style.gridArea = areas[i] || "";
-    });
+      // Look at first three items (do not change DOM order)
+      const firstThree = items.slice(0, 3);
+
+      // Find a portrait image among them
+      let portraitIdx = -1;
+      for (let i = 0; i < firstThree.length; i++) {
+        const img = firstThree[i].querySelector("img") as HTMLImageElement | null;
+        if (img && img.naturalHeight > img.naturalWidth) {
+          portraitIdx = i;
+          break;
+        }
+      }
+
+      if (portraitIdx === -1) {
+        // default to the third item if exists
+        portraitIdx = firstThree.length >= 3 ? 2 : firstThree.length - 1;
+      }
+
+      if (portraitIdx >= 0 && firstThree[portraitIdx]) {
+        // span two rows and force column start 2 so the large image sits on the right
+        firstThree[portraitIdx].classList.add("md:row-span-2", "md:col-start-2", "md:row-start-1");
+
+        // For the two other items, force them on the left: first->row-start-1, second->row-start-2
+        const others: HTMLElement[] = [];
+        for (let i = 0; i < firstThree.length; i++) {
+          if (i !== portraitIdx && firstThree[i]) others.push(firstThree[i]);
+        }
+        if (others[0]) {
+          others[0].classList.add("md:col-start-1", "md:row-start-1");
+        }
+        if (others[1]) {
+          others[1].classList.add("md:col-start-1", "md:row-start-2");
+        }
+      }
+
+      return;
+    }
+
+    if (count === 4) {
+      grid.classList.add("md:grid-cols-2", "md:grid-rows-2");
+      return;
+    }
+
+    if (count === 5) {
+      grid.classList.add("md:grid-cols-2", "md:grid-rows-3");
+      if (items[4]) items[4].classList.add("md:col-span-2");
+      return;
+    }
+
+    // 6 or more
+    grid.classList.add("md:grid-cols-2", "md:grid-rows-3");
   }
 }
 

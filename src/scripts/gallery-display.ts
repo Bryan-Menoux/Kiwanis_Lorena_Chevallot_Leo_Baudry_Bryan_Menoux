@@ -6,8 +6,6 @@
 import {
   setGridStyles,
   openModal,
-  closeModal,
-  navigate,
   setupModalHandlers,
 } from "../utils/gallery";
 
@@ -15,24 +13,30 @@ document.addEventListener("DOMContentLoaded", () => {
   // Initialiser les styles de la grille
   const grid = document.getElementById("photoGrid");
   if (grid) {
+    // Applique les styles puis révèle la grille pour éviter un flash
+    const applyStylesAndReveal = () => {
+      setGridStyles(grid);
+      grid.classList.remove("opacity-0");
+    };
+
     // Attendre que toutes les images soient chargées
     const imgs = grid.querySelectorAll("img");
     let loadedCount = 0;
 
     if (imgs.length === 0) {
-      setGridStyles(grid);
+      applyStylesAndReveal();
     } else {
       imgs.forEach((img) => {
         if (img.complete) {
           loadedCount++;
           if (loadedCount === imgs.length) {
-            setGridStyles(grid);
+            applyStylesAndReveal();
           }
         } else {
           img.addEventListener("load", () => {
             loadedCount++;
             if (loadedCount === imgs.length) {
-              setGridStyles(grid);
+              applyStylesAndReveal();
             }
           });
         }
@@ -43,7 +47,7 @@ document.addEventListener("DOMContentLoaded", () => {
     window.addEventListener("resize", () => setGridStyles(grid));
   }
 
-  // Setup du modal et des événements
+  // Initialiser le modal et les événements
   setupModalHandlers();
 
   // Délégation d'événement pour les clics sur les photos
