@@ -29,7 +29,7 @@ try {
 // Placeholder utilisé pour rendre toutes les sections côté serveur afin que le client puisse hydrater la prévisualisation
 const placeholderImg = `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='400' height='400' viewBox='0 0 400 400'><rect width='100%' height='100%' fill='%23f3f6f7'/><image href='${imageIcon.src}' x='50' y='50' width='300' height='300' preserveAspectRatio='xMidYMid meet' style='opacity:0.95;'/></svg>`;
 
-// Helpers
+// Fonctions utilitaires
 function formatDateForInput(d: any) {
   if (!d) return "";
   try {
@@ -43,17 +43,17 @@ function formatDateForInput(d: any) {
 
 function normalizeImageUrl(v: any, action?: any) {
   if (!v) return null;
-  // If it's already a full data/blob/http URL, return as-is
+  // Si c'est déjà une URL complète (data:, blob:, http(s): ou chemin), la retourner telle quelle
   if (typeof v === 'string' && (v.startsWith('data:') || v.startsWith('blob:') || v.startsWith('http://') || v.startsWith('https://') || v.startsWith('/'))) return v;
-  // If PocketBase file object or just filename string, prefer using Astro.locals.pb.files.getURL when we have the action
+  // Si c'est un objet fichier PocketBase ou juste un nom de fichier, utiliser `Astro.locals.pb.files.getURL` quand on a l'action
   try {
     if (action && typeof Astro !== 'undefined' && Astro.locals && Astro.locals.pb && Astro.locals.pb.files && typeof Astro.locals.pb.files.getURL === 'function') {
-      // When v is an object PocketBase sometimes stores file metadata as { filename, ... } or just filename string
+        // Quand v est un objet, PocketBase stocke parfois les métadonnées sous la forme { filename, ... } ou juste une chaîne de nom de fichier
       const fileRef = (typeof v === 'string') ? v : (v.filename ?? v.id ?? null);
       if (fileRef) return Astro.locals.pb.files.getURL(action, fileRef);
     }
   } catch (e) {
-    // fallback to other heuristics
+    // revenir à d'autres heuristiques en cas d'échec
   }
 
   if (typeof v === 'object') {
@@ -114,10 +114,21 @@ const previewData: any = {
 };
 
 // Gestion de la soumission du formulaire côté serveur
-// If `idParam` is present update the existing record, otherwise create a new one.
+// Si `idParam` est présent : mise à jour de l'enregistrement existant, sinon création d'un nouvel enregistrement.
 if (Astro.request.method === "POST") {
   try {
     const formData = await Astro.request.formData();
+
+    // Support suppression envoyée par POST depuis la liste (no endpoint)
+    const action = formData.get('_action')?.toString();
+    if (action === 'delete' && idParam) {
+      try {
+        await Astro.locals.pb.collection('actions').delete(idParam);
+      } catch (e) {
+        console.error('Erreur suppression action:', e);
+      }
+      return Astro.redirect('/creation/actions?success=Action supprimée');
+    }
 
     // Vérifier que le titre est fourni
     const titre = formData.get("titre")?.toString();
@@ -132,8 +143,8 @@ if (Astro.request.method === "POST") {
     const data: any = { slug };
 
     // Récupérer tous les champs texte du formulaire
-    // Skip file inputs and any client-side removal flags (keys starting with `remove_`)
-    // Gallery handling is explicit below.
+    // Ignorer les inputs de type fichier et les flags côté client pour suppression (clés commençant par `remove_`)
+    // Le traitement de la galerie est géré explicitement plus bas.
     for (const [key, value] of formData.entries()) {
       if (value instanceof File) continue; // Gérer les fichiers séparément
       if (key === 'galerie_photos' || key === 'remove_galerie_photos' || key.startsWith('remove_')) continue;
@@ -160,8 +171,8 @@ if (Astro.request.method === "POST") {
       }
     }
 
-    // NOTE: We no longer support client-side explicit removal of single-image fields.
-    // Images will be replaced only when the user uploads a new file for that field.
+    // REMARQUE : nous ne prenons plus en charge la suppression explicite côté client des champs image uniques.
+    // Les images ne seront remplacées que lorsque l'utilisateur téléverse un nouveau fichier pour ce champ.
 
     // If creating a new record and user uploaded files for galerie_photos,
     // remove any hidden `galerie_photos` data (which may contain data-URLs)

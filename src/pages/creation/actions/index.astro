@@ -1,5 +1,259 @@
 ---
-// Page pour les actions
+import Layout from "../../../layouts/Layout-back-office.astro";
+import slugify from "slugify";
+import ActionsSearch from "../../../components/ActionsSearch.astro";
+
+interface ActionItem {
+  id: string;
+  titre: string;
+  slug: string;
+  sous_titre?: string;
+  hero?: string;
+  updated?: string;
+  date_debut?: string;
+  date_fin?: string;
+  beneficiaire?: string;
+  type_de_chiffre?: string;
+}
+
+const actionsRaw: any[] = await Astro.locals.pb
+  .collection("actions")
+  .getFullList(200, { sort: "-updated" });
+const actions: ActionItem[] = actionsRaw.map((a) => ({
+  id: a.id,
+  titre: a.titre,
+  slug: slugify(a.titre || "", { lower: true, strict: true }),
+  sous_titre: a.sous_titre,
+  hero: a.hero,
+  updated: a.updated,
+  date_debut: a.date_debut,
+  date_fin: a.date_fin,
+  beneficiaire: a.beneficiaire,
+  type_de_chiffre: a.type_de_chiffre,
+}));
+
+const stats = { total: actions.length };
+
+// Lecture des query params pour initialiser les filtres
+const params = Astro.url.searchParams;
+const q = (params.get("q") || "").trim();
+
+const allActions = actions;
 ---
 
-<h1>Actions</h1>
+<Layout>
+  <div class="container mx-auto px-6 py-12 my-20">
+    <div
+      class="flex flex-col md:flex-row justify-between items-start gap-6 mb-8"
+    >
+      <div class="flex-1">
+        <h1 class="text-5xl md:text-6xl font-extrabold leading-tight">
+          Actions
+        </h1>
+        <p class="text-base text-base-content/70 mt-2">
+          Gérez vos actions — rechercher, filtrer et modifier rapidement.
+        </p>
+      </div>
+      <div class="flex items-center gap-4">
+        <a href="/actions" class="btn btn-ghost">Voir le site</a>
+        <a
+          href="/creation/actions/nouveau"
+          class="btn btn-primary btn-md shadow-lg rounded-full"
+          >Créer une action</a
+        >
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 items-start mb-8">
+      <div
+        class="p-4 bg-base-100 rounded-lg h-full max-h-full flex items-center gap-4 border border-base-300"
+      >
+        <p class="text-sm text-base-content/70">
+          Nombre d'actions total - <span class="text-accent font-bold text-2xl!"
+            >{stats.total}</span>
+        </p>
+      </div>
+      <div class="md:col-span-3 flex items-center gap-4">
+        <ActionsSearch value={q} />
+        <select id="sort-select" class="select select-bordered w-44">
+          <option value="updated_desc">Date ↓</option>
+          <option value="updated_asc">Date ↑</option>
+        </select>
+      </div>
+    </div>
+
+    <div id="pages-container" class="mb-8" data-initial-search={q}>
+      <!-- rendu initial fait côté serveur -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {
+          actions.map((a) => (
+            <div
+              class="bg-base-100 border border-base-300 rounded-xl p-6 shadow-sm min-h-35 flex flex-col justify-between"
+              data-action-id={a.id}
+              data-action-slug={a.slug}
+              data-title={a.titre}
+              data-type={a.type_de_chiffre}
+            >
+              <div>
+                <div class="flex items-start">
+                  <h3 class="text-2xl md:text-2xl font-bold leading-tight mr-4 truncate">
+                    {a.titre}
+                  </h3>
+                </div>
+                <p class="text-sm text-base-content/70 mt-3 mb-2 truncate">
+                  {a.sous_titre}
+                </p>
+
+                <p class="text-sm text-base-content/70 mb-4">
+                  {a.beneficiaire}
+                </p>
+                <p class="text-xs text-base-content/60 mb-2">
+                  {a.updated
+                    ? new Date(a.updated).toLocaleDateString("fr-FR", {
+                        day: "numeric",
+                        month: "short",
+                        year: "numeric",
+                      })
+                    : ""}
+                </p>
+              </div>
+              <div class="flex items-center justify-end gap-3">
+                <a
+                  class="text-sm text-base-content hover:underline"
+                  href={`/actions/${a.id}-${a.slug}`}
+                >
+                  Voir
+                </a>
+                <a
+                  class="btn btn-sm btn-outline rounded-full"
+                  href={`/creation/actions/edit/${a.id}-${a.slug}`}
+                >
+                  Modifier
+                </a>
+              </div>
+            </div>
+          ))
+        }
+      </div>
+    </div>
+  </div>
+</Layout>
+
+<script define:vars={{ allActions, q }}>
+  const actions = allActions;
+  let currentSearch = q || "";
+  let currentBeneficiary = "";
+
+  function formatDate(d) {
+    return new Date(d).toLocaleDateString("fr-FR", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    });
+  }
+
+  function getViewUrl(id, slug) {
+    return `/actions/${id}-${slug}`;
+  }
+  function getEditUrl(id, slug) {
+    return `/creation/actions/edit/${id}-${slug}`;
+  }
+
+  function filterActions(search, beneficiary) {
+    let filtered = actions.slice();
+    if (typeof console !== "undefined" && console.debug)
+      console.debug("filterActions input", { search, beneficiary });
+    if (beneficiary && beneficiary !== "")
+      filtered = filtered.filter((a) =>
+        (a.beneficiaire || "").toLowerCase().includes(beneficiary.toLowerCase()),
+      );
+    if (search && search !== "")
+      filtered = filtered.filter((a) =>
+        (a.titre || "").toLowerCase().includes(search.toLowerCase()),
+      );
+    if (typeof console !== "undefined" && console.debug)
+      console.debug("filterActions result count", filtered.length);
+    return filtered;
+  }
+
+  function renderActions(list) {
+    const container = document.getElementById("pages-container");
+    if (!container) return;
+    if (list.length === 0) {
+      container.innerHTML = `<div class="text-center py-12"><p class="text-base-content/60 mb-4">Aucune action trouvée</p></div>`;
+      return;
+    }
+    const html = `
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          ${list
+            .map(
+              (a) => `
+                    <div class="card bg-base-100 border" data-action-id="${a.id}" data-action-slug="${a.slug}">
+              <div class="card-body p-4">
+                <div class="flex justify-between items-start mb-2">
+                  <h3 class="card-title text-lg truncate">${a.titre}</h3>
+                  </div>
+                  <p class="text-sm text-base-content/70 mb-2 truncate">${a.sous_titre || ""}</p>
+                  <p class="text-sm text-base-content/70 mb-2">${a.beneficiaire || ""}</p>
+                  <p class="text-xs text-base-content/60 mb-2">
+                  ${a.updated
+                    ? new Date(a.updated).toLocaleDateString("fr-FR", {
+                        day: "numeric",
+                        month: "short",
+                        year: "numeric",
+                      })
+                    : ""}
+                </p>
+                  <div class="card-actions justify-end mt-4">
+                    <a class="btn btn-sm" href="${getViewUrl(a.id, a.slug)}">Voir</a>
+                                <a class="btn btn-sm" href="${getEditUrl(a.id, a.slug)}">Modifier</a>
+                                
+                </div>
+              </div>
+            </div>
+				`,
+            )
+            .join("")}
+			</div>
+		`;
+    container.innerHTML = html;
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    const pagesContainer = document.getElementById("pages-container");
+    let currentSearch = pagesContainer?.dataset.initialSearch || "";
+
+    // Listen for the reusable search component events
+    const sortSelect = document.getElementById("sort-select");
+
+    function applyAndRender() {
+      let filtered = filterActions(currentSearch, currentBeneficiary);
+      const sort =
+        sortSelect instanceof HTMLSelectElement
+          ? sortSelect.value
+          : "updated_desc";
+      filtered.sort((a, b) => {
+        const da = new Date(a.updated || 0).getTime();
+        const db = new Date(b.updated || 0).getTime();
+        return sort === "updated_asc" ? da - db : db - da;
+      });
+      renderActions(filtered);
+    }
+
+    document.addEventListener("actions-filter-change", (ev) => {
+      const d = ev.detail || {};
+      if (typeof console !== "undefined" && console.debug)
+        console.debug("actions-filter-change received", d);
+      currentSearch = d.search || "";
+      currentBeneficiary = d.beneficiary || "";
+      applyAndRender();
+    });
+
+    // initial render based on server-side params
+    if (sortSelect instanceof HTMLSelectElement)
+      sortSelect.addEventListener("change", applyAndRender);
+    applyAndRender();
+
+    // No individual delete buttons on this page; bulk delete handled by the form
+  });
+</script>

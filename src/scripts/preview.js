@@ -23,13 +23,13 @@ function isDataUrl(v) {
 }
 
 function renderField(prop) {
-  // update any element in the document that has the matching data-field
+  // Met à jour tout élément du document ayant l'attribut data-field correspondant
   const nodes = Array.from(document.querySelectorAll(`[data-field="${prop}"]`));
   if (!nodes.length) return;
   const val = previewState[prop];
   nodes.forEach((node) => {
     if (node.tagName === 'IMG') {
-      // debug: log updates to image fields
+      // debug : journaliser les mises à jour des champs image
       try { console.debug('[preview] update IMG', prop, val && (val.length ? (val.slice ? val.slice(0,50) : String(val)) : val)); } catch(e){}
       node.src = val || '';
       node.loading = 'lazy';
@@ -74,16 +74,16 @@ function renderGallery(arr) {
   });
   photoGrid.dataset.photoCount = String(arr.length);
 
-  // Wait for images to load then apply grid styles (to avoid layout flash)
+  // Attendre le chargement des images puis appliquer les styles de la grille (éviter un flash de mise en page)
   const imgs = photoGrid.querySelectorAll('img');
   let loaded = 0;
   const applyAndReveal = () => {
-    // If gallery.js is loaded as a plain script it exposes a global `setGridStyles`.
+    // Si `gallery.js` est chargé comme script simple, il expose une fonction globale `setGridStyles`.
     if (typeof window !== 'undefined' && typeof window.setGridStyles === 'function') {
       try { window.setGridStyles(); } catch (e) {}
     }
-    // Do not remove opacity here; gallery-display is the single source of truth
-    // for revealing the grid after layout has been applied.
+    // Ne pas retirer l'opacité ici ; `gallery-display` est la source de vérité
+    // pour révéler la grille après application du layout.
 
     if (!photoGrid.__previewBound) {
       photoGrid.addEventListener('click', function (e) {
@@ -152,7 +152,7 @@ function renderFormGalleryThumbnails(input, dataUrls) {
     container.appendChild(wrap);
   });
 
-  // bind click handler once per input
+  // Attacher le gestionnaire de clic une seule fois par input
   if (!container.__boundInputId || container.__boundInputId !== (input && input.id)) {
     container.addEventListener('click', function (e) {
       const btn = e.target.closest && e.target.closest('[data-index]');
@@ -175,7 +175,7 @@ function renderFormGalleryThumbnails(input, dataUrls) {
       }));
 
       Promise.all(readPromises).then((dataUrls) => {
-        // Keep existing server-stored images and append the newly selected files
+        // Conserver les images déjà présentes côté serveur puis ajouter les fichiers nouvellement sélectionnés
         const serverUrls = Array.isArray(previewState.galerie_photos)
           ? previewState.galerie_photos.filter(v => typeof v === 'string' && !isDataUrl(v))
           : [];
@@ -183,10 +183,10 @@ function renderFormGalleryThumbnails(input, dataUrls) {
         previewState.galerie_photos = combined;
         renderGallery(combined);
         updateHidden('galerie_photos');
-        // Thumbnails for the form show the selected files (data URLs)
+        // Les miniatures du formulaire affichent les fichiers sélectionnés (data URLs)
         renderFormGalleryThumbnails(input, dataUrls);
       }).catch(() => {
-        // keep any existing server images, but clear selected files UI
+        // Conserver les éventuelles images serveur, mais vider l'UI des fichiers sélectionnés
         previewState.galerie_photos = previewState.galerie_photos || [];
         renderGallery(previewState.galerie_photos);
         renderFormGalleryThumbnails(input, []);
@@ -310,13 +310,13 @@ function handleFileElement(el) {
   // image unique
   const f = files[0];
   const r = new FileReader();
-  r.onload = (ev) => {
+    r.onload = (ev) => {
     const dataUrl = ev.target.result;
     previewState[prop] = dataUrl;
     renderField(prop);
-    // ensure hidden input (if any) is synced for debugging/submit
+    // s'assurer que l'input hidden (le cas échéant) est synchronisé pour le debug/la soumission
     try { updateHidden(prop); } catch (e) {}
-    // render inline preview (in the form) for selected single-image fields
+    // afficher un aperçu inline (dans le formulaire) pour les champs image uniques sélectionnés
     try { renderFormImagePreview(prop, dataUrl); } catch (e) {}
   };
   r.readAsDataURL(f);
@@ -398,7 +398,7 @@ function initPreview() {
   // bind existing single-image remove buttons if any
   bindExistingSingleRemoveButtons();
 
-  // initial sync: populate hidden inputs from previewState so server receives values
+  // Synchronisation initiale : remplir les hidden inputs depuis previewState pour que le serveur reçoive les valeurs
   if (form) {
     // populate hidden inputs from previewState, but DO NOT populate the gallery hidden input
     // because placeholder images should not be counted as user-selected files.
@@ -407,7 +407,7 @@ function initPreview() {
       updateHidden(k);
     });
 
-    // ensure gallery hidden input is empty at start (only user selections populate it)
+    // s'assurer que le hidden de la galerie est vide au départ (seules les sélections utilisateur le rempliront)
     const hidGallery = document.getElementById('hidden_galerie_photos');
     if (hidGallery) hidGallery.value = '';
     // render existing gallery thumbnails with delete controls

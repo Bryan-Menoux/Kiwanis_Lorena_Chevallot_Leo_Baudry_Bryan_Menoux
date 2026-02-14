@@ -1,5 +1,6 @@
 ---
 import Layout from "../../layouts/Layout-back-office.astro";
+import ActionsSearch from "../../components/ActionsSearch.astro";
 import slugify from 'slugify';
 
 interface Page {
@@ -9,6 +10,7 @@ interface Page {
   status: 'actions' | 'projets' | 'produits' | 'draft';
   updatedAt: string;
   authorName: string;
+  beneficiary?: string;
 }
 
 const actions = await Astro.locals.pb.collection('actions').getFullList(200, { sort: '-updated' });
@@ -24,7 +26,8 @@ const pages: Page[] = [
     slug: slugify(action.titre, { lower: true, strict: true }),
     status: 'actions' as const,
     updatedAt: action.updated,
-    authorName: 'Admin' // Valeur par défaut
+    authorName: 'Admin', // Valeur par défaut
+    beneficiary: action.beneficiaire
   })),
   ...projets.map(projet => ({
     id: projet.id,
@@ -75,6 +78,13 @@ function getEditUrl(status: Page['status'], id: string, slug: string): string {
   if (status === 'produits') return `/creation/produits/${id}-${slug}`;
   if (status === 'draft') return `/creation/brouillons/${id}-${slug}`;
   return `/creation/pages/${id}-${slug}`;
+}
+
+function getViewUrl(status: Page['status'], id: string, slug: string): string {
+  if (status === 'actions') return `/actions/${id}-${slug}`;
+  if (status === 'projets') return `/projets/${id}-${slug}`;
+  if (status === 'produits') return `/produits/${id}-${slug}`;
+  return getEditUrl(status, id, slug);
 }
 
 function computeStats(pages: Page[]): { actions: number; projets: number; produits: number; drafts: number; total: number; } {
@@ -171,20 +181,7 @@ const allPages = db.pages;
         </div>
 
         <div class="flex flex-col md:flex-row gap-4">
-          <input
-            type="text"
-            id="search-input"
-            placeholder="Rechercher une page..."
-            class="input input-bordered flex-1"
-            value={q}
-          />
-          <select id="status-select" class="select select-bordered">
-            <option value="all">Tous les types</option>
-            <option value="actions">Actions</option>
-            <option value="projets">Projets</option>
-            <option value="produits">Produits</option>
-            <option value="draft">Brouillons</option>
-          </select>
+          <ActionsSearch showStatus={true} value={q} statusOptions={["all","actions","projets","produits","draft"]} />
         </div>
       </div>
     </div>
@@ -218,6 +215,7 @@ const allPages = db.pages;
                       <p class="text-sm text-base-content/60 mb-2">Par {page.authorName}</p>
                       <p class="text-sm text-base-content/60">{formatDate(page.updatedAt)}</p>
                       <div class="card-actions justify-end mt-4">
+                        <a href={getViewUrl(page.status, page.id, page.slug)} class="btn btn-sm">Voir</a>
                         <a href={getEditUrl(page.status, page.id, page.slug)} class="btn btn-sm">Modifier</a>
                       </div>
                     </div>
@@ -237,20 +235,36 @@ const allPages = db.pages;
   const pages = allPages;
   let currentSearch = q;
   let currentStatus = status;
+  let currentBenef = '';
 
   function formatDate(d) {
     return new Date(d).toLocaleString('fr-FR', { dateStyle: 'medium', timeStyle: 'short' });
   }
 
   function getEditUrl(status, id, slug) {
-    if (status === 'actions') return `/creation/actions/${id}-${slug}`;
+    if (status === 'actions') return `/creation/actions/edit/${id}-${slug}`;
     if (status === 'projets') return `/creation/projets/${id}-${slug}`;
     if (status === 'produits') return `/creation/produits/${id}-${slug}`;
     if (status === 'draft') return `/creation/brouillons/${id}-${slug}`;
     return `/creation/pages/${id}-${slug}`;
   }
 
-  function filterPages(search, statusFilter) {
+  function getViewUrl(status, id, slug) {
+    if (status === 'actions') return `/actions/${id}-${slug}`;
+    if (status === 'projets') return `/projets/${id}-${slug}`;
+    if (status === 'produits') return `/produits/${id}-${slug}`;
+    return getEditUrl(status, id, slug);
+  }
+
+  function getStatusBadge(status) {
+    if (status === 'actions') return { label: 'Actions', className: 'badge-success' };
+    if (status === 'projets') return { label: 'Projets', className: 'badge-primary' };
+    if (status === 'produits') return { label: 'Produits', className: 'badge-secondary' };
+    if (status === 'draft') return { label: 'Brouillon', className: 'badge-ghost' };
+    return { label: status, className: 'badge' };
+  }
+
+  function filterPages(search, statusFilter, benef) {
     let filtered = pages.slice();
 
     // Filtre par statut
@@ -264,6 +278,14 @@ const allPages = db.pages;
       filtered = filtered.filter(p =>
         p.title.toLowerCase().includes(token) ||
         p.slug.toLowerCase().includes(token)
+      );
+    }
+
+    // Filtre par bénéficiaire (seulement pour les actions)
+    if (benef) {
+      const benefToken = benef.toLowerCase();
+      filtered = filtered.filter(p =>
+        p.status === 'actions' && (p.beneficiary || '').toLowerCase().includes(benefToken)
       );
     }
 
@@ -319,12 +341,19 @@ const allPages = db.pages;
 
       // Réattacher l'événement pour effacer les filtres
       document.getElementById('clear-filters-empty').addEventListener('click', () => {
-        document.getElementById('search-input').value = '';
-        document.getElementById('status-select').value = 'all';
-        currentSearch = '';
-        currentStatus = 'all';
-        updateActiveFilters(currentSearch, currentStatus);
-        renderPages(filterPages(currentSearch, currentStatus));
+        const root = document.querySelector('.actions-search');
+        if (root instanceof HTMLElement) {
+          const si = root.querySelector('#search-input');
+          const st = root.querySelector('#status-select');
+          if (si instanceof HTMLInputElement) si.value = '';
+          if (st instanceof HTMLSelectElement) st.value = 'all';
+          document.dispatchEvent(new CustomEvent('actions-filter-change', { detail: { search: '', status: 'all' } }));
+        } else {
+          currentSearch = '';
+          currentStatus = 'all';
+          updateActiveFilters(currentSearch, currentStatus);
+          renderPages(filterPages(currentSearch, currentStatus));
+        }
       });
     } else {
       const pagesHtml = `
@@ -342,6 +371,7 @@ const allPages = db.pages;
                   <p class="text-sm text-base-content/60 mb-2">Par ${page.authorName}</p>
                   <p class="text-sm text-base-content/60">${formatDate(page.updatedAt)}</p>
                   <div class="card-actions justify-end mt-4">
+                    <a href="${getViewUrl(page.status, page.id, page.slug)}" class="btn btn-sm">Voir</a>
                     <a href="${getEditUrl(page.status, page.id, page.slug)}" class="btn btn-sm">Modifier</a>
                   </div>
                 </div>
@@ -356,35 +386,41 @@ const allPages = db.pages;
 
   // Initialisation
   document.addEventListener('DOMContentLoaded', () => {
-    const searchInput = document.getElementById('search-input');
-    const statusSelect = document.getElementById('status-select');
     const clearFiltersBtn = document.getElementById('clear-filters');
 
-    // Définir les valeurs initiales
-    searchInput.value = currentSearch;
-    statusSelect.value = currentStatus;
+    // Listen to the shared ActionsSearch events
+    document.addEventListener('actions-filter-change', (ev) => {
+      const d = ev.detail || {};
+      currentSearch = d.search || '';
+      currentBenef = d.beneficiary || '';
+      // prefer status if provided, else keep existing
+      if (typeof d.status !== 'undefined') currentStatus = d.status || 'all';
+      updateActiveFilters(currentSearch, currentStatus);
+      renderPages(filterPages(currentSearch, currentStatus, currentBenef));
+    });
+
+    // initial render and active filters
     updateActiveFilters(currentSearch, currentStatus);
-
-    // Événements pour les filtres
-    searchInput.addEventListener('input', (e) => {
-      currentSearch = e.target.value.trim();
-      updateActiveFilters(currentSearch, currentStatus);
-      renderPages(filterPages(currentSearch, currentStatus));
-    });
-
-    statusSelect.addEventListener('change', (e) => {
-      currentStatus = e.target.value;
-      updateActiveFilters(currentSearch, currentStatus);
-      renderPages(filterPages(currentSearch, currentStatus));
-    });
+    renderPages(filterPages(currentSearch, currentStatus, currentBenef));
 
     clearFiltersBtn.addEventListener('click', () => {
-      searchInput.value = '';
-      statusSelect.value = 'all';
-      currentSearch = '';
-      currentStatus = 'all';
-      updateActiveFilters(currentSearch, currentStatus);
-      renderPages(filterPages(currentSearch, currentStatus));
+      // Reset component inputs if present
+      const root = document.querySelector('.actions-search');
+      if (root instanceof HTMLElement) {
+        const si = root.querySelector('#search-input');
+        const st = root.querySelector('#status-select');
+        if (si instanceof HTMLInputElement) si.value = '';
+        if (st instanceof HTMLSelectElement) st.value = 'all';
+        // emit cleared state
+        document.dispatchEvent(new CustomEvent('actions-filter-change', { detail: { search: '', status: 'all' } }));
+      } else {
+        // fallback
+        currentSearch = '';
+        currentBenef = '';
+        currentStatus = 'all';
+        updateActiveFilters(currentSearch, currentStatus);
+        renderPages(filterPages(currentSearch, currentStatus, currentBenef));
+      }
     });
   });
 </script>

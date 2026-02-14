@@ -102,6 +102,12 @@ if (Astro.request.method === "POST") {
       }
     }
 
+    // Ensure we don't accidentally send client-side gallery JSON/data-URLs
+    // to PocketBase. For creation we rely on uploaded File objects in `files.galerie_photos`.
+    if (Object.prototype.hasOwnProperty.call(data, 'galerie_photos')) {
+      delete data.galerie_photos;
+    }
+
     // Créer l'action dans PocketBase
     const newAction = await Astro.locals.pb.collection("actions").create({
       ...data,

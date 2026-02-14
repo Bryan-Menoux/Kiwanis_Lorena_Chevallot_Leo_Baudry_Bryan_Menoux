@@ -1,0 +1,96 @@
+---
+const props = Astro.props || {};
+const {
+  value = "",
+  showStatus = false,
+  statusOptions = [],
+} = props;
+---
+
+<div
+  class="p-4 bg-base-100 rounded-lg border border-base-300 actions-search w-full"
+  data-initial-search={value}
+>
+  <div class="flex flex-col md:flex-row gap-4 items-center w-full">
+    <input
+      id="search-input"
+      class="input input-bordered flex-1 w-full"
+      type="text"
+      placeholder="Rechercher par titre..."
+    />
+    <input
+      id="beneficiary-input"
+      class="input input-bordered w-44"
+      type="text"
+      placeholder="Filtre bénéficiaire"
+    />
+    {showStatus && (
+      <select id="status-select" class="select select-bordered w-44">
+        {statusOptions.map((s: string) => <option value={s}>{s}</option>)}
+      </select>
+    )}
+  </div>
+</div>
+
+<script>
+  (function() {
+    function init() {
+      if (typeof console !== 'undefined' && console.debug) console.debug('ActionsSearch init');
+      const root = document.querySelector(".actions-search");
+      if (!(root instanceof HTMLElement)) {
+        if (typeof console !== 'undefined' && console.debug) console.debug('ActionsSearch: root not found');
+        return;
+      }
+
+      const searchInput = root.querySelector("#search-input");
+      const beneficiaryInput = root.querySelector("#beneficiary-input");
+      const statusSelect = root.querySelector('#status-select');
+      const initialSearch = root.dataset.initialSearch || "";
+
+      if (typeof console !== 'undefined' && console.debug) console.debug('ActionsSearch init');
+      
+      if (searchInput instanceof HTMLInputElement) searchInput.value = initialSearch;
+      if (typeof console !== 'undefined' && console.debug) console.debug('ActionsSearch inputs initialized');
+
+      function emit() {
+        const detail = {
+          search: (searchInput instanceof HTMLInputElement) ? searchInput.value.trim() : "",
+          beneficiary: (beneficiaryInput instanceof HTMLInputElement) ? beneficiaryInput.value.trim() : "",
+          status: (statusSelect instanceof HTMLSelectElement) ? statusSelect.value : "",
+        };
+        if (typeof console !== 'undefined' && console.debug) console.debug('ActionsSearch emit', detail);
+        document.dispatchEvent(new CustomEvent("actions-filter-change", { detail, bubbles: true }));
+      }
+
+      // Attach listeners
+      if (searchInput instanceof Element) {
+        searchInput.addEventListener('input', (ev: Event) => {
+          const tgt = ev.target as HTMLElement & { value?: string; id?: string };
+          if (typeof console !== 'undefined' && console.debug) console.debug('ActionsSearch input event', { id: tgt?.id, value: tgt?.value });
+          emit();
+        });
+        searchInput.addEventListener('change', emit);
+      }
+      if (beneficiaryInput instanceof Element) {
+        beneficiaryInput.addEventListener('input', (ev: Event) => {
+          const tgt = ev.target as HTMLElement & { value?: string; id?: string };
+          if (typeof console !== 'undefined' && console.debug) console.debug('ActionsSearch beneficiary event', { id: tgt?.id, value: tgt?.value });
+          emit();
+        });
+        beneficiaryInput.addEventListener('change', emit);
+      }
+      if (statusSelect instanceof Element) {
+        statusSelect.addEventListener('change', emit);
+      }
+
+      // emit initial state once
+      emit();
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', init);
+    } else {
+      init();
+    }
+  })();
+</script>
