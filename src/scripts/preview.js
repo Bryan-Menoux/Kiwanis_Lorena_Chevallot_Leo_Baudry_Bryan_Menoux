@@ -1,13 +1,3 @@
-// Script client responsable de la prévisualisation live sur la page de création
-// Modifications réalisées :
-// - Lecture d'un objet placeholder injecté côté serveur via `window.__previewData`
-// - Mise à jour du DOM en ciblant les attributs `data-field` dans `#actionPreview`
-// - Gestion des champs fichier (FileReader) pour aperçus d'images
-// - Ajout de logs et d'un export `window.__initPreview` pour faciliter le debug
-// Ce fichier est chargé comme module externe (import ?url dans l'ASTRO) pour
-// conserver le même timing d'exécution qu'une ressource servie (comme précédemment).
-
-
 // État d'exécution pour la prévisualisation live
 let previewState = {};
 
@@ -33,13 +23,14 @@ function isDataUrl(v) {
 }
 
 function renderField(prop) {
-  const root = document.getElementById('actionPreview');
-  if (!root) return;
-  const nodes = Array.from(root.querySelectorAll(`[data-field="${prop}"]`));
+  // update any element in the document that has the matching data-field
+  const nodes = Array.from(document.querySelectorAll(`[data-field="${prop}"]`));
   if (!nodes.length) return;
   const val = previewState[prop];
   nodes.forEach((node) => {
     if (node.tagName === 'IMG') {
+      // debug: log updates to image fields
+      try { console.debug('[preview] update IMG', prop, val && (val.length ? (val.slice ? val.slice(0,50) : String(val)) : val)); } catch(e){}
       node.src = val || '';
       node.loading = 'lazy';
       node.decoding = 'async';
@@ -91,7 +82,8 @@ function renderGallery(arr) {
     if (typeof window !== 'undefined' && typeof window.setGridStyles === 'function') {
       try { window.setGridStyles(); } catch (e) {}
     }
-    photoGrid.classList.remove('opacity-0');
+    // Do not remove opacity here; gallery-display is the single source of truth
+    // for revealing the grid after layout has been applied.
 
     if (!photoGrid.__previewBound) {
       photoGrid.addEventListener('click', function (e) {
@@ -183,17 +175,74 @@ function renderFormGalleryThumbnails(input, dataUrls) {
       }));
 
       Promise.all(readPromises).then((dataUrls) => {
-        previewState.galerie_photos = dataUrls;
-        renderGallery(dataUrls);
+        // Keep existing server-stored images and append the newly selected files
+        const serverUrls = Array.isArray(previewState.galerie_photos)
+          ? previewState.galerie_photos.filter(v => typeof v === 'string' && !isDataUrl(v))
+          : [];
+        const combined = serverUrls.concat(dataUrls);
+        previewState.galerie_photos = combined;
+        renderGallery(combined);
         updateHidden('galerie_photos');
+        // Thumbnails for the form show the selected files (data URLs)
         renderFormGalleryThumbnails(input, dataUrls);
       }).catch(() => {
-        previewState.galerie_photos = [];
-        renderGallery([]);
+        // keep any existing server images, but clear selected files UI
+        previewState.galerie_photos = previewState.galerie_photos || [];
+        renderGallery(previewState.galerie_photos);
         renderFormGalleryThumbnails(input, []);
       });
     });
     container.__boundInputId = input.id;
+  }
+}
+
+function renderExistingThumbnails(arr) {
+  const container = document.getElementById('galleryExisting');
+  if (!container) return;
+  container.innerHTML = '';
+  arr.forEach((url, idx) => {
+    const wrap = document.createElement('div');
+    wrap.className = 'relative overflow-hidden rounded-md';
+    wrap.style.paddingBottom = '100%';
+
+    const img = document.createElement('img');
+    img.src = url;
+    img.alt = 'Miniature existante';
+    img.className = 'absolute inset-0 w-full h-full object-cover';
+    wrap.appendChild(img);
+
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'absolute top-1 right-1 bg-black/60 text-white rounded-full w-6 h-6 flex items-center justify-center';
+    btn.setAttribute('data-existing-index', String(idx));
+    btn.innerHTML = '×';
+    wrap.appendChild(btn);
+
+    container.appendChild(wrap);
+  });
+
+  if (!container.__bound) {
+    container.addEventListener('click', function (e) {
+      const btn = e.target.closest && e.target.closest('[data-existing-index]');
+      if (!btn) return;
+      const idx = parseInt(btn.getAttribute('data-existing-index'), 10);
+      if (Number.isNaN(idx)) return;
+      const url = arr[idx];
+      // mark removed in hidden input
+      const hidRemove = document.getElementById('hidden_remove_galerie_photos');
+      container.__removed = container.__removed || [];
+      container.__removed.push(url);
+      if (hidRemove) hidRemove.value = JSON.stringify(container.__removed);
+      // remove from previewState.galerie_photos
+      previewState.galerie_photos = (previewState.galerie_photos || []).filter((v) => v !== url);
+      // re-render existing and main gallery
+      const remainingExisting = (previewState.galerie_photos || []).filter((v) => typeof v === 'string' && !isDataUrl(v));
+      renderExistingThumbnails(remainingExisting);
+      renderGallery(previewState.galerie_photos || []);
+      // also update hidden galleries
+      updateHidden('galerie_photos');
+    });
+    container.__bound = true;
   }
 }
 
@@ -240,16 +289,21 @@ function handleFileElement(el) {
       r.readAsDataURL(f);
     }));
 
-    Promise.all(readPromises).then((dataUrls) => {
-      previewState.galerie_photos = dataUrls;
-      renderGallery(dataUrls);
-      updateHidden('galerie_photos');
-      renderFormGalleryThumbnails(input, dataUrls);
-    }).catch(() => {
-      previewState.galerie_photos = [];
-      renderGallery([]);
-      renderFormGalleryThumbnails(input, []);
-    });
+      Promise.all(readPromises).then((dataUrls) => {
+        // Preserve server-side images and append remaining selected files
+        const serverUrls = Array.isArray(previewState.galerie_photos)
+          ? previewState.galerie_photos.filter(v => typeof v === 'string' && !isDataUrl(v))
+          : [];
+        const combined = serverUrls.concat(dataUrls);
+        previewState.galerie_photos = combined;
+        renderGallery(combined);
+        updateHidden('galerie_photos');
+        renderFormGalleryThumbnails(input, dataUrls);
+      }).catch(() => {
+        previewState.galerie_photos = previewState.galerie_photos || [];
+        renderGallery(previewState.galerie_photos);
+        renderFormGalleryThumbnails(input, []);
+      });
 
     return;
   }
@@ -257,10 +311,60 @@ function handleFileElement(el) {
   const f = files[0];
   const r = new FileReader();
   r.onload = (ev) => {
-    previewState[prop] = ev.target.result;
+    const dataUrl = ev.target.result;
+    previewState[prop] = dataUrl;
     renderField(prop);
+    // ensure hidden input (if any) is synced for debugging/submit
+    try { updateHidden(prop); } catch (e) {}
+    // render inline preview (in the form) for selected single-image fields
+    try { renderFormImagePreview(prop, dataUrl); } catch (e) {}
   };
   r.readAsDataURL(f);
+}
+
+function renderFormImagePreview(prop, dataUrl) {
+  const container = document.getElementById(`preview_${prop}`);
+  if (!container) return;
+  container.innerHTML = '';
+  if (!dataUrl || !isDataUrl(dataUrl)) return;
+
+  const wrap = document.createElement('div');
+  wrap.className = 'relative overflow-hidden rounded-md';
+  wrap.style.paddingBottom = '56%';
+
+  const img = document.createElement('img');
+  img.src = dataUrl;
+  img.alt = 'Aperçu';
+  img.className = 'absolute inset-0 w-full h-full object-cover';
+  wrap.appendChild(img);
+
+  const btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'absolute top-1 right-1 bg-black/60 text-white rounded-full w-6 h-6 flex items-center justify-center';
+  btn.innerHTML = '×';
+  wrap.appendChild(btn);
+
+  container.appendChild(wrap);
+
+  // remove handler
+  btn.addEventListener('click', function () {
+    // clear the corresponding file input
+    const input = document.querySelector(`[data-prop-file="${prop}"]`);
+    if (input) {
+      try {
+        input.value = '';
+        if (input.__dt) {
+          input.__dt = new DataTransfer();
+          input.files = input.__dt.files;
+        }
+      } catch (e) {}
+    }
+    // remove from previewState and hidden
+    previewState[prop] = '';
+    renderField(prop);
+    updateHidden(prop);
+    container.innerHTML = '';
+  });
 }
 
 function renderAll() {
@@ -291,6 +395,9 @@ function initPreview() {
 
   renderAll();
 
+  // bind existing single-image remove buttons if any
+  bindExistingSingleRemoveButtons();
+
   // initial sync: populate hidden inputs from previewState so server receives values
   if (form) {
     // populate hidden inputs from previewState, but DO NOT populate the gallery hidden input
@@ -303,6 +410,9 @@ function initPreview() {
     // ensure gallery hidden input is empty at start (only user selections populate it)
     const hidGallery = document.getElementById('hidden_galerie_photos');
     if (hidGallery) hidGallery.value = '';
+    // render existing gallery thumbnails with delete controls
+    const existing = Array.isArray(previewState.galerie_photos) ? previewState.galerie_photos.filter(v => typeof v === 'string' && !isDataUrl(v)) : [];
+    if (existing.length) renderExistingThumbnails(existing);
   }
 
   // brancher les écouteurs d'événements
@@ -334,6 +444,42 @@ function initPreview() {
       updateHidden('galerie_photos');
     });
   }
+}
+
+function bindExistingSingleRemoveButtons() {
+  const btns = document.querySelectorAll('.existing-single-remove');
+  if (!btns || !btns.length) return;
+  btns.forEach((btn) => {
+    if (btn.__bound) return;
+    btn.addEventListener('click', function (e) {
+      const prop = btn.getAttribute('data-prop');
+      if (!prop) return;
+      // mark remove hidden input for server
+      const hid = document.getElementById(`remove_${prop}`);
+      if (hid) hid.value = '1';
+      // remove DOM preview
+      const container = btn.closest && btn.closest('[id^="existing_"]') ? btn.closest('[id^="existing_"]') : btn.parentElement && btn.parentElement.parentElement;
+      if (container && container.remove) container.remove();
+      // update previewState and hidden value
+      previewState[prop] = '';
+      renderField(prop);
+      // ensure a hidden input exists for the actual image field (so formData contains the key)
+      const form = document.getElementById('leftForm');
+      if (form) {
+        let hidField = document.getElementById(`hidden_${prop}`);
+        if (!hidField) {
+          hidField = document.createElement('input');
+          hidField.type = 'hidden';
+          hidField.id = `hidden_${prop}`;
+          hidField.name = prop;
+          form.appendChild(hidField);
+        }
+        hidField.value = '';
+      }
+      updateHidden(prop);
+    });
+    btn.__bound = true;
+  });
 }
 
 // exposer un déclencheur manuel pour le débogage

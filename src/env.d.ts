@@ -5,4 +5,10 @@ declare global {
       pb: TypedPocketBase;
     }
   }
+
+  interface Window {
+    __previewData?: any;
+    setGridStyles?: (count: number) => void;
+    openModal?: (url: string) => void;
+  }
 }

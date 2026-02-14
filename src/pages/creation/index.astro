@@ -70,7 +70,7 @@ function getStatusBadge(status: Page['status']) {
 }
 
 function getEditUrl(status: Page['status'], id: string, slug: string): string {
-  if (status === 'actions') return `/creation/actions/${id}-${slug}`;
+  if (status === 'actions') return `/creation/actions/edit/${id}-${slug}`;
   if (status === 'projets') return `/creation/projets/${id}-${slug}`;
   if (status === 'produits') return `/creation/produits/${id}-${slug}`;
   if (status === 'draft') return `/creation/brouillons/${id}-${slug}`;

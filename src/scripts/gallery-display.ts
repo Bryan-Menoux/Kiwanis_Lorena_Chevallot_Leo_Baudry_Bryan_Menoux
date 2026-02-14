@@ -1,8 +1,3 @@
-/**
- * Minimal gallery display script: wait for images, then call window.setGridStyles()
- * and reveal the grid. No layout logic here; resize & click are handled in gallery.js.
- */
-
 document.addEventListener("DOMContentLoaded", () => {
   const grid = document.getElementById("photoGrid");
   if (!grid) return;
@@ -10,10 +5,21 @@ document.addEventListener("DOMContentLoaded", () => {
   const imgs = Array.from(grid.querySelectorAll('img')) as HTMLImageElement[];
 
   const reveal = () => {
-    if (typeof (window as any) !== 'undefined' && typeof (window as any).setGridStyles === 'function') {
-      (window as any).setGridStyles();
+    const tryApply = () => {
+      if (typeof (window as any) !== 'undefined' && typeof (window as any).setGridStyles === 'function') {
+        try { (window as any).setGridStyles(); } catch (e) {}
+        grid.classList.remove('opacity-0');
+        return true;
+      }
+      return false;
+    };
+
+    if (!tryApply()) {
+      // setGridStyles not yet available; wait briefly
+      const to = setInterval(() => {
+        if (tryApply()) clearInterval(to);
+      }, 50);
     }
-    grid.classList.remove('opacity-0');
   };
 
   if (imgs.length === 0) {

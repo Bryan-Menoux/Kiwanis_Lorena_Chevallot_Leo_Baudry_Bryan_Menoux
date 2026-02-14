@@ -15,7 +15,8 @@
     if (!grid) return;
 
     const count = Math.max(0, parseInt(grid.dataset.photoCount || '0', 10) || 0);
-    const items = Array.from(grid.children).filter((c) => c instanceof HTMLElement);
+    // Only consider direct children that represent gallery items (have data-photo-url)
+    const items = Array.from(grid.children).filter((c) => c instanceof HTMLElement && c.hasAttribute && c.hasAttribute('data-photo-url'));
     const imgs = Array.from(grid.querySelectorAll('img'));
 
     // Clean inline styles before recalculating
@@ -38,7 +39,9 @@
 
     // Desktop: two columns
     grid.style.gridTemplateColumns = '1fr 1fr';
-    const n = Math.min(count, 8);
+    const effectiveCount = Math.min(8, Math.max(count, items.length, imgs.length));
+    const n = Math.min(effectiveCount, 8);
+    console.log('gallery setGridStyles', { hasGrid: !!grid, count, items: items.length, imgs: imgs.length, n });
     if (n === 0) {
       grid.style.gridTemplateAreas = '';
       return;
@@ -116,7 +119,7 @@
 
     grid.style.gridTemplateAreas = template;
 
-    // assign gridArea for each item
+    // assign gridArea for each item (only for items that exist)
     items.forEach((it, i) => {
       if (i < mapping.length && mapping[i]) it.style.gridArea = mapping[i];
       else it.style.gridArea = letter(i);
