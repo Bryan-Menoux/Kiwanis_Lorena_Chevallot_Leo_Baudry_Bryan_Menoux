@@ -1,5 +1,6 @@
 ---
 import wait from "../assets/wait.svg";
+import { formatDateShort } from "../utils/utilitaires.js";
 
 type User = {
   id: string;
@@ -32,9 +33,7 @@ const user = Astro.props.user as any as User;
     <p class="text-xs text-base-content/60 break-all">{user.email}</p>
     <p class="text-xs text-base-content/50">
       Rejeté le{" "}
-      {user.rejectionDate
-        ? new Date(user.rejectionDate).toLocaleDateString("fr-FR")
-        : "—"}
+      {user.rejectionDate ? formatDateShort(user.rejectionDate) : "—"}
     </p>
   </div>
   </div>

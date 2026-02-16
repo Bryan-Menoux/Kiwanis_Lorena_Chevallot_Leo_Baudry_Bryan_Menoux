@@ -1,6 +1,7 @@
 ---
 import Layout from "../../../../layouts/Layout-back-office.astro";
 import slugify from "slugify";
+import { formatDateShort } from "../../../../utils/utilitaires.js";
 import ActionsSearch from "../../../../components/ActionsSearch.astro";
 
 let error = "";
@@ -147,15 +148,7 @@ try {
                 <p class="text-sm text-base-content/70 mb-4">
                   {a.beneficiaire}
                 </p>
-                <p class="text-xs text-base-content/60 mb-2">
-                  {a.updated
-                    ? new Date(a.updated).toLocaleDateString("fr-FR", {
-                        day: "numeric",
-                        month: "short",
-                        year: "numeric",
-                      })
-                    : ""}
-                </p>
+                <p class="text-xs text-base-content/60 mb-2">{a.updated ? formatDateShort(a.updated) : ""}</p>
               </div>
               <div class="flex items-center justify-end gap-3">
                 <a

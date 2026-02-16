@@ -1,61 +1,75 @@
 // État d'exécution pour la prévisualisation live
 let previewState = {};
 
-// Script simplifié (scopé à `#actionPreview`)
+import { formatDateLong } from '../utils/utilitaires.js';
+
+// raccourcis pour sélectionner des éléments DOM
 const qs = (sel, ctx = document) => ctx.querySelector(sel);
 const qsa = (sel, ctx = document) => Array.from((ctx || document).querySelectorAll(sel));
 
+// échapper les entités HTML basiques pour éviter l'injection lors de l'insertion en HTML
 function escapeHtml(str) {
   return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
+// formate un intervalle de dates : retour vide si aucune date, sinon "début au fin" ou la valeur disponible
 function formatDateRange(d1, d2) {
   if (!d1 && !d2) return '';
   try {
-    const start = d1 ? new Date(d1).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }) : '';
-    const end = d2 ? new Date(d2).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }) : '';
+    const start = d1 ? formatDateLong(d1) : '';
+    const end = d2 ? formatDateLong(d2) : '';
     return start && end ? `${start} au ${end}` : (start || end);
   } catch (e) { return ''; }
 }
 
+// détecte si une valeur est une data URL ou blob URL
 function isDataUrl(v) {
   return typeof v === 'string' && (v.startsWith('data:') || v.startsWith('blob:'));
 }
 
+// met à jour tous les éléments ayant l'attribut data-field égal à prop
 function renderField(prop) {
-  // Met à jour tout élément du document ayant l'attribut data-field correspondant
   const nodes = Array.from(document.querySelectorAll(`[data-field="${prop}"]`));
   if (!nodes.length) return;
   const val = previewState[prop];
   nodes.forEach((node) => {
     if (node.tagName === 'IMG') {
-      // debug : journaliser les mises à jour des champs image
-      try { console.debug('[preview] update IMG', prop, val && (val.length ? (val.slice ? val.slice(0,50) : String(val)) : val)); } catch(e){}
+      // image : définir la source et paramètres de chargement
+      try { console.debug('[preview] update IMG', prop, val && (val.length ? (val.slice ? val.slice(0,50) : String(val)) : val)); } catch (e) {}
       node.src = val || '';
       node.loading = 'lazy';
       node.decoding = 'async';
-      // image updated
       return;
     }
+
+    // champs texte multi-lignes stockés avec des sauts de ligne -> paragraphes
     if (prop.startsWith('texte_partie') || prop === 'description_remerciements') {
       node.innerHTML = (String(val || '')).split('\n').map(l => `<p>${escapeHtml(l)}</p>`).join('');
       return;
     }
+
+    // champs de date affichés via la fonction de formatage d'intervalle
     if (prop === 'dates' || prop === 'date_debut' || prop === 'date_fin') {
       const d = formatDateRange(previewState.date_debut, previewState.date_fin);
       node.textContent = d;
       return;
     }
+
+    // cas général : texte simple
     node.textContent = val ?? '';
   });
 }
 
+// rend la galerie principale (élément #photoGrid dans #actionPreview)
 function renderGallery(arr) {
   const root = document.getElementById('actionPreview');
   if (!root) return;
+
   const photoGrid = root.querySelector('#photoGrid');
   if (!photoGrid) return;
   photoGrid.innerHTML = '';
+
+  // créer les vignettes
   arr.forEach((url, idx) => {
     const div = document.createElement('div');
     div.className = 'relative w-full h-full overflow-hidden rounded-box cursor-pointer';
@@ -74,17 +88,16 @@ function renderGallery(arr) {
   });
   photoGrid.dataset.photoCount = String(arr.length);
 
-  // Attendre le chargement des images puis appliquer les styles de la grille (éviter un flash de mise en page)
+  // attendre que toutes les images aient déclenché load/complete pour appliquer le layout
   const imgs = photoGrid.querySelectorAll('img');
   let loaded = 0;
   const applyAndReveal = () => {
-    // Si `gallery.js` est chargé comme script simple, il expose une fonction globale `setGridStyles`.
+    // si un script externe expose setGridStyles, l'appeler
     if (typeof window !== 'undefined' && typeof window.setGridStyles === 'function') {
       try { window.setGridStyles(); } catch (e) {}
     }
-    // Ne pas retirer l'opacité ici ; `gallery-display` est la source de vérité
-    // pour révéler la grille après application du layout.
 
+    // bind d'ouverture modal sur clic : on cherche l'élément le plus proche avec data-photo-index
     if (!photoGrid.__previewBound) {
       photoGrid.addEventListener('click', function (e) {
         const photoEl = e.target.closest && e.target.closest('[data-photo-index]') ? e.target.closest('[data-photo-index]') : null;
@@ -102,6 +115,7 @@ function renderGallery(arr) {
   if (imgs.length === 0) {
     applyAndReveal();
   } else {
+    // écouter load/error pour chaque image et invoquer applyAndReveal lorsque toutes sont traitées
     imgs.forEach((img) => {
       if (img.complete) {
         loaded += 1;
@@ -120,6 +134,7 @@ function renderGallery(arr) {
   }
 }
 
+// synchronise la valeur d'un hidden input avec previewState[prop]
 function updateHidden(prop) {
   const hid = document.getElementById(`hidden_${prop}`);
   if (!hid) return;
@@ -127,10 +142,12 @@ function updateHidden(prop) {
   hid.value = Array.isArray(val) ? JSON.stringify(val) : (val ?? '');
 }
 
+// affiche les miniatures (data URLs) sélectionnées dans le formulaire
 function renderFormGalleryThumbnails(input, dataUrls) {
   const container = document.getElementById('gallerySelected');
   if (!container) return;
   container.innerHTML = '';
+
   dataUrls.forEach((url, idx) => {
     const wrap = document.createElement('div');
     wrap.className = 'relative overflow-hidden rounded-md';
@@ -152,7 +169,7 @@ function renderFormGalleryThumbnails(input, dataUrls) {
     container.appendChild(wrap);
   });
 
-  // Attacher le gestionnaire de clic une seule fois par input
+  // attacher un seul handler par input pour gérer la suppression d'une miniature sélectionnée
   if (!container.__boundInputId || container.__boundInputId !== (input && input.id)) {
     container.addEventListener('click', function (e) {
       const btn = e.target.closest && e.target.closest('[data-index]');
@@ -160,6 +177,7 @@ function renderFormGalleryThumbnails(input, dataUrls) {
       const idx = parseInt(btn.getAttribute('data-index'), 10);
       if (Number.isNaN(idx)) return;
 
+      // reconstruire DataTransfer sans l'élément supprimé
       const oldDt = input.__dt || new DataTransfer();
       const filesArr = Array.from(oldDt.files);
       filesArr.splice(idx, 1);
@@ -168,6 +186,7 @@ function renderFormGalleryThumbnails(input, dataUrls) {
       input.__dt = newDt;
       input.files = newDt.files;
 
+      // relire les fichiers restants en data URLs pour ré-afficher les miniatures
       const readPromises = Array.from(newDt.files).map((f) => new Promise((res) => {
         const r = new FileReader();
         r.onload = (ev) => res(ev.target.result);
@@ -175,7 +194,7 @@ function renderFormGalleryThumbnails(input, dataUrls) {
       }));
 
       Promise.all(readPromises).then((dataUrls) => {
-        // Conserver les images déjà présentes côté serveur puis ajouter les fichiers nouvellement sélectionnés
+        // combiner les URLs déjà présentes côté serveur et les nouvelles data URLs
         const serverUrls = Array.isArray(previewState.galerie_photos)
           ? previewState.galerie_photos.filter(v => typeof v === 'string' && !isDataUrl(v))
           : [];
@@ -183,10 +202,10 @@ function renderFormGalleryThumbnails(input, dataUrls) {
         previewState.galerie_photos = combined;
         renderGallery(combined);
         updateHidden('galerie_photos');
-        // Les miniatures du formulaire affichent les fichiers sélectionnés (data URLs)
+        // réafficher les miniatures à partir des data URLs actuelles
         renderFormGalleryThumbnails(input, dataUrls);
       }).catch(() => {
-        // Conserver les éventuelles images serveur, mais vider l'UI des fichiers sélectionnés
+        // en cas d'erreur, conserver les images serveur et vider les miniatures de fichiers
         previewState.galerie_photos = previewState.galerie_photos || [];
         renderGallery(previewState.galerie_photos);
         renderFormGalleryThumbnails(input, []);
@@ -196,6 +215,7 @@ function renderFormGalleryThumbnails(input, dataUrls) {
   }
 }
 
+// affiche les miniatures des images déjà présentes côté serveur (avec boutons de suppression)
 function renderExistingThumbnails(arr) {
   const container = document.getElementById('galleryExisting');
   if (!container) return;
@@ -221,6 +241,7 @@ function renderExistingThumbnails(arr) {
     container.appendChild(wrap);
   });
 
+  // clic sur une miniature existante -> marquer comme supprimée
   if (!container.__bound) {
     container.addEventListener('click', function (e) {
       const btn = e.target.closest && e.target.closest('[data-existing-index]');
@@ -228,33 +249,38 @@ function renderExistingThumbnails(arr) {
       const idx = parseInt(btn.getAttribute('data-existing-index'), 10);
       if (Number.isNaN(idx)) return;
       const url = arr[idx];
-      // mark removed in hidden input
+
       const hidRemove = document.getElementById('hidden_remove_galerie_photos');
       container.__removed = container.__removed || [];
       container.__removed.push(url);
       if (hidRemove) hidRemove.value = JSON.stringify(container.__removed);
-      // remove from previewState.galerie_photos
+
+      // retirer l'URL du previewState et re-render
       previewState.galerie_photos = (previewState.galerie_photos || []).filter((v) => v !== url);
-      // re-render existing and main gallery
       const remainingExisting = (previewState.galerie_photos || []).filter((v) => typeof v === 'string' && !isDataUrl(v));
       renderExistingThumbnails(remainingExisting);
       renderGallery(previewState.galerie_photos || []);
-      // also update hidden galleries
       updateHidden('galerie_photos');
     });
     container.__bound = true;
   }
 }
 
+// gère les changements sur les inputs text/select/date etc.
 function handleInputElement(el) {
   if (!el) return;
   const prop = el.getAttribute('data-prop');
   if (!prop) return;
   const val = el.value;
   previewState[prop] = val;
+
+  // quelques alias/conversions spécifiques
   if (prop === 'titre_remerciement') previewState['titre_remerciements'] = val;
   if (prop === 'description_remerciement') previewState['description_remerciements'] = val;
+
   updateHidden(prop);
+
+  // si dates modifiées, rerendre le champ affichant l'intervalle
   if (prop === 'date_debut' || prop === 'date_fin') {
     renderField('dates');
   }
@@ -263,19 +289,22 @@ function handleInputElement(el) {
   if (prop === 'description_remerciement') renderField('description_remerciements');
 }
 
+// gère les inputs de type "file" (galerie multiple ou image unique)
 function handleFileElement(el) {
   if (!el) return;
   const prop = el.getAttribute('data-prop-file');
   if (!prop) return;
   const files = el.files;
   if (!files || files.length === 0) return;
+
+  // traitement pour la galerie multiple
   if (prop === 'galerie_photos') {
     const input = el;
     if (!input.__dt) input.__dt = new DataTransfer();
     const dt = input.__dt;
     const currentCount = dt.files.length;
     const remaining = Math.max(0, 8 - currentCount);
-    if (remaining === 0) return;
+    if (remaining === 0) return; // limite atteinte
     const toAdd = Math.min(files.length, remaining);
     for (let i = 0; i < toAdd; i++) {
       dt.items.add(files[i]);
@@ -289,42 +318,118 @@ function handleFileElement(el) {
       r.readAsDataURL(f);
     }));
 
-      Promise.all(readPromises).then((dataUrls) => {
-        // Preserve server-side images and append remaining selected files
-        const serverUrls = Array.isArray(previewState.galerie_photos)
-          ? previewState.galerie_photos.filter(v => typeof v === 'string' && !isDataUrl(v))
-          : [];
-        const combined = serverUrls.concat(dataUrls);
-        previewState.galerie_photos = combined;
-        renderGallery(combined);
-        updateHidden('galerie_photos');
-        renderFormGalleryThumbnails(input, dataUrls);
-      }).catch(() => {
-        previewState.galerie_photos = previewState.galerie_photos || [];
-        renderGallery(previewState.galerie_photos);
-        renderFormGalleryThumbnails(input, []);
-      });
+    Promise.all(readPromises).then((dataUrls) => {
+      // conserver les URLs serveur et ajouter les nouvelles data-URLs
+      const serverUrls = Array.isArray(previewState.galerie_photos)
+        ? previewState.galerie_photos.filter(v => typeof v === 'string' && !isDataUrl(v))
+        : [];
+      const combined = serverUrls.concat(dataUrls);
+      previewState.galerie_photos = combined;
+      renderGallery(combined);
+      updateHidden('galerie_photos');
+      renderFormGalleryThumbnails(input, dataUrls);
+    }).catch(() => {
+      previewState.galerie_photos = previewState.galerie_photos || [];
+      renderGallery(previewState.galerie_photos);
+      renderFormGalleryThumbnails(input, []);
+    });
 
     return;
   }
-  // image unique
+
+  // traitement pour une image unique
   const f = files[0];
+
+  // s'assurer que input.files contient bien le fichier via DataTransfer (compatibilité soumission)
+  try {
+    if (el) {
+      const input = el;
+      const dt = new DataTransfer();
+      dt.items.add(f);
+      input.__dt = dt;
+      input.files = dt.files;
+      try {
+        const form = document.getElementById('leftForm');
+        if (form) {
+          const removeEl = document.getElementById(`remove_${prop}`);
+          if (removeEl && removeEl.parentElement) removeEl.parentElement.removeChild(removeEl);
+        }
+      } catch (e) {}
+    }
+  } catch (e) {}
+
+  // si aucun container d'existing n'existe, le créer pour afficher l'aperçu intégré
+  try {
+    const existingId = `existing_${prop}_container`;
+    let existingContainer = document.getElementById(existingId);
+    if (!existingContainer) {
+      const inputEl = el || document.querySelector(`[data-prop-file="${prop}"]`);
+      const ref = inputEl ? inputEl.closest('label') || inputEl.parentElement : null;
+      if (ref && ref.parentElement) {
+        existingContainer = document.createElement('div');
+        existingContainer.className = 'mt-2';
+        existingContainer.id = existingId;
+        const lab = document.createElement('label');
+        lab.className = 'block text-sm font-medium mb-1';
+        lab.textContent = 'Image actuelle';
+        const wrap = document.createElement('div');
+        wrap.className = 'relative';
+        const img = document.createElement('img');
+        img.setAttribute('data-field', prop);
+        img.alt = 'Aperçu';
+        img.className = 'w-full h-[25dvh] object-cover rounded';
+        const removeBtn = document.createElement('button');
+        removeBtn.type = 'button';
+        removeBtn.className = 'existing-single-remove absolute top-2 right-2 bg-black/60 text-white rounded-full w-6 h-6 flex items-center justify-center';
+        removeBtn.setAttribute('data-prop', prop);
+        removeBtn.innerHTML = '×';
+        wrap.appendChild(removeBtn);
+        wrap.appendChild(img);
+        existingContainer.appendChild(lab);
+        existingContainer.appendChild(wrap);
+        try { ref.parentElement.insertBefore(existingContainer, ref.nextSibling); } catch (e) { ref.parentElement.appendChild(existingContainer); }
+        try { bindExistingSingleRemoveButtons(); } catch (e) {}
+      }
+    } else if (existingContainer && existingContainer.__hiddenByPreview) {
+      existingContainer.style.display = '';
+      existingContainer.__hiddenByPreview = false;
+    }
+  } catch (e) {}
+
   const r = new FileReader();
-    r.onload = (ev) => {
+  r.onload = (ev) => {
     const dataUrl = ev.target.result;
-    previewState[prop] = dataUrl;
+    previewState[prop] = dataUrl; // stocker la data URL pour l'aperçu
     renderField(prop);
-    // s'assurer que l'input hidden (le cas échéant) est synchronisé pour le debug/la soumission
+
+    // si un container existant avait été caché, le réafficher
+    try {
+      const existingContainer = document.getElementById(`existing_${prop}_container`);
+      if (existingContainer && existingContainer.__hiddenByPreview) {
+        existingContainer.style.display = '';
+        existingContainer.__hiddenByPreview = false;
+      }
+      try {
+        const existingImg = existingContainer ? existingContainer.querySelector(`img[data-field="${prop}"]`) : null;
+        if (existingImg) {
+          existingImg.src = dataUrl;
+          existingImg.loading = 'lazy';
+          existingImg.decoding = 'async';
+        }
+      } catch (e) {}
+    } catch (e) {}
+
     try { updateHidden(prop); } catch (e) {}
-    // afficher un aperçu inline (dans le formulaire) pour les champs image uniques sélectionnés
     try { renderFormImagePreview(prop, dataUrl); } catch (e) {}
   };
   r.readAsDataURL(f);
 }
 
+// affiche un aperçu inline pour un champ image unique (preview_{prop})
 function renderFormImagePreview(prop, dataUrl) {
   const container = document.getElementById(`preview_${prop}`);
   if (!container) return;
+
   container.innerHTML = '';
   if (!dataUrl || !isDataUrl(dataUrl)) return;
 
@@ -346,9 +451,8 @@ function renderFormImagePreview(prop, dataUrl) {
 
   container.appendChild(wrap);
 
-  // remove handler
+  // suppression de l'aperçu par l'utilisateur : nettoyer input, previewState et hidden
   btn.addEventListener('click', function () {
-    // clear the corresponding file input
     const input = document.querySelector(`[data-prop-file="${prop}"]`);
     if (input) {
       try {
@@ -359,14 +463,23 @@ function renderFormImagePreview(prop, dataUrl) {
         }
       } catch (e) {}
     }
-    // remove from previewState and hidden
     previewState[prop] = '';
     renderField(prop);
     updateHidden(prop);
     container.innerHTML = '';
+    try {
+      const existingContainer = document.getElementById(`existing_${prop}_container`);
+      if (existingContainer) {
+        const existingImg = existingContainer.querySelector(`img[data-field="${prop}"]`);
+        if (existingImg) existingImg.src = '';
+        existingContainer.style.display = 'none';
+        existingContainer.__hiddenByPreview = true;
+      }
+    } catch (e) {}
   });
 }
 
+// rendre tous les champs à partir du previewState
 function renderAll() {
   Object.keys(previewState).forEach((k) => {
     if (k === 'galerie_photos') {
@@ -377,6 +490,7 @@ function renderAll() {
   });
 }
 
+// initialisation : récupérer les données placeholder et binder les handlers
 function initPreview() {
   const root = document.getElementById('actionPreview');
   const placeholderScript = qs('#previewData');
@@ -385,7 +499,8 @@ function initPreview() {
   previewState = Object.assign({}, placeholder);
 
   const form = document.getElementById('leftForm');
-  // initialiser les valeurs visibles du formulaire depuis le placeholder
+
+  // initialiser les inputs du formulaire avec les valeurs de previewState
   if (form) {
     Array.from(form.querySelectorAll('[data-prop]')).forEach((el) => {
       const p = el.getAttribute('data-prop');
@@ -394,28 +509,22 @@ function initPreview() {
   }
 
   renderAll();
-
-  // bind existing single-image remove buttons if any
   bindExistingSingleRemoveButtons();
 
-  // Synchronisation initiale : remplir les hidden inputs depuis previewState pour que le serveur reçoive les valeurs
+  // remplir les hidden inputs initiaux (sauf galerie)
   if (form) {
-    // populate hidden inputs from previewState, but DO NOT populate the gallery hidden input
-    // because placeholder images should not be counted as user-selected files.
     Object.keys(previewState).forEach((k) => {
       if (k === 'galerie_photos') return;
       updateHidden(k);
     });
 
-    // s'assurer que le hidden de la galerie est vide au départ (seules les sélections utilisateur le rempliront)
     const hidGallery = document.getElementById('hidden_galerie_photos');
     if (hidGallery) hidGallery.value = '';
-    // render existing gallery thumbnails with delete controls
     const existing = Array.isArray(previewState.galerie_photos) ? previewState.galerie_photos.filter(v => typeof v === 'string' && !isDataUrl(v)) : [];
     if (existing.length) renderExistingThumbnails(existing);
   }
 
-  // brancher les écouteurs d'événements
+  // binder les écouteurs sur le formulaire
   if (form) {
     Array.from(form.querySelectorAll('[data-prop]')).forEach((el) => {
       const ev = el.tagName === 'SELECT' || el.type === 'date' ? 'change' : 'input';
@@ -429,8 +538,13 @@ function initPreview() {
       });
     });
 
-    // Avant la soumission, s'assurer que tous les hidden_* sont à jour
+    // avant soumission : synchroniser tous les hidden_* et la galerie
     form.addEventListener('submit', () => {
+      try {
+        const fileInputs = Array.from(form.querySelectorAll('[data-prop-file]'));
+        const filesReport = fileInputs.map((inp) => ({ name: inp.getAttribute('data-prop-file') || inp.name, count: inp.files ? inp.files.length : 0, files: inp.files ? Array.from(inp.files).map(f => ({ name: f.name, size: f.size })) : [] }));
+      } catch (e) {}
+
       Array.from(form.querySelectorAll('[data-prop]')).forEach((el) => {
         const p = el.getAttribute('data-prop');
         if (!p) return;
@@ -440,55 +554,75 @@ function initPreview() {
         }
       });
 
-      // sync gallery hidden input if present
       updateHidden('galerie_photos');
     });
   }
 }
 
+// bind global pour les boutons de suppression d'images existantes
 function bindExistingSingleRemoveButtons() {
-  const btns = document.querySelectorAll('.existing-single-remove');
-  if (!btns || !btns.length) return;
-  btns.forEach((btn) => {
-    if (btn.__bound) return;
-    btn.addEventListener('click', function (e) {
-      const prop = btn.getAttribute('data-prop');
-      if (!prop) return;
-      // mark remove hidden input for server
-      const hid = document.getElementById(`remove_${prop}`);
-      if (hid) hid.value = '1';
-      // remove DOM preview
-      const container = btn.closest && btn.closest('[id^="existing_"]') ? btn.closest('[id^="existing_"]') : btn.parentElement && btn.parentElement.parentElement;
-      if (container && container.remove) container.remove();
-      // update previewState and hidden value
-      previewState[prop] = '';
-      renderField(prop);
-      // ensure a hidden input exists for the actual image field (so formData contains the key)
-      const form = document.getElementById('leftForm');
-      if (form) {
-        let hidField = document.getElementById(`hidden_${prop}`);
-        if (!hidField) {
-          hidField = document.createElement('input');
-          hidField.type = 'hidden';
-          hidField.id = `hidden_${prop}`;
-          hidField.name = prop;
-          form.appendChild(hidField);
-        }
-        hidField.value = '';
+  if (document.__existingRemoveBound) return;
+  document.addEventListener('click', function (e) {
+    const btn = e.target && e.target.closest ? e.target.closest('.existing-single-remove') : null;
+    if (!btn) return;
+
+    const prop = btn.getAttribute('data-prop');
+    if (!prop) return;
+    const form = document.getElementById('leftForm');
+
+    // créer ou mettre à jour un hidden remove_{prop} pour indiquer la suppression côté serveur
+    if (form) {
+      let hid = document.getElementById(`remove_${prop}`);
+      if (!hid) {
+        hid = document.createElement('input');
+        hid.type = 'hidden';
+        hid.id = `remove_${prop}`;
+        hid.name = `remove_${prop}`;
+        hid.value = '1';
+        form.appendChild(hid);
+      } else {
+        hid.value = '1';
       }
-      updateHidden(prop);
-    });
-    btn.__bound = true;
+    }
+
+    // masquer le container existant pour que l'utilisateur voie la suppression
+    const container = btn.closest && btn.closest('[id^="existing_"]') ? btn.closest('[id^="existing_"]') : btn.parentElement && btn.parentElement.parentElement;
+    if (container) {
+      try {
+        container.style.display = 'none';
+        container.__hiddenByPreview = true;
+      } catch (e) {
+        try { if (container.remove) container.remove(); } catch (ee) {}
+      }
+    }
+
+    previewState[prop] = '';
+    renderField(prop);
+
+    if (form) {
+      let hidField = document.getElementById(`hidden_${prop}`);
+      if (!hidField) {
+        hidField = document.createElement('input');
+        hidField.type = 'hidden';
+        hidField.id = `hidden_${prop}`;
+        hidField.name = prop;
+        form.appendChild(hidField);
+      }
+      hidField.value = '';
+    }
+    updateHidden(prop);
   });
+  document.__existingRemoveBound = true;
 }
 
-// exposer un déclencheur manuel pour le débogage
+// exposer initPreview pour usage manuel/debug si disponible
 try {
   if (typeof window !== 'undefined') {
     window.__initPreview = initPreview;
   }
 } catch (e) {}
 
+// démarrer automatiquement si le DOM est prêt
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', initPreview);
 } else {

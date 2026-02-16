@@ -2,6 +2,8 @@
 import Layout from "../../../layouts/Layout-back-office.astro";
 import slugify from "slugify";
 import ActionsSearch from "../../../components/ActionsSearch.astro";
+import utilUrl from "../../../utils/utilitaires.js?url";
+import { formatDateShort } from "../../../utils/utilitaires.js";
 
 interface ActionItem {
   id: string;
@@ -108,13 +110,7 @@ const allActions = actions;
                   {a.beneficiaire}
                 </p>
                 <p class="text-xs text-base-content/60 mb-2">
-                  {a.updated
-                    ? new Date(a.updated).toLocaleDateString("fr-FR", {
-                        day: "numeric",
-                        month: "short",
-                        year: "numeric",
-                      })
-                    : ""}
+                  {a.updated ? formatDateShort(a.updated) : ""}
                 </p>
               </div>
               <div class="flex items-center justify-end gap-3">
@@ -139,12 +135,17 @@ const allActions = actions;
   </div>
 </Layout>
 
+<script type="module" src={utilUrl}></script>
 <script define:vars={{ allActions, q }}>
   const actions = allActions;
   let currentSearch = q || "";
   let currentBeneficiary = "";
 
   function formatDate(d) {
+    if (!d) return "";
+    if (typeof window !== 'undefined' && window.dateUtils && typeof window.dateUtils.formatDateShort === 'function') {
+      try { return window.dateUtils.formatDateShort(d); } catch (e) {}
+    }
     return new Date(d).toLocaleDateString("fr-FR", {
       day: "numeric",
       month: "short",
@@ -196,13 +197,7 @@ const allActions = actions;
                   <p class="text-sm text-base-content/70 mb-2 truncate">${a.sous_titre || ""}</p>
                   <p class="text-sm text-base-content/70 mb-2">${a.beneficiaire || ""}</p>
                   <p class="text-xs text-base-content/60 mb-2">
-                  ${a.updated
-                    ? new Date(a.updated).toLocaleDateString("fr-FR", {
-                        day: "numeric",
-                        month: "short",
-                        year: "numeric",
-                      })
-                    : ""}
+                  ${a.updated ? formatDate(a.updated) : ""}
                 </p>
                   <div class="card-actions justify-end mt-4">
                     <a class="btn btn-sm" href="${getViewUrl(a.id, a.slug)}">Voir</a>

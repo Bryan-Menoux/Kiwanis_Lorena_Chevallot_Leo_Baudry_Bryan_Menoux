@@ -3,6 +3,7 @@ import diagArrow from "../assets/diag-arrow.svg";
 import imageIcon from "../assets/image-icon.svg";
 import galleryUrl from "../scripts/gallery.js?url";
 import galleryDisplayUrl from "../scripts/gallery-display.js?url";
+import { formatDateLong } from "../utils/utilitaires.js";
 export interface Props {
   action: any;
 }
@@ -82,16 +83,8 @@ const partie3Img =
       )
     }
     <div data-field="dates">
-      {
-        action.date_debut
-          ? `${new Date(action.date_debut).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })}`
-          : ""
-      }
-      {
-        action.date_fin
-          ? ` au ${new Date(action.date_fin).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })}`
-          : ""
-      }
+      {action.date_debut ? `${formatDateLong(action.date_debut)}` : ""}
+      {action.date_fin ? ` au ${formatDateLong(action.date_fin)}` : ""}
     </div>
   </div>
 

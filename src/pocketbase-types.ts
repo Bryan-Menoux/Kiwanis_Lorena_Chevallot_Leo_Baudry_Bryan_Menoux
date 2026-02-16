@@ -97,6 +97,7 @@ export type SuperusersRecord = {
 }
 
 export enum ActionsTypeDeChiffreOptions {
+	"dépenses" = "dépenses",
 	"récoltes" = "récoltes",
 }
 export type ActionsRecord = {

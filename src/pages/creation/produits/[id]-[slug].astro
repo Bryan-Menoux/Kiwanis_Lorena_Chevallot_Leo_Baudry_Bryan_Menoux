@@ -3,8 +3,6 @@ import Layout from "../../../layouts/Layout-back-office.astro"
 
 const id = Astro.params.id;
 const produit = await Astro.locals.pb.collection('produits').getOne(id!);
-
-console.log(produit);
 ---
 
 <Layout>

@@ -1,5 +1,6 @@
 import type { APIRoute } from 'astro';
 import { capitalizeName } from '../../utils/utilitaires.js';
+import { nowIso } from '../../utils/utilitaires.js';
 
 export const POST: APIRoute = async ({ locals, request }) => {
   if (request.headers.get("content-type") !== "application/json") {
@@ -112,7 +113,7 @@ export const POST: APIRoute = async ({ locals, request }) => {
             });
             break;
           case 'reject':
-            const now = new Date().toISOString();
+            const now = nowIso();
             await locals.pb.collection("users").update(userId, {
               verified: false,
               rejected: true,

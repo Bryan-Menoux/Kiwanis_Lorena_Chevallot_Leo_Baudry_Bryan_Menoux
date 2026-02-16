@@ -10,14 +10,7 @@ export const onRequest = defineMiddleware(
     if (request.method === "POST" && process.env.DEBUG_ORIGIN === "true") {
       const proto = request.headers.get("x-forwarded-proto") || "http";
       const host = request.headers.get("x-forwarded-host") || request.headers.get("host");
-      console.log("[DEBUG_ORIGIN] POST to", request.url);
-      console.log("  Origin header:", request.headers.get("origin"));
-      console.log("  Host header:", request.headers.get("host"));
-      console.log("  X-Forwarded-Proto:", proto);
-      console.log("  X-Forwarded-Host:", request.headers.get("x-forwarded-host"));
-      console.log("  URL origin:", new URL(request.url).origin);
-      console.log("  ORIGIN env:", process.env.ORIGIN);
-      console.log("  Reconstructed (X-Forwarded):", `${proto}://${host}`);
+      // Debug origin logging was removed to reduce console noise.
     }
 
     const pbUrl = import.meta.env.PROD 

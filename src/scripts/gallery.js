@@ -41,7 +41,7 @@
     grid.style.gridTemplateColumns = '1fr 1fr';
     const effectiveCount = Math.min(8, Math.max(count, items.length, imgs.length));
     const n = Math.min(effectiveCount, 8);
-    console.log('gallery setGridStyles', { hasGrid: !!grid, count, items: items.length, imgs: imgs.length, n });
+    
     if (n === 0) {
       grid.style.gridTemplateAreas = '';
       return;

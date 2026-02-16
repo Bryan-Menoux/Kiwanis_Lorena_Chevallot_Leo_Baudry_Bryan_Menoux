@@ -1,82 +1,39 @@
 ---
+// Page serveur pour créer/éditer une action — logique serveur et rendu.
 import Layout from "../../../../layouts/Layout-back-office.astro";
 import ActionContent from "../../../../components/ActionContent.astro";
 import slugify from "slugify";
+// Paramètre `id` optionnel provenant de l'URL (utilisé pour l'édition)
 const idParam = Astro.params?.id;
 import previewUrl from "../../../../scripts/preview.js?url";
 import galleryUrl from "../../../../scripts/gallery.js?url";
 import galleryDisplayUrl from "../../../../scripts/gallery-display.ts?url";
+import utilUrl from "../../../../utils/utilitaires.js?url";
+import {
+  formatDateForInput,
+  normalizeImageUrl,
+} from "../../../../utils/utilitaires.js";
 import imageIcon from "../../../../assets/image-icon.svg";
 import { ActionsTypeDeChiffreOptions } from "../../../../pocketbase-types";
 
-const id = Astro.locals.pb.authStore.record?.id;
+// Message d'erreur affiché dans le formulaire en cas d'échec serveur
 let error: string = "";
 
-// Récupérer les options : priorité aux valeurs utilisées en base, sinon fallback sur l'enum générée.
+// On récupère le options `type_de_chiffre`
 let typeDeChiffreOptions: string[] = Object.values(ActionsTypeDeChiffreOptions);
-try {
-  const records: any[] = await Astro.locals.pb
-    .collection("actions")
-    .getFullList(100);
-  const values = Array.from(
-    new Set(records.map((r: any) => r?.type_de_chiffre).filter(Boolean)),
-  );
-  if (values.length > 0) typeDeChiffreOptions = values;
-} catch (e) {
-  // probable manque de permissions : on laisse le fallback sur l'enum
-}
 
-// Placeholder utilisé pour rendre toutes les sections côté serveur afin que le client puisse hydrater la prévisualisation
+// Placeholder SVG data-URL pour la prévisualisation serveur
 const placeholderImg = `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='400' height='400' viewBox='0 0 400 400'><rect width='100%' height='100%' fill='%23f3f6f7'/><image href='${imageIcon.src}' x='50' y='50' width='300' height='300' preserveAspectRatio='xMidYMid meet' style='opacity:0.95;'/></svg>`;
 
-// Fonctions utilitaires
-function formatDateForInput(d: any) {
-  if (!d) return "";
-  try {
-    const dt = new Date(d);
-    if (isNaN(dt.getTime())) return "";
-    return dt.toISOString().slice(0, 10);
-  } catch (e) {
-    return "";
-  }
-}
-
-function normalizeImageUrl(v: any, action?: any) {
-  if (!v) return null;
-  // Si c'est déjà une URL complète (data:, blob:, http(s): ou chemin), la retourner telle quelle
-  if (typeof v === 'string' && (v.startsWith('data:') || v.startsWith('blob:') || v.startsWith('http://') || v.startsWith('https://') || v.startsWith('/'))) return v;
-  // Si c'est un objet fichier PocketBase ou juste un nom de fichier, utiliser `Astro.locals.pb.files.getURL` quand on a l'action
-  try {
-    if (action && typeof Astro !== 'undefined' && Astro.locals && Astro.locals.pb && Astro.locals.pb.files && typeof Astro.locals.pb.files.getURL === 'function') {
-        // Quand v est un objet, PocketBase stocke parfois les métadonnées sous la forme { filename, ... } ou juste une chaîne de nom de fichier
-      const fileRef = (typeof v === 'string') ? v : (v.filename ?? v.id ?? null);
-      if (fileRef) return Astro.locals.pb.files.getURL(action, fileRef);
-    }
-  } catch (e) {
-    // revenir à d'autres heuristiques en cas d'échec
-  }
-
-  if (typeof v === 'object') {
-    if (v.url) return v.url;
-    if (v.directUrl) return v.directUrl;
-    if (v.filename) return '/' + v.filename;
-    return null;
-  }
-
-  if (typeof v === 'string') {
-    return '/' + v;
-  }
-
-  return null;
-}
-
-// Charger l'action si on a un id
+// Charger l'enregistrement existant lorsque `idParam` est fourni (mode édition)
 let actionRecord: any = null;
 if (idParam) {
   try {
     actionRecord = await Astro.locals.pb.collection("actions").getOne(idParam);
+    
   } catch (e) {
     console.error("Erreur retrieving action:", e);
+    // message utilisateur succinct
     error = "Impossible de charger l'action";
   }
 }
@@ -87,47 +44,84 @@ const previewData: any = {
   date_debut: formatDateForInput(actionRecord?.date_debut) || "",
   date_fin: formatDateForInput(actionRecord?.date_fin) || "",
   description_hero: actionRecord?.description_hero ?? "",
-  hero: normalizeImageUrl(actionRecord?.hero, actionRecord) ?? placeholderImg,
+  hero:
+    normalizeImageUrl(actionRecord?.hero, actionRecord, Astro.locals.pb) ??
+    placeholderImg,
   titre_partie_1: actionRecord?.titre_partie_1 ?? "",
   texte_partie_1: actionRecord?.texte_partie_1 ?? "",
-  photo_partie_1: normalizeImageUrl(actionRecord?.photo_partie_1, actionRecord) ?? placeholderImg,
+  photo_partie_1:
+    normalizeImageUrl(
+      actionRecord?.photo_partie_1,
+      actionRecord,
+      Astro.locals.pb,
+    ) ?? placeholderImg,
   description_photo_partie_1: actionRecord?.description_photo_partie_1 ?? "",
   nom_lieu: actionRecord?.nom_lieu ?? "",
   adresse_lieu: actionRecord?.adresse_lieu ?? "",
   lien_lieu: actionRecord?.lien_lieu ?? "",
   chiffre: actionRecord?.chiffre ?? "",
-  type_de_chiffre: actionRecord?.type_de_chiffre ?? typeDeChiffreOptions[0] ?? "",
+  type_de_chiffre:
+    actionRecord?.type_de_chiffre ?? typeDeChiffreOptions[0] ?? "",
   beneficiaire: actionRecord?.beneficiaire ?? "",
   titre_partie_2: actionRecord?.titre_partie_2 ?? "",
   texte_partie_2: actionRecord?.texte_partie_2 ?? "",
-  photo_partie_2: normalizeImageUrl(actionRecord?.photo_partie_2, actionRecord) ?? placeholderImg,
+  photo_partie_2:
+    normalizeImageUrl(
+      actionRecord?.photo_partie_2,
+      actionRecord,
+      Astro.locals.pb,
+    ) ?? placeholderImg,
   description_photo_partie_2: actionRecord?.description_photo_partie_2 ?? "",
   titre_partie_3: actionRecord?.titre_partie_3 ?? "",
   texte_partie_3: actionRecord?.texte_partie_3 ?? "",
-  photo_partie_3: normalizeImageUrl(actionRecord?.photo_partie_3, actionRecord) ?? placeholderImg,
+  photo_partie_3:
+    normalizeImageUrl(
+      actionRecord?.photo_partie_3,
+      actionRecord,
+      Astro.locals.pb,
+    ) ?? placeholderImg,
   description_photo_partie_3: actionRecord?.description_photo_partie_3 ?? "",
   titre_remerciements: actionRecord?.titre_remerciements ?? "",
   description_remerciements: actionRecord?.description_remerciements ?? "",
-  galerie_photos: (actionRecord?.galerie_photos && actionRecord.galerie_photos.length > 0)
-    ? actionRecord.galerie_photos.map((p: any) => normalizeImageUrl(p, actionRecord) ?? placeholderImg)
-    : [placeholderImg, placeholderImg, placeholderImg],
+  galerie_photos:
+    actionRecord?.galerie_photos && actionRecord.galerie_photos.length > 0
+      ? actionRecord.galerie_photos.map(
+          (p: any) =>
+            normalizeImageUrl(p, actionRecord, Astro.locals.pb) ??
+            placeholderImg,
+        )
+      : [placeholderImg, placeholderImg, placeholderImg],
 };
 
 // Gestion de la soumission du formulaire côté serveur
-// Si `idParam` est présent : mise à jour de l'enregistrement existant, sinon création d'un nouvel enregistrement.
+// Si `idParam` présent -> mise à jour, sinon création.
 if (Astro.request.method === "POST") {
   try {
     const formData = await Astro.request.formData();
-
-    // Support suppression envoyée par POST depuis la liste (no endpoint)
-    const action = formData.get('_action')?.toString();
-    if (action === 'delete' && idParam) {
       try {
-        await Astro.locals.pb.collection('actions').delete(idParam);
-      } catch (e) {
-        console.error('Erreur suppression action:', e);
+      const entries = [];
+      for (const e of formData.entries()) {
+        const [k, v] = e;
+        if (v instanceof File) {
+          entries.push({ key: k, isFile: true, name: v.name, size: v.size });
+        } else {
+          const s = String(v).slice(0, 200);
+          entries.push({ key: k, isFile: false, valueSample: s });
+        }
       }
-      return Astro.redirect('/creation/actions?success=Action supprimée');
+    } catch (e) {
+      // ignore serialization diagnostics
+    }
+
+    // Support suppression envoyée par POST depuis la liste
+    const action = formData.get("_action")?.toString();
+    if (action === "delete" && idParam) {
+      try {
+        await Astro.locals.pb.collection("actions").delete(idParam);
+      } catch (e) {
+        console.error("Erreur suppression action:", e);
+      }
+      return Astro.redirect("/creation/actions?success=Action supprimée");
     }
 
     // Vérifier que le titre est fourni
@@ -142,15 +136,33 @@ if (Astro.request.method === "POST") {
     // Préparer les données pour PocketBase
     const data: any = { slug };
 
-    // Récupérer tous les champs texte du formulaire
-    // Ignorer les inputs de type fichier et les flags côté client pour suppression (clés commençant par `remove_`)
-    // Le traitement de la galerie est géré explicitement plus bas.
+    // Copier les champs texte (ignorer fichiers et flags 'remove_')
     for (const [key, value] of formData.entries()) {
       if (value instanceof File) continue; // Gérer les fichiers séparément
-      if (key === 'galerie_photos' || key === 'remove_galerie_photos' || key.startsWith('remove_')) continue;
+      if (
+        key === "galerie_photos" ||
+        key === "remove_galerie_photos" ||
+        key.startsWith("remove_")
+      )
+        continue;
       const stringValue = value.toString().trim();
       if (stringValue !== "") {
         data[key] = stringValue;
+      }
+    }
+
+    // Si l'UI a envoyé des flags `remove_{field}`, s'assurer d'envoyer
+    // explicitement une valeur vide pour le champ afin que PocketBase
+    // supprime le fichier côté serveur.
+    for (const [key, value] of formData.entries()) {
+      if (typeof key === 'string' && key.startsWith('remove_')) {
+        const vStr = value?.toString?.();
+        if (vStr) {
+          const field = key.replace(/^remove_/, '');
+          // forcer la clé à une chaîne vide — PocketBase prendra en compte
+          // la valeur vide pour effacer le champ fichier
+          data[field] = '';
+        }
       }
     }
 
@@ -159,72 +171,68 @@ if (Astro.request.method === "POST") {
     for (const [key, value] of formData.entries()) {
       if (value instanceof File && value.size > 0) {
         if (key === "galerie_photos") {
-          // Pour la galerie, collecter tous les fichiers dans un tableau
+          // Galerie : collecter les fichiers dans un tableau
           if (!files[key]) {
             files[key] = [];
           }
           files[key].push(value);
         } else {
-          // Pour les autres fichiers (images uniques)
+          // Fichiers simples (image unique)
           files[key] = value;
         }
       }
     }
 
-    // REMARQUE : nous ne prenons plus en charge la suppression explicite côté client des champs image uniques.
-    // Les images ne seront remplacées que lorsque l'utilisateur téléverse un nouveau fichier pour ce champ.
-
-    // If creating a new record and user uploaded files for galerie_photos,
-    // remove any hidden `galerie_photos` data (which may contain data-URLs)
-    // to avoid passing invalid values to PocketBase. We will rely on the
-    // uploaded files in `files.galerie_photos` instead.
     if (!idParam && files.galerie_photos && files.galerie_photos.length) {
       delete data.galerie_photos;
     }
 
-    let savedAction: any = null;
     if (idParam) {
-      // update existing: we only replace single-image fields when a new file is uploaded.
-      // The `files` object already contains any newly uploaded files; if a field
-      // has no uploaded file, we leave it out of the payload so PocketBase keeps
-      // the existing value.
-
-      // Gallery handling: only include galerie_photos in the update when the user
-      // actually modified the gallery (either removed items or uploaded new files).
+      // Mise à jour : ne remplacer les images uniques que si nouvel upload
+      // Galerie : n'inclure la galerie que si elle a été modifiée
       let removedList: string[] = [];
       try {
-        const rawRemoved = formData.get("remove_galerie_photos")?.toString() || "";
+        const rawRemoved =
+          formData.get("remove_galerie_photos")?.toString() || "";
         removedList = rawRemoved ? JSON.parse(rawRemoved) : [];
       } catch (e) {
         removedList = [];
       }
 
-      const existingFiles = Array.isArray(actionRecord?.galerie_photos) ? actionRecord.galerie_photos : [];
-      const newFiles = Array.isArray(files.galerie_photos) ? files.galerie_photos : [];
+      const existingFiles = Array.isArray(actionRecord?.galerie_photos)
+        ? actionRecord.galerie_photos
+        : [];
+      const newFiles = Array.isArray(files.galerie_photos)
+        ? files.galerie_photos
+        : [];
 
-      const galleryWasModified = (removedList && removedList.length > 0) || (newFiles && newFiles.length > 0);
+      const galleryWasModified =
+        (removedList && removedList.length > 0) ||
+        (newFiles && newFiles.length > 0);
 
-      // remove galerie_photos from files to avoid spreading it blindly
+      // Retirer `galerie_photos` de `files` pour éviter propagation involontaire
       if (files.galerie_photos) delete files.galerie_photos;
 
       const payload: any = { ...data, ...files };
 
       if (galleryWasModified) {
         const keepFiles = existingFiles.filter((fn: any) => {
-          const url = normalizeImageUrl(fn, actionRecord);
+          const url = normalizeImageUrl(fn, actionRecord, Astro.locals.pb);
           return !(removedList || []).includes(url);
         });
 
         const combinedGallery = (keepFiles || []).concat(newFiles);
-        // Explicit empty array if gallery was cleared
+        // [] si galerie vidée
         payload.galerie_photos = combinedGallery.length ? combinedGallery : [];
       }
 
-      savedAction = await Astro.locals.pb.collection("actions").update(idParam, payload);
+      await Astro.locals.pb.collection("actions").update(idParam, payload);
 
-      return Astro.redirect(`/creation/actions/${idParam}-${slug}?success=Action mise à jour`);
+      return Astro.redirect(
+        `/creation/actions/${idParam}-${slug}?success=Action mise à jour`,
+      );
     } else {
-      // create new
+      // création
       const newAction = await Astro.locals.pb.collection("actions").create({
         ...data,
         ...files,
@@ -235,7 +243,7 @@ if (Astro.request.method === "POST") {
     }
   } catch (err) {
     console.error("Erreur lors de la création:", err);
-    // En cas d'erreur, on continue et affiche le formulaire avec l'erreur
+    // Afficher l'erreur au formulaire
     error =
       err instanceof Error ? err.message : "Une erreur inconnue est survenue";
   }
@@ -245,7 +253,9 @@ if (Astro.request.method === "POST") {
 <Layout>
   <div class="flex h-fit w-full">
     <div class="w-1/3">
-      <div class="h-[105dvh] bg-accent pb-24 rounded-br-box sticky left-0 top-0 overflow-auto p-6">
+      <div
+        class="h-[105dvh] bg-accent pb-24 rounded-br-box sticky left-0 top-0 overflow-auto p-6"
+      >
         <form
           id="leftForm"
           class="space-y-8 text-accent"
@@ -257,7 +267,9 @@ if (Astro.request.method === "POST") {
           </h1>
           {error && <p class="text-red-300 mb-4">{error}</p>}
 
-          <div class="p-4 bg-base-200 rounded-lg border border-base-300 space-y-4">
+          <div
+            class="p-4 bg-base-200 rounded-lg border border-base-300 space-y-4"
+          >
             <label class="block text-sm font-medium mb-1">Titre</label>
             <input
               data-prop="titre"
@@ -267,7 +279,12 @@ if (Astro.request.method === "POST") {
               placeholder="Titre de l'action"
               value={previewData.titre}
             />
-            <input type="hidden" name="titre" id="hidden_titre" value={previewData.titre} />
+            <input
+              type="hidden"
+              name="titre"
+              id="hidden_titre"
+              value={previewData.titre}
+            />
 
             <label class="block text-sm font-medium mb-1">Sous-titre</label>
             <input
@@ -277,7 +294,12 @@ if (Astro.request.method === "POST") {
               placeholder="Sous-titre"
               value={previewData.sous_titre}
             />
-            <input type="hidden" name="sous_titre" id="hidden_sous_titre" value={previewData.sous_titre} />
+            <input
+              type="hidden"
+              name="sous_titre"
+              id="hidden_sous_titre"
+              value={previewData.sous_titre}
+            />
 
             <div class="flex gap-4">
               <div class="w-1/2">
@@ -289,7 +311,12 @@ if (Astro.request.method === "POST") {
                   class="border rounded px-2 py-1 w-full text-black bg-base-100"
                   value={previewData.date_debut}
                 />
-                <input type="hidden" name="date_debut" id="hidden_date_debut" value={previewData.date_debut} />
+                <input
+                  type="hidden"
+                  name="date_debut"
+                  id="hidden_date_debut"
+                  value={previewData.date_debut}
+                />
               </div>
               <div class="w-1/2">
                 <label class="text-sm">Date fin</label>
@@ -300,13 +327,22 @@ if (Astro.request.method === "POST") {
                   class="border rounded px-2 py-1 w-full text-black bg-base-100"
                   value={previewData.date_fin}
                 />
-                <input type="hidden" name="date_fin" id="hidden_date_fin" value={previewData.date_fin} />
+                <input
+                  type="hidden"
+                  name="date_fin"
+                  id="hidden_date_fin"
+                  value={previewData.date_fin}
+                />
               </div>
             </div>
           </div>
 
-          <div class="p-4 bg-base-200 rounded-lg border border-base-300 space-y-4">
-            <label class="block text-sm font-medium mb-1">Image de l'en-tête</label>
+          <div
+            class="p-4 bg-base-200 rounded-lg border border-base-300 space-y-4"
+          >
+            <label class="block text-sm font-medium mb-1"
+              >Image de l'en-tête</label
+            >
             <label
               for="input_hero_file"
               class="cursor-pointer w-full h-40 border-2 border-dashed rounded bg-base-100 flex items-center justify-center text-gray-500"
@@ -333,14 +369,28 @@ if (Astro.request.method === "POST") {
                 <span class="text-xs text-gray-400">PNG, JPG, GIF</span>
               </div>
             </label>
-            {actionRecord?.hero && (
-              <div class="mt-2" id="existing_hero_container">
-                <label class="block text-sm font-medium mb-1">Image actuelle</label>
-                <div class="relative">
-                  <img data-field="hero" src={normalizeImageUrl(actionRecord.hero, actionRecord)} alt="Aperçu image hero" class="w-full h-[25dvh] object-cover rounded" />
+            {
+              actionRecord?.hero && (
+                <div class="mt-2" id="existing_hero_container">
+                  <label class="block text-sm font-medium mb-1">
+                    Image actuelle
+                  </label>
+                    <div class="relative">
+                      <button type="button" class="existing-single-remove absolute top-2 right-2 bg-black/60 text-white rounded-full w-6 h-6 flex items-center justify-center" data-prop="hero">×</button>
+                      <img
+                        data-field="hero"
+                        src={normalizeImageUrl(
+                          actionRecord.hero,
+                          actionRecord,
+                          Astro.locals.pb,
+                        )}
+                        alt="Aperçu image hero"
+                        class="w-full h-[25dvh] object-cover rounded"
+                      />
+                    </div>
                 </div>
-              </div>
-            )}
+              )
+            }
             <label class="block text-sm font-medium mt-2 mb-1"
               >Description image de l'en-tête</label
             >
@@ -348,7 +398,8 @@ if (Astro.request.method === "POST") {
               data-prop="description_hero"
               id="input_description_hero"
               class="w-full border rounded px-2 py-1 text-black bg-base-100"
-              rows="2">{previewData.description_hero}</textarea>
+              rows="2">{previewData.description_hero}</textarea
+            >
             <input
               type="hidden"
               name="description_hero"
@@ -357,7 +408,9 @@ if (Astro.request.method === "POST") {
             />
           </div>
 
-          <div class="p-4 bg-base-200 rounded-lg border border-base-300 space-y-4">
+          <div
+            class="p-4 bg-base-200 rounded-lg border border-base-300 space-y-4"
+          >
             <h4 class="font-semibold">Partie 1</h4>
             <input
               data-prop="titre_partie_1"
@@ -377,7 +430,8 @@ if (Astro.request.method === "POST") {
               data-prop="texte_partie_1"
               id="input_texte_partie_1"
               class="w-full border rounded px-2 py-1 text-black bg-base-100"
-              rows="4">{previewData.texte_partie_1}</textarea>
+              rows="4">{previewData.texte_partie_1}</textarea
+            >
             <input
               type="hidden"
               name="texte_partie_1"
@@ -410,14 +464,28 @@ if (Astro.request.method === "POST") {
                 <span class="text-sm">Ajouter une photo</span>
               </div>
             </label>
-            {actionRecord?.photo_partie_1 && (
-              <div class="mt-2" id="existing_photo_partie_1_container">
-                <label class="block text-sm font-medium mb-1">Image actuelle</label>
-                <div class="relative">
-                  <img data-field="photo_partie_1" src={normalizeImageUrl(actionRecord.photo_partie_1, actionRecord)} alt="Aperçu photo partie 1" class="w-full h-[25dvh] object-cover rounded" />
+            {
+              actionRecord?.photo_partie_1 && (
+                <div class="mt-2" id="existing_photo_partie_1_container">
+                  <label class="block text-sm font-medium mb-1">
+                    Image actuelle
+                  </label>
+                    <div class="relative">
+                      <button type="button" class="existing-single-remove absolute top-2 right-2 bg-black/60 text-white rounded-full w-6 h-6 flex items-center justify-center" data-prop="photo_partie_1">×</button>
+                      <img
+                        data-field="photo_partie_1"
+                        src={normalizeImageUrl(
+                          actionRecord.photo_partie_1,
+                          actionRecord,
+                          Astro.locals.pb,
+                        )}
+                        alt="Aperçu photo partie 1"
+                        class="w-full h-[25dvh] object-cover rounded"
+                      />
+                    </div>
                 </div>
-              </div>
-            )}
+              )
+            }
             <label class="block text-sm font-medium mt-2"
               >Description photo partie 1</label
             >
@@ -435,7 +503,9 @@ if (Astro.request.method === "POST") {
             />
           </div>
 
-          <div class="p-4 bg-base-200 rounded-lg border border-base-300 space-y-4">
+          <div
+            class="p-4 bg-base-200 rounded-lg border border-base-300 space-y-4"
+          >
             <h4 class="font-semibold">Lieu / Chiffres / Bénéficiaires</h4>
             <label class="block text-sm font-medium mt-2"
               >Nom du lieu (max 30 caractères)</label
@@ -448,7 +518,12 @@ if (Astro.request.method === "POST") {
               class="w-full border rounded px-2 py-1 mt-2 text-black bg-base-100"
               placeholder="Nom du lieu"
             />
-            <input type="hidden" name="nom_lieu" id="hidden_nom_lieu" value={previewData.nom_lieu} />
+            <input
+              type="hidden"
+              name="nom_lieu"
+              id="hidden_nom_lieu"
+              value={previewData.nom_lieu}
+            />
             <label class="block text-sm font-medium mt-2"
               >Adresse du lieu (max 30 caractères)</label
             >
@@ -459,14 +534,24 @@ if (Astro.request.method === "POST") {
               class="w-full border rounded px-2 py-1 mt-2 text-black bg-base-100"
               placeholder="Adresse"
             />
-            <input type="hidden" name="adresse_lieu" id="hidden_adresse_lieu" value={previewData.adresse_lieu} />
+            <input
+              type="hidden"
+              name="adresse_lieu"
+              id="hidden_adresse_lieu"
+              value={previewData.adresse_lieu}
+            />
             <input
               data-prop="lien_lieu"
               id="input_lien_lieu"
               class="w-full border rounded px-2 py-1 mt-2 text-black bg-base-100"
               placeholder="Lien Google Maps"
             />
-            <input type="hidden" name="lien_lieu" id="hidden_lien_lieu" value={previewData.lien_lieu} />
+            <input
+              type="hidden"
+              name="lien_lieu"
+              id="hidden_lien_lieu"
+              value={previewData.lien_lieu}
+            />
             <div class="flex gap-2 mt-2">
               <input
                 data-prop="chiffre"
@@ -484,12 +569,22 @@ if (Astro.request.method === "POST") {
                 <option value="">Type</option>
                 {
                   typeDeChiffreOptions.map((opt) => (
-                    <option value={opt} selected={opt === previewData.type_de_chiffre}>{opt}</option>
+                    <option
+                      value={opt}
+                      selected={opt === previewData.type_de_chiffre}
+                    >
+                      {opt}
+                    </option>
                   ))
                 }
               </select>
             </div>
-            <input type="hidden" name="chiffre" id="hidden_chiffre" value={previewData.chiffre} />
+            <input
+              type="hidden"
+              name="chiffre"
+              id="hidden_chiffre"
+              value={previewData.chiffre}
+            />
             <input
               type="hidden"
               name="type_de_chiffre"
@@ -503,10 +598,17 @@ if (Astro.request.method === "POST") {
               placeholder="Bénéficiaire"
               value={previewData.beneficiaire}
             />
-            <input type="hidden" name="beneficiaire" id="hidden_beneficiaire" value={previewData.beneficiaire} />
+            <input
+              type="hidden"
+              name="beneficiaire"
+              id="hidden_beneficiaire"
+              value={previewData.beneficiaire}
+            />
           </div>
 
-          <div class="p-4 bg-base-200 rounded-lg border border-base-300 space-y-4">
+          <div
+            class="p-4 bg-base-200 rounded-lg border border-base-300 space-y-4"
+          >
             <h4 class="font-semibold">Partie 2</h4>
             <input
               data-prop="titre_partie_2"
@@ -526,7 +628,8 @@ if (Astro.request.method === "POST") {
               data-prop="texte_partie_2"
               id="input_texte_partie_2"
               class="w-full border rounded px-2 py-1 text-black bg-base-100"
-              rows="4">{previewData.texte_partie_2}</textarea>
+              rows="4">{previewData.texte_partie_2}</textarea
+            >
             <input
               type="hidden"
               name="texte_partie_2"
@@ -559,14 +662,28 @@ if (Astro.request.method === "POST") {
                 <span class="text-sm">Ajouter une photo</span>
               </div>
             </label>
-            {actionRecord?.photo_partie_2 && (
-              <div class="mt-2" id="existing_photo_partie_2_container">
-                <label class="block text-sm font-medium mb-1">Image actuelle</label>
-                <div class="relative">
-                  <img data-field="photo_partie_2" src={normalizeImageUrl(actionRecord.photo_partie_2, actionRecord)} alt="Aperçu photo partie 2" class="w-full h-[25dvh] object-cover rounded" />
+            {
+              actionRecord?.photo_partie_2 && (
+                <div class="mt-2" id="existing_photo_partie_2_container">
+                  <label class="block text-sm font-medium mb-1">
+                    Image actuelle
+                  </label>
+                  <div class="relative">
+                    <button type="button" class="existing-single-remove absolute top-2 right-2 bg-black/60 text-white rounded-full w-6 h-6 flex items-center justify-center" data-prop="photo_partie_2">×</button>
+                    <img
+                      data-field="photo_partie_2"
+                      src={normalizeImageUrl(
+                        actionRecord.photo_partie_2,
+                        actionRecord,
+                        Astro.locals.pb,
+                      )}
+                      alt="Aperçu photo partie 2"
+                      class="w-full h-[25dvh] object-cover rounded"
+                    />
+                  </div>
                 </div>
-              </div>
-            )}
+              )
+            }
             <input
               data-prop="description_photo_partie_2"
               id="input_description_photo_partie_2"
@@ -581,7 +698,9 @@ if (Astro.request.method === "POST") {
             />
           </div>
 
-          <div class="p-4 bg-base-200 rounded-lg border border-base-300 space-y-4">
+          <div
+            class="p-4 bg-base-200 rounded-lg border border-base-300 space-y-4"
+          >
             <h4 class="font-semibold">Partie 3</h4>
             <input
               data-prop="titre_partie_3"
@@ -601,7 +720,8 @@ if (Astro.request.method === "POST") {
               data-prop="texte_partie_3"
               id="input_texte_partie_3"
               class="w-full border rounded px-2 py-1 text-black bg-base-100"
-              rows="4">{previewData.texte_partie_3}</textarea>
+              rows="4">{previewData.texte_partie_3}</textarea
+            >
             <input
               type="hidden"
               name="texte_partie_3"
@@ -634,14 +754,28 @@ if (Astro.request.method === "POST") {
                 <span class="text-sm">Ajouter une photo</span>
               </div>
             </label>
-            {actionRecord?.photo_partie_3 && (
-              <div class="mt-2" id="existing_photo_partie_3_container">
-                <label class="block text-sm font-medium mb-1">Image actuelle</label>
-                <div class="relative">
-                  <img data-field="photo_partie_3" src={normalizeImageUrl(actionRecord.photo_partie_3, actionRecord)} alt="Aperçu photo partie 3" class="w-full h-[25dvh] object-cover rounded" />
+            {
+              actionRecord?.photo_partie_3 && (
+                <div class="mt-2" id="existing_photo_partie_3_container">
+                  <label class="block text-sm font-medium mb-1">
+                    Image actuelle
+                  </label>
+                  <div class="relative">
+                    <button type="button" class="existing-single-remove absolute top-2 right-2 bg-black/60 text-white rounded-full w-6 h-6 flex items-center justify-center" data-prop="photo_partie_3">×</button>
+                    <img
+                      data-field="photo_partie_3"
+                      src={normalizeImageUrl(
+                        actionRecord.photo_partie_3,
+                        actionRecord,
+                        Astro.locals.pb,
+                      )}
+                      alt="Aperçu photo partie 3"
+                      class="w-full h-[25dvh] object-cover rounded"
+                    />
+                  </div>
                 </div>
-              </div>
-            )}
+              )
+            }
             <input
               data-prop="description_photo_partie_3"
               id="input_description_photo_partie_3"
@@ -656,7 +790,9 @@ if (Astro.request.method === "POST") {
             />
           </div>
 
-          <div class="p-4 bg-base-200 rounded-lg border border-base-300 space-y-4">
+          <div
+            class="p-4 bg-base-200 rounded-lg border border-base-300 space-y-4"
+          >
             <h4 class="font-semibold">Remerciements</h4>
             <input
               data-prop="titre_remerciement"
@@ -678,7 +814,8 @@ if (Astro.request.method === "POST") {
               data-prop="description_remerciement"
               id="input_description_remerciement"
               class="w-full border rounded px-2 py-1 text-black bg-base-100"
-              rows="3">{previewData.description_remerciements}</textarea>
+              rows="3">{previewData.description_remerciements}</textarea
+            >
             <input
               type="hidden"
               name="description_remerciement"
@@ -687,7 +824,9 @@ if (Astro.request.method === "POST") {
             />
           </div>
 
-          <div class="p-4 bg-base-200 rounded-lg border border-base-300 space-y-4">
+          <div
+            class="p-4 bg-base-200 rounded-lg border border-base-300 space-y-4"
+          >
             <label class="block text-sm font-medium mb-1">Galerie (max 8)</label
             >
             <label
@@ -716,8 +855,16 @@ if (Astro.request.method === "POST") {
                 <span class="text-xs text-gray-400">Jusqu'à 8 images</span>
               </div>
             </label>
-            <input type="hidden" id="hidden_galerie_photos" name="galerie_photos" />
-            <input type="hidden" id="hidden_remove_galerie_photos" name="remove_galerie_photos" />
+            <input
+              type="hidden"
+              id="hidden_galerie_photos"
+              name="galerie_photos"
+            />
+            <input
+              type="hidden"
+              id="hidden_remove_galerie_photos"
+              name="remove_galerie_photos"
+            />
             <div id="galleryExisting" class="mt-2 grid grid-cols-4 gap-2"></div>
             <div id="gallerySelected" class="mt-2 grid grid-cols-4 gap-2"></div>
           </div>
@@ -726,7 +873,10 @@ if (Astro.request.method === "POST") {
             <button
               type="submit"
               class="bg-base-100 text-accent px-4 py-2 rounded w-full"
-            >{idParam ? "Enregistrer les modifications" : "Créer l'action"}</button>
+              >{
+                idParam ? "Enregistrer les modifications" : "Créer l'action"
+              }</button
+            >
           </div>
         </form>
       </div>
@@ -736,8 +886,11 @@ if (Astro.request.method === "POST") {
       <ActionContent action={previewData} />
     </div>
   </div>
-  <script set:html={`window.__previewData = ${JSON.stringify(previewData).replace(/</g, "\\u003c")};`}></script>
+  <script
+    set:html={`window.__previewData = ${JSON.stringify(previewData).replace(/</g, "\\u003c")};`}
+  />
 
+  <script type="module" src={utilUrl}></script>
   <script type="module" src={previewUrl}></script>
   <script type="module" src={galleryUrl}></script>
   <script type="module" src={galleryDisplayUrl}></script>

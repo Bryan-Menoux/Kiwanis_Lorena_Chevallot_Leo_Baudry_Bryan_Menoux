@@ -1,6 +1,7 @@
 ---
 import circleCheck from "../assets/circle-check.svg";
 import crossCircle from "../assets/cross-circle.svg";
+import { formatDateShort } from "../utils/utilitaires.js";
 
 type User = {
   id: string;
@@ -28,7 +29,7 @@ const user = Astro.props.user as any as User;
       <p class="text-base-content/70 break-all">{user.email}</p>
       <p class="text-sm text-base-content/50">
         Inscrit le{" "}
-        {new Date(user.created).toLocaleDateString("fr-FR")}
+        {formatDateShort(user.created)}
       </p>
     </div>
   </div>
