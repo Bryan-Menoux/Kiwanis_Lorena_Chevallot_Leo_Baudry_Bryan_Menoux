@@ -3,18 +3,15 @@ import diagArrow from "../assets/diag-arrow.svg";
 import imageIcon from "../assets/image-icon.svg";
 import galleryUrl from "../scripts/gallery.js?url";
 import galleryDisplayUrl from "../scripts/gallery-display.js?url";
-import { formatDateLong } from "../utils/utilitaires.js";
+import { formatDateLong, isDataUrl as isDataUrlRuntime } from "../utils/utilitaires.js";
 export interface Props {
   action: any;
 }
 
 const { action } = Astro.props;
 
-// Helper pour vérifier si une valeur est une URL de données ou un blob (pour les images)
-const isDataUrl = (v: unknown): v is string => {
-  if (typeof v !== "string") return false;
-  return v.startsWith("data:") || v.startsWith("blob:");
-};
+// runtime helper importé (on conserve le guard TypeScript localement)
+const isDataUrl = isDataUrlRuntime as (v: unknown) => v is string;
 // Préparation des URLs d'images : si c'est une URL de données, on l'utilise directement, sinon on génère l'URL via `Astro.locals.pb.files.getURL`
 const heroImg =
   action && action.hero
@@ -79,7 +76,7 @@ const partie3Img =
   >
     {
       Object.prototype.hasOwnProperty.call(action, "sous_titre") && (
-        <p data-field="sous_titre">{action.sous_titre}</p>
+        <h3 data-field="sous_titre">{action.sous_titre}</h3>
       )
     }
     <div data-field="dates">

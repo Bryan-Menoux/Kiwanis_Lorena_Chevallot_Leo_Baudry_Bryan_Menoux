@@ -133,10 +133,47 @@ export type ActionsRecord = {
 	updated: IsoAutoDateString
 }
 
+export enum BrouillonsTypeDeChiffreOptions {
+	"dépenses" = "dépenses",
+	"récoltes" = "récoltes",
+}
+
+export enum BrouillonsTypeOptions {
+	"action" = "action",
+	"produit" = "produit",
+	"projet" = "projet",
+}
 export type BrouillonsRecord = {
+	adresse_lieu?: string
+	beneficiaire?: string
+	chiffre?: number
 	created: IsoAutoDateString
+	date_debut?: IsoDateString
+	date_fin?: IsoDateString
+	description_hero?: string
+	description_photo_partie_1?: string
+	description_photo_partie_2?: string
+	description_photo_partie_3?: string
+	description_remerciements?: string
+	galerie_photos?: FileNameString[]
+	hero?: FileNameString
 	id: string
+	lien_lieu?: string
+	nom_lieu?: string
+	photo_partie_1?: FileNameString
+	photo_partie_2?: FileNameString
+	photo_partie_3?: FileNameString
+	sous_titre?: string
+	texte_partie_1?: string
+	texte_partie_2?: string
+	texte_partie_3?: string
 	titre?: string
+	titre_partie_1?: string
+	titre_partie_2?: string
+	titre_partie_3?: string
+	titre_remerciements?: string
+	type?: BrouillonsTypeOptions
+	type_de_chiffre?: BrouillonsTypeDeChiffreOptions
 	updated: IsoAutoDateString
 }
 

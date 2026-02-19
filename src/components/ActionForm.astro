@@ -1,0 +1,628 @@
+---
+export interface Props {
+  mode?: string;
+  previewPlaceholder: any;
+  previewData?: any;
+  typeDeChiffreOptions?: string[];
+  imageIcon?: any;
+  actionRecord?: any;
+}
+
+const { 
+  mode = "create",
+  previewPlaceholder,
+  previewData,
+  typeDeChiffreOptions: typeDeChiffreOptionsProp,
+  imageIcon: imageIconProp,
+  actionRecord
+} = Astro.props;
+
+const typeDeChiffreOptions = typeDeChiffreOptionsProp || [
+  "type de chiffre",
+  "dépenses",
+  "récoltes",
+];
+import imageIcon from "../assets/image-icon.svg";
+export let error: string = "";
+import previewDefaults from "../scripts/previewDefaults.js";
+const placeholders = {
+  ...previewDefaults,
+  ...(previewPlaceholder || {}),
+};
+---
+
+<form
+  id="leftForm"
+  class="space-y-8 text-accent"
+  method="POST"
+  enctype="multipart/form-data"
+>
+  <h1 class="text-4xl! font-bold mb-8 mt-24 text-white">
+    Créer une nouvelle action
+  </h1>
+  {error && <p class="text-red-300 mb-4">{error}</p>}
+
+  <div class="p-4 bg-base-200 rounded-box border border-contrast space-y-4">
+    <label class="block text-lg font-bold mb-3">Titre de l'action</label>
+    <input
+      data-prop="titre"
+      id="input_titre"
+      name="titre_local"
+      class="w-full border-2 border-accent rounded px-2 py-1 text-black bg-base-100"
+      placeholder={placeholders.titre}
+      {...(mode === "edit" && previewData ? { value: previewData.titre } : {})}
+    />
+    <input
+      type="hidden"
+      name="titre"
+      id="hidden_titre"
+      {...(mode === "edit" && previewData ? { value: previewData.titre } : {})}
+    />
+
+    <label class="block text-sm font-medium mb-1">Sous-titre de l'action</label>
+    <input
+      data-prop="sous_titre"
+      id="input_sous_titre"
+      class="w-full border border-accent rounded px-2 py-1 text-black bg-base-100"
+      placeholder={placeholders.sous_titre}
+      {...(mode === "edit" && previewData ? { value: previewData.sous_titre } : {})}
+    />
+    <input
+      type="hidden"
+      name="sous_titre"
+      id="hidden_sous_titre"
+      {...(mode === "edit" && previewData ? { value: previewData.sous_titre } : {})}
+    />
+
+    <div class="flex gap-4">
+      <div class="w-1/2">
+        <label class="text-sm">Date début</label>
+        <input
+          data-prop="date_debut"
+          id="input_date_debut"
+          type="date"
+          class="border border-accent rounded px-2 py-1 w-full text-black bg-base-100"
+          {...(mode === "edit" && previewData ? { value: previewData.date_debut } : {})}
+        />
+        <input
+          type="hidden"
+          name="date_debut"
+          id="hidden_date_debut"
+          {...(mode === "edit" && previewData ? { value: previewData.date_debut } : {})}
+        />
+      </div>
+      <div class="w-1/2">
+        <label class="text-sm">Date fin</label>
+        <input
+          data-prop="date_fin"
+          id="input_date_fin"
+          type="date"
+          class="border border-accent rounded px-2 py-1 w-full text-black bg-base-100"
+          {...(mode === "edit" && previewData ? { value: previewData.date_fin } : {})}
+        />
+        <input
+          type="hidden"
+          name="date_fin"
+          id="hidden_date_fin"
+          {...(mode === "edit" && previewData ? { value: previewData.date_fin } : {})}
+        />
+      </div>
+    </div>
+    <label class="block text-sm font-medium mb-1">Image de l'en-tête</label>
+    <label
+      for="input_hero_file"
+      class="cursor-pointer w-full h-40 border-2 border-dashed rounded bg-base-100 flex items-center justify-center text-gray-500"
+    >
+      <input
+        data-prop-file="hero"
+        type="file"
+        name="hero"
+        id="input_hero_file"
+        accept="image/*"
+        class="hidden"
+      />
+      <div class="flex flex-col items-center text-center pointer-events-none">
+        <img
+          src={imageIcon.src}
+          alt="Icone image"
+          class="h-16 w-16"
+          style="filter:grayscale(100%) brightness(0.5); opacity:0.3;"
+        />
+        <span class="text-sm">Cliquez ou glissez l'image ici</span>
+        <span class="text-xs text-gray-400">PNG, JPG, GIF</span>
+      </div>
+    </label>
+    <div id="preview_hero" class="mt-2">
+      {
+        mode === "edit" && previewData ? (
+          previewData.hero ? (
+            <div
+              class="relative overflow-hidden rounded-md"
+              style="padding-bottom:56%"
+            >
+              <img
+                src={previewData.hero}
+                alt="Aperçu"
+                class="absolute inset-0 w-full h-full object-cover"
+                loading="lazy"
+                decoding="async"
+              />
+            </div>
+          ) : null
+        ) : null
+      }
+    </div>
+    <label class="block text-sm font-medium mt-2 mb-1"
+      >Description image de l'en-têtre</label
+    >
+    <textarea
+      data-prop="description_hero"
+      name="description_hero"
+      id="input_description_hero"
+      placeholder={placeholders.description_hero}
+      class="w-full border border-accent rounded px-2 py-1 text-black bg-base-100"
+      rows="2"
+    >{mode === "edit" && previewData ? previewData.description_hero : ""}</textarea>
+    <input
+      type="hidden"
+      name="description_hero"
+      id="hidden_description_hero"
+      {...(mode === "edit" && previewData ? { value: previewData.description_hero } : {})}
+    />
+  </div>
+
+  <div class="p-4 bg-base-200 rounded-box border border-contrast space-y-4">
+    <h4 class="font-semibold">Partie 1</h4>
+    <input
+      data-prop="titre_partie_1"
+      id="input_titre_partie_1"
+      class="w-full border border-accent rounded px-2 py-1 mt-2 text-black bg-base-100"
+      placeholder={placeholders.titre_partie_1}
+      {...(mode === "edit" && previewData ? { value: previewData.titre_partie_1 } : {})}
+    />
+    <input
+      type="hidden"
+      name="titre_partie_1"
+      id="hidden_titre_partie_1"
+      {...(mode === "edit" && previewData ? { value: previewData.titre_partie_1 } : {})}
+    />
+    <label class="block text-sm font-medium mt-2">Texte partie 1</label>
+    <textarea
+      data-prop="texte_partie_1"
+      name="texte_partie_1"
+      id="input_texte_partie_1"
+      placeholder={placeholders.texte_partie_1}
+      class="w-full border border-accent rounded px-2 py-1 text-black bg-base-100"
+      rows="4"
+    >{mode === "edit" && previewData ? previewData.texte_partie_1 : ""}</textarea>
+    <input
+      type="hidden"
+      name="texte_partie_1"
+      id="hidden_texte_partie_1"
+      {...(mode === "edit" && previewData ? { value: previewData.texte_partie_1 } : {})}
+    />
+    <label class="block text-sm font-medium mt-2">Photo partie 1</label>
+    <label
+      for="input_photo_partie_1"
+      class="cursor-pointer w-full h-36 border-2 border-dashed rounded bg-base-100 flex items-center justify-center text-gray-500"
+    >
+      <input
+        data-prop-file="photo_partie_1"
+        type="file"
+        name="photo_partie_1"
+        id="input_photo_partie_1"
+        accept="image/*"
+        class="hidden"
+      />
+      <div class="flex flex-col items-center text-center pointer-events-none">
+        <img
+          src={imageIcon.src}
+          alt="Icone image"
+          class="h-16 w-16"
+          style="filter:grayscale(100%) brightness(0.5); opacity:0.3;"
+        />
+        <span class="text-sm">Ajouter une photo</span>
+      </div>
+    </label>
+    <div id="preview_photo_partie_1" class="mt-2">
+      {
+        mode === "edit" && previewData ? (
+          previewData.photo_partie_1 ? (
+            <div
+              class="relative overflow-hidden rounded-md"
+              style="padding-bottom:56%"
+            >
+              <img
+                src={previewData.photo_partie_1}
+                alt="Aperçu"
+                class="absolute inset-0 w-full h-full object-cover"
+                loading="lazy"
+                decoding="async"
+              />
+            </div>
+          ) : null
+        ) : null
+      }
+    </div>
+    <label class="block text-sm font-medium mt-2"
+      >Description photo partie 1</label
+    >
+    <input
+      data-prop="description_photo_partie_1"
+      id="input_description_photo_partie_1"
+      placeholder={placeholders.description_photo_partie_1}
+      class="w-full border border-accent rounded px-2 py-1 text-black bg-base-100"
+      {...(mode === "edit" && previewData ? { value: previewData.description_photo_partie_1 } : {})}
+    />
+    <input
+      type="hidden"
+      name="description_photo_partie_1"
+      id="hidden_description_photo_partie_1"
+      {...(mode === "edit" && previewData ? { value: previewData.description_photo_partie_1 } : {})}
+    />
+  </div>
+  <div class="p-4 bg-base-200 rounded-box border border-contrast space-y-4">
+    <h4 class="font-semibold">Lieu / Chiffres / Bénéficiaires</h4>
+    <label class="block text-sm font-medium mt-2"
+      >Nom du lieu (max 30 caractères)</label
+    >
+    <input
+      data-prop="nom_lieu"
+      id="input_nom_lieu"
+      name="nom_lieu_local"
+      maxlength="30"
+      class="w-full border border-accent rounded px-2 py-1 mt-2 text-black bg-base-100"
+      placeholder={placeholders.nom_lieu}
+      {...(mode === "edit" && previewData ? { value: previewData.nom_lieu } : {})}
+    />
+    <input
+      type="hidden"
+      name="nom_lieu"
+      id="hidden_nom_lieu"
+      {...(mode === "edit" && previewData ? { value: previewData.nom_lieu } : {})}
+    />
+    <label class="block text-sm font-medium mt-2"
+      >Adresse du lieu (max 30 caractères)</label
+    >
+    <input
+      data-prop="adresse_lieu"
+      id="input_adresse_lieu"
+      maxlength="30"
+      class="w-full border border-accent rounded px-2 py-1 mt-2 text-black bg-base-100"
+      placeholder={placeholders.adresse_lieu}
+      {...(mode === "edit" && previewData ? { value: previewData.adresse_lieu } : {})}
+    />
+    <input
+      type="hidden"
+      name="adresse_lieu"
+      id="hidden_adresse_lieu"
+      {...(mode === "edit" && previewData ? { value: previewData.adresse_lieu } : {})}
+    />
+    <input
+      data-prop="lien_lieu"
+      id="input_lien_lieu"
+      class="w-full border border-accent rounded px-2 py-1 mt-2 text-black bg-base-100"
+      placeholder={placeholders.lien_lieu}
+      value={mode === "edit" && previewData ? previewData.lien_lieu : ""}
+    />
+    <input
+      type="hidden"
+      name="lien_lieu"
+      id="hidden_lien_lieu"
+      value={mode === "edit" && previewData ? previewData.lien_lieu : ""}
+    />
+    <div class="flex gap-2 mt-2">
+      <input
+        data-prop="chiffre"
+        id="input_chiffre"
+        type="number"
+        class="border border-accent rounded px-2 py-1 w-1/2 text-black bg-base-100"
+        placeholder={placeholders.chiffre}
+        value={mode === "edit" && previewData ? previewData.chiffre : ""}
+      />
+      <select
+        data-prop="type_de_chiffre"
+        id="input_type_de_chiffre"
+        class="border border-accent rounded px-2 py-1 w-1/2 text-black bg-base-100"
+        value={mode === "edit" && previewData ? previewData.type_de_chiffre : ""}
+      >
+        {typeDeChiffreOptions.map((opt) => <option value={opt}>{opt}</option>)}
+      </select>
+    </div>
+    <input
+      type="hidden"
+      name="chiffre"
+      id="hidden_chiffre"
+      value={mode === "edit" && previewData ? previewData.chiffre : ""}
+    />
+    <input
+      type="hidden"
+      name="type_de_chiffre"
+      id="hidden_type_de_chiffre"
+      value={mode === "edit" && previewData ? previewData.type_de_chiffre : ""}
+    />
+    <input
+      data-prop="beneficiaire"
+      id="input_beneficiaire"
+      class="w-full border border-accent rounded px-2 py-1 mt-2 text-black bg-base-100"
+      placeholder={placeholders.beneficiaire}
+      value={mode === "edit" && previewData ? previewData.beneficiaire : ""}
+    />
+    <input
+      type="hidden"
+      name="beneficiaire"
+      id="hidden_beneficiaire"
+      value={mode === "edit" && previewData ? previewData.beneficiaire : ""}
+    />
+  </div>
+
+  {
+    /** Partie 2, 3, remerciements, galerie simplified — keep same IDs for scripts */
+  }
+  <div class="p-4 bg-base-200 rounded-box border border-contrast space-y-4">
+    <h4 class="font-semibold">Partie 2</h4>
+    <input
+      data-prop="titre_partie_2"
+      id="input_titre_partie_2"
+      class="w-full border border-accent rounded px-2 py-1 mt-2 text-black bg-base-100"
+      placeholder={placeholders.titre_partie_2}
+      value={mode === "edit" && previewData ? previewData.titre_partie_2 : ""}
+    />
+    <input
+      type="hidden"
+      name="titre_partie_2"
+      id="hidden_titre_partie_2"
+      value={mode === "edit" && previewData ? previewData.titre_partie_2 : ""}
+    />
+    <label class="block text-sm font-medium mt-2">Texte partie 2</label>
+    <textarea
+      data-prop="texte_partie_2"
+      name="texte_partie_2"
+      id="input_texte_partie_2"
+      placeholder={placeholders.texte_partie_2}
+      class="w-full border border-accent rounded px-2 py-1 text-black bg-base-100"
+      rows="4"
+    >{mode === "edit" && previewData ? previewData.texte_partie_2 : ""}</textarea>
+    <input
+      type="hidden"
+      name="texte_partie_2"
+      id="hidden_texte_partie_2"
+      value={mode === "edit" && previewData ? previewData.texte_partie_2 : ""}
+    />
+    <label class="block text-sm font-medium mt-2">Photo partie 2</label>
+    <label
+      for="input_photo_partie_2"
+      class="cursor-pointer w-full h-36 border-2 border-dashed rounded bg-base-100 flex items-center justify-center text-gray-500"
+    >
+      <input
+        data-prop-file="photo_partie_2"
+        type="file"
+        name="photo_partie_2"
+        id="input_photo_partie_2"
+        accept="image/*"
+        class="hidden"
+      />
+      <div class="flex flex-col items-center text-center pointer-events-none">
+        <img
+          src={imageIcon?.src}
+          alt="Icone image"
+          class="h-16 w-16"
+          style="filter:grayscale(100%) brightness(0.5); opacity:0.3;"
+        />
+        <span class="text-sm">Ajouter une photo</span>
+      </div>
+    </label>
+    <div id="preview_photo_partie_2" class="mt-2">
+      {
+        mode === "edit" && previewData?.photo_partie_2 ? (
+          <div
+            class="relative overflow-hidden rounded-md"
+            style="padding-bottom:56%"
+          >
+            <img
+              src={previewData.photo_partie_2}
+              alt="Aperçu"
+              class="absolute inset-0 w-full h-full object-cover"
+              loading="lazy"
+              decoding="async"
+            />
+          </div>
+        ) : null
+      }
+    </div>
+    <input
+      data-prop="description_photo_partie_2"
+      id="input_description_photo_partie_2"
+      placeholder={placeholders.description_photo_partie_2}
+      class="w-full border border-accent rounded px-2 py-1 mt-2 text-black bg-base-100"
+      value={mode === "edit" && previewData ? previewData.description_photo_partie_2 : ""}
+    />
+    <input
+      type="hidden"
+      name="description_photo_partie_2"
+      id="hidden_description_photo_partie_2"
+      value={mode === "edit" && previewData ? previewData.description_photo_partie_2 : ""}
+    />
+  </div>
+
+  <div class="p-4 bg-base-200 rounded-box border border-contrast space-y-4">
+    <h4 class="font-semibold">Partie 3</h4>
+    <input
+      data-prop="titre_partie_3"
+      id="input_titre_partie_3"
+      class="w-full border border-accent rounded px-2 py-1 mt-2 text-black bg-base-100"
+      placeholder={placeholders.titre_partie_3}
+      value={mode === "edit" && previewData ? previewData.titre_partie_3 : ""}
+    />
+    <input
+      type="hidden"
+      name="titre_partie_3"
+      id="hidden_titre_partie_3"
+      value={mode === "edit" && previewData ? previewData.titre_partie_3 : ""}
+    />
+    <label class="block text-sm font-medium mt-2">Texte partie 3</label>
+    <textarea
+      data-prop="texte_partie_3"
+      name="texte_partie_3"
+      id="input_texte_partie_3"
+      placeholder={placeholders.texte_partie_3}
+      class="w-full border border-accent rounded px-2 py-1 text-black bg-base-100"
+      rows="4"
+    >{mode === "edit" && previewData ? previewData.texte_partie_3 : ""}</textarea>
+    <input
+      type="hidden"
+      name="texte_partie_3"
+      id="hidden_texte_partie_3"
+      value={mode === "edit" && previewData ? previewData.texte_partie_3 : ""}
+    />
+    <label class="block text-sm font-medium mt-2">Photo partie 3</label>
+    <label
+      for="input_photo_partie_3"
+      class="cursor-pointer w-full h-36 border-2 border-dashed rounded bg-base-100 flex items-center justify-center text-gray-500"
+    >
+      <input
+        data-prop-file="photo_partie_3"
+        type="file"
+        name="photo_partie_3"
+        id="input_photo_partie_3"
+        accept="image/*"
+        class="hidden"
+      />
+      <div class="flex flex-col items-center text-center pointer-events-none">
+        <img
+          src={imageIcon?.src}
+          alt="Icone image"
+          class="h-16 w-16"
+          style="filter:grayscale(100%) brightness(0.5); opacity:0.3;"
+        />
+        <span class="text-sm">Ajouter une photo</span>
+      </div>
+    </label>
+    <div id="preview_photo_partie_3" class="mt-2">
+      {
+        mode === "edit" && previewData?.photo_partie_3 ? (
+          <div
+            class="relative overflow-hidden rounded-md"
+            style="padding-bottom:56%"
+          >
+            <img
+              src={previewData.photo_partie_3}
+              alt="Aperçu"
+              class="absolute inset-0 w-full h-full object-cover"
+              loading="lazy"
+              decoding="async"
+            />
+          </div>
+        ) : null
+      }
+    </div>
+    <input
+      data-prop="description_photo_partie_3"
+      id="input_description_photo_partie_3"
+      placeholder={placeholders.description_photo_partie_3}
+      class="w-full border border-accent rounded px-2 py-1 mt-2 text-black bg-base-100"
+      value={mode === "edit" && previewData ? previewData.description_photo_partie_3 : ""}
+    />
+    <input
+      type="hidden"
+      name="description_photo_partie_3"
+      id="hidden_description_photo_partie_3"
+      value={mode === "edit" && previewData ? previewData.description_photo_partie_3 : ""}
+    />
+  </div>
+
+  <div class="p-4 bg-base-200 rounded-box border border-contrast space-y-4">
+    <h4 class="font-semibold">Remerciements</h4>
+    <input
+      data-prop="titre_remerciement"
+      id="input_titre_remerciement"
+      class="w-full border border-accent rounded px-2 py-1 mt-2 text-black bg-base-100"
+      placeholder={placeholders.titre_remerciements}
+      value={mode === "edit" && previewData ? previewData.titre_remerciements : ""}
+    />
+    <input
+      type="hidden"
+      name="titre_remerciement"
+      id="hidden_titre_remerciement"
+      value={mode === "edit" && previewData ? previewData.titre_remerciements : ""}
+    />
+    <label class="block text-sm font-medium mt-2"
+      >Description remerciements</label
+    >
+    <textarea
+      data-prop="description_remerciement"
+      name="description_remerciement"
+      id="input_description_remerciement"
+      placeholder={placeholders.description_remerciements}
+      class="w-full border border-accent rounded px-2 py-1 text-black bg-base-100"
+      rows="3"
+    >{mode === "edit" && previewData ? previewData.description_remerciements : ""}</textarea>
+    <input
+      type="hidden"
+      name="description_remerciement"
+      id="hidden_description_remerciement"
+      value={mode === "edit" && previewData ? previewData.description_remerciements : ""}
+    />
+  </div>
+
+  <div class="p-4 bg-base-200 rounded-box border border-contrast space-y-4">
+    <label class="block text-sm font-medium mb-1">Galerie (max 8)</label>
+    <label
+      for="input_galerie_photos"
+      class="cursor-pointer w-full h-36 border-2 border-dashed rounded bg-base-100 flex items-center justify-center text-gray-500"
+    >
+      <input
+        data-prop-file="galerie_photos"
+        type="file"
+        name="galerie_photos"
+        id="input_galerie_photos"
+        accept="image/*"
+        multiple
+        class="hidden"
+      />
+      <div class="flex flex-col items-center text-center pointer-events-none">
+        <img
+          src={imageIcon?.src}
+          alt="Icone image"
+          class="h-16 w-16"
+          style="filter:grayscale(100%) brightness(0.5); opacity:0.3;"
+        />
+        <span class="text-sm">Cliquez ou glissez vos photos</span>
+        <span class="text-xs text-gray-400">Jusqu'à 8 images</span>
+      </div>
+    </label>
+    <input
+      type="hidden"
+      id="hidden_galerie_photos"
+      name="galerie_photos"
+      value={mode === "edit" && previewData ? JSON.stringify(previewData.galerie_photos) : undefined}
+    />
+    <input
+      type="hidden"
+      id="hidden_remove_galerie_photos"
+      name="remove_galerie_photos"
+    />
+    <div id="galleryExisting" class="mt-2 grid grid-cols-4 gap-2"></div>
+    <div id="gallerySelected" class="mt-2 grid grid-cols-4 gap-2"></div>
+  </div>
+
+  <div class="pt-4 flex gap-2">
+    {
+      mode === "create" && (
+        <button
+          type="submit"
+          name="save_as"
+          value="brouillon"
+          class="btn btn-ghost hover:text-accent text-base-100 px-4 py-2 rounded-md!"
+        >
+          Enregistrer en brouillon
+        </button>
+      )
+    }
+    <button
+      type="submit"
+      class="btn btn-border text-base-content px-4 py-2 rounded-md! flex-1"
+      >{mode === "create" ? "Créer l'action" : "Enregistrer"}</button
+    >
+  </div>
+</form>

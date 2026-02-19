@@ -9,9 +9,10 @@ interface Page {
   id: string;
   title: string;
   slug: string;
-  status: 'actions' | 'projets' | 'produits' | 'draft';
+  status: 'actions' | 'projets' | 'produits' | 'brouillon';
   updatedAt: string;
   authorName: string;
+  type?: 'action' | 'projet' | 'produit';
   beneficiary?: string;
 }
 
@@ -47,14 +48,24 @@ const pages: Page[] = [
     updatedAt: produit.updated,
     authorName: 'Admin' // Valeur par défaut
   })),
-  ...brouillons.map(brouillon => ({
-    id: brouillon.id,
-    title: brouillon.titre,
-    slug: slugify(brouillon.titre, { lower: true, strict: true }),
-    status: 'draft' as const,
-    updatedAt: brouillon.updated,
-    authorName: 'Admin' // Valeur par défaut
-  }))
+  ...brouillons.map(brouillon => {
+    // Inférer le type si absent (heuristique : champs typiques d'une action)
+    const inferredType = brouillon.type || (
+      brouillon.date_debut || brouillon.nom_lieu || brouillon.beneficiaire || brouillon.titre_partie_1 || (Array.isArray(brouillon.galerie_photos) && brouillon.galerie_photos.length)
+        ? 'action'
+        : undefined
+    );
+
+    return ({
+      id: brouillon.id,
+      title: brouillon.titre,
+      slug: slugify(brouillon.titre || 'brouillon', { lower: true, strict: true }),
+      status: 'brouillon' as const,
+      updatedAt: brouillon.updated,
+      authorName: 'Admin', // Valeur par défaut
+      type: inferredType,
+    });
+  })
 ];
 
 // Simple fake DB: only pages (id, title, slug, status, updatedAt, authorName)
@@ -68,31 +79,47 @@ function getStatusBadge(status: Page['status']) {
   if (status === 'actions') return { label: 'Actions', className: 'badge badge-success' };
   if (status === 'projets') return { label: 'Projets', className: 'badge badge-primary' };
   if (status === 'produits') return { label: 'Produits', className: 'badge badge-secondary' };
-  if (status === 'draft') return { label: 'Brouillon', className: 'badge badge-ghost' };
+  if (status === 'brouillon') return { label: 'Brouillon', className: 'badge badge-ghost' };
   return { label: status, className: 'badge' };
 }
 
-function getEditUrl(status: Page['status'], id: string, slug: string): string {
+function getEditUrl(status: Page['status'], id: string, slug: string, type?: string): string {
   if (status === 'actions') return `/creation/actions/edit/${id}-${slug}`;
-  if (status === 'projets') return `/creation/projets/${id}-${slug}`;
-  if (status === 'produits') return `/creation/produits/${id}-${slug}`;
-  if (status === 'draft') return `/creation/brouillons/${id}-${slug}`;
+  if (status === 'projets') return `/creation/projets/edit/${id}-${slug}`;
+  if (status === 'produits') return `/creation/produits/edit/${id}-${slug}`;
+
+  // Pour les brouillons, utiliser le `type` si présent ; sinon ouvrir
+  // l'éditeur `actions` par défaut (comportement demandé).
+  if (status === 'brouillon') {
+    if (type === 'action') return `/creation/actions/edit/${id}-${slug}`;
+    if (type === 'projet') return `/creation/projets/edit/${id}-${slug}`;
+    if (type === 'produit') return `/creation/produits/edit/${id}-${slug}`;
+    // fallback par défaut → ouvrir l'éditeur actions
+    return `/creation/actions/edit/${id}-${slug}`;
+  }
+
   return `/creation/pages/${id}-${slug}`;
 }
 
-function getViewUrl(status: Page['status'], id: string, slug: string): string {
+function getViewUrl(status: Page['status'], id: string, slug: string, type?: string): string {
   if (status === 'actions') return `/actions/${id}-${slug}`;
   if (status === 'projets') return `/projets/${id}-${slug}`;
   if (status === 'produits') return `/produits/${id}-${slug}`;
+  if (status === 'brouillon') {
+    if (type === 'action') return `/actions/${id}-${slug}`;
+    if (type === 'projet') return `/projets/${id}-${slug}`;
+    if (type === 'produit') return `/produits/${id}-${slug}`;
+    return getEditUrl(status, id, slug);
+  }
   return getEditUrl(status, id, slug);
 }
 
-function computeStats(pages: Page[]): { actions: number; projets: number; produits: number; drafts: number; total: number; } {
+function computeStats(pages: Page[]): { actions: number; projets: number; produits: number; brouillons: number; total: number; } {
   return {
     actions: pages.filter(p => p.status === 'actions').length,
     projets: pages.filter(p => p.status === 'projets').length,
     produits: pages.filter(p => p.status === 'produits').length,
-    drafts: pages.filter(p => p.status === 'draft').length,
+    brouillons: pages.filter(p => p.status === 'brouillon').length,
     total: pages.length
   };
 }
@@ -162,7 +189,7 @@ const allPages = db.pages;
       </div>
       <div class="card bg-base-100 shadow-sm">
         <div class="card-body text-center p-4">
-          <div class="text-2xl font-bold text-base-content">{stats.drafts}</div>
+          <div class="text-2xl font-bold text-base-content">{stats.brouillons}</div>
           <div class="text-sm text-base-content/70">Brouillons</div>
         </div>
       </div>
@@ -181,7 +208,7 @@ const allPages = db.pages;
         </div>
 
         <div class="flex flex-col md:flex-row gap-4">
-          <ActionsSearch showStatus={true} value={q} statusOptions={["all","actions","projets","produits","draft"]} />
+          <ActionsSearch showStatus={true} value={q} statusOptions={["all","actions","projets","produits","brouillon"]} />
         </div>
       </div>
     </div>
@@ -215,8 +242,8 @@ const allPages = db.pages;
                       <p class="text-sm text-base-content/60 mb-2">Par {page.authorName}</p>
                       <p class="text-sm text-base-content/60">{formatDateWithTime(page.updatedAt)}</p>
                       <div class="card-actions justify-end mt-4">
-                        <a href={getViewUrl(page.status, page.id, page.slug)} class="btn btn-sm">Voir</a>
-                        <a href={getEditUrl(page.status, page.id, page.slug)} class="btn btn-sm">Modifier</a>
+                        <a href={getViewUrl(page.status, page.id, page.slug, page.type)} class="btn btn-sm">Voir</a>
+                        <a href={getEditUrl(page.status, page.id, page.slug, page.type)} class="btn btn-sm">Modifier</a>
                       </div>
                     </div>
                   </div>
@@ -246,18 +273,32 @@ const allPages = db.pages;
     return new Date(d).toLocaleString('fr-FR', { dateStyle: 'medium', timeStyle: 'short' });
   }
 
-  function getEditUrl(status, id, slug) {
+  function getEditUrl(status, id, slug, type) {
     if (status === 'actions') return `/creation/actions/edit/${id}-${slug}`;
-    if (status === 'projets') return `/creation/projets/${id}-${slug}`;
-    if (status === 'produits') return `/creation/produits/${id}-${slug}`;
-    if (status === 'draft') return `/creation/brouillons/${id}-${slug}`;
-    return `/creation/pages/${id}-${slug}`;
+    if (status === 'projets') return `/creation/projets/edit/${id}-${slug}`;
+    if (status === 'produits') return `/creation/produits/edit/${id}-${slug}`;
+
+    if (status === 'brouillon') {
+      if (type === 'action') return `/creation/actions/edit/${id}-${slug}`;
+      if (type === 'projet') return `/creation/projets/edit/${id}-${slug}`;
+      if (type === 'produit') return `/creation/produits/edit/${id}-${slug}`;
+      // fallback -> ouvrir l'éditeur actions
+      return `/creation/actions/edit/${id}-${slug}`;
+    }
+
+    return `/creation/pages/edit/${id}-${slug}`;
   }
 
-  function getViewUrl(status, id, slug) {
+  function getViewUrl(status, id, slug, type) {
     if (status === 'actions') return `/actions/${id}-${slug}`;
     if (status === 'projets') return `/projets/${id}-${slug}`;
     if (status === 'produits') return `/produits/${id}-${slug}`;
+    if (status === 'brouillon') {
+      if (type === 'action') return `/actions/${id}-${slug}`;
+      if (type === 'projet') return `/projets/${id}-${slug}`;
+      if (type === 'produit') return `/produits/${id}-${slug}`;
+      return getEditUrl(status, id, slug);
+    }
     return getEditUrl(status, id, slug);
   }
 
@@ -265,7 +306,7 @@ const allPages = db.pages;
     if (status === 'actions') return { label: 'Actions', className: 'badge-success' };
     if (status === 'projets') return { label: 'Projets', className: 'badge-primary' };
     if (status === 'produits') return { label: 'Produits', className: 'badge-secondary' };
-    if (status === 'draft') return { label: 'Brouillon', className: 'badge-ghost' };
+    if (status === 'brouillon') return { label: 'Brouillon', className: 'badge-ghost' };
     return { label: status, className: 'badge' };
   }
 
@@ -321,7 +362,7 @@ const allPages = db.pages;
         const statusLabel = statusFilter === 'actions' ? 'Actions' :
                            statusFilter === 'projets' ? 'Projets' :
                            statusFilter === 'produits' ? 'Produits' :
-                           statusFilter === 'draft' ? 'Brouillons' : statusFilter;
+                           statusFilter === 'brouillon' ? 'Brouillons' : statusFilter;
         const badge = document.createElement('span');
         badge.className = 'badge';
         badge.textContent = `Type: ${statusLabel}`;
@@ -376,8 +417,8 @@ const allPages = db.pages;
                   <p class="text-sm text-base-content/60 mb-2">Par ${page.authorName}</p>
                   <p class="text-sm text-base-content/60">${formatDate(page.updatedAt)}</p>
                   <div class="card-actions justify-end mt-4">
-                    <a href="${getViewUrl(page.status, page.id, page.slug)}" class="btn btn-sm">Voir</a>
-                    <a href="${getEditUrl(page.status, page.id, page.slug)}" class="btn btn-sm">Modifier</a>
+                    <a href="${getViewUrl(page.status, page.id, page.slug, page.type)}" class="btn btn-sm">Voir</a>
+                    <a href="${getEditUrl(page.status, page.id, page.slug, page.type)}" class="btn btn-sm">Modifier</a>
                   </div>
                 </div>
               </div>

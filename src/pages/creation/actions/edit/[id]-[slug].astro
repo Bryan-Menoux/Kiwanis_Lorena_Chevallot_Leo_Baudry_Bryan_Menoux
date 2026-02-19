@@ -2,6 +2,7 @@
 // Page serveur pour créer/éditer une action — logique serveur et rendu.
 import Layout from "../../../../layouts/Layout-back-office.astro";
 import ActionContent from "../../../../components/ActionContent.astro";
+import ActionForm from "../../../../components/ActionForm.astro";
 import slugify from "slugify";
 // Paramètre `id` optionnel provenant de l'URL (utilisé pour l'édition)
 const idParam = Astro.params?.id;
@@ -15,22 +16,44 @@ import {
 } from "../../../../utils/utilitaires.js";
 import imageIcon from "../../../../assets/image-icon.svg";
 import { ActionsTypeDeChiffreOptions } from "../../../../pocketbase-types";
+import previewDefaults from "../../../../scripts/previewDefaults.js";
 
 // Message d'erreur affiché dans le formulaire en cas d'échec serveur
 let error: string = "";
 
-// On récupère le options `type_de_chiffre`
-let typeDeChiffreOptions: string[] = Object.values(ActionsTypeDeChiffreOptions);
+// récupérer uniquement les valeurs présentes en base (pas de fallback local)
+let typeDeChiffreOptions: string[] = [];
+try {
+  const records: any[] = await Astro.locals.pb
+    .collection("actions")
+    .getFullList(100);
+  const values = Array.from(new Set(records.map((r: any) => r?.type_de_chiffre).filter(Boolean)));
+  if (values.length > 0) typeDeChiffreOptions = values;
+} catch (e) {
+  // garder la liste vide si on ne peut pas récupérer
+}
 
 // Placeholder SVG data-URL pour la prévisualisation serveur
 const placeholderImg = `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='400' height='400' viewBox='0 0 400 400'><rect width='100%' height='100%' fill='%23f3f6f7'/><image href='${imageIcon.src}' x='50' y='50' width='300' height='300' preserveAspectRatio='xMidYMid meet' style='opacity:0.95;'/></svg>`;
 
 // Charger l'enregistrement existant lorsque `idParam` est fourni (mode édition)
 let actionRecord: any = null;
+let actionRecordFromBrouillon = false;
 if (idParam) {
   try {
-    actionRecord = await Astro.locals.pb.collection("actions").getOne(idParam);
-    
+    // tenter d'abord dans `actions`; si record non trouvé (404), rechercher dans `brouillons`
+    try {
+      actionRecord = await Astro.locals.pb.collection("actions").getOne(idParam);
+    } catch (err) {
+      // si la requête vers `actions` échoue (404 ou autre), tenter `brouillons`
+      try {
+        actionRecord = await Astro.locals.pb.collection("brouillons").getOne(idParam);
+        actionRecordFromBrouillon = true;
+      } catch (err2) {
+        // ni actions ni brouillons trouvés — remonter l'erreur originale
+        throw err;
+      }
+    }
   } catch (e) {
     console.error("Erreur retrieving action:", e);
     // message utilisateur succinct
@@ -60,8 +83,7 @@ const previewData: any = {
   adresse_lieu: actionRecord?.adresse_lieu ?? "",
   lien_lieu: actionRecord?.lien_lieu ?? "",
   chiffre: actionRecord?.chiffre ?? "",
-  type_de_chiffre:
-    actionRecord?.type_de_chiffre ?? typeDeChiffreOptions[0] ?? "",
+  type_de_chiffre: actionRecord?.type_de_chiffre ?? "",
   beneficiaire: actionRecord?.beneficiaire ?? "",
   titre_partie_2: actionRecord?.titre_partie_2 ?? "",
   texte_partie_2: actionRecord?.texte_partie_2 ?? "",
@@ -85,14 +107,18 @@ const previewData: any = {
   description_remerciements: actionRecord?.description_remerciements ?? "",
   galerie_photos:
     actionRecord?.galerie_photos && actionRecord.galerie_photos.length > 0
-      ? actionRecord.galerie_photos.map(
+      ? actionRecord?.galerie_photos.map(
           (p: any) =>
             normalizeImageUrl(p, actionRecord, Astro.locals.pb) ??
             placeholderImg,
         )
       : [placeholderImg, placeholderImg, placeholderImg],
 };
-
+ // Placeholder partagé (source unique injecté côté serveur depuis `previewDefaults.js`)
+const previewPlaceholder: any = {
+  ...previewDefaults,
+  ...previewData,
+};
 // Gestion de la soumission du formulaire côté serveur
 // Si `idParam` présent -> mise à jour, sinon création.
 if (Astro.request.method === "POST") {
@@ -117,11 +143,18 @@ if (Astro.request.method === "POST") {
     const action = formData.get("_action")?.toString();
     if (action === "delete" && idParam) {
       try {
+        if (actionRecordFromBrouillon) {
+          // supprimer le brouillon
+          await Astro.locals.pb.collection("brouillons").delete(idParam);
+          return Astro.redirect("/creation/brouillons?success=Brouillon supprimé");
+        }
+
+        // suppression classique d'une action
         await Astro.locals.pb.collection("actions").delete(idParam);
+        return Astro.redirect("/creation/actions?success=Action supprimée");
       } catch (e) {
-        console.error("Erreur suppression action:", e);
+        console.error("Erreur suppression:", e);
       }
-      return Astro.redirect("/creation/actions?success=Action supprimée");
     }
 
     // Vérifier que le titre est fourni
@@ -226,6 +259,26 @@ if (Astro.request.method === "POST") {
         payload.galerie_photos = combinedGallery.length ? combinedGallery : [];
       }
 
+      // Si le record provient d'un brouillon, on met à jour la collection `brouillons`
+      if (actionRecordFromBrouillon) {
+        // assurer que le type reste 'action' pour que les liens redirigent correctement
+        payload.type = 'action';
+
+        // copier les références de fichiers existantes depuis le brouillon si aucun upload n'a été fait
+        if (!payload.hero && actionRecord?.hero) payload.hero = actionRecord.hero;
+        if (!payload.photo_partie_1 && actionRecord?.photo_partie_1) payload.photo_partie_1 = actionRecord.photo_partie_1;
+        if (!payload.photo_partie_2 && actionRecord?.photo_partie_2) payload.photo_partie_2 = actionRecord.photo_partie_2;
+        if (!payload.photo_partie_3 && actionRecord?.photo_partie_3) payload.photo_partie_3 = actionRecord.photo_partie_3;
+        if (!payload.galerie_photos && Array.isArray(actionRecord?.galerie_photos) && actionRecord.galerie_photos.length) payload.galerie_photos = actionRecord.galerie_photos;
+
+        await Astro.locals.pb.collection("brouillons").update(idParam, payload);
+
+        return Astro.redirect(
+          `/creation/brouillons/${idParam}-${slug}?success=Brouillon mis à jour`,
+        );
+      }
+
+      // Mise à jour classique d'une action
       await Astro.locals.pb.collection("actions").update(idParam, payload);
 
       return Astro.redirect(
@@ -253,645 +306,27 @@ if (Astro.request.method === "POST") {
 <Layout>
   <div class="flex h-fit w-full">
     <div class="w-1/3">
-      <div
-        class="h-[105dvh] bg-accent pb-24 rounded-br-box sticky left-0 top-0 overflow-auto p-6"
-      >
-        <form
-          id="leftForm"
-          class="space-y-8 text-accent"
-          method="POST"
-          enctype="multipart/form-data"
-        >
-          <h1 class="text-3xl font-bold mb-8 mt-32 text-white">
-            {idParam ? "Modifier l'action" : "Créer une nouvelle action"}
-          </h1>
-          {error && <p class="text-red-300 mb-4">{error}</p>}
-
-          <div
-            class="p-4 bg-base-200 rounded-lg border border-base-300 space-y-4"
-          >
-            <label class="block text-sm font-medium mb-1">Titre</label>
-            <input
-              data-prop="titre"
-              id="input_titre"
-              name="titre_local"
-              class="w-full border rounded px-2 py-1 text-black bg-base-100"
-              placeholder="Titre de l'action"
-              value={previewData.titre}
-            />
-            <input
-              type="hidden"
-              name="titre"
-              id="hidden_titre"
-              value={previewData.titre}
-            />
-
-            <label class="block text-sm font-medium mb-1">Sous-titre</label>
-            <input
-              data-prop="sous_titre"
-              id="input_sous_titre"
-              class="w-full border rounded px-2 py-1 text-black bg-base-100"
-              placeholder="Sous-titre"
-              value={previewData.sous_titre}
-            />
-            <input
-              type="hidden"
-              name="sous_titre"
-              id="hidden_sous_titre"
-              value={previewData.sous_titre}
-            />
-
-            <div class="flex gap-4">
-              <div class="w-1/2">
-                <label class="text-sm">Date début</label>
-                <input
-                  data-prop="date_debut"
-                  id="input_date_debut"
-                  type="date"
-                  class="border rounded px-2 py-1 w-full text-black bg-base-100"
-                  value={previewData.date_debut}
-                />
-                <input
-                  type="hidden"
-                  name="date_debut"
-                  id="hidden_date_debut"
-                  value={previewData.date_debut}
-                />
-              </div>
-              <div class="w-1/2">
-                <label class="text-sm">Date fin</label>
-                <input
-                  data-prop="date_fin"
-                  id="input_date_fin"
-                  type="date"
-                  class="border rounded px-2 py-1 w-full text-black bg-base-100"
-                  value={previewData.date_fin}
-                />
-                <input
-                  type="hidden"
-                  name="date_fin"
-                  id="hidden_date_fin"
-                  value={previewData.date_fin}
-                />
-              </div>
-            </div>
-          </div>
-
-          <div
-            class="p-4 bg-base-200 rounded-lg border border-base-300 space-y-4"
-          >
-            <label class="block text-sm font-medium mb-1"
-              >Image de l'en-tête</label
-            >
-            <label
-              for="input_hero_file"
-              class="cursor-pointer w-full h-40 border-2 border-dashed rounded bg-base-100 flex items-center justify-center text-gray-500"
-            >
-              <input
-                data-prop-file="hero"
-                type="file"
-                name="hero"
-                id="input_hero_file"
-                accept="image/*"
-                class="hidden"
-              />
-              <div id="preview_hero" class="mt-2"></div>
-              <div
-                class="flex flex-col items-center text-center pointer-events-none"
-              >
-                <img
-                  src={imageIcon.src}
-                  alt="Icone image"
-                  class="h-16 w-16"
-                  style="filter:grayscale(100%) brightness(0.5); opacity:0.3;"
-                />
-                <span class="text-sm">Cliquez ou glissez l'image ici</span>
-                <span class="text-xs text-gray-400">PNG, JPG, GIF</span>
-              </div>
-            </label>
-            {
-              actionRecord?.hero && (
-                <div class="mt-2" id="existing_hero_container">
-                  <label class="block text-sm font-medium mb-1">
-                    Image actuelle
-                  </label>
-                    <div class="relative">
-                      <button type="button" class="existing-single-remove absolute top-2 right-2 bg-black/60 text-white rounded-full w-6 h-6 flex items-center justify-center" data-prop="hero">×</button>
-                      <img
-                        data-field="hero"
-                        src={normalizeImageUrl(
-                          actionRecord.hero,
-                          actionRecord,
-                          Astro.locals.pb,
-                        )}
-                        alt="Aperçu image hero"
-                        class="w-full h-[25dvh] object-cover rounded"
-                      />
-                    </div>
-                </div>
-              )
-            }
-            <label class="block text-sm font-medium mt-2 mb-1"
-              >Description image de l'en-tête</label
-            >
-            <textarea
-              data-prop="description_hero"
-              id="input_description_hero"
-              class="w-full border rounded px-2 py-1 text-black bg-base-100"
-              rows="2">{previewData.description_hero}</textarea
-            >
-            <input
-              type="hidden"
-              name="description_hero"
-              id="hidden_description_hero"
-              value={previewData.description_hero}
-            />
-          </div>
-
-          <div
-            class="p-4 bg-base-200 rounded-lg border border-base-300 space-y-4"
-          >
-            <h4 class="font-semibold">Partie 1</h4>
-            <input
-              data-prop="titre_partie_1"
-              id="input_titre_partie_1"
-              class="w-full border rounded px-2 py-1 mt-2 text-black bg-base-100"
-              placeholder="Titre partie 1"
-              value={previewData.titre_partie_1}
-            />
-            <input
-              type="hidden"
-              name="titre_partie_1"
-              id="hidden_titre_partie_1"
-              value={previewData.titre_partie_1}
-            />
-            <label class="block text-sm font-medium mt-2">Texte partie 1</label>
-            <textarea
-              data-prop="texte_partie_1"
-              id="input_texte_partie_1"
-              class="w-full border rounded px-2 py-1 text-black bg-base-100"
-              rows="4">{previewData.texte_partie_1}</textarea
-            >
-            <input
-              type="hidden"
-              name="texte_partie_1"
-              id="hidden_texte_partie_1"
-              value={previewData.texte_partie_1}
-            />
-            <label class="block text-sm font-medium mt-2">Photo partie 1</label>
-            <label
-              for="input_photo_partie_1"
-              class="cursor-pointer w-full h-36 border-2 border-dashed rounded bg-base-100 flex items-center justify-center text-gray-500"
-            >
-              <input
-                data-prop-file="photo_partie_1"
-                type="file"
-                name="photo_partie_1"
-                id="input_photo_partie_1"
-                accept="image/*"
-                class="hidden"
-              />
-              <div id="preview_photo_partie_1" class="mt-2"></div>
-              <div
-                class="flex flex-col items-center text-center pointer-events-none"
-              >
-                <img
-                  src={imageIcon.src}
-                  alt="Icone image"
-                  class="h-16 w-16"
-                  style="filter:grayscale(100%) brightness(0.5); opacity:0.3;"
-                />
-                <span class="text-sm">Ajouter une photo</span>
-              </div>
-            </label>
-            {
-              actionRecord?.photo_partie_1 && (
-                <div class="mt-2" id="existing_photo_partie_1_container">
-                  <label class="block text-sm font-medium mb-1">
-                    Image actuelle
-                  </label>
-                    <div class="relative">
-                      <button type="button" class="existing-single-remove absolute top-2 right-2 bg-black/60 text-white rounded-full w-6 h-6 flex items-center justify-center" data-prop="photo_partie_1">×</button>
-                      <img
-                        data-field="photo_partie_1"
-                        src={normalizeImageUrl(
-                          actionRecord.photo_partie_1,
-                          actionRecord,
-                          Astro.locals.pb,
-                        )}
-                        alt="Aperçu photo partie 1"
-                        class="w-full h-[25dvh] object-cover rounded"
-                      />
-                    </div>
-                </div>
-              )
-            }
-            <label class="block text-sm font-medium mt-2"
-              >Description photo partie 1</label
-            >
-            <input
-              data-prop="description_photo_partie_1"
-              id="input_description_photo_partie_1"
-              class="w-full border rounded px-2 py-1 text-black bg-base-100"
-              value={previewData.description_photo_partie_1}
-            />
-            <input
-              type="hidden"
-              name="description_photo_partie_1"
-              id="hidden_description_photo_partie_1"
-              value={previewData.description_photo_partie_1}
-            />
-          </div>
-
-          <div
-            class="p-4 bg-base-200 rounded-lg border border-base-300 space-y-4"
-          >
-            <h4 class="font-semibold">Lieu / Chiffres / Bénéficiaires</h4>
-            <label class="block text-sm font-medium mt-2"
-              >Nom du lieu (max 30 caractères)</label
-            >
-            <input
-              data-prop="nom_lieu"
-              id="input_nom_lieu"
-              name="nom_lieu_local"
-              maxlength="30"
-              class="w-full border rounded px-2 py-1 mt-2 text-black bg-base-100"
-              placeholder="Nom du lieu"
-            />
-            <input
-              type="hidden"
-              name="nom_lieu"
-              id="hidden_nom_lieu"
-              value={previewData.nom_lieu}
-            />
-            <label class="block text-sm font-medium mt-2"
-              >Adresse du lieu (max 30 caractères)</label
-            >
-            <input
-              data-prop="adresse_lieu"
-              id="input_adresse_lieu"
-              maxlength="30"
-              class="w-full border rounded px-2 py-1 mt-2 text-black bg-base-100"
-              placeholder="Adresse"
-            />
-            <input
-              type="hidden"
-              name="adresse_lieu"
-              id="hidden_adresse_lieu"
-              value={previewData.adresse_lieu}
-            />
-            <input
-              data-prop="lien_lieu"
-              id="input_lien_lieu"
-              class="w-full border rounded px-2 py-1 mt-2 text-black bg-base-100"
-              placeholder="Lien Google Maps"
-            />
-            <input
-              type="hidden"
-              name="lien_lieu"
-              id="hidden_lien_lieu"
-              value={previewData.lien_lieu}
-            />
-            <div class="flex gap-2 mt-2">
-              <input
-                data-prop="chiffre"
-                id="input_chiffre"
-                type="number"
-                class="border rounded px-2 py-1 w-1/2 text-black bg-base-100"
-                placeholder="Chiffre"
-                value={previewData.chiffre}
-              />
-              <select
-                data-prop="type_de_chiffre"
-                id="input_type_de_chiffre"
-                class="border rounded px-2 py-1 w-1/2 text-black bg-base-100"
-              >
-                <option value="">Type</option>
-                {
-                  typeDeChiffreOptions.map((opt) => (
-                    <option
-                      value={opt}
-                      selected={opt === previewData.type_de_chiffre}
-                    >
-                      {opt}
-                    </option>
-                  ))
-                }
-              </select>
-            </div>
-            <input
-              type="hidden"
-              name="chiffre"
-              id="hidden_chiffre"
-              value={previewData.chiffre}
-            />
-            <input
-              type="hidden"
-              name="type_de_chiffre"
-              id="hidden_type_de_chiffre"
-              value={previewData.type_de_chiffre}
-            />
-            <input
-              data-prop="beneficiaire"
-              id="input_beneficiaire"
-              class="w-full border rounded px-2 py-1 mt-2 text-black bg-base-100"
-              placeholder="Bénéficiaire"
-              value={previewData.beneficiaire}
-            />
-            <input
-              type="hidden"
-              name="beneficiaire"
-              id="hidden_beneficiaire"
-              value={previewData.beneficiaire}
-            />
-          </div>
-
-          <div
-            class="p-4 bg-base-200 rounded-lg border border-base-300 space-y-4"
-          >
-            <h4 class="font-semibold">Partie 2</h4>
-            <input
-              data-prop="titre_partie_2"
-              id="input_titre_partie_2"
-              class="w-full border rounded px-2 py-1 mt-2 text-black bg-base-100"
-              placeholder="Titre partie 2"
-              value={previewData.titre_partie_2}
-            />
-            <input
-              type="hidden"
-              name="titre_partie_2"
-              id="hidden_titre_partie_2"
-              value={previewData.titre_partie_2}
-            />
-            <label class="block text-sm font-medium mt-2">Texte partie 2</label>
-            <textarea
-              data-prop="texte_partie_2"
-              id="input_texte_partie_2"
-              class="w-full border rounded px-2 py-1 text-black bg-base-100"
-              rows="4">{previewData.texte_partie_2}</textarea
-            >
-            <input
-              type="hidden"
-              name="texte_partie_2"
-              id="hidden_texte_partie_2"
-              value={previewData.texte_partie_2}
-            />
-            <label class="block text-sm font-medium mt-2">Photo partie 2</label>
-            <label
-              for="input_photo_partie_2"
-              class="cursor-pointer w-full h-36 border-2 border-dashed rounded bg-base-100 flex items-center justify-center text-gray-500"
-            >
-              <input
-                data-prop-file="photo_partie_2"
-                type="file"
-                name="photo_partie_2"
-                id="input_photo_partie_2"
-                accept="image/*"
-                class="hidden"
-              />
-              <div id="preview_photo_partie_2" class="mt-2"></div>
-              <div
-                class="flex flex-col items-center text-center pointer-events-none"
-              >
-                <img
-                  src={imageIcon.src}
-                  alt="Icone image"
-                  class="h-16 w-16"
-                  style="filter:grayscale(100%) brightness(0.5); opacity:0.3;"
-                />
-                <span class="text-sm">Ajouter une photo</span>
-              </div>
-            </label>
-            {
-              actionRecord?.photo_partie_2 && (
-                <div class="mt-2" id="existing_photo_partie_2_container">
-                  <label class="block text-sm font-medium mb-1">
-                    Image actuelle
-                  </label>
-                  <div class="relative">
-                    <button type="button" class="existing-single-remove absolute top-2 right-2 bg-black/60 text-white rounded-full w-6 h-6 flex items-center justify-center" data-prop="photo_partie_2">×</button>
-                    <img
-                      data-field="photo_partie_2"
-                      src={normalizeImageUrl(
-                        actionRecord.photo_partie_2,
-                        actionRecord,
-                        Astro.locals.pb,
-                      )}
-                      alt="Aperçu photo partie 2"
-                      class="w-full h-[25dvh] object-cover rounded"
-                    />
-                  </div>
-                </div>
-              )
-            }
-            <input
-              data-prop="description_photo_partie_2"
-              id="input_description_photo_partie_2"
-              class="w-full border rounded px-2 py-1 mt-2 text-black bg-base-100"
-              value={previewData.description_photo_partie_2}
-            />
-            <input
-              type="hidden"
-              name="description_photo_partie_2"
-              id="hidden_description_photo_partie_2"
-              value={previewData.description_photo_partie_2}
-            />
-          </div>
-
-          <div
-            class="p-4 bg-base-200 rounded-lg border border-base-300 space-y-4"
-          >
-            <h4 class="font-semibold">Partie 3</h4>
-            <input
-              data-prop="titre_partie_3"
-              id="input_titre_partie_3"
-              class="w-full border rounded px-2 py-1 mt-2 text-black bg-base-100"
-              placeholder="Titre partie 3"
-              value={previewData.titre_partie_3}
-            />
-            <input
-              type="hidden"
-              name="titre_partie_3"
-              id="hidden_titre_partie_3"
-              value={previewData.titre_partie_3}
-            />
-            <label class="block text-sm font-medium mt-2">Texte partie 3</label>
-            <textarea
-              data-prop="texte_partie_3"
-              id="input_texte_partie_3"
-              class="w-full border rounded px-2 py-1 text-black bg-base-100"
-              rows="4">{previewData.texte_partie_3}</textarea
-            >
-            <input
-              type="hidden"
-              name="texte_partie_3"
-              id="hidden_texte_partie_3"
-              value={previewData.texte_partie_3}
-            />
-            <label class="block text-sm font-medium mt-2">Photo partie 3</label>
-            <label
-              for="input_photo_partie_3"
-              class="cursor-pointer w-full h-36 border-2 border-dashed rounded bg-base-100 flex items-center justify-center text-gray-500"
-            >
-              <input
-                data-prop-file="photo_partie_3"
-                type="file"
-                name="photo_partie_3"
-                id="input_photo_partie_3"
-                accept="image/*"
-                class="hidden"
-              />
-              <div id="preview_photo_partie_3" class="mt-2"></div>
-              <div
-                class="flex flex-col items-center text-center pointer-events-none"
-              >
-                <img
-                  src={imageIcon.src}
-                  alt="Icone image"
-                  class="h-16 w-16"
-                  style="filter:grayscale(100%) brightness(0.5); opacity:0.3;"
-                />
-                <span class="text-sm">Ajouter une photo</span>
-              </div>
-            </label>
-            {
-              actionRecord?.photo_partie_3 && (
-                <div class="mt-2" id="existing_photo_partie_3_container">
-                  <label class="block text-sm font-medium mb-1">
-                    Image actuelle
-                  </label>
-                  <div class="relative">
-                    <button type="button" class="existing-single-remove absolute top-2 right-2 bg-black/60 text-white rounded-full w-6 h-6 flex items-center justify-center" data-prop="photo_partie_3">×</button>
-                    <img
-                      data-field="photo_partie_3"
-                      src={normalizeImageUrl(
-                        actionRecord.photo_partie_3,
-                        actionRecord,
-                        Astro.locals.pb,
-                      )}
-                      alt="Aperçu photo partie 3"
-                      class="w-full h-[25dvh] object-cover rounded"
-                    />
-                  </div>
-                </div>
-              )
-            }
-            <input
-              data-prop="description_photo_partie_3"
-              id="input_description_photo_partie_3"
-              class="w-full border rounded px-2 py-1 mt-2 text-black bg-base-100"
-              value={previewData.description_photo_partie_3}
-            />
-            <input
-              type="hidden"
-              name="description_photo_partie_3"
-              id="hidden_description_photo_partie_3"
-              value={previewData.description_photo_partie_3}
-            />
-          </div>
-
-          <div
-            class="p-4 bg-base-200 rounded-lg border border-base-300 space-y-4"
-          >
-            <h4 class="font-semibold">Remerciements</h4>
-            <input
-              data-prop="titre_remerciement"
-              id="input_titre_remerciement"
-              class="w-full border rounded px-2 py-1 mt-2 text-black bg-base-100"
-              placeholder="Titre remerciements"
-              value={previewData.titre_remerciements}
-            />
-            <input
-              type="hidden"
-              name="titre_remerciement"
-              id="hidden_titre_remerciement"
-              value={previewData.titre_remerciements}
-            />
-            <label class="block text-sm font-medium mt-2"
-              >Description remerciements</label
-            >
-            <textarea
-              data-prop="description_remerciement"
-              id="input_description_remerciement"
-              class="w-full border rounded px-2 py-1 text-black bg-base-100"
-              rows="3">{previewData.description_remerciements}</textarea
-            >
-            <input
-              type="hidden"
-              name="description_remerciement"
-              id="hidden_description_remerciement"
-              value={previewData.description_remerciements}
-            />
-          </div>
-
-          <div
-            class="p-4 bg-base-200 rounded-lg border border-base-300 space-y-4"
-          >
-            <label class="block text-sm font-medium mb-1">Galerie (max 8)</label
-            >
-            <label
-              for="input_galerie_photos"
-              class="cursor-pointer w-full h-36 border-2 border-dashed rounded bg-base-100 flex items-center justify-center text-gray-500"
-            >
-              <input
-                data-prop-file="galerie_photos"
-                type="file"
-                name="galerie_photos"
-                id="input_galerie_photos"
-                accept="image/*"
-                multiple
-                class="hidden"
-              />
-              <div
-                class="flex flex-col items-center text-center pointer-events-none"
-              >
-                <img
-                  src={imageIcon.src}
-                  alt="Icone image"
-                  class="h-16 w-16"
-                  style="filter:grayscale(100%) brightness(0.5); opacity:0.3;"
-                />
-                <span class="text-sm">Cliquez ou glissez vos photos</span>
-                <span class="text-xs text-gray-400">Jusqu'à 8 images</span>
-              </div>
-            </label>
-            <input
-              type="hidden"
-              id="hidden_galerie_photos"
-              name="galerie_photos"
-            />
-            <input
-              type="hidden"
-              id="hidden_remove_galerie_photos"
-              name="remove_galerie_photos"
-            />
-            <div id="galleryExisting" class="mt-2 grid grid-cols-4 gap-2"></div>
-            <div id="gallerySelected" class="mt-2 grid grid-cols-4 gap-2"></div>
-          </div>
-
-          <div class="pt-4">
-            <button
-              type="submit"
-              class="bg-base-100 text-accent px-4 py-2 rounded w-full"
-              >{
-                idParam ? "Enregistrer les modifications" : "Créer l'action"
-              }</button
-            >
-          </div>
-        </form>
+      <div class="h-[105dvh] bg-accent pb-24 rounded-br-box sticky left-0 top-0 overflow-auto p-6">
+        <ActionForm
+          mode="edit"
+          previewPlaceholder={previewPlaceholder}
+          previewData={previewData}
+          typeDeChiffreOptions={typeDeChiffreOptions}
+          imageIcon={imageIcon}
+          actionRecord={actionRecord}
+        />
       </div>
     </div>
 
     <div class="w-2/3 px-8">
-      <ActionContent action={previewData} />
+      <ActionContent action={previewPlaceholder} />
     </div>
   </div>
-  <script
-    set:html={`window.__previewData = ${JSON.stringify(previewData).replace(/</g, "\\u003c")};`}
-  />
+  <script set:html={`window.__previewData = ${JSON.stringify(previewPlaceholder).replace(/</g, "\\u003c")};`} />
 
   <script type="module" src={utilUrl}></script>
   <script type="module" src={previewUrl}></script>
   <script type="module" src={galleryUrl}></script>
   <script type="module" src={galleryDisplayUrl}></script>
 </Layout>
+

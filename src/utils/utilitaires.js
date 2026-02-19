@@ -4,18 +4,18 @@ export function splitUserName(fullName) {
     return { firstName: "", lastName: "" };
   }
 
-  const parts = fullName.trim().split(/\s+/);
+  const nameParts = fullName.trim().split(/\s+/);
 
-  if (parts.length === 1) {
+  if (nameParts.length === 1) {
     return {
-      firstName: parts[0],
+      firstName: nameParts[0],
       lastName: "",
     };
   }
 
   return {
-    firstName: parts[0],
-    lastName: parts.slice(1).join(" "),
+    firstName: nameParts[0],
+    lastName: nameParts.slice(1).join(" "),
   };
 }
 
@@ -23,48 +23,91 @@ export function splitUserName(fullName) {
 export function capitalizeName(name) {
   if (!name || typeof name !== "string") return "";
 
-  return name.split(' ').map(word =>
-    word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
-  ).join(' ');
+  return name
+    .split(" ")
+    .map((namePart) => namePart.charAt(0).toUpperCase() + namePart.slice(1).toLowerCase())
+    .join(" ");
 }
 
 // Fonctions utilitaires liées aux dates (réutilisables côté serveur et client)
-export function formatDateForInput(d) {
-  if (!d) return "";
+export function formatDateForInput(dateValue) {
+  if (!dateValue) return "";
   try {
-    const dt = new Date(d);
-    if (isNaN(dt.getTime())) return "";
-    return dt.toISOString().slice(0, 10);
-  } catch (e) {
+    const dateObj = new Date(dateValue);
+    if (isNaN(dateObj.getTime())) return "";
+    return dateObj.toISOString().slice(0, 10);
+  } catch (error) {
     return "";
   }
 }
 
-export function formatDateLong(d) {
-  if (!d) return "";
+export function formatDateLong(dateValue) {
+  if (!dateValue) return "";
   try {
-    return new Date(d).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
-  } catch (e) {
+    return new Date(dateValue).toLocaleDateString("fr-FR", {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    });
+  } catch (error) {
     return "";
   }
 }
 
-export function formatDateShort(d) {
-  if (!d) return "";
+export function formatDateShort(dateValue) {
+  if (!dateValue) return "";
   try {
-    return new Date(d).toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "numeric" });
-  } catch (e) {
+    return new Date(dateValue).toLocaleDateString("fr-FR", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    });
+  } catch (error) {
     return "";
   }
 }
 
-export function formatDateWithTime(d) {
-  if (!d) return "";
+export function formatDateWithTime(dateValue) {
+  if (!dateValue) return "";
   try {
-    return new Date(d).toLocaleString("fr-FR", { dateStyle: "medium", timeStyle: "short" });
-  } catch (e) {
+    return new Date(dateValue).toLocaleString("fr-FR", {
+      dateStyle: "medium",
+      timeStyle: "short",
+    });
+  } catch (error) {
     return "";
   }
+}
+
+// ----------------------------------------------------
+// Fonctions utilisées dans preview.js
+// ----------------------------------------------------
+
+export function formatDateRange(dateStart, dateEnd) {
+  if (!dateStart && !dateEnd) return "";
+  try {
+    const startFormatted = dateStart ? formatDateLong(dateStart) : "";
+    const endFormatted = dateEnd ? formatDateLong(dateEnd) : "";
+    return startFormatted && endFormatted
+      ? `${startFormatted} au ${endFormatted}`
+      : startFormatted || endFormatted;
+  } catch (error) {
+    return "";
+  }
+}
+
+export function escapeHtml(inputString) {
+  return String(inputString)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
+
+export function isDataUrl(candidateUrl) {
+  return (
+    typeof candidateUrl === "string" &&
+    (candidateUrl.startsWith("data:") || candidateUrl.startsWith("blob:"))
+  );
 }
 
 export function nowIso() {
@@ -73,50 +116,57 @@ export function nowIso() {
 
 // Exposer un objet global pratique pour les scripts client
 try {
-  if (typeof globalThis !== 'undefined') {
+  if (typeof globalThis !== "undefined") {
     globalThis.dateUtils = Object.assign(globalThis.dateUtils || {}, {
       formatDateForInput,
       formatDateLong,
+      formatDateRange,
+      escapeHtml,
+      isDataUrl,
       formatDateShort,
       formatDateWithTime,
       nowIso,
     });
   }
-} catch (e) {
-  // noop
+} catch (error) {
 }
 
-
 // Normalise référence d'image en URL en préférant l'API PocketBase.
-// Usage : `normalizeImageUrl(value, record, pb)` où `pb` est typiquement `Astro.locals.pb`.
-export function normalizeImageUrl(v, record, pb) {
-  if (!v) return null;
+// Usage : `normalizeImageUrl(value, record, pocketbaseClient)` où `pocketbaseClient` est typiquement `Astro.locals.pb`.
+export function normalizeImageUrl(value, record, pocketbaseClient) {
+  if (!value) return null;
 
-  if (Array.isArray(v)) {
-    if (v.length === 0) return null;
-    v = v[0];
+  if (Array.isArray(value)) {
+    if (value.length === 0) return null;
+    value = value[0];
   }
 
-  if (typeof v === 'string' && (v.startsWith('data:') || v.startsWith('blob:') || v.startsWith('http://') || v.startsWith('https://') || v.startsWith('/'))) {
-    return v;
+  if (
+    typeof value === "string" &&
+    (value.startsWith("data:") ||
+      value.startsWith("blob:") ||
+      value.startsWith("http://") ||
+      value.startsWith("https://") ||
+      value.startsWith("/"))
+  ) {
+    return value;
   }
 
   try {
-    if (pb && pb.files && typeof pb.files.getURL === 'function' && record) {
-      const fileRef = typeof v === 'string' ? v : (v && (v.filename ?? v.name ?? v.id));
-      if (fileRef) return pb.files.getURL(record, fileRef);
+    if (pocketbaseClient && pocketbaseClient.files && typeof pocketbaseClient.files.getURL === "function" && record) {
+      const fileReference =
+        typeof value === "string" ? value : value && (value.filename ?? value.name ?? value.id);
+      if (fileReference) return pocketbaseClient.files.getURL(record, fileReference);
     }
-  } catch (e) {
+  } catch (error) {
     // ignore et try fallbacks
   }
 
-  if (typeof v === 'object' && v !== null) {
-    if (v.url) return v.url;
-    if (v.directUrl) return v.directUrl;
+  if (typeof value === "object" && value !== null) {
+    if (value.url) return value.url;
+    if (value.directUrl) return value.directUrl;
     return null;
   }
 
   return null;
 }
-
-

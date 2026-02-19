@@ -1,10 +1,11 @@
 ---
 import Logo from "../assets/logo-kiwanis-full.svg";
 import userIcon from "../assets/user.svg";
-
 ---
 
-<header class="flex items-center justify-center gap-8 py-6 fixed top-0 left-0 right-0 z-50">
+<header
+  class="flex items-center justify-center gap-8 py-6 fixed top-0 left-0 right-0 z-50"
+>
   <a href="/">
     <img src={Logo.src} alt="Kiwanis Logo" class="w-14 h-14 object-fit" />
   </a>
@@ -12,7 +13,6 @@ import userIcon from "../assets/user.svg";
     class="w-full h-14 max-w-[80dvw] flex items-center justify-between gap-4 bg-accent rounded-xl px-4"
   >
     <div class="flex items-center gap-4 text-white">
-      <a href="/creation">Tableau de bord</a>
       <div class="relative w-fit text-white group">
         <summary
           class="flex w-full items-center justify-between gap-4 h-12 px-6 rounded-lg text-sm text-white cursor-pointer list-none transition hover:bg-white/10"
@@ -159,10 +159,15 @@ import userIcon from "../assets/user.svg";
           </li>
         </ul>
       </div>
+      <a href="/creation">Espace création</a>
     </div>
     <a href="/mon-compte" class="flex items-center gap-4">
-        <span class="text-sm text-white">Mon compte</span>
-      <img src={userIcon.src} alt="User Icon" class="w-8 h-8 rounded-full invert " />
+      <span class="text-sm text-white">Mon compte</span>
+      <img
+        src={userIcon.src}
+        alt="User Icon"
+        class="w-8 h-8 rounded-full invert"
+      />
     </a>
   </div>
 </header>

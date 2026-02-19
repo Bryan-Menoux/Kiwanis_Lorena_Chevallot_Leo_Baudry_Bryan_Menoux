@@ -1,110 +1,107 @@
 // État d'exécution pour la prévisualisation live
 let previewState = {};
 
-import { formatDateLong } from '../utils/utilitaires.js';
+
+import PREVIEW_DEFAULTS from './previewDefaults.js';
+import {formatDateRange, escapeHtml, isDataUrl } from '../utils/utilitaires.js';
 
 // raccourcis pour sélectionner des éléments DOM
-const qs = (sel, ctx = document) => ctx.querySelector(sel);
-const qsa = (sel, ctx = document) => Array.from((ctx || document).querySelectorAll(sel));
-
-// échapper les entités HTML basiques pour éviter l'injection lors de l'insertion en HTML
-function escapeHtml(str) {
-  return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-}
-
-// formate un intervalle de dates : retour vide si aucune date, sinon "début au fin" ou la valeur disponible
-function formatDateRange(d1, d2) {
-  if (!d1 && !d2) return '';
-  try {
-    const start = d1 ? formatDateLong(d1) : '';
-    const end = d2 ? formatDateLong(d2) : '';
-    return start && end ? `${start} au ${end}` : (start || end);
-  } catch (e) { return ''; }
-}
-
-// détecte si une valeur est une data URL ou blob URL
-function isDataUrl(v) {
-  return typeof v === 'string' && (v.startsWith('data:') || v.startsWith('blob:'));
-}
+const selectOne = (selector, context = document) => context.querySelector(selector);
 
 // met à jour tous les éléments ayant l'attribut data-field égal à prop
 function renderField(prop) {
   const nodes = Array.from(document.querySelectorAll(`[data-field="${prop}"]`));
   if (!nodes.length) return;
-  const val = previewState[prop];
-  nodes.forEach((node) => {
-    if (node.tagName === 'IMG') {
+  const value = previewState[prop];
+  nodes.forEach((element) => {
+    if (element.tagName === 'IMG') {
       // image : définir la source et paramètres de chargement
-      try { console.debug('[preview] update IMG', prop, val && (val.length ? (val.slice ? val.slice(0,50) : String(val)) : val)); } catch (e) {}
-      node.src = val || '';
-      node.loading = 'lazy';
-      node.decoding = 'async';
+      try { console.debug('[preview] update IMG', prop, value && (value.length ? (value.slice ? value.slice(0,50) : String(value)) : value)); } catch (error) {}
+      element.src = value || '';
+      element.loading = 'lazy';
+      element.decoding = 'async';
       return;
     }
 
     // champs texte multi-lignes stockés avec des sauts de ligne -> paragraphes
     if (prop.startsWith('texte_partie') || prop === 'description_remerciements') {
-      node.innerHTML = (String(val || '')).split('\n').map(l => `<p>${escapeHtml(l)}</p>`).join('');
+      element.innerHTML = (String(value || '')).split('\n').map(line => `<p>${escapeHtml(line)}</p>`).join('');
       return;
     }
 
     // champs de date affichés via la fonction de formatage d'intervalle
     if (prop === 'dates' || prop === 'date_debut' || prop === 'date_fin') {
-      const d = formatDateRange(previewState.date_debut, previewState.date_fin);
-      node.textContent = d;
+      const formattedRange = formatDateRange(previewState.date_debut, previewState.date_fin);
+      element.textContent = formattedRange;
       return;
     }
 
-    // cas général : texte simple
-    node.textContent = val ?? '';
+    // spécial : afficher le champ `chiffre` avec symbole euro
+    if (prop === 'chiffre') {
+      const num = Number(value);
+      if (Number.isFinite(num)) {
+        // valeur numérique formatée + espace insécable + €
+        element.textContent = new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 0 }).format(num) + '\u00A0€';
+      } else if (value && String(value).trim() !== '') {
+        // valeur non numérique (texte) : afficher la valeur suivie du €
+        element.textContent = String(value) + '\u00A0€';
+      } else {
+        // aucun chiffre : afficher quand même le symbole €
+        element.textContent = '\u00A0€';
+      }
+    } else {
+      element.textContent = value ?? '';
+    }
   });
 }
 
-// rend la galerie principale (élément #photoGrid dans #actionPreview)
-function renderGallery(arr) {
-  const root = document.getElementById('actionPreview');
-  if (!root) return;
+// rend la galerie principale (élément #photoGrid dans #actionPreview -> le parent de toute ma logique de page dans actions)
+function renderGallery(photoUrls) {
+  const previewRoot = document.getElementById('actionPreview');
+  if (!previewRoot) return;
 
-  const photoGrid = root.querySelector('#photoGrid');
+  const photoGrid = previewRoot.querySelector('#photoGrid');
   if (!photoGrid) return;
+
+  // vider les vignettes précédentes
   photoGrid.innerHTML = '';
 
   // créer les vignettes
-  arr.forEach((url, idx) => {
-    const div = document.createElement('div');
-    div.className = 'relative w-full h-full overflow-hidden rounded-box cursor-pointer';
-    div.setAttribute('data-photo-index', String(idx));
-    div.setAttribute('data-photo-url', url);
+  photoUrls.forEach((photoUrl, index) => {
+    const thumbnailDiv = document.createElement('div');
+    thumbnailDiv.className = 'relative w-full h-full overflow-hidden rounded-box cursor-pointer';
+    thumbnailDiv.setAttribute('data-photo-index', String(index));
+    thumbnailDiv.setAttribute('data-photo-url', photoUrl);
 
-    const img = document.createElement('img');
-    img.alt = 'Photo de la galerie';
-    img.className = 'absolute inset-0 w-full h-full object-center object-cover';
-    img.src = url;
-    img.loading = 'lazy';
-    img.decoding = 'async';
-    div.appendChild(img);
+    const thumbnailImage = document.createElement('img');
+    thumbnailImage.alt = 'Photo de la galerie';
+    thumbnailImage.className = 'absolute inset-0 w-full h-full object-center object-cover';
+    thumbnailImage.src = photoUrl;
+    thumbnailImage.loading = 'lazy';
+    thumbnailImage.decoding = 'async';
+    thumbnailDiv.appendChild(thumbnailImage);
 
-    photoGrid.appendChild(div);
+    photoGrid.appendChild(thumbnailDiv);
   });
-  photoGrid.dataset.photoCount = String(arr.length);
+  photoGrid.dataset.photoCount = String(photoUrls.length);
 
   // attendre que toutes les images aient déclenché load/complete pour appliquer le layout
-  const imgs = photoGrid.querySelectorAll('img');
-  let loaded = 0;
+  const galleryImageElements = photoGrid.querySelectorAll('img');
+  let loadedCount = 0;
   const applyAndReveal = () => {
     // si un script externe expose setGridStyles, l'appeler
     if (typeof window !== 'undefined' && typeof window.setGridStyles === 'function') {
-      try { window.setGridStyles(); } catch (e) {}
+      try { window.setGridStyles(); } catch (error) {}
     }
 
     // bind d'ouverture modal sur clic : on cherche l'élément le plus proche avec data-photo-index
     if (!photoGrid.__previewBound) {
-      photoGrid.addEventListener('click', function (e) {
-        const photoEl = e.target.closest && e.target.closest('[data-photo-index]') ? e.target.closest('[data-photo-index]') : null;
-        if (photoEl) {
-          const url = photoEl.getAttribute('data-photo-url');
-          if (url && typeof window !== 'undefined' && typeof window.openModal === 'function') {
-            try { window.openModal(url); } catch (err) {}
+      photoGrid.addEventListener('click', function (event) {
+        const photoElement = event.target.closest && event.target.closest('[data-photo-index]') ? event.target.closest('[data-photo-index]') : null;
+        if (photoElement) {
+          const photoUrl = photoElement.getAttribute('data-photo-url');
+          if (photoUrl && typeof window !== 'undefined' && typeof window.openModal === 'function') {
+            try { window.openModal(photoUrl); } catch (err) {}
           }
         }
       });
@@ -112,22 +109,22 @@ function renderGallery(arr) {
     }
   };
 
-  if (imgs.length === 0) {
+  if (galleryImageElements.length === 0) {
     applyAndReveal();
   } else {
     // écouter load/error pour chaque image et invoquer applyAndReveal lorsque toutes sont traitées
-    imgs.forEach((img) => {
-      if (img.complete) {
-        loaded += 1;
-        if (loaded === imgs.length) applyAndReveal();
+    galleryImageElements.forEach((imageElement) => {
+      if (imageElement.complete) {
+        loadedCount += 1;
+        if (loadedCount === galleryImageElements.length) applyAndReveal();
       } else {
-        img.addEventListener('load', () => {
-          loaded += 1;
-          if (loaded === imgs.length) applyAndReveal();
+        imageElement.addEventListener('load', () => {
+          loadedCount += 1;
+          if (loadedCount === galleryImageElements.length) applyAndReveal();
         });
-        img.addEventListener('error', () => {
-          loaded += 1;
-          if (loaded === imgs.length) applyAndReveal();
+        imageElement.addEventListener('error', () => {
+          loadedCount += 1;
+          if (loadedCount === galleryImageElements.length) applyAndReveal();
         });
       }
     });
@@ -136,128 +133,127 @@ function renderGallery(arr) {
 
 // synchronise la valeur d'un hidden input avec previewState[prop]
 function updateHidden(prop) {
-  const hid = document.getElementById(`hidden_${prop}`);
-  if (!hid) return;
-  const val = previewState[prop];
-  hid.value = Array.isArray(val) ? JSON.stringify(val) : (val ?? '');
+  const hiddenInput = document.getElementById(`hidden_${prop}`);
+  if (!hiddenInput) return;
+  const value = previewState[prop];
+  hiddenInput.value = Array.isArray(value) ? JSON.stringify(value) : (value ?? '');
 }
 
 // affiche les miniatures (data URLs) sélectionnées dans le formulaire
-function renderFormGalleryThumbnails(input, dataUrls) {
+function renderFormGalleryThumbnails(fileInput, dataUrls) {
   const container = document.getElementById('gallerySelected');
   if (!container) return;
   container.innerHTML = '';
 
-  dataUrls.forEach((url, idx) => {
-    const wrap = document.createElement('div');
-    wrap.className = 'relative overflow-hidden rounded-md';
-    wrap.style.paddingBottom = '100%';
+  dataUrls.forEach((dataUrl, index) => {
+    const thumbnailWrap = document.createElement('div');
+    thumbnailWrap.className = 'relative overflow-hidden rounded-md';
+    thumbnailWrap.style.paddingBottom = '100%';
 
-    const img = document.createElement('img');
-    img.src = url;
-    img.alt = 'Miniature';
-    img.className = 'absolute inset-0 w-full h-full object-cover';
-    wrap.appendChild(img);
+    const thumbnailImage = document.createElement('img');
+    thumbnailImage.src = dataUrl;
+    thumbnailImage.alt = 'Miniature';
+    thumbnailImage.className = 'absolute inset-0 w-full h-full object-cover';
+    thumbnailWrap.appendChild(thumbnailImage);
 
-    const btn = document.createElement('button');
-    btn.type = 'button';
-    btn.className = 'absolute top-1 right-1 bg-black/60 text-white rounded-full w-6 h-6 flex items-center justify-center';
-    btn.setAttribute('data-index', String(idx));
-    btn.innerHTML = '×';
-    wrap.appendChild(btn);
+    const removeButton = document.createElement('button');
+    removeButton.type = 'button';
+    removeButton.className = 'absolute top-1 right-1 bg-black/60 text-white rounded-full w-6 h-6 flex items-center justify-center';
+    removeButton.setAttribute('data-index', String(index));
+    removeButton.innerHTML = '×';
+    thumbnailWrap.appendChild(removeButton);
 
-    container.appendChild(wrap);
+    container.appendChild(thumbnailWrap);
   });
 
   // attacher un seul handler par input pour gérer la suppression d'une miniature sélectionnée
-  if (!container.__boundInputId || container.__boundInputId !== (input && input.id)) {
-    container.addEventListener('click', function (e) {
-      const btn = e.target.closest && e.target.closest('[data-index]');
-      if (!btn) return;
-      const idx = parseInt(btn.getAttribute('data-index'), 10);
-      if (Number.isNaN(idx)) return;
+  if (!container.__boundInputId || container.__boundInputId !== (fileInput && fileInput.id)) {
+    container.addEventListener('click', function (event) {
+      const clickedButton = event.target.closest && event.target.closest('[data-index]');
+      if (!clickedButton) return;
+      const removeIndex = parseInt(clickedButton.getAttribute('data-index'), 10);
+      if (Number.isNaN(removeIndex)) return;
 
       // reconstruire DataTransfer sans l'élément supprimé
-      const oldDt = input.__dt || new DataTransfer();
-      const filesArr = Array.from(oldDt.files);
-      filesArr.splice(idx, 1);
-      const newDt = new DataTransfer();
-      filesArr.forEach((f) => newDt.items.add(f));
-      input.__dt = newDt;
-      input.files = newDt.files;
+      const oldDataTransfer = fileInput.__dt || new DataTransfer();
+      const filesArray = Array.from(oldDataTransfer.files);
+      filesArray.splice(removeIndex, 1);
+      const newDataTransfer = new DataTransfer();
+      filesArray.forEach((file) => newDataTransfer.items.add(file));
+      fileInput.__dt = newDataTransfer;
+      fileInput.files = newDataTransfer.files;
 
       // relire les fichiers restants en data URLs pour ré-afficher les miniatures
-      const readPromises = Array.from(newDt.files).map((f) => new Promise((res) => {
-        const r = new FileReader();
-        r.onload = (ev) => res(ev.target.result);
-        r.readAsDataURL(f);
+      const readPromises = Array.from(newDataTransfer.files).map((file) => new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = (loadEvent) => resolve(loadEvent.target.result);
+        reader.readAsDataURL(file);
       }));
 
-      Promise.all(readPromises).then((dataUrls) => {
+      Promise.all(readPromises).then((thumbnailDataUrls) => {
         // combiner les URLs déjà présentes côté serveur et les nouvelles data URLs
         const serverUrls = Array.isArray(previewState.galerie_photos)
-          ? previewState.galerie_photos.filter(v => typeof v === 'string' && !isDataUrl(v))
+          ? previewState.galerie_photos.filter(urlValue => typeof urlValue === 'string' && !isDataUrl(urlValue))
           : [];
-        const combined = serverUrls.concat(dataUrls);
-        previewState.galerie_photos = combined;
-        renderGallery(combined);
+        const combinedUrls = serverUrls.concat(thumbnailDataUrls);
+        previewState.galerie_photos = combinedUrls;
+        renderGallery(combinedUrls);
         updateHidden('galerie_photos');
         // réafficher les miniatures à partir des data URLs actuelles
-        renderFormGalleryThumbnails(input, dataUrls);
+        renderFormGalleryThumbnails(fileInput, thumbnailDataUrls);
       }).catch(() => {
         // en cas d'erreur, conserver les images serveur et vider les miniatures de fichiers
         previewState.galerie_photos = previewState.galerie_photos || [];
         renderGallery(previewState.galerie_photos);
-        renderFormGalleryThumbnails(input, []);
+        renderFormGalleryThumbnails(fileInput, []);
       });
     });
-    container.__boundInputId = input.id;
+    container.__boundInputId = fileInput.id;
   }
 }
 
 // affiche les miniatures des images déjà présentes côté serveur (avec boutons de suppression)
-function renderExistingThumbnails(arr) {
+function renderExistingThumbnails(existingPhotoUrls) {
   const container = document.getElementById('galleryExisting');
   if (!container) return;
   container.innerHTML = '';
-  arr.forEach((url, idx) => {
-    const wrap = document.createElement('div');
-    wrap.className = 'relative overflow-hidden rounded-md';
-    wrap.style.paddingBottom = '100%';
+  existingPhotoUrls.forEach((photoUrl, index) => {
+    const thumbnailWrap = document.createElement('div');
+    thumbnailWrap.className = 'relative overflow-hidden rounded-md';
+    thumbnailWrap.style.paddingBottom = '100%';
 
-    const img = document.createElement('img');
-    img.src = url;
-    img.alt = 'Miniature existante';
-    img.className = 'absolute inset-0 w-full h-full object-cover';
-    wrap.appendChild(img);
+    const existingImage = document.createElement('img');
+    existingImage.src = photoUrl;
+    existingImage.alt = 'Miniature existante';
+    existingImage.className = 'absolute inset-0 w-full h-full object-cover';
+    thumbnailWrap.appendChild(existingImage);
 
-    const btn = document.createElement('button');
-    btn.type = 'button';
-    btn.className = 'absolute top-1 right-1 bg-black/60 text-white rounded-full w-6 h-6 flex items-center justify-center';
-    btn.setAttribute('data-existing-index', String(idx));
-    btn.innerHTML = '×';
-    wrap.appendChild(btn);
+    const removeButton = document.createElement('button');
+    removeButton.type = 'button';
+    removeButton.className = 'absolute top-1 right-1 bg-black/60 text-white rounded-full w-6 h-6 flex items-center justify-center';
+    removeButton.setAttribute('data-photo-url', photoUrl);
+    removeButton.innerHTML = '×';
+    thumbnailWrap.appendChild(removeButton);
 
-    container.appendChild(wrap);
+    container.appendChild(thumbnailWrap);
   });
 
   // clic sur une miniature existante -> marquer comme supprimée
   if (!container.__bound) {
-    container.addEventListener('click', function (e) {
-      const btn = e.target.closest && e.target.closest('[data-existing-index]');
-      if (!btn) return;
-      const idx = parseInt(btn.getAttribute('data-existing-index'), 10);
-      if (Number.isNaN(idx)) return;
-      const url = arr[idx];
+    container.addEventListener('click', function (event) {
+      const clickedButton = event.target.closest && event.target.closest('[data-photo-url]');
+      if (!clickedButton) return;
+      const photoUrl = clickedButton.getAttribute('data-photo-url');
+      if (!photoUrl) return;
 
-      const hidRemove = document.getElementById('hidden_remove_galerie_photos');
+      const hiddenRemoveInput = document.getElementById('hidden_remove_galerie_photos');
       container.__removed = container.__removed || [];
-      container.__removed.push(url);
-      if (hidRemove) hidRemove.value = JSON.stringify(container.__removed);
+      container.__removed.push(photoUrl);
+      if (hiddenRemoveInput) hiddenRemoveInput.value = JSON.stringify(container.__removed);
 
       // retirer l'URL du previewState et re-render
-      previewState.galerie_photos = (previewState.galerie_photos || []).filter((v) => v !== url);
-      const remainingExisting = (previewState.galerie_photos || []).filter((v) => typeof v === 'string' && !isDataUrl(v));
+      previewState.galerie_photos = (previewState.galerie_photos || []).filter((url) => url !== photoUrl);
+      const remainingExisting = (previewState.galerie_photos || []).filter((url) => typeof url === 'string' && !isDataUrl(url));
       renderExistingThumbnails(remainingExisting);
       renderGallery(previewState.galerie_photos || []);
       updateHidden('galerie_photos');
@@ -267,162 +263,121 @@ function renderExistingThumbnails(arr) {
 }
 
 // gère les changements sur les inputs text/select/date etc.
-function handleInputElement(el) {
-  if (!el) return;
-  const prop = el.getAttribute('data-prop');
+function handleInputElement(inputElement) {
+  if (!inputElement) return;
+  const prop = inputElement.getAttribute('data-prop');
   if (!prop) return;
-  const val = el.value;
-  previewState[prop] = val;
 
-  // quelques alias/conversions spécifiques
-  if (prop === 'titre_remerciement') previewState['titre_remerciements'] = val;
-  if (prop === 'description_remerciement') previewState['description_remerciements'] = val;
+  const rawValue = inputElement.value ?? '';
+  const isEmpty = String(rawValue).trim() === '';
 
-  updateHidden(prop);
+  // pour l'affichage, si l'input est vide on affiche la valeur par défaut
+  const previewValue = isEmpty
+    ? (typeof PREVIEW_DEFAULTS !== 'undefined' && PREVIEW_DEFAULTS[prop] !== undefined
+        ? PREVIEW_DEFAULTS[prop]
+        : (DEFAULT_PLACEHOLDERS[prop] ?? ''))
+    : rawValue;
 
-  // si dates modifiées, rerendre le champ affichant l'intervalle
-  if (prop === 'date_debut' || prop === 'date_fin') {
-    renderField('dates');
-  }
+  // mettre à jour l'état d'affichage
+  previewState[prop] = previewValue;
+
+  // alias pour les clés utilisées dans le template de preview
+  if (prop === 'titre_remerciement') previewState['titre_remerciements'] = previewValue;
+  if (prop === 'description_remerciement') previewState['description_remerciements'] = previewValue;
+
+  // hidden inputs doivent contenir LA VALEUR RÉELLE fournie par l'utilisateur (vide si supprimée)
+  const hiddenField = document.getElementById(`hidden_${prop}`);
+  if (hiddenField) hiddenField.value = rawValue;
+
+  // n'écrire le hidden via updateHidden que si l'utilisateur a saisi une valeur
+  if (!isEmpty) updateHidden(prop);
+
+  // rerendre la preview (dates/chiffres/alias gérés)
+  if (prop === 'date_debut' || prop === 'date_fin') renderField('dates');
   renderField(prop);
   if (prop === 'titre_remerciement') renderField('titre_remerciements');
   if (prop === 'description_remerciement') renderField('description_remerciements');
 }
 
 // gère les inputs de type "file" (galerie multiple ou image unique)
-function handleFileElement(el) {
-  if (!el) return;
-  const prop = el.getAttribute('data-prop-file');
+function handleFileElement(inputElement) {
+  if (!inputElement) return;
+  const prop = inputElement.getAttribute('data-prop-file');
   if (!prop) return;
-  const files = el.files;
-  if (!files || files.length === 0) return;
+  const selectedFiles = inputElement.files;
+  if (!selectedFiles || selectedFiles.length === 0) return;
 
   // traitement pour la galerie multiple
   if (prop === 'galerie_photos') {
-    const input = el;
-    if (!input.__dt) input.__dt = new DataTransfer();
-    const dt = input.__dt;
-    const currentCount = dt.files.length;
-    const remaining = Math.max(0, 8 - currentCount);
-    if (remaining === 0) return; // limite atteinte
-    const toAdd = Math.min(files.length, remaining);
-    for (let i = 0; i < toAdd; i++) {
-      dt.items.add(files[i]);
+    const fileInput = inputElement;
+    if (!fileInput.__dt) fileInput.__dt = new DataTransfer();
+    const dataTransfer = fileInput.__dt;
+    const currentCount = dataTransfer.files.length;
+    const remainingSlots = Math.max(0, 8 - currentCount);
+    if (remainingSlots === 0) return; // limite atteinte
+    const toAdd = Math.min(selectedFiles.length, remainingSlots);
+    for (let addIndex = 0; addIndex < toAdd; addIndex++) {
+      dataTransfer.items.add(selectedFiles[addIndex]);
     }
-    input.files = dt.files;
+    fileInput.files = dataTransfer.files;
 
-    const fileList = Array.from(dt.files);
-    const readPromises = fileList.map((f) => new Promise((res) => {
-      const r = new FileReader();
-      r.onload = (ev) => res(ev.target.result);
-      r.readAsDataURL(f);
+    const fileListArray = Array.from(dataTransfer.files);
+    const readPromises = fileListArray.map((file) => new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = (loadEvent) => resolve(loadEvent.target.result);
+      reader.readAsDataURL(file);
     }));
 
     Promise.all(readPromises).then((dataUrls) => {
       // conserver les URLs serveur et ajouter les nouvelles data-URLs
       const serverUrls = Array.isArray(previewState.galerie_photos)
-        ? previewState.galerie_photos.filter(v => typeof v === 'string' && !isDataUrl(v))
+        ? previewState.galerie_photos.filter(urlValue => typeof urlValue === 'string' && !isDataUrl(urlValue))
         : [];
-      const combined = serverUrls.concat(dataUrls);
-      previewState.galerie_photos = combined;
-      renderGallery(combined);
+      const combinedUrls = serverUrls.concat(dataUrls);
+      previewState.galerie_photos = combinedUrls;
+      renderGallery(combinedUrls);
       updateHidden('galerie_photos');
-      renderFormGalleryThumbnails(input, dataUrls);
+      renderFormGalleryThumbnails(fileInput, dataUrls);
     }).catch(() => {
       previewState.galerie_photos = previewState.galerie_photos || [];
       renderGallery(previewState.galerie_photos);
-      renderFormGalleryThumbnails(input, []);
+      renderFormGalleryThumbnails(fileInput, []);
     });
 
     return;
   }
 
   // traitement pour une image unique
-  const f = files[0];
+  const file = selectedFiles[0];
 
   // s'assurer que input.files contient bien le fichier via DataTransfer (compatibilité soumission)
   try {
-    if (el) {
-      const input = el;
-      const dt = new DataTransfer();
-      dt.items.add(f);
-      input.__dt = dt;
-      input.files = dt.files;
+    if (inputElement) {
+      const fileInput = inputElement;
+      const dataTransfer = new DataTransfer();
+      dataTransfer.items.add(file);
+      fileInput.__dt = dataTransfer;
+      fileInput.files = dataTransfer.files;
       try {
-        const form = document.getElementById('leftForm');
-        if (form) {
-          const removeEl = document.getElementById(`remove_${prop}`);
-          if (removeEl && removeEl.parentElement) removeEl.parentElement.removeChild(removeEl);
+        const formElement = document.getElementById('leftForm');
+        if (formElement) {
+          const removeElement = document.getElementById(`remove_${prop}`);
+          if (removeElement && removeElement.parentElement) removeElement.parentElement.removeChild(removeElement);
         }
-      } catch (e) {}
+      } catch (err) {}
     }
-  } catch (e) {}
+  } catch (err) {}
 
-  // si aucun container d'existing n'existe, le créer pour afficher l'aperçu intégré
-  try {
-    const existingId = `existing_${prop}_container`;
-    let existingContainer = document.getElementById(existingId);
-    if (!existingContainer) {
-      const inputEl = el || document.querySelector(`[data-prop-file="${prop}"]`);
-      const ref = inputEl ? inputEl.closest('label') || inputEl.parentElement : null;
-      if (ref && ref.parentElement) {
-        existingContainer = document.createElement('div');
-        existingContainer.className = 'mt-2';
-        existingContainer.id = existingId;
-        const lab = document.createElement('label');
-        lab.className = 'block text-sm font-medium mb-1';
-        lab.textContent = 'Image actuelle';
-        const wrap = document.createElement('div');
-        wrap.className = 'relative';
-        const img = document.createElement('img');
-        img.setAttribute('data-field', prop);
-        img.alt = 'Aperçu';
-        img.className = 'w-full h-[25dvh] object-cover rounded';
-        const removeBtn = document.createElement('button');
-        removeBtn.type = 'button';
-        removeBtn.className = 'existing-single-remove absolute top-2 right-2 bg-black/60 text-white rounded-full w-6 h-6 flex items-center justify-center';
-        removeBtn.setAttribute('data-prop', prop);
-        removeBtn.innerHTML = '×';
-        wrap.appendChild(removeBtn);
-        wrap.appendChild(img);
-        existingContainer.appendChild(lab);
-        existingContainer.appendChild(wrap);
-        try { ref.parentElement.insertBefore(existingContainer, ref.nextSibling); } catch (e) { ref.parentElement.appendChild(existingContainer); }
-        try { bindExistingSingleRemoveButtons(); } catch (e) {}
-      }
-    } else if (existingContainer && existingContainer.__hiddenByPreview) {
-      existingContainer.style.display = '';
-      existingContainer.__hiddenByPreview = false;
-    }
-  } catch (e) {}
-
-  const r = new FileReader();
-  r.onload = (ev) => {
-    const dataUrl = ev.target.result;
+  const reader = new FileReader();
+  reader.onload = (loadEvent) => {
+    const dataUrl = loadEvent.target.result;
     previewState[prop] = dataUrl; // stocker la data URL pour l'aperçu
     renderField(prop);
 
-    // si un container existant avait été caché, le réafficher
-    try {
-      const existingContainer = document.getElementById(`existing_${prop}_container`);
-      if (existingContainer && existingContainer.__hiddenByPreview) {
-        existingContainer.style.display = '';
-        existingContainer.__hiddenByPreview = false;
-      }
-      try {
-        const existingImg = existingContainer ? existingContainer.querySelector(`img[data-field="${prop}"]`) : null;
-        if (existingImg) {
-          existingImg.src = dataUrl;
-          existingImg.loading = 'lazy';
-          existingImg.decoding = 'async';
-        }
-      } catch (e) {}
-    } catch (e) {}
-
-    try { updateHidden(prop); } catch (e) {}
-    try { renderFormImagePreview(prop, dataUrl); } catch (e) {}
+    try { updateHidden(prop); } catch (err) {}
+    try { renderFormImagePreview(prop, dataUrl); } catch (err) {}
   };
-  r.readAsDataURL(f);
+  reader.readAsDataURL(file);
 }
 
 // affiche un aperçu inline pour un champ image unique (preview_{prop})
@@ -433,124 +388,125 @@ function renderFormImagePreview(prop, dataUrl) {
   container.innerHTML = '';
   if (!dataUrl || !isDataUrl(dataUrl)) return;
 
-  const wrap = document.createElement('div');
-  wrap.className = 'relative overflow-hidden rounded-md';
-  wrap.style.paddingBottom = '56%';
+  const previewWrap = document.createElement('div');
+  previewWrap.className = 'relative overflow-hidden rounded-md';
+  previewWrap.style.paddingBottom = '56%';
 
-  const img = document.createElement('img');
-  img.src = dataUrl;
-  img.alt = 'Aperçu';
-  img.className = 'absolute inset-0 w-full h-full object-cover';
-  wrap.appendChild(img);
+  const previewImage = document.createElement('img');
+  previewImage.src = dataUrl;
+  previewImage.alt = 'Aperçu';
+  previewImage.className = 'absolute inset-0 w-full h-full object-cover';
+  previewWrap.appendChild(previewImage);
 
-  const btn = document.createElement('button');
-  btn.type = 'button';
-  btn.className = 'absolute top-1 right-1 bg-black/60 text-white rounded-full w-6 h-6 flex items-center justify-center';
-  btn.innerHTML = '×';
-  wrap.appendChild(btn);
+  const removeButton = document.createElement('button');
+  removeButton.type = 'button';
+  removeButton.className = 'absolute top-1 right-1 bg-black/60 text-white rounded-full w-6 h-6 flex items-center justify-center';
+  removeButton.innerHTML = '×';
+  previewWrap.appendChild(removeButton);
 
-  container.appendChild(wrap);
+  container.appendChild(previewWrap);
 
   // suppression de l'aperçu par l'utilisateur : nettoyer input, previewState et hidden
-  btn.addEventListener('click', function () {
-    const input = document.querySelector(`[data-prop-file="${prop}"]`);
-    if (input) {
+  removeButton.addEventListener('click', function () {
+    const fileInput = document.querySelector(`[data-prop-file="${prop}"]`);
+    if (fileInput) {
       try {
-        input.value = '';
-        if (input.__dt) {
-          input.__dt = new DataTransfer();
-          input.files = input.__dt.files;
+        fileInput.value = '';
+        if (fileInput.__dt) {
+          fileInput.__dt = new DataTransfer();
+          fileInput.files = fileInput.__dt.files;
         }
-      } catch (e) {}
+      } catch (err) {}
     }
     previewState[prop] = '';
     renderField(prop);
     updateHidden(prop);
     container.innerHTML = '';
-    try {
-      const existingContainer = document.getElementById(`existing_${prop}_container`);
-      if (existingContainer) {
-        const existingImg = existingContainer.querySelector(`img[data-field="${prop}"]`);
-        if (existingImg) existingImg.src = '';
-        existingContainer.style.display = 'none';
-        existingContainer.__hiddenByPreview = true;
-      }
-    } catch (e) {}
   });
 }
 
 // rendre tous les champs à partir du previewState
 function renderAll() {
-  Object.keys(previewState).forEach((k) => {
-    if (k === 'galerie_photos') {
+  Object.keys(previewState).forEach((key) => {
+    if (key === 'galerie_photos') {
       if (Array.isArray(previewState.galerie_photos) && previewState.galerie_photos.length) renderGallery(previewState.galerie_photos);
       return;
     }
-    renderField(k);
+    renderField(key);
   });
 }
 
 // initialisation : récupérer les données placeholder et binder les handlers
 function initPreview() {
-  const root = document.getElementById('actionPreview');
-  const placeholderScript = qs('#previewData');
+  const previewRoot = document.getElementById('actionPreview');
+  const placeholderScript = selectOne('#previewData');
   const placeholderFromWindow = typeof window !== 'undefined' && (window.__previewData !== undefined) ? window.__previewData : null;
   const placeholder = placeholderFromWindow || (placeholderScript ? JSON.parse(placeholderScript.textContent || '{}') : {});
   previewState = Object.assign({}, placeholder);
 
-  const form = document.getElementById('leftForm');
+  const formElement = document.getElementById('leftForm');
 
   // initialiser les inputs du formulaire avec les valeurs de previewState
-  if (form) {
-    Array.from(form.querySelectorAll('[data-prop]')).forEach((el) => {
-      const p = el.getAttribute('data-prop');
-      if (p && previewState[p] !== undefined && 'value' in el) el.value = previewState[p];
+  // Remplir uniquement si la valeur a été fournie côté serveur (mode édition).
+  if (formElement) {
+    Array.from(formElement.querySelectorAll('[data-prop]')).forEach((fieldElement) => {
+      const prop = fieldElement.getAttribute('data-prop');
+      if (!prop || previewState[prop] === undefined || !('value' in fieldElement)) return;
+      // n'écrase pas les inputs vides côté création — seuls les champs qui
+      // ont un attribut `value` (rendus par le serveur en édition) sont initialisés.
+      if (fieldElement.hasAttribute('value')) {
+        fieldElement.value = previewState[prop];
+      }
     });
   }
 
   renderAll();
-  bindExistingSingleRemoveButtons();
 
   // remplir les hidden inputs initiaux (sauf galerie)
-  if (form) {
-    Object.keys(previewState).forEach((k) => {
-      if (k === 'galerie_photos') return;
-      updateHidden(k);
+  // N'écrit les `hidden_*` qu'en mode édition (le serveur pré-remplit `value`),
+  // sinon on garde les hidden vides pour ne pas envoyer les placeholders au POST.
+  if (formElement) {
+    Object.keys(previewState).forEach((key) => {
+      if (key === 'galerie_photos') return;
+      const hiddenElement = document.getElementById(`hidden_${key}`);
+      if (hiddenElement && hiddenElement.hasAttribute('value')) {
+        updateHidden(key);
+      }
     });
 
-    const hidGallery = document.getElementById('hidden_galerie_photos');
-    if (hidGallery) hidGallery.value = '';
-    const existing = Array.isArray(previewState.galerie_photos) ? previewState.galerie_photos.filter(v => typeof v === 'string' && !isDataUrl(v)) : [];
+    const hiddenGalleryInput = document.getElementById('hidden_galerie_photos');
+    if (hiddenGalleryInput) hiddenGalleryInput.value = '';
+    const existing = Array.isArray(previewState.galerie_photos) ? previewState.galerie_photos.filter(urlValue => typeof urlValue === 'string' && !isDataUrl(urlValue)) : [];
     if (existing.length) renderExistingThumbnails(existing);
   }
 
   // binder les écouteurs sur le formulaire
-  if (form) {
-    Array.from(form.querySelectorAll('[data-prop]')).forEach((el) => {
-      const ev = el.tagName === 'SELECT' || el.type === 'date' ? 'change' : 'input';
-      el.addEventListener(ev, (e) => {
-        handleInputElement(e.currentTarget);
+  if (formElement) {
+    Array.from(formElement.querySelectorAll('[data-prop]')).forEach((fieldElement) => {
+      const eventName = fieldElement.tagName === 'SELECT' || fieldElement.type === 'date' ? 'change' : 'input';
+      fieldElement.addEventListener(eventName, (event) => {
+        handleInputElement(event.currentTarget);
       });
     });
-    Array.from(form.querySelectorAll('[data-prop-file]')).forEach((el) => {
-      el.addEventListener('change', (e) => {
-        handleFileElement(e.currentTarget);
+    Array.from(formElement.querySelectorAll('[data-prop-file]')).forEach((fileInput) => {
+      fileInput.addEventListener('change', (event) => {
+        handleFileElement(event.currentTarget);
       });
     });
 
     // avant soumission : synchroniser tous les hidden_* et la galerie
-    form.addEventListener('submit', () => {
+    formElement.addEventListener('submit', () => {
       try {
-        const fileInputs = Array.from(form.querySelectorAll('[data-prop-file]'));
-        const filesReport = fileInputs.map((inp) => ({ name: inp.getAttribute('data-prop-file') || inp.name, count: inp.files ? inp.files.length : 0, files: inp.files ? Array.from(inp.files).map(f => ({ name: f.name, size: f.size })) : [] }));
-      } catch (e) {}
+        const fileInputs = Array.from(formElement.querySelectorAll('[data-prop-file]'));
+        const filesReport = fileInputs.map((fileInput) => ({ name: fileInput.getAttribute('data-prop-file') || fileInput.name, count: fileInput.files ? fileInput.files.length : 0, files: fileInput.files ? Array.from(fileInput.files).map(file => ({ name: file.name, size: file.size })) : [] }));
+      } catch (err) {}
 
-      Array.from(form.querySelectorAll('[data-prop]')).forEach((el) => {
-        const p = el.getAttribute('data-prop');
-        if (!p) return;
-        const hid = document.getElementById(`hidden_${p}`);
-        if (hid) {
-          hid.value = el.value ?? '';
+      Array.from(formElement.querySelectorAll('[data-prop]')).forEach((fieldElement) => {
+        const prop = fieldElement.getAttribute('data-prop');
+        if (!prop) return;
+        const hiddenField = document.getElementById(`hidden_${prop}`);
+        if (hiddenField) {
+          hiddenField.value = fieldElement.value ?? '';
         }
       });
 
@@ -562,53 +518,53 @@ function initPreview() {
 // bind global pour les boutons de suppression d'images existantes
 function bindExistingSingleRemoveButtons() {
   if (document.__existingRemoveBound) return;
-  document.addEventListener('click', function (e) {
-    const btn = e.target && e.target.closest ? e.target.closest('.existing-single-remove') : null;
-    if (!btn) return;
+  document.addEventListener('click', function (event) {
+    const removeButton = event.target && event.target.closest ? event.target.closest('.existing-single-remove') : null;
+    if (!removeButton) return;
 
-    const prop = btn.getAttribute('data-prop');
+    const prop = removeButton.getAttribute('data-prop');
     if (!prop) return;
-    const form = document.getElementById('leftForm');
+    const formElement = document.getElementById('leftForm');
 
     // créer ou mettre à jour un hidden remove_{prop} pour indiquer la suppression côté serveur
-    if (form) {
-      let hid = document.getElementById(`remove_${prop}`);
-      if (!hid) {
-        hid = document.createElement('input');
-        hid.type = 'hidden';
-        hid.id = `remove_${prop}`;
-        hid.name = `remove_${prop}`;
-        hid.value = '1';
-        form.appendChild(hid);
+    if (formElement) {
+      let hiddenRemoveInput = document.getElementById(`remove_${prop}`);
+      if (!hiddenRemoveInput) {
+        hiddenRemoveInput = document.createElement('input');
+        hiddenRemoveInput.type = 'hidden';
+        hiddenRemoveInput.id = `remove_${prop}`;
+        hiddenRemoveInput.name = `remove_${prop}`;
+        hiddenRemoveInput.value = '1';
+        formElement.appendChild(hiddenRemoveInput);
       } else {
-        hid.value = '1';
+        hiddenRemoveInput.value = '1';
       }
     }
 
     // masquer le container existant pour que l'utilisateur voie la suppression
-    const container = btn.closest && btn.closest('[id^="existing_"]') ? btn.closest('[id^="existing_"]') : btn.parentElement && btn.parentElement.parentElement;
+    const container = removeButton.closest && removeButton.closest('[id^="existing_"]') ? removeButton.closest('[id^="existing_"]') : removeButton.parentElement && removeButton.parentElement.parentElement;
     if (container) {
       try {
         container.style.display = 'none';
         container.__hiddenByPreview = true;
-      } catch (e) {
-        try { if (container.remove) container.remove(); } catch (ee) {}
+      } catch (err) {
+        try { if (container.remove) container.remove(); } catch (err2) {}
       }
     }
 
     previewState[prop] = '';
     renderField(prop);
 
-    if (form) {
-      let hidField = document.getElementById(`hidden_${prop}`);
-      if (!hidField) {
-        hidField = document.createElement('input');
-        hidField.type = 'hidden';
-        hidField.id = `hidden_${prop}`;
-        hidField.name = prop;
-        form.appendChild(hidField);
+    if (formElement) {
+      let hiddenField = document.getElementById(`hidden_${prop}`);
+      if (!hiddenField) {
+        hiddenField = document.createElement('input');
+        hiddenField.type = 'hidden';
+        hiddenField.id = `hidden_${prop}`;
+        hiddenField.name = prop;
+        formElement.appendChild(hiddenField);
       }
-      hidField.value = '';
+      hiddenField.value = '';
     }
     updateHidden(prop);
   });
@@ -628,3 +584,4 @@ if (document.readyState === 'loading') {
 } else {
   initPreview();
 }
+
