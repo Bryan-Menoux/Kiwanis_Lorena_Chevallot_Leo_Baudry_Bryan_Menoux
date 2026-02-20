@@ -3,7 +3,10 @@ import diagArrow from "../assets/diag-arrow.svg";
 import imageIcon from "../assets/image-icon.svg";
 import galleryUrl from "../scripts/gallery.js?url";
 import galleryDisplayUrl from "../scripts/gallery-display.js?url";
-import { formatDateLong, isDataUrl as isDataUrlRuntime } from "../utils/utilitaires.js";
+import {
+  formatDateLong,
+  isDataUrl as isDataUrlRuntime,
+} from "../utils/utilitaires.js";
 export interface Props {
   action: any;
 }
@@ -50,7 +53,6 @@ const partie3Img =
         width: 100% !important;
       }
     }
-    
   }
 </style>
 
@@ -115,7 +117,10 @@ const partie3Img =
       Object.prototype.hasOwnProperty.call(action, "photo_partie_1")) && (
       <div class="flex flex-col max-w-7xl mx-auto my-16 md:my-32 gap-4 px-4 md:px-8">
         {Object.prototype.hasOwnProperty.call(action, "titre_partie_1") && (
-          <h2 data-field="titre_partie_1" class="text-2xl md:text-3xl">
+          <h2
+            data-field="titre_partie_1"
+            class="uppercase font-light! text-2xl md:text-3xl"
+          >
             {action.titre_partie_1}
           </h2>
         )}
@@ -131,23 +136,21 @@ const partie3Img =
           )}
           {
             <div class="flex flex-col items-end w-full mx-auto max-h-[50dvh] lg:max-w-full">
-                  {
-                    action.photo_partie_1 && (
-                      <img
-                        data-field="photo_partie_1"
-                        src={partie1Img}
-                        alt={action.description_photo_partie_1}
-                        loading="lazy"
-                        decoding="async"
-                        class="w-full h-full flex-1 object-cover rounded-lg"
-                      />
-                    )
-                  }
-                  {action.photo_partie_1 && action.description_photo_partie_1 && (
-                    <p data-field="description_photo_partie_1" class="text-sm mt-4">
-                      {action.description_photo_partie_1}
-                    </p>
-                  )}
+              {action.photo_partie_1 && (
+                <img
+                  data-field="photo_partie_1"
+                  src={partie1Img}
+                  alt={action.description_photo_partie_1}
+                  loading="lazy"
+                  decoding="async"
+                  class="w-full h-full flex-1 object-cover rounded-lg"
+                />
+              )}
+              {action.photo_partie_1 && action.description_photo_partie_1 && (
+                <p data-field="description_photo_partie_1" class="text-sm mt-4">
+                  {action.description_photo_partie_1}
+                </p>
+              )}
             </div>
           }
         </div>
@@ -266,18 +269,16 @@ const partie3Img =
           )}
         </div>
         <div class="flex flex-col items-end w-full mx-auto max-h-[50dvh] lg:max-w-full">
-          {
-            action.photo_partie_2 && (
-              <img
-                data-field="photo_partie_2"
-                src={partie2Img}
-                alt={action.description_photo_partie_2}
-                loading="lazy"
-                decoding="async"
-                class="w-full h-full flex-1 object-cover rounded-lg"
-              />
-            )
-          }
+          {action.photo_partie_2 && (
+            <img
+              data-field="photo_partie_2"
+              src={partie2Img}
+              alt={action.description_photo_partie_2}
+              loading="lazy"
+              decoding="async"
+              class="w-full h-full flex-1 object-cover rounded-lg"
+            />
+          )}
           {action.photo_partie_2 && action.description_photo_partie_2 && (
             <p data-field="description_photo_partie_2" class="text-sm mt-4">
               {action.description_photo_partie_2}
@@ -295,18 +296,16 @@ const partie3Img =
       Object.prototype.hasOwnProperty.call(action, "photo_partie_3")) && (
       <div class="flex flex-col-reverse lg:grid lg:grid-cols-[1fr_1fr] gap-6 md:gap-8 lg:gap-16 min-h-[40dvh] mt-16 mb-16 md:mt-16 md:mb-32 px-4 md:px-0">
         <div class="flex flex-col w-full mx-auto max-h-[50dvh] lg:max-w-full">
-          {
-            action.photo_partie_3 && (
-              <img
-                data-field="photo_partie_3"
-                src={partie3Img}
-                alt={action.description_photo_partie_3}
-                loading="lazy"
-                decoding="async"
-                class="w-full h-full flex-1 object-cover rounded-lg"
-              />
-            )
-          }
+          {action.photo_partie_3 && (
+            <img
+              data-field="photo_partie_3"
+              src={partie3Img}
+              alt={action.description_photo_partie_3}
+              loading="lazy"
+              decoding="async"
+              class="w-full h-full flex-1 object-cover rounded-lg"
+            />
+          )}
           {action.photo_partie_3 && action.description_photo_partie_3 && (
             <p
               data-field="description_photo_partie_3"
@@ -449,8 +448,8 @@ const partie3Img =
 {
   action.galerie_photos && action.galerie_photos.length > 0 && (
     <>
-      <script src={galleryUrl}></script>
-      <script src={galleryDisplayUrl}></script>
+      <script src={galleryUrl} />
+      <script src={galleryDisplayUrl} />
     </>
   )
 }

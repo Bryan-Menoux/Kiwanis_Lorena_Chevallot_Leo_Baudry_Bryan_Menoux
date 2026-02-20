@@ -1,6 +1,9 @@
 // État d'exécution pour la prévisualisation live
 let previewState = {};
 
+// Accumulation des fichiers galerie sélectionnés par l'utilisateur
+let galleryFiles = [];
+let galleryDataUrls = [];
 
 import PREVIEW_DEFAULTS from './previewDefaults.js';
 import {formatDateRange, escapeHtml, isDataUrl } from '../utils/utilitaires.js';
@@ -16,10 +19,11 @@ function renderField(prop) {
   nodes.forEach((element) => {
     if (element.tagName === 'IMG') {
       // image : définir la source et paramètres de chargement
-      try { console.debug('[preview] update IMG', prop, value && (value.length ? (value.slice ? value.slice(0,50) : String(value)) : value)); } catch (error) {}
       element.src = value || '';
       element.loading = 'lazy';
       element.decoding = 'async';
+      // cacher l'image si pas de src
+      element.style.display = value ? '' : 'none';
       return;
     }
 
@@ -139,13 +143,13 @@ function updateHidden(prop) {
   hiddenInput.value = Array.isArray(value) ? JSON.stringify(value) : (value ?? '');
 }
 
-// affiche les miniatures (data URLs) sélectionnées dans le formulaire
-function renderFormGalleryThumbnails(fileInput, dataUrls) {
+// re-render toutes les miniatures sélectionnées depuis galleryFiles/galleryDataUrls
+function renderFormGalleryThumbnails() {
   const container = document.getElementById('gallerySelected');
   if (!container) return;
   container.innerHTML = '';
 
-  dataUrls.forEach((dataUrl, index) => {
+  galleryDataUrls.forEach((dataUrl, index) => {
     const thumbnailWrap = document.createElement('div');
     thumbnailWrap.className = 'relative overflow-hidden rounded-md';
     thumbnailWrap.style.paddingBottom = '100%';
@@ -159,56 +163,43 @@ function renderFormGalleryThumbnails(fileInput, dataUrls) {
     const removeButton = document.createElement('button');
     removeButton.type = 'button';
     removeButton.className = 'absolute top-1 right-1 bg-black/60 text-white rounded-full w-6 h-6 flex items-center justify-center';
-    removeButton.setAttribute('data-index', String(index));
+    removeButton.setAttribute('data-gallery-index', String(index));
     removeButton.innerHTML = '×';
     thumbnailWrap.appendChild(removeButton);
 
     container.appendChild(thumbnailWrap);
   });
 
-  // attacher un seul handler par input pour gérer la suppression d'une miniature sélectionnée
-  if (!container.__boundInputId || container.__boundInputId !== (fileInput && fileInput.id)) {
+  // délégation : un seul listener sur le container
+  if (!container.__galleryBound) {
     container.addEventListener('click', function (event) {
-      const clickedButton = event.target.closest && event.target.closest('[data-index]');
+      const clickedButton = event.target.closest && event.target.closest('[data-gallery-index]');
       if (!clickedButton) return;
-      const removeIndex = parseInt(clickedButton.getAttribute('data-index'), 10);
+      const removeIndex = parseInt(clickedButton.getAttribute('data-gallery-index'), 10);
       if (Number.isNaN(removeIndex)) return;
 
-      // reconstruire DataTransfer sans l'élément supprimé
-      const oldDataTransfer = fileInput.__dt || new DataTransfer();
-      const filesArray = Array.from(oldDataTransfer.files);
-      filesArray.splice(removeIndex, 1);
-      const newDataTransfer = new DataTransfer();
-      filesArray.forEach((file) => newDataTransfer.items.add(file));
-      fileInput.__dt = newDataTransfer;
-      fileInput.files = newDataTransfer.files;
+      // retirer le fichier et sa data URL des tableaux
+      galleryFiles.splice(removeIndex, 1);
+      galleryDataUrls.splice(removeIndex, 1);
 
-      // relire les fichiers restants en data URLs pour ré-afficher les miniatures
-      const readPromises = Array.from(newDataTransfer.files).map((file) => new Promise((resolve) => {
-        const reader = new FileReader();
-        reader.onload = (loadEvent) => resolve(loadEvent.target.result);
-        reader.readAsDataURL(file);
-      }));
+      // reconstruire le DataTransfer pour la soumission
+      const fileInput = document.getElementById('input_galerie_photos');
+      if (fileInput) {
+        const dt = new DataTransfer();
+        galleryFiles.forEach((f) => dt.items.add(f));
+        fileInput.files = dt.files;
+      }
 
-      Promise.all(readPromises).then((thumbnailDataUrls) => {
-        // combiner les URLs déjà présentes côté serveur et les nouvelles data URLs
-        const serverUrls = Array.isArray(previewState.galerie_photos)
-          ? previewState.galerie_photos.filter(urlValue => typeof urlValue === 'string' && !isDataUrl(urlValue))
-          : [];
-        const combinedUrls = serverUrls.concat(thumbnailDataUrls);
-        previewState.galerie_photos = combinedUrls;
-        renderGallery(combinedUrls);
-        updateHidden('galerie_photos');
-        // réafficher les miniatures à partir des data URLs actuelles
-        renderFormGalleryThumbnails(fileInput, thumbnailDataUrls);
-      }).catch(() => {
-        // en cas d'erreur, conserver les images serveur et vider les miniatures de fichiers
-        previewState.galerie_photos = previewState.galerie_photos || [];
-        renderGallery(previewState.galerie_photos);
-        renderFormGalleryThumbnails(fileInput, []);
-      });
+      // mettre à jour la preview et les miniatures
+      const serverUrls = Array.isArray(previewState.galerie_photos)
+        ? previewState.galerie_photos.filter((u) => typeof u === 'string' && !isDataUrl(u))
+        : [];
+      previewState.galerie_photos = serverUrls.concat(galleryDataUrls);
+      renderGallery(previewState.galerie_photos);
+      updateHidden('galerie_photos');
+      renderFormGalleryThumbnails();
     });
-    container.__boundInputId = fileInput.id;
+    container.__galleryBound = true;
   }
 }
 
@@ -309,39 +300,42 @@ function handleFileElement(inputElement) {
 
   // traitement pour la galerie multiple
   if (prop === 'galerie_photos') {
-    const fileInput = inputElement;
-    if (!fileInput.__dt) fileInput.__dt = new DataTransfer();
-    const dataTransfer = fileInput.__dt;
-    const currentCount = dataTransfer.files.length;
-    const remainingSlots = Math.max(0, 8 - currentCount);
-    if (remainingSlots === 0) return; // limite atteinte
-    const toAdd = Math.min(selectedFiles.length, remainingSlots);
-    for (let addIndex = 0; addIndex < toAdd; addIndex++) {
-      dataTransfer.items.add(selectedFiles[addIndex]);
-    }
-    fileInput.files = dataTransfer.files;
+    const existingCount = Array.isArray(previewState.galerie_photos)
+      ? previewState.galerie_photos.filter((u) => typeof u === 'string' && !isDataUrl(u)).length
+      : 0;
+    const remainingSlots = Math.max(0, 8 - existingCount - galleryFiles.length);
+    if (remainingSlots === 0) return;
 
-    const fileListArray = Array.from(dataTransfer.files);
-    const readPromises = fileListArray.map((file) => new Promise((resolve) => {
+    // ajouter seulement les nouveaux fichiers (dans la limite)
+    const newFiles = Array.from(selectedFiles).slice(0, remainingSlots);
+    galleryFiles = galleryFiles.concat(newFiles);
+
+    // lire UNIQUEMENT les nouveaux fichiers en data URL, puis les ajouter à galleryDataUrls
+    const readPromises = newFiles.map((file) => new Promise((resolve) => {
       const reader = new FileReader();
-      reader.onload = (loadEvent) => resolve(loadEvent.target.result);
+      reader.onload = (e) => resolve(e.target.result);
       reader.readAsDataURL(file);
     }));
 
-    Promise.all(readPromises).then((dataUrls) => {
-      // conserver les URLs serveur et ajouter les nouvelles data-URLs
+    Promise.all(readPromises).then((newDataUrls) => {
+      galleryDataUrls = galleryDataUrls.concat(newDataUrls);
+
+      // reconstruire le DataTransfer pour la soumission
+      const fileInput = document.getElementById('input_galerie_photos');
+      if (fileInput) {
+        const dt = new DataTransfer();
+        galleryFiles.forEach((f) => dt.items.add(f));
+        fileInput.files = dt.files;
+      }
+
+      // mettre à jour la preview et les miniatures
       const serverUrls = Array.isArray(previewState.galerie_photos)
-        ? previewState.galerie_photos.filter(urlValue => typeof urlValue === 'string' && !isDataUrl(urlValue))
+        ? previewState.galerie_photos.filter((u) => typeof u === 'string' && !isDataUrl(u))
         : [];
-      const combinedUrls = serverUrls.concat(dataUrls);
-      previewState.galerie_photos = combinedUrls;
-      renderGallery(combinedUrls);
-      updateHidden('galerie_photos');
-      renderFormGalleryThumbnails(fileInput, dataUrls);
-    }).catch(() => {
-      previewState.galerie_photos = previewState.galerie_photos || [];
+      previewState.galerie_photos = serverUrls.concat(galleryDataUrls);
       renderGallery(previewState.galerie_photos);
-      renderFormGalleryThumbnails(fileInput, []);
+      updateHidden('galerie_photos');
+      renderFormGalleryThumbnails();
     });
 
     return;
@@ -389,7 +383,7 @@ function renderFormImagePreview(prop, dataUrl) {
   if (!dataUrl || !isDataUrl(dataUrl)) return;
 
   const previewWrap = document.createElement('div');
-  previewWrap.className = 'relative overflow-hidden rounded-md';
+  previewWrap.className = 'relative w-full overflow-hidden rounded-md';
   previewWrap.style.paddingBottom = '56%';
 
   const previewImage = document.createElement('img');
@@ -496,11 +490,6 @@ function initPreview() {
 
     // avant soumission : synchroniser tous les hidden_* et la galerie
     formElement.addEventListener('submit', () => {
-      try {
-        const fileInputs = Array.from(formElement.querySelectorAll('[data-prop-file]'));
-        const filesReport = fileInputs.map((fileInput) => ({ name: fileInput.getAttribute('data-prop-file') || fileInput.name, count: fileInput.files ? fileInput.files.length : 0, files: fileInput.files ? Array.from(fileInput.files).map(file => ({ name: file.name, size: file.size })) : [] }));
-      } catch (err) {}
-
       Array.from(formElement.querySelectorAll('[data-prop]')).forEach((fieldElement) => {
         const prop = fieldElement.getAttribute('data-prop');
         if (!prop) return;

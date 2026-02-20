@@ -6,6 +6,7 @@ import ActionForm from "../../../../components/ActionForm.astro";
 import slugify from "slugify";
 // Paramètre `id` optionnel provenant de l'URL (utilisé pour l'édition)
 const idParam = Astro.params?.id;
+
 import previewUrl from "../../../../scripts/preview.js?url";
 import galleryUrl from "../../../../scripts/gallery.js?url";
 import galleryDisplayUrl from "../../../../scripts/gallery-display.ts?url";
@@ -21,17 +22,8 @@ import previewDefaults from "../../../../scripts/previewDefaults.js";
 // Message d'erreur affiché dans le formulaire en cas d'échec serveur
 let error: string = "";
 
-// récupérer uniquement les valeurs présentes en base (pas de fallback local)
-let typeDeChiffreOptions: string[] = [];
-try {
-  const records: any[] = await Astro.locals.pb
-    .collection("actions")
-    .getFullList(100);
-  const values = Array.from(new Set(records.map((r: any) => r?.type_de_chiffre).filter(Boolean)));
-  if (values.length > 0) typeDeChiffreOptions = values;
-} catch (e) {
-  // garder la liste vide si on ne peut pas récupérer
-}
+// Récupérer les options de type_de_chiffre depuis le type TypeScript généré
+let typeDeChiffreOptions: string[] = ["type de chiffre", ...(Array.isArray(ActionsTypeDeChiffreOptions) ? ActionsTypeDeChiffreOptions : Object.values(ActionsTypeDeChiffreOptions))];
 
 // Placeholder SVG data-URL pour la prévisualisation serveur
 const placeholderImg = `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='400' height='400' viewBox='0 0 400 400'><rect width='100%' height='100%' fill='%23f3f6f7'/><image href='${imageIcon.src}' x='50' y='50' width='300' height='300' preserveAspectRatio='xMidYMid meet' style='opacity:0.95;'/></svg>`;
@@ -56,7 +48,6 @@ if (idParam) {
     }
   } catch (e) {
     console.error("Erreur retrieving action:", e);
-    // message utilisateur succinct
     error = "Impossible de charger l'action";
   }
 }
@@ -69,7 +60,7 @@ const previewData: any = {
   description_hero: actionRecord?.description_hero ?? "",
   hero:
     normalizeImageUrl(actionRecord?.hero, actionRecord, Astro.locals.pb) ??
-    placeholderImg,
+    null,
   titre_partie_1: actionRecord?.titre_partie_1 ?? "",
   texte_partie_1: actionRecord?.texte_partie_1 ?? "",
   photo_partie_1:
@@ -77,7 +68,7 @@ const previewData: any = {
       actionRecord?.photo_partie_1,
       actionRecord,
       Astro.locals.pb,
-    ) ?? placeholderImg,
+    ) ?? null,
   description_photo_partie_1: actionRecord?.description_photo_partie_1 ?? "",
   nom_lieu: actionRecord?.nom_lieu ?? "",
   adresse_lieu: actionRecord?.adresse_lieu ?? "",
@@ -92,7 +83,7 @@ const previewData: any = {
       actionRecord?.photo_partie_2,
       actionRecord,
       Astro.locals.pb,
-    ) ?? placeholderImg,
+    ) ?? null,
   description_photo_partie_2: actionRecord?.description_photo_partie_2 ?? "",
   titre_partie_3: actionRecord?.titre_partie_3 ?? "",
   texte_partie_3: actionRecord?.texte_partie_3 ?? "",
@@ -101,7 +92,7 @@ const previewData: any = {
       actionRecord?.photo_partie_3,
       actionRecord,
       Astro.locals.pb,
-    ) ?? placeholderImg,
+    ) ?? null,
   description_photo_partie_3: actionRecord?.description_photo_partie_3 ?? "",
   titre_remerciements: actionRecord?.titre_remerciements ?? "",
   description_remerciements: actionRecord?.description_remerciements ?? "",
@@ -118,6 +109,10 @@ const previewData: any = {
 const previewPlaceholder: any = {
   ...previewDefaults,
   ...previewData,
+  hero: previewData.hero ?? placeholderImg,
+  photo_partie_1: previewData.photo_partie_1 ?? placeholderImg,
+  photo_partie_2: previewData.photo_partie_2 ?? placeholderImg,
+  photo_partie_3: previewData.photo_partie_3 ?? placeholderImg,
 };
 // Gestion de la soumission du formulaire côté serveur
 // Si `idParam` présent -> mise à jour, sinon création.
@@ -153,7 +148,7 @@ if (Astro.request.method === "POST") {
         await Astro.locals.pb.collection("actions").delete(idParam);
         return Astro.redirect("/creation/actions?success=Action supprimée");
       } catch (e) {
-        console.error("Erreur suppression:", e);
+        // ignore
       }
     }
 
@@ -187,11 +182,13 @@ if (Astro.request.method === "POST") {
     // Si l'UI a envoyé des flags `remove_{field}`, s'assurer d'envoyer
     // explicitement une valeur vide pour le champ afin que PocketBase
     // supprime le fichier côté serveur.
+    const emptyImageFields: string[] = [];
     for (const [key, value] of formData.entries()) {
       if (typeof key === 'string' && key.startsWith('remove_')) {
         const vStr = value?.toString?.();
         if (vStr) {
           const field = key.replace(/^remove_/, '');
+          emptyImageFields.push(field);
           // forcer la clé à une chaîne vide — PocketBase prendra en compte
           // la valeur vide pour effacer le champ fichier
           data[field] = '';
@@ -199,10 +196,17 @@ if (Astro.request.method === "POST") {
       }
     }
 
-    // Gérer les fichiers
+    // Gérer les fichiers — ignorer les champs marqués pour suppression
+    // EXCEPTION : si un nouveau fichier est fourni pour un champ marqué remove_, le fichier prend la priorité
     const files: any = {};
     for (const [key, value] of formData.entries()) {
       if (value instanceof File && value.size > 0) {
+        const idx = emptyImageFields.indexOf(key);
+        if (idx !== -1) {
+          // nouveau fichier fourni : annuler la suppression
+          emptyImageFields.splice(idx, 1);
+          delete data[key];
+        }
         if (key === "galerie_photos") {
           // Galerie : collecter les fichiers dans un tableau
           if (!files[key]) {
@@ -265,10 +269,11 @@ if (Astro.request.method === "POST") {
         payload.type = 'action';
 
         // copier les références de fichiers existantes depuis le brouillon si aucun upload n'a été fait
-        if (!payload.hero && actionRecord?.hero) payload.hero = actionRecord.hero;
-        if (!payload.photo_partie_1 && actionRecord?.photo_partie_1) payload.photo_partie_1 = actionRecord.photo_partie_1;
-        if (!payload.photo_partie_2 && actionRecord?.photo_partie_2) payload.photo_partie_2 = actionRecord.photo_partie_2;
-        if (!payload.photo_partie_3 && actionRecord?.photo_partie_3) payload.photo_partie_3 = actionRecord.photo_partie_3;
+        // IMPORTANT : utiliser === undefined pour ne pas écraser '' (suppression intentionnelle)
+        if (payload.hero === undefined && actionRecord?.hero) payload.hero = actionRecord.hero;
+        if (payload.photo_partie_1 === undefined && actionRecord?.photo_partie_1) payload.photo_partie_1 = actionRecord.photo_partie_1;
+        if (payload.photo_partie_2 === undefined && actionRecord?.photo_partie_2) payload.photo_partie_2 = actionRecord.photo_partie_2;
+        if (payload.photo_partie_3 === undefined && actionRecord?.photo_partie_3) payload.photo_partie_3 = actionRecord.photo_partie_3;
         if (!payload.galerie_photos && Array.isArray(actionRecord?.galerie_photos) && actionRecord.galerie_photos.length) payload.galerie_photos = actionRecord.galerie_photos;
 
         await Astro.locals.pb.collection("brouillons").update(idParam, payload);
@@ -296,11 +301,11 @@ if (Astro.request.method === "POST") {
     }
   } catch (err) {
     console.error("Erreur lors de la création:", err);
-    // Afficher l'erreur au formulaire
     error =
       err instanceof Error ? err.message : "Une erreur inconnue est survenue";
   }
 }
+
 ---
 
 <Layout>
@@ -322,7 +327,13 @@ if (Astro.request.method === "POST") {
       <ActionContent action={previewPlaceholder} />
     </div>
   </div>
-  <script set:html={`window.__previewData = ${JSON.stringify(previewPlaceholder).replace(/</g, "\\u003c")};`} />
+  <script set:html={`window.__previewData = ${JSON.stringify({
+    ...previewPlaceholder,
+    hero: previewData.hero,
+    photo_partie_1: previewData.photo_partie_1,
+    photo_partie_2: previewData.photo_partie_2,
+    photo_partie_3: previewData.photo_partie_3,
+  }).replace(/</g, "\\u003c")};`} />
 
   <script type="module" src={utilUrl}></script>
   <script type="module" src={previewUrl}></script>

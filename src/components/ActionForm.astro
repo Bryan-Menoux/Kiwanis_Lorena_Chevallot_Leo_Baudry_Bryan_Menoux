@@ -8,13 +8,13 @@ export interface Props {
   actionRecord?: any;
 }
 
-const { 
+const {
   mode = "create",
   previewPlaceholder,
   previewData,
   typeDeChiffreOptions: typeDeChiffreOptionsProp,
   imageIcon: imageIconProp,
-  actionRecord
+  actionRecord,
 } = Astro.props;
 
 const typeDeChiffreOptions = typeDeChiffreOptionsProp || [
@@ -50,13 +50,13 @@ const placeholders = {
       name="titre_local"
       class="w-full border-2 border-accent rounded px-2 py-1 text-black bg-base-100"
       placeholder={placeholders.titre}
-      {...(mode === "edit" && previewData ? { value: previewData.titre } : {})}
+      {...mode === "edit" && previewData ? { value: previewData.titre } : {}}
     />
     <input
       type="hidden"
       name="titre"
       id="hidden_titre"
-      {...(mode === "edit" && previewData ? { value: previewData.titre } : {})}
+      {...mode === "edit" && previewData ? { value: previewData.titre } : {}}
     />
 
     <label class="block text-sm font-medium mb-1">Sous-titre de l'action</label>
@@ -65,13 +65,17 @@ const placeholders = {
       id="input_sous_titre"
       class="w-full border border-accent rounded px-2 py-1 text-black bg-base-100"
       placeholder={placeholders.sous_titre}
-      {...(mode === "edit" && previewData ? { value: previewData.sous_titre } : {})}
+      {...mode === "edit" && previewData
+        ? { value: previewData.sous_titre }
+        : {}}
     />
     <input
       type="hidden"
       name="sous_titre"
       id="hidden_sous_titre"
-      {...(mode === "edit" && previewData ? { value: previewData.sous_titre } : {})}
+      {...mode === "edit" && previewData
+        ? { value: previewData.sous_titre }
+        : {}}
     />
 
     <div class="flex gap-4">
@@ -82,13 +86,17 @@ const placeholders = {
           id="input_date_debut"
           type="date"
           class="border border-accent rounded px-2 py-1 w-full text-black bg-base-100"
-          {...(mode === "edit" && previewData ? { value: previewData.date_debut } : {})}
+          {...mode === "edit" && previewData
+            ? { value: previewData.date_debut }
+            : {}}
         />
         <input
           type="hidden"
           name="date_debut"
           id="hidden_date_debut"
-          {...(mode === "edit" && previewData ? { value: previewData.date_debut } : {})}
+          {...mode === "edit" && previewData
+            ? { value: previewData.date_debut }
+            : {}}
         />
       </div>
       <div class="w-1/2">
@@ -98,13 +106,17 @@ const placeholders = {
           id="input_date_fin"
           type="date"
           class="border border-accent rounded px-2 py-1 w-full text-black bg-base-100"
-          {...(mode === "edit" && previewData ? { value: previewData.date_fin } : {})}
+          {...mode === "edit" && previewData
+            ? { value: previewData.date_fin }
+            : {}}
         />
         <input
           type="hidden"
           name="date_fin"
           id="hidden_date_fin"
-          {...(mode === "edit" && previewData ? { value: previewData.date_fin } : {})}
+          {...mode === "edit" && previewData
+            ? { value: previewData.date_fin }
+            : {}}
         />
       </div>
     </div>
@@ -136,10 +148,7 @@ const placeholders = {
       {
         mode === "edit" && previewData ? (
           previewData.hero ? (
-            <div
-              class="relative overflow-hidden rounded-md"
-              style="padding-bottom:56%"
-            >
+            <div class="relative w-full overflow-hidden rounded-md" style="padding-bottom:56%;" data-delete-image="hero">
               <img
                 src={previewData.hero}
                 alt="Aperçu"
@@ -147,6 +156,13 @@ const placeholders = {
                 loading="lazy"
                 decoding="async"
               />
+              <button
+                type="button"
+                class="delete-image-btn absolute top-1 right-1 bg-black/60 text-white rounded-full w-6 h-6 flex items-center justify-center"
+                title="Supprimer l'image"
+              >
+                ×
+              </button>
             </div>
           ) : null
         ) : null
@@ -162,29 +178,59 @@ const placeholders = {
       placeholder={placeholders.description_hero}
       class="w-full border border-accent rounded px-2 py-1 text-black bg-base-100"
       rows="2"
-    >{mode === "edit" && previewData ? previewData.description_hero : ""}</textarea>
+      >{
+        mode === "edit" && previewData ? previewData.description_hero : ""
+      }</textarea
+    >
     <input
       type="hidden"
       name="description_hero"
       id="hidden_description_hero"
-      {...(mode === "edit" && previewData ? { value: previewData.description_hero } : {})}
+      {...mode === "edit" && previewData
+        ? { value: previewData.description_hero }
+        : {}}
     />
   </div>
 
   <div class="p-4 bg-base-200 rounded-box border border-contrast space-y-4">
-    <h4 class="font-semibold">Partie 1</h4>
-    <input
-      data-prop="titre_partie_1"
-      id="input_titre_partie_1"
-      class="w-full border border-accent rounded px-2 py-1 mt-2 text-black bg-base-100"
-      placeholder={placeholders.titre_partie_1}
-      {...(mode === "edit" && previewData ? { value: previewData.titre_partie_1 } : {})}
-    />
+    <div class="flex items-center justify-between">
+      <div class="flex-1">
+        <h4 class="font-semibold mr-2" id="titre_label_partie_1">
+          {
+            mode === "edit" && previewData
+              ? previewData.titre_partie_1
+              : placeholders.titre_partie_1
+          }
+        </h4>
+        <input
+          data-prop="titre_partie_1"
+          id="input_titre_partie_1"
+          class="w-full border border-accent rounded px-2 py-1 mt-0 text-black bg-base-100"
+          placeholder={"Ex : " + placeholders.titre_partie_1}
+          data-example={placeholders.titre_partie_1}
+          {...mode === "edit" && previewData
+            ? { value: previewData.titre_partie_1 }
+            : {}}
+          style="display:none;"
+        />
+      </div>
+      <button
+        type="button"
+        class="btn btn-accent rounded-md! h-full px-2 py-1 ml-2"
+        aria-label="Modifier le titre de la section"
+        data-edit-target="titre_partie_1"
+        aria-pressed="false"
+      >
+        Modifier le titre de la section
+      </button>
+    </div>
     <input
       type="hidden"
       name="titre_partie_1"
       id="hidden_titre_partie_1"
-      {...(mode === "edit" && previewData ? { value: previewData.titre_partie_1 } : {})}
+      {...mode === "edit" && previewData
+        ? { value: previewData.titre_partie_1 }
+        : {}}
     />
     <label class="block text-sm font-medium mt-2">Texte partie 1</label>
     <textarea
@@ -194,12 +240,17 @@ const placeholders = {
       placeholder={placeholders.texte_partie_1}
       class="w-full border border-accent rounded px-2 py-1 text-black bg-base-100"
       rows="4"
-    >{mode === "edit" && previewData ? previewData.texte_partie_1 : ""}</textarea>
+      >{
+        mode === "edit" && previewData ? previewData.texte_partie_1 : ""
+      }</textarea
+    >
     <input
       type="hidden"
       name="texte_partie_1"
       id="hidden_texte_partie_1"
-      {...(mode === "edit" && previewData ? { value: previewData.texte_partie_1 } : {})}
+      {...mode === "edit" && previewData
+        ? { value: previewData.texte_partie_1 }
+        : {}}
     />
     <label class="block text-sm font-medium mt-2">Photo partie 1</label>
     <label
@@ -221,17 +272,14 @@ const placeholders = {
           class="h-16 w-16"
           style="filter:grayscale(100%) brightness(0.5); opacity:0.3;"
         />
-        <span class="text-sm">Ajouter une photo</span>
+        <span class="text-sm">Ajouter / Remplacer une photo</span>
       </div>
     </label>
     <div id="preview_photo_partie_1" class="mt-2">
       {
         mode === "edit" && previewData ? (
           previewData.photo_partie_1 ? (
-            <div
-              class="relative overflow-hidden rounded-md"
-              style="padding-bottom:56%"
-            >
+            <div class="relative w-full overflow-hidden rounded-md" style="padding-bottom:56%;" data-delete-image="photo_partie_1">
               <img
                 src={previewData.photo_partie_1}
                 alt="Aperçu"
@@ -239,6 +287,13 @@ const placeholders = {
                 loading="lazy"
                 decoding="async"
               />
+              <button
+                type="button"
+                class="delete-image-btn absolute top-1 right-1 bg-black/60 text-white rounded-full w-6 h-6 flex items-center justify-center"
+                title="Supprimer l'image"
+              >
+                ×
+              </button>
             </div>
           ) : null
         ) : null
@@ -252,13 +307,17 @@ const placeholders = {
       id="input_description_photo_partie_1"
       placeholder={placeholders.description_photo_partie_1}
       class="w-full border border-accent rounded px-2 py-1 text-black bg-base-100"
-      {...(mode === "edit" && previewData ? { value: previewData.description_photo_partie_1 } : {})}
+      {...mode === "edit" && previewData
+        ? { value: previewData.description_photo_partie_1 }
+        : {}}
     />
     <input
       type="hidden"
       name="description_photo_partie_1"
       id="hidden_description_photo_partie_1"
-      {...(mode === "edit" && previewData ? { value: previewData.description_photo_partie_1 } : {})}
+      {...mode === "edit" && previewData
+        ? { value: previewData.description_photo_partie_1 }
+        : {}}
     />
   </div>
   <div class="p-4 bg-base-200 rounded-box border border-contrast space-y-4">
@@ -273,13 +332,13 @@ const placeholders = {
       maxlength="30"
       class="w-full border border-accent rounded px-2 py-1 mt-2 text-black bg-base-100"
       placeholder={placeholders.nom_lieu}
-      {...(mode === "edit" && previewData ? { value: previewData.nom_lieu } : {})}
+      {...mode === "edit" && previewData ? { value: previewData.nom_lieu } : {}}
     />
     <input
       type="hidden"
       name="nom_lieu"
       id="hidden_nom_lieu"
-      {...(mode === "edit" && previewData ? { value: previewData.nom_lieu } : {})}
+      {...mode === "edit" && previewData ? { value: previewData.nom_lieu } : {}}
     />
     <label class="block text-sm font-medium mt-2"
       >Adresse du lieu (max 30 caractères)</label
@@ -290,13 +349,17 @@ const placeholders = {
       maxlength="30"
       class="w-full border border-accent rounded px-2 py-1 mt-2 text-black bg-base-100"
       placeholder={placeholders.adresse_lieu}
-      {...(mode === "edit" && previewData ? { value: previewData.adresse_lieu } : {})}
+      {...mode === "edit" && previewData
+        ? { value: previewData.adresse_lieu }
+        : {}}
     />
     <input
       type="hidden"
       name="adresse_lieu"
       id="hidden_adresse_lieu"
-      {...(mode === "edit" && previewData ? { value: previewData.adresse_lieu } : {})}
+      {...mode === "edit" && previewData
+        ? { value: previewData.adresse_lieu }
+        : {}}
     />
     <input
       data-prop="lien_lieu"
@@ -324,7 +387,9 @@ const placeholders = {
         data-prop="type_de_chiffre"
         id="input_type_de_chiffre"
         class="border border-accent rounded px-2 py-1 w-1/2 text-black bg-base-100"
-        value={mode === "edit" && previewData ? previewData.type_de_chiffre : ""}
+        value={mode === "edit" && previewData
+          ? previewData.type_de_chiffre
+          : ""}
       >
         {typeDeChiffreOptions.map((opt) => <option value={opt}>{opt}</option>)}
       </select>
@@ -360,14 +425,37 @@ const placeholders = {
     /** Partie 2, 3, remerciements, galerie simplified — keep same IDs for scripts */
   }
   <div class="p-4 bg-base-200 rounded-box border border-contrast space-y-4">
-    <h4 class="font-semibold">Partie 2</h4>
-    <input
-      data-prop="titre_partie_2"
-      id="input_titre_partie_2"
-      class="w-full border border-accent rounded px-2 py-1 mt-2 text-black bg-base-100"
-      placeholder={placeholders.titre_partie_2}
-      value={mode === "edit" && previewData ? previewData.titre_partie_2 : ""}
-    />
+    <div class="flex items-center justify-between">
+      <div class="flex-1">
+        <h4 class="font-semibold mr-2" id="titre_label_partie_2">
+          {
+            mode === "edit" && previewData
+              ? previewData.titre_partie_2
+              : placeholders.titre_partie_2
+          }
+        </h4>
+        <input
+          data-prop="titre_partie_2"
+          id="input_titre_partie_2"
+          class="w-full border border-accent rounded px-2 py-1 mt-0 text-black bg-base-100"
+          placeholder={"Ex : " + placeholders.titre_partie_2}
+          data-example={placeholders.titre_partie_2}
+          value={mode === "edit" && previewData
+            ? previewData.titre_partie_2
+            : ""}
+          style="display:none;"
+        />
+      </div>
+      <button
+        type="button"
+        class="btn btn-accent rounded-md! h-full px-2 py-1 ml-2"
+        aria-label="Modifier le titre de la section"
+        data-edit-target="titre_partie_2"
+        aria-pressed="false"
+      >
+        Modifier le titre de la section
+      </button>
+    </div>
     <input
       type="hidden"
       name="titre_partie_2"
@@ -382,7 +470,10 @@ const placeholders = {
       placeholder={placeholders.texte_partie_2}
       class="w-full border border-accent rounded px-2 py-1 text-black bg-base-100"
       rows="4"
-    >{mode === "edit" && previewData ? previewData.texte_partie_2 : ""}</textarea>
+      >{
+        mode === "edit" && previewData ? previewData.texte_partie_2 : ""
+      }</textarea
+    >
     <input
       type="hidden"
       name="texte_partie_2"
@@ -409,16 +500,13 @@ const placeholders = {
           class="h-16 w-16"
           style="filter:grayscale(100%) brightness(0.5); opacity:0.3;"
         />
-        <span class="text-sm">Ajouter une photo</span>
+        <span class="text-sm">Ajouter / Remplacer une photo</span>
       </div>
     </label>
     <div id="preview_photo_partie_2" class="mt-2">
       {
         mode === "edit" && previewData?.photo_partie_2 ? (
-          <div
-            class="relative overflow-hidden rounded-md"
-            style="padding-bottom:56%"
-          >
+          <div class="relative w-full overflow-hidden rounded-md" style="padding-bottom:56%;" data-delete-image="photo_partie_2">
             <img
               src={previewData.photo_partie_2}
               alt="Aperçu"
@@ -426,6 +514,13 @@ const placeholders = {
               loading="lazy"
               decoding="async"
             />
+            <button
+              type="button"
+              class="delete-image-btn absolute top-1 right-1 bg-black/60 text-white rounded-full w-6 h-6 flex items-center justify-center"
+              title="Supprimer l'image"
+            >
+              ×
+            </button>
           </div>
         ) : null
       }
@@ -435,25 +530,52 @@ const placeholders = {
       id="input_description_photo_partie_2"
       placeholder={placeholders.description_photo_partie_2}
       class="w-full border border-accent rounded px-2 py-1 mt-2 text-black bg-base-100"
-      value={mode === "edit" && previewData ? previewData.description_photo_partie_2 : ""}
+      value={mode === "edit" && previewData
+        ? previewData.description_photo_partie_2
+        : ""}
     />
     <input
       type="hidden"
       name="description_photo_partie_2"
       id="hidden_description_photo_partie_2"
-      value={mode === "edit" && previewData ? previewData.description_photo_partie_2 : ""}
+      value={mode === "edit" && previewData
+        ? previewData.description_photo_partie_2
+        : ""}
     />
   </div>
 
   <div class="p-4 bg-base-200 rounded-box border border-contrast space-y-4">
-    <h4 class="font-semibold">Partie 3</h4>
-    <input
-      data-prop="titre_partie_3"
-      id="input_titre_partie_3"
-      class="w-full border border-accent rounded px-2 py-1 mt-2 text-black bg-base-100"
-      placeholder={placeholders.titre_partie_3}
-      value={mode === "edit" && previewData ? previewData.titre_partie_3 : ""}
-    />
+    <div class="flex items-center justify-between">
+      <div class="flex-1">
+        <h4 class="font-semibold mr-2" id="titre_label_partie_3">
+          {
+            mode === "edit" && previewData
+              ? previewData.titre_partie_3
+              : placeholders.titre_partie_3
+          }
+        </h4>
+        <input
+          data-prop="titre_partie_3"
+          id="input_titre_partie_3"
+          class="w-full border border-accent rounded px-2 py-1 mt-0 text-black bg-base-100"
+          placeholder={"Ex : " + placeholders.titre_partie_3}
+          data-example={placeholders.titre_partie_3}
+          value={mode === "edit" && previewData
+            ? previewData.titre_partie_3
+            : ""}
+          style="display:none;"
+        />
+      </div>
+      <button
+        type="button"
+        class="btn btn-accent rounded-md! h-full px-2 py-1 ml-2"
+        aria-label="Modifier le titre de la section"
+        data-edit-target="titre_partie_3"
+        aria-pressed="false"
+      >
+        Modifier le titre de la section
+      </button>
+    </div>
     <input
       type="hidden"
       name="titre_partie_3"
@@ -468,7 +590,10 @@ const placeholders = {
       placeholder={placeholders.texte_partie_3}
       class="w-full border border-accent rounded px-2 py-1 text-black bg-base-100"
       rows="4"
-    >{mode === "edit" && previewData ? previewData.texte_partie_3 : ""}</textarea>
+      >{
+        mode === "edit" && previewData ? previewData.texte_partie_3 : ""
+      }</textarea
+    >
     <input
       type="hidden"
       name="texte_partie_3"
@@ -495,16 +620,13 @@ const placeholders = {
           class="h-16 w-16"
           style="filter:grayscale(100%) brightness(0.5); opacity:0.3;"
         />
-        <span class="text-sm">Ajouter une photo</span>
+        <span class="text-sm">Ajouter / Remplacer une photo</span>
       </div>
     </label>
     <div id="preview_photo_partie_3" class="mt-2">
       {
         mode === "edit" && previewData?.photo_partie_3 ? (
-          <div
-            class="relative overflow-hidden rounded-md"
-            style="padding-bottom:56%"
-          >
+          <div class="relative w-full overflow-hidden rounded-md" style="padding-bottom:56%;" data-delete-image="photo_partie_3">
             <img
               src={previewData.photo_partie_3}
               alt="Aperçu"
@@ -512,6 +634,13 @@ const placeholders = {
               loading="lazy"
               decoding="async"
             />
+            <button
+              type="button"
+              class="delete-image-btn absolute top-1 right-1 bg-black/60 text-white rounded-full w-6 h-6 flex items-center justify-center"
+              title="Supprimer l'image"
+            >
+              ×
+            </button>
           </div>
         ) : null
       }
@@ -521,13 +650,17 @@ const placeholders = {
       id="input_description_photo_partie_3"
       placeholder={placeholders.description_photo_partie_3}
       class="w-full border border-accent rounded px-2 py-1 mt-2 text-black bg-base-100"
-      value={mode === "edit" && previewData ? previewData.description_photo_partie_3 : ""}
+      value={mode === "edit" && previewData
+        ? previewData.description_photo_partie_3
+        : ""}
     />
     <input
       type="hidden"
       name="description_photo_partie_3"
       id="hidden_description_photo_partie_3"
-      value={mode === "edit" && previewData ? previewData.description_photo_partie_3 : ""}
+      value={mode === "edit" && previewData
+        ? previewData.description_photo_partie_3
+        : ""}
     />
   </div>
 
@@ -538,13 +671,17 @@ const placeholders = {
       id="input_titre_remerciement"
       class="w-full border border-accent rounded px-2 py-1 mt-2 text-black bg-base-100"
       placeholder={placeholders.titre_remerciements}
-      value={mode === "edit" && previewData ? previewData.titre_remerciements : ""}
+      value={mode === "edit" && previewData
+        ? previewData.titre_remerciements
+        : ""}
     />
     <input
       type="hidden"
       name="titre_remerciement"
       id="hidden_titre_remerciement"
-      value={mode === "edit" && previewData ? previewData.titre_remerciements : ""}
+      value={mode === "edit" && previewData
+        ? previewData.titre_remerciements
+        : ""}
     />
     <label class="block text-sm font-medium mt-2"
       >Description remerciements</label
@@ -556,12 +693,19 @@ const placeholders = {
       placeholder={placeholders.description_remerciements}
       class="w-full border border-accent rounded px-2 py-1 text-black bg-base-100"
       rows="3"
-    >{mode === "edit" && previewData ? previewData.description_remerciements : ""}</textarea>
+      >{
+        mode === "edit" && previewData
+          ? previewData.description_remerciements
+          : ""
+      }</textarea
+    >
     <input
       type="hidden"
       name="description_remerciement"
       id="hidden_description_remerciement"
-      value={mode === "edit" && previewData ? previewData.description_remerciements : ""}
+      value={mode === "edit" && previewData
+        ? previewData.description_remerciements
+        : ""}
     />
   </div>
 
@@ -595,15 +739,19 @@ const placeholders = {
       type="hidden"
       id="hidden_galerie_photos"
       name="galerie_photos"
-      value={mode === "edit" && previewData ? JSON.stringify(previewData.galerie_photos) : undefined}
+      value={mode === "edit" && previewData
+        ? JSON.stringify(previewData.galerie_photos)
+        : undefined}
     />
     <input
       type="hidden"
       id="hidden_remove_galerie_photos"
       name="remove_galerie_photos"
     />
-    <div id="galleryExisting" class="mt-2 grid grid-cols-4 gap-2"></div>
-    <div id="gallerySelected" class="mt-2 grid grid-cols-4 gap-2"></div>
+    <div class="mt-2 grid grid-cols-4 gap-2">
+      <div id="galleryExisting" class="contents"></div>
+      <div id="gallerySelected" class="contents"></div>
+    </div>
   </div>
 
   <div class="pt-4 flex gap-2">
@@ -626,3 +774,175 @@ const placeholders = {
     >
   </div>
 </form>
+<script is:inline>
+  document.addEventListener("DOMContentLoaded", () => {
+    const form = document.getElementById("leftForm");
+    if (!form) return;
+
+    const imageFieldNames = ["hero", "photo_partie_1", "photo_partie_2", "photo_partie_3"];
+    const deletedImages = {};
+
+    // Délégation d'événement sur le formulaire — gère les boutons présents ET
+    // ceux ajoutés dynamiquement par preview.js, sans MutationObserver
+    form.addEventListener("click", (e) => {
+      const btn = e.target.closest(".delete-image-btn");
+      if (!btn) return;
+      e.preventDefault();
+      const container = btn.closest("[data-delete-image]");
+      if (!container) return;
+      const fieldName = container.getAttribute("data-delete-image");
+      if (fieldName) {
+        deletedImages[fieldName] = true;
+        container.remove();
+        // Réinitialiser le file input pour permettre la re-sélection du même fichier
+        const fileInput = form.querySelector(`[data-prop-file="${fieldName}"]`);
+        if (fileInput) {
+          fileInput.value = "";
+          if (fileInput.__dt) fileInput.__dt = null;
+        }
+        // mettre à jour la colonne preview droite
+        document.querySelectorAll(`[data-field="${fieldName}"]`).forEach((el) => {
+          if (el.tagName === "IMG") {
+            el.src = "";
+            el.style.display = "none";
+          }
+        });
+      }
+    });
+
+    // Au submit : pour chaque image supprimée, envoyer remove_<field>=1
+    // SAUF si un nouveau fichier a été sélectionné entretemps (il prend la priorité)
+    form.addEventListener("submit", () => {
+      imageFieldNames.forEach((fieldName) => {
+        if (!deletedImages[fieldName]) return;
+        // Si un fichier a été re-sélectionné, ne pas envoyer remove_ (le fichier remplace)
+        const fileInput = form.querySelector(`[data-prop-file="${fieldName}"]`);
+        if (fileInput && fileInput.files && fileInput.files.length > 0) return;
+        const input = document.createElement("input");
+        input.type = "hidden";
+        input.name = "remove_" + fieldName;
+        input.value = "1";
+        form.appendChild(input);
+      });
+    });
+  });
+</script>
+
+<script>
+  import PREVIEW_DEFAULTS from "../scripts/previewDefaults.js";
+
+  document.addEventListener("DOMContentLoaded", () => {
+    document.querySelectorAll("[data-prop]").forEach((el) => {
+      const prop = el.getAttribute("data-prop");
+      if (
+        prop &&
+        (PREVIEW_DEFAULTS as unknown as Record<string, string>)[prop]
+      ) {
+        el.setAttribute(
+          "placeholder",
+          (PREVIEW_DEFAULTS as unknown as Record<string, string>)[prop],
+        );
+      }
+    });
+
+    document.querySelectorAll("[data-edit-target]").forEach((btn) => {
+      const target = btn.getAttribute("data-edit-target");
+      if (!target) return;
+
+      const input = document.getElementById(
+        "input_" + target,
+      ) as HTMLInputElement;
+      const hidden = document.getElementById(
+        "hidden_" + target,
+      ) as HTMLInputElement;
+      const h4 = document.getElementById(
+        "titre_label_" + target.replace(/^titre_/, ""),
+      ) as HTMLElement;
+
+      if (!input || !hidden || !h4) return;
+
+      const example =
+        (PREVIEW_DEFAULTS as unknown as Record<string, string>)[target] ||
+        input.dataset.example ||
+        "";
+      if (example) input.dataset.example = example;
+
+      input.style.display = "none";
+      (btn as HTMLElement).dataset.editing = "false";
+
+      const rawPlaceholder =
+        input.dataset.example ||
+        (
+          input.getAttribute("placeholder") ||
+          h4.textContent?.trim() ||
+          ""
+        ).replace(/^Ex :\s*/i, "");
+      const displayPlaceholder = "Ex : " + rawPlaceholder;
+
+      if (!h4.textContent?.trim() || h4.textContent.trim() === rawPlaceholder) {
+        h4.textContent = rawPlaceholder;
+      }
+      input.setAttribute("placeholder", displayPlaceholder);
+
+      const setEditState = (isEditing: boolean, shouldSave = false) => {
+        if (isEditing) {
+          h4.style.display = "none";
+          input.style.display = "";
+          input.value =
+            hidden.value ||
+            (h4.textContent?.trim() === rawPlaceholder
+              ? ""
+              : h4.textContent?.trim() || "");
+          input.focus();
+          (btn as HTMLElement).textContent = "Valider";
+          (btn as HTMLElement).dataset.editing = "true";
+          btn.setAttribute("aria-pressed", "true");
+        } else {
+          input.style.display = "none";
+          h4.style.display = "";
+          if (shouldSave) {
+            hidden.value = input.value;
+            h4.textContent = input.value || rawPlaceholder;
+          }
+          (btn as HTMLElement).textContent = "Modifier le titre de la section";
+          (btn as HTMLElement).dataset.editing = "false";
+          btn.setAttribute("aria-pressed", "false");
+        }
+      };
+
+      // Create cancel button
+      const cancelBtn = document.createElement("button");
+      cancelBtn.type = "button";
+      cancelBtn.className =
+        "btn btn-ghost rounded-md! h-full px-2 py-1 bg-base-100 ml-2";
+      cancelBtn.textContent = "Annuler";
+      cancelBtn.style.display = "none";
+      btn.parentNode?.insertBefore(cancelBtn, btn.nextSibling);
+
+      btn.addEventListener("click", () => {
+        if ((btn as HTMLElement).dataset.editing === "false") {
+          setEditState(true, false);
+          cancelBtn.style.display = "";
+        } else {
+          setEditState(false, true);
+          cancelBtn.style.display = "none";
+        }
+      });
+
+      cancelBtn.addEventListener("click", () => {
+        setEditState(false, false);
+        cancelBtn.style.display = "none";
+      });
+
+      input.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          setEditState(false, true);
+        } else if (e.key === "Escape") {
+          e.preventDefault();
+          setEditState(false, false);
+        }
+      });
+    });
+  });
+</script>
