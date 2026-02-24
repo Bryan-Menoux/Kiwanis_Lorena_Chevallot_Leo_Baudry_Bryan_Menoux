@@ -92,11 +92,11 @@ function renderField(prop) {
     if (prop === 'chiffre') {
       const num = Number(value);
       if (Number.isFinite(num)) {
-        element.textContent = new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 0 }).format(num) + '\u00A0â‚¬';
+        element.textContent = new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 0 }).format(num) + '\u00A0€';
       } else if (value && String(value).trim() !== '') {
-        element.textContent = String(value) + '\u00A0â‚¬';
+        element.textContent = String(value) + '\u00A0€';
       } else {
-        element.textContent = '\u00A0â‚¬';
+        element.textContent = '\u00A0€';
       }
     } else {
       element.textContent = value ?? '';

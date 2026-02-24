@@ -15,17 +15,26 @@ function renderGallery(photoUrls) {
   const photoGrid = previewRoot.querySelector('#photoGrid');
   if (!photoGrid) return;
 
+  const gallerieSection = previewRoot.querySelector('#gallerieSection');
+
   photoGrid.innerHTML = '';
+
+  if (!photoUrls || photoUrls.length === 0) {
+    if (gallerieSection) gallerieSection.style.display = 'none';
+    return;
+  }
+
+  if (gallerieSection) gallerieSection.style.display = '';
 
   photoUrls.forEach((photoUrl, index) => {
     const thumbnailDiv = document.createElement('div');
-    thumbnailDiv.className = 'relative w-full h-full overflow-hidden rounded-box cursor-pointer';
+    thumbnailDiv.className = 'overflow-hidden rounded-box cursor-pointer';
     thumbnailDiv.setAttribute('data-photo-index', String(index));
     thumbnailDiv.setAttribute('data-photo-url', photoUrl);
 
     const thumbnailImage = document.createElement('img');
     thumbnailImage.alt = 'Photo de la galerie';
-    thumbnailImage.className = 'absolute inset-0 w-full h-full object-center object-cover';
+    thumbnailImage.className = 'w-full h-[50dvh] object-cover block';
     thumbnailImage.src = photoUrl;
     thumbnailImage.loading = 'lazy';
     thumbnailImage.decoding = 'async';
@@ -97,7 +106,7 @@ function renderFormGalleryThumbnails() {
     removeButton.type = 'button';
     removeButton.className = 'absolute top-1 right-1 bg-black/60 text-white rounded-full w-6 h-6 flex items-center justify-center';
     removeButton.setAttribute('data-gallery-index', String(index));
-    removeButton.innerHTML = 'Ã—';
+    removeButton.innerHTML = '×';
     thumbnailWrap.appendChild(removeButton);
 
     container.appendChild(thumbnailWrap);
@@ -150,8 +159,8 @@ function renderExistingThumbnails(existingPhotoUrls) {
     const removeButton = document.createElement('button');
     removeButton.type = 'button';
     removeButton.className = 'absolute top-1 right-1 bg-black/60 text-white rounded-full w-6 h-6 flex items-center justify-center';
-    removeButton.setAttribute('data-photo-url', photoUrl);
-    removeButton.innerHTML = 'Ã—';
+    removeButton.setAttribute('data-remove-url', photoUrl);
+    removeButton.innerHTML = '×';
     thumbnailWrap.appendChild(removeButton);
 
     container.appendChild(thumbnailWrap);
@@ -159,9 +168,10 @@ function renderExistingThumbnails(existingPhotoUrls) {
 
   if (!container.__bound) {
     container.addEventListener('click', function (event) {
-      const clickedButton = event.target.closest && event.target.closest('[data-photo-url]');
+      const clickedButton = event.target.closest && event.target.closest('[data-remove-url]');
       if (!clickedButton) return;
-      const photoUrl = clickedButton.getAttribute('data-photo-url');
+      event.stopPropagation();
+      const photoUrl = clickedButton.getAttribute('data-remove-url');
       if (!photoUrl) return;
 
       const hiddenRemoveInput = document.getElementById('hidden_remove_galerie_photos');

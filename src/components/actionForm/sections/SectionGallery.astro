@@ -1,0 +1,53 @@
+---
+import HiddenField from "../partials/HiddenField.astro";
+
+export interface Props {
+  mode?: string;
+  previewData?: any;
+  imageIcon?: any;
+}
+
+const { mode = "create", previewData, imageIcon } = Astro.props;
+---
+
+<div class="p-4 bg-base-200 rounded-box border border-contrast space-y-4">
+  <label class="block text-sm font-medium mt-3 mb-1">Galerie (max 8)</label>
+  <label
+    for="input_galerie_photos"
+    class="cursor-pointer w-full h-36 border-2 border-dashed rounded bg-base-100 flex items-center justify-center text-gray-500 mt-3 mb-1"
+  >
+    <input
+      data-prop-file="galerie_photos"
+      type="file"
+      name="galerie_photos"
+      id="input_galerie_photos"
+      accept="image/*"
+      multiple
+      class="hidden"
+    />
+    <div class="flex flex-col items-center text-center pointer-events-none">
+      <img
+        src={imageIcon?.src}
+        alt="Icone image"
+        class="h-16 w-16"
+        style="filter:grayscale(100%) brightness(0.5); opacity:0.3;"
+      />
+      <span class="text-sm">Cliquez ou glissez vos photos</span>
+      <span class="text-xs text-gray-400">Jusqu'à 8 images</span>
+    </div>
+  </label>
+
+  <HiddenField
+    id="hidden_galerie_photos"
+    name="galerie_photos"
+    value={mode === "edit" && previewData
+      ? JSON.stringify(previewData.galerie_photos)
+      : undefined}
+  />
+  <HiddenField id="hidden_remove_galerie_photos" name="remove_galerie_photos" />
+
+  <div class="mt-3 grid grid-cols-4 gap-2">
+    <div id="galleryExisting" class="contents"></div>
+    <div id="gallerySelected" class="contents"></div>
+  </div>
+</div>

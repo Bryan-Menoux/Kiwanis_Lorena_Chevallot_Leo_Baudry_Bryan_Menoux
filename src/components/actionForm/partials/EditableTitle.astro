@@ -1,0 +1,43 @@
+---
+import HiddenField from "./HiddenField.astro";
+
+export interface Props {
+  target: string;
+  displayValue: string;
+  placeholderValue: string;
+  inputValue?: string;
+  hiddenValue?: string;
+}
+
+const { target, displayValue, placeholderValue, inputValue, hiddenValue } =
+  Astro.props;
+
+const labelId = `titre_label_${target.replace(/^titre_/, "")}`;
+const inputId = `input_${target}`;
+const hiddenId = `hidden_${target}`;
+---
+
+<div class="flex items-center justify-between">
+  <div class="flex-1">
+    <h4 class="font-semibold mr-2" id={labelId}>{displayValue}</h4>
+    <input
+      data-prop={target}
+      id={inputId}
+      class="w-full border border-accent rounded px-2 py-1 text-black bg-base-100"
+      placeholder={"Ex : " + placeholderValue}
+      data-example={placeholderValue}
+      value={inputValue}
+      style="display:none;"
+    />
+  </div>
+  <button
+    type="button"
+    class="btn btn-accent rounded-md! h-full px-2 py-1 ml-2"
+    aria-label="Modifier le titre de la section"
+    data-edit-target={target}
+    aria-pressed="false"
+  >
+    Modifier le titre de la section
+  </button>
+</div>
+<HiddenField name={target} id={hiddenId} value={hiddenValue} />

@@ -258,8 +258,8 @@ if (Astro.request.method === "POST") {
         });
 
         const combinedGallery = (keepFiles || []).concat(newFiles);
-        // [] si galerie vidée
-        payload.galerie_photos = combinedGallery.length ? combinedGallery : [];
+        // "" si galerie complètement vidée, sinon tableau des fichiers restants
+        payload.galerie_photos = combinedGallery.length ? combinedGallery : "";
       }
 
       // Si le record provient d'un brouillon, on met à jour la collection `brouillons`
@@ -273,7 +273,7 @@ if (Astro.request.method === "POST") {
         if (payload.photo_partie_1 === undefined && actionRecord?.photo_partie_1) payload.photo_partie_1 = actionRecord.photo_partie_1;
         if (payload.photo_partie_2 === undefined && actionRecord?.photo_partie_2) payload.photo_partie_2 = actionRecord.photo_partie_2;
         if (payload.photo_partie_3 === undefined && actionRecord?.photo_partie_3) payload.photo_partie_3 = actionRecord.photo_partie_3;
-        if (!payload.galerie_photos && Array.isArray(actionRecord?.galerie_photos) && actionRecord.galerie_photos.length) payload.galerie_photos = actionRecord.galerie_photos;
+        if (payload.galerie_photos === undefined && Array.isArray(actionRecord?.galerie_photos) && actionRecord.galerie_photos.length) payload.galerie_photos = actionRecord.galerie_photos;
 
         await Astro.locals.pb.collection("brouillons").update(idParam, payload);
 

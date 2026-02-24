@@ -1,0 +1,84 @@
+---
+export interface Props {
+  fieldName: string;
+  previewData?: any;
+  imageIcon?: any;
+  mode?: string;
+  ctaText?: string;
+  helperText?: string;
+  heightClass?: string;
+}
+
+const {
+  fieldName,
+  previewData,
+  imageIcon,
+  mode = "create",
+  ctaText = "Ajouter / Remplacer une photo",
+  helperText,
+  heightClass,
+} = Astro.props;
+
+const inputId = fieldName === "hero" ? "input_hero_file" : `input_${fieldName}`;
+const blockHeight = heightClass || (fieldName === "hero" ? "h-40" : "h-36");
+const currentImage = mode === "edit" && previewData ? previewData[fieldName] : null;
+---
+
+<label
+  for={inputId}
+  class={`cursor-pointer w-full ${blockHeight} border-2 border-dashed rounded bg-base-100 flex items-center justify-center text-gray-500 mt-3 mb-1`}
+>
+  <input
+    data-prop-file={fieldName}
+    type="file"
+    name={fieldName}
+    id={inputId}
+    accept="image/*"
+    class="hidden"
+  />
+  <div class="flex flex-col items-center text-center pointer-events-none">
+    <img
+      src={imageIcon?.src}
+      alt="Icône image"
+      class="h-16 w-16"
+      style="filter:grayscale(100%) brightness(0.5); opacity:0.3;"
+    />
+    <span class="text-sm">{ctaText}</span>
+    {helperText ? <span class="text-xs text-gray-400">{helperText}</span> : null}
+  </div>
+</label>
+<div id={`preview_${fieldName}`} class="mt-3">
+  {
+    currentImage ? (
+      <div
+        class="relative w-full overflow-hidden rounded-md"
+        style="padding-bottom:56%;"
+        data-delete-image={fieldName}
+      >
+        <div class="px-2">
+          <p class="text-sm text-gray-500 mb-1">Photo actuelle</p>
+        </div>
+        <div class="absolute top-2 left-2 z-10">
+          <p class="text-xs text-white bg-black/60 px-2 py-1 rounded">
+            Photo actuelle
+          </p>
+        </div>
+        <img
+          src={currentImage}
+          alt="Aperçu"
+          class="absolute inset-0 w-full h-full object-cover"
+          loading="lazy"
+          decoding="async"
+        />
+        <button
+          type="button"
+          class="delete-image-btn absolute top-1 right-1 bg-black/60 text-white rounded-full w-6 h-6 flex items-center justify-center"
+          title="Supprimer l'image"
+          aria-label="Supprimer l'image"
+        >
+          ×
+        </button>
+      </div>
+    ) : null
+  }
+</div>

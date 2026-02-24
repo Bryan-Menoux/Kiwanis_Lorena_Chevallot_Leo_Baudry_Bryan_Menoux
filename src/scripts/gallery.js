@@ -23,12 +23,18 @@
     grid.style.gridTemplateColumns = '';
     grid.style.gridTemplateRows = '';
     grid.style.gridTemplateAreas = '';
-    items.forEach((it) => (it.style.gridArea = ''));
+    grid.style.gridAutoRows = 'auto';
+    items.forEach((it) => {
+      it.style.gridArea = '';
+      it.style.height = '';
+      const img = it.querySelector('img');
+      if (img) { img.style.height = ''; img.style.width = ''; }
+    });
 
     // Mobile: single column stack
     if (window.innerWidth < 768) {
       grid.style.gridTemplateColumns = '1fr';
-      grid.style.gridTemplateRows = `repeat(${count}, 1fr)`;
+      grid.style.gridTemplateRows = '';
       const areas = Array.from({ length: count }, (_, i) => `"${letter(i)}"`).join(' ');
       grid.style.gridTemplateAreas = areas;
       items.slice(0, count).forEach((it, i) => {
@@ -71,15 +77,13 @@
 
     if (n === 1) {
       template = '"a a"';
-      grid.style.gridTemplateRows = '1fr';
       mapping[0] = 'a';
     } else if (n === 2) {
       template = '"a b"';
-      grid.style.gridTemplateRows = '1fr';
       mapping[0] = 'a';
       mapping[1] = 'b';
     } else if (n === 3) {
-      // prefer first portrait among the first 3, otherwise use the 3rd
+      // prefer first portrait among the first 3, otherwise use the last
       let portraitIndex = -1;
       for (let i = 0; i < Math.min(3, relevantImgs.length); i++) {
         const im = relevantImgs[i];
@@ -90,30 +94,32 @@
       }
       if (portraitIndex === -1) portraitIndex = Math.min(2, relevantImgs.length - 1);
       const others = [0, 1, 2].filter((i) => i !== portraitIndex);
+      // a, b = left column (stacked), c = right column (portrait spanning 2 rows)
       mapping[others[0]] = 'a';
       mapping[others[1]] = 'b';
       mapping[portraitIndex] = 'c';
       template = '"a c" "b c"';
-      grid.style.gridTemplateRows = '1fr 1fr';
+      grid.style.gridTemplateRows = '50dvh 50dvh';
+      // items must fill their grid cell (portrait spans 2 rows = 100dvh)
+      items.slice(0, 3).forEach((it) => {
+        const img = it.querySelector('img');
+        if (img) { img.style.height = '100%'; img.style.width = '100%'; }
+        it.style.height = '100%';
+      });
     } else if (n === 4) {
       template = '"a b" "c d"';
-      grid.style.gridTemplateRows = '1fr 1fr';
       for (let i = 0; i < 4; i++) mapping[i] = letter(i);
     } else if (n === 5) {
       template = '"a b" "c d" "e e"';
-      grid.style.gridTemplateRows = '1fr 1fr 0.5fr';
       for (let i = 0; i < 5; i++) mapping[i] = letter(i);
     } else if (n === 6) {
       template = '"a b" "c d" "e f"';
-      grid.style.gridTemplateRows = '1fr 1fr 1fr';
       for (let i = 0; i < 6; i++) mapping[i] = letter(i);
     } else if (n === 7) {
       template = '"a b" "c d" "e f" "g g"';
-      grid.style.gridTemplateRows = '1fr 1fr 1fr 1fr';
       for (let i = 0; i < 7; i++) mapping[i] = letter(i);
     } else {
       template = '"a b" "c d" "e f" "g h"';
-      grid.style.gridTemplateRows = '1fr 1fr 1fr 1fr';
       for (let i = 0; i < 8; i++) mapping[i] = letter(i);
     }
 

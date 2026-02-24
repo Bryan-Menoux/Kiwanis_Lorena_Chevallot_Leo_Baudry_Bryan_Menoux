@@ -1,0 +1,127 @@
+---
+import SectionMainInfo from "./sections/SectionMainInfo.astro";
+import SectionPart from "./sections/SectionPart.astro";
+import SectionLocation from "./sections/SectionLocation.astro";
+import SectionThanks from "./sections/SectionThanks.astro";
+import SectionGallery from "./sections/SectionGallery.astro";
+
+import imageIcon from "../../assets/image-icon.svg";
+import previewDefaults from "../../scripts/previewDefaults.js";
+import previewUrl from "../../scripts/preview/index.js?url";
+
+import imageDeletionUrl from "../../scripts/actionForm/imageDeletion.js?url";
+import mapsToggleUrl from "../../scripts/actionForm/mapsToggle.js?url";
+import editableTitleUrl from "../../scripts/actionForm/editableTitle.js?url";
+import placeholdersUrl from "../../scripts/actionForm/placeholders.js?url";
+
+export interface Props {
+  mode?: string;
+  previewPlaceholder: any;
+  previewData?: any;
+  typeDeChiffreOptions?: string[];
+  imageIcon?: any;
+  actionRecord?: any;
+  error?: string;
+}
+
+const {
+  mode = "create",
+  previewPlaceholder,
+  previewData,
+  typeDeChiffreOptions: typeDeChiffreOptionsProp,
+  imageIcon: imageIconProp,
+  actionRecord,
+  error = "",
+} = Astro.props;
+
+const typeDeChiffreOptions = typeDeChiffreOptionsProp || [
+  "type de chiffre",
+  "dépenses",
+  "récoltes",
+];
+
+const placeholders = {
+  ...previewDefaults,
+  ...(previewPlaceholder || {}),
+};
+---
+
+<form
+  id="leftForm"
+  class="space-y-8 text-accent"
+  method="POST"
+  enctype="multipart/form-data"
+>
+  <h1 class="text-4xl! font-bold mb-8 mt-34 text-white">
+    Créer une nouvelle action
+  </h1>
+  {error && <p class="text-red-300 mb-2">{error}</p>}
+
+  <SectionMainInfo
+    mode={mode}
+    previewData={previewData}
+    placeholders={placeholders}
+    imageIcon={imageIcon}
+  />
+
+  <SectionPart
+    partNumber={1}
+    mode={mode}
+    previewData={previewData}
+    placeholders={placeholders}
+    imageIcon={imageIcon}
+  />
+
+  <SectionLocation
+    mode={mode}
+    previewData={previewData}
+    placeholders={placeholders}
+    typeDeChiffreOptions={typeDeChiffreOptions}
+  />
+
+  <SectionPart
+    partNumber={2}
+    mode={mode}
+    previewData={previewData}
+    placeholders={placeholders}
+    imageIcon={imageIcon}
+  />
+
+  <SectionPart
+    partNumber={3}
+    mode={mode}
+    previewData={previewData}
+    placeholders={placeholders}
+    imageIcon={imageIcon}
+  />
+
+  <SectionThanks mode={mode} previewData={previewData} placeholders={placeholders} />
+
+  <SectionGallery mode={mode} previewData={previewData} imageIcon={imageIcon} />
+
+  <div class="pt-4 flex gap-2">
+    {
+      mode === "create" && (
+        <button
+          type="submit"
+          name="save_as"
+          value="brouillon"
+          class="btn btn-ghost hover:text-accent text-base-100 px-4 py-2 rounded-md!"
+        >
+          Enregistrer en brouillon
+        </button>
+      )
+    }
+    <button
+      type="submit"
+      class="btn btn-border text-base-content px-4 py-2 rounded-md! flex-1"
+      >{mode === "create" ? "Créer l'action" : "Enregistrer les modifications"}</button
+    >
+  </div>
+</form>
+
+<script type="module" src={imageDeletionUrl}></script>
+<script type="module" src={mapsToggleUrl}></script>
+<script type="module" src={placeholdersUrl}></script>
+<script type="module" src={editableTitleUrl}></script>
+<script type="module" src={previewUrl}></script>

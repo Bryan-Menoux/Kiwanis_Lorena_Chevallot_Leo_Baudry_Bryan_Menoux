@@ -54,14 +54,14 @@ function renderFormImagePreview(prop, dataUrl) {
 
   const previewImage = document.createElement('img');
   previewImage.src = dataUrl;
-  previewImage.alt = 'AperÃ§u';
+  previewImage.alt = 'Aperçu';
   previewImage.className = 'absolute inset-0 w-full h-full object-cover';
   previewWrap.appendChild(previewImage);
 
   const removeButton = document.createElement('button');
   removeButton.type = 'button';
   removeButton.className = 'absolute top-1 right-1 bg-black/60 text-white rounded-full w-6 h-6 flex items-center justify-center';
-  removeButton.innerHTML = 'Ã—';
+  removeButton.innerHTML = '×';
   previewWrap.appendChild(removeButton);
 
   const labelWrap = document.createElement('div');

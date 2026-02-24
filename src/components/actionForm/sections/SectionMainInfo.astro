@@ -1,0 +1,106 @@
+---
+import HiddenField from "../partials/HiddenField.astro";
+import ImageUpload from "../partials/ImageUpload.astro";
+
+export interface Props {
+  mode?: string;
+  previewData?: any;
+  placeholders: any;
+  imageIcon?: any;
+}
+
+const { mode = "create", previewData, placeholders, imageIcon } = Astro.props;
+---
+
+<div class="p-4 bg-base-200 rounded-box border border-contrast space-y-4">
+  <label class="block text-lg font-bold mt-3 mb-1">Titre de l'action</label>
+  <input
+    data-prop="titre"
+    id="input_titre"
+    name="titre_local"
+    class="w-full border-2 border-accent rounded px-2 py-1 text-black bg-base-100"
+    placeholder={placeholders.titre}
+    {...mode === "edit" && previewData ? { value: previewData.titre } : {}}
+  />
+  <HiddenField
+    name="titre"
+    id="hidden_titre"
+    value={mode === "edit" && previewData ? previewData.titre : undefined}
+  />
+
+  <label class="block text-sm font-medium mt-3 mb-1">Sous-titre de l'action</label>
+  <input
+    data-prop="sous_titre"
+    id="input_sous_titre"
+    class="w-full border border-accent rounded px-2 py-1 text-black bg-base-100"
+    placeholder={placeholders.sous_titre}
+    {...mode === "edit" && previewData ? { value: previewData.sous_titre } : {}}
+  />
+  <HiddenField
+    name="sous_titre"
+    id="hidden_sous_titre"
+    value={mode === "edit" && previewData ? previewData.sous_titre : undefined}
+  />
+
+  <div class="flex gap-4">
+    <div class="w-1/2">
+      <label class="text-sm mt-3 mb-1">Date début</label>
+      <input
+        data-prop="date_debut"
+        id="input_date_debut"
+        type="date"
+        class="border border-accent rounded px-2 py-1 w-full text-black bg-base-100"
+        {...mode === "edit" && previewData ? { value: previewData.date_debut } : {}}
+      />
+      <HiddenField
+        name="date_debut"
+        id="hidden_date_debut"
+        value={mode === "edit" && previewData ? previewData.date_debut : undefined}
+      />
+    </div>
+    <div class="w-1/2">
+      <label class="text-sm mt-3 mb-1">Date fin</label>
+      <input
+        data-prop="date_fin"
+        id="input_date_fin"
+        type="date"
+        class="border border-accent rounded px-2 py-1 w-full text-black bg-base-100"
+        {...mode === "edit" && previewData ? { value: previewData.date_fin } : {}}
+      />
+      <HiddenField
+        name="date_fin"
+        id="hidden_date_fin"
+        value={mode === "edit" && previewData ? previewData.date_fin : undefined}
+      />
+    </div>
+  </div>
+
+  <label class="block text-sm font-medium mt-3 mb-1">Image de l'en-tête</label>
+  <ImageUpload
+    fieldName="hero"
+    mode={mode}
+    previewData={previewData}
+    imageIcon={imageIcon}
+    ctaText="Cliquez ou glissez l'image ici"
+    helperText="PNG, JPG, GIF"
+    heightClass="h-40"
+  />
+
+  <label class="block text-sm font-medium mt-3 mb-1">Description image de l'en-tête</label>
+  <textarea
+    data-prop="description_hero"
+    name="description_hero"
+    id="input_description_hero"
+    placeholder={placeholders.description_hero}
+    class="w-full border border-accent rounded px-2 py-1 text-black bg-base-100"
+    rows="2"
+    >{mode === "edit" && previewData ? previewData.description_hero : ""}</textarea
+  >
+  <HiddenField
+    name="description_hero"
+    id="hidden_description_hero"
+    value={mode === "edit" && previewData
+      ? previewData.description_hero
+      : undefined}
+  />
+</div>

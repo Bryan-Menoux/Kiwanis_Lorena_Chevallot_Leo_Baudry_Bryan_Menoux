@@ -84,6 +84,7 @@ function initPreview() {
     const hiddenGalleryInput = document.getElementById('hidden_galerie_photos');
     if (hiddenGalleryInput) hiddenGalleryInput.value = '';
     const existing = Array.isArray(previewState.galerie_photos) ? previewState.galerie_photos.filter(urlValue => typeof urlValue === 'string' && !isDataUrl(urlValue)) : [];
+    renderGallery(existing);
     if (existing.length) renderExistingThumbnails(existing);
   }
 

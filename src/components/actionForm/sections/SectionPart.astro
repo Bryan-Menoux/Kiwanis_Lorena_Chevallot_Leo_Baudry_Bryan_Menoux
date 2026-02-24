@@ -1,0 +1,127 @@
+---
+import EditableTitle from "../partials/EditableTitle.astro";
+import HiddenField from "../partials/HiddenField.astro";
+import ImageUpload from "../partials/ImageUpload.astro";
+
+export interface Props {
+  partNumber: number;
+  previewData?: any;
+  placeholders: any;
+  mode?: string;
+  imageIcon?: any;
+}
+
+const {
+  partNumber,
+  previewData,
+  placeholders,
+  mode = "create",
+  imageIcon,
+} = Astro.props;
+
+const titleKey = `titre_partie_${partNumber}`;
+const textKey = `texte_partie_${partNumber}`;
+const photoKey = `photo_partie_${partNumber}`;
+const descriptionKey = `description_photo_partie_${partNumber}`;
+
+const isPartOne = partNumber === 1;
+
+const titleDisplayValue = mode === "edit" && previewData
+  ? previewData[titleKey]
+  : placeholders[titleKey];
+
+const titleInputValue = mode === "edit" && previewData
+  ? previewData[titleKey]
+  : isPartOne
+    ? undefined
+    : "";
+
+const titleHiddenValue = mode === "edit" && previewData
+  ? previewData[titleKey]
+  : isPartOne
+    ? undefined
+    : "";
+
+const textHiddenValue = mode === "edit" && previewData
+  ? previewData[textKey]
+  : isPartOne
+    ? undefined
+    : "";
+
+const descriptionInputValue = mode === "edit" && previewData
+  ? previewData[descriptionKey]
+  : isPartOne
+    ? undefined
+    : "";
+
+const descriptionHiddenValue = mode === "edit" && previewData
+  ? previewData[descriptionKey]
+  : isPartOne
+    ? undefined
+    : "";
+---
+
+<div class="p-4 bg-base-200 rounded-box border border-contrast space-y-4">
+  <EditableTitle
+    target={titleKey}
+    displayValue={titleDisplayValue}
+    placeholderValue={placeholders[titleKey]}
+    inputValue={titleInputValue}
+    hiddenValue={titleHiddenValue}
+  />
+
+  <label class="block text-sm font-medium mt-3 mb-1"
+    >Texte de la partie <span
+      data-label-for={titleKey}
+      class="text-sm! font-medium! lowercase"
+      >{titleDisplayValue}</span
+    ></label
+  >
+  <textarea
+    data-prop={textKey}
+    name={textKey}
+    id={`input_${textKey}`}
+    placeholder={placeholders[textKey]}
+    class="w-full border border-accent rounded px-2 py-1 text-black bg-base-100"
+    rows="4"
+    >{mode === "edit" && previewData ? previewData[textKey] : ""}</textarea
+  >
+  <HiddenField name={textKey} id={`hidden_${textKey}`} value={textHiddenValue} />
+
+  <label class="block text-sm font-medium mt-3 mb-1"
+    >Photo partie <span
+      data-label-for={titleKey}
+      class="text-sm! font-medium! lowercase"
+      >{titleDisplayValue}</span
+    ></label
+  >
+
+  <ImageUpload
+    fieldName={photoKey}
+    mode={mode}
+    previewData={previewData}
+    imageIcon={imageIcon}
+    ctaText="Ajouter / Remplacer une photo"
+    heightClass="h-36"
+  />
+
+  <label class="block text-sm font-medium mt-3 mb-1"
+    >Description photo partie <span
+      data-label-for={titleKey}
+      class="text-sm! font-medium! lowercase"
+      >{titleDisplayValue}</span
+    ></label
+  >
+  <input
+    data-prop={descriptionKey}
+    id={`input_${descriptionKey}`}
+    placeholder={placeholders[descriptionKey]}
+    class="w-full border border-accent rounded px-2 py-1 text-black bg-base-100"
+    value={descriptionInputValue}
+  />
+  <HiddenField
+    name={descriptionKey}
+    id={`hidden_${descriptionKey}`}
+    value={descriptionHiddenValue}
+  />
+</div>
