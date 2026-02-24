@@ -1,0 +1,184 @@
+---
+export interface Props {
+  inputId?: string;
+  suggestionsId?: string;
+  placeholder?: string;
+  value?: string;
+  inputClass?: string;
+  dataProp?: string;
+  name?: string;
+  maxLength?: number;
+  mapLinkInputId?: string;
+}
+
+const {
+  inputId = "input_adresse_lieu",
+  suggestionsId = "suggestions_adresse_lieu",
+  placeholder = "Tape l'adresse du lieu",
+  value = "",
+  inputClass = "w-full border border-accent rounded px-2 py-1 mt-2 text-black bg-base-100",
+  dataProp = "adresse_lieu",
+  name,
+  maxLength,
+  mapLinkInputId = "input_lien_lieu",
+} = Astro.props;
+---
+
+<div
+  class="relative w-full"
+  data-location-search
+  data-map-link-input-id={mapLinkInputId}
+>
+  <input
+    id={inputId}
+    type="text"
+    placeholder={placeholder}
+    autocomplete="off"
+    class={inputClass}
+    value={value}
+    data-prop={dataProp}
+    name={name}
+    maxlength={maxLength}
+  />
+
+  <div
+    id={suggestionsId}
+    class="absolute left-0 right-0 bg-white border border-zinc-200 rounded-xl mt-1 hidden z-50"
+  ></div>
+</div>
+
+<script>
+  type NominatimResult = {
+    name?: string;
+    display_name?: string;
+    lat?: string;
+    lon?: string;
+    address?: {
+      house_number?: string;
+      road?: string;
+      pedestrian?: string;
+      footway?: string;
+      path?: string;
+      city?: string;
+      town?: string;
+      village?: string;
+      municipality?: string;
+      state?: string;
+      region?: string;
+      county?: string;
+    };
+  };
+
+  document.querySelectorAll<HTMLElement>("[data-location-search]").forEach((root) => {
+    if (root.dataset.bound === "true") return;
+    root.dataset.bound = "true";
+
+    const input = root.querySelector<HTMLInputElement>("input");
+    const box = root.querySelector<HTMLDivElement>("div[id]");
+    if (!input || !box) return;
+    const mapLinkInputId = root.dataset.mapLinkInputId;
+    const mapLinkInput =
+      (mapLinkInputId && document.getElementById(mapLinkInputId)) || null;
+    const mapLinkField =
+      mapLinkInput instanceof HTMLInputElement ? mapLinkInput : null;
+
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    let isProgrammaticUpdate = false;
+    const joinParts = (parts: Array<string | undefined>) =>
+      parts
+        .map((part) => String(part || "").trim())
+        .filter((part, index, arr) => part && arr.indexOf(part) === index);
+    const formatShortAddress = (item: NominatimResult) => {
+      const street = joinParts([
+        item.address?.house_number,
+        item.address?.road || item.address?.pedestrian || item.address?.footway || item.address?.path,
+      ]).join(" ");
+      const city =
+        item.address?.city ||
+        item.address?.town ||
+        item.address?.village ||
+        item.address?.municipality;
+      const region = item.address?.state || item.address?.region || item.address?.county;
+      const concise = joinParts([street, city, region]).join(", ");
+      if (concise) return concise;
+      return String(item.display_name || "")
+        .split(",")
+        .map((part) => part.trim())
+        .filter(Boolean)
+        .slice(0, 3)
+        .join(", ");
+    };
+    const buildMapsLink = (query: string) =>
+      query
+        ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`
+        : "";
+    const syncMapLinkFromInput = () => {
+      if (!mapLinkField) return;
+      mapLinkField.value = buildMapsLink(input.value.trim());
+      mapLinkField.dispatchEvent(new Event("input", { bubbles: true }));
+      mapLinkField.dispatchEvent(new Event("change", { bubbles: true }));
+    };
+    syncMapLinkFromInput();
+
+    input.addEventListener("input", () => {
+      syncMapLinkFromInput();
+      if (isProgrammaticUpdate) return;
+      clearTimeout(timer);
+
+      const value = input.value.trim();
+      if (value.length < 3) {
+        box.classList.add("hidden");
+        box.innerHTML = "";
+        return;
+      }
+
+      timer = setTimeout(async () => {
+        try {
+          const res = await fetch(
+            `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(value)}&format=jsonv2&addressdetails=1&limit=3`,
+          );
+          if (!res.ok) throw new Error("Erreur Nominatim");
+
+          const data: NominatimResult[] = await res.json();
+          box.innerHTML = "";
+
+          if (!Array.isArray(data) || data.length === 0) {
+            box.classList.add("hidden");
+            return;
+          }
+
+          data.forEach((item) => {
+            const btn = document.createElement("button");
+            btn.type = "button";
+            const shortAddress = formatShortAddress(item);
+            btn.textContent = shortAddress || item.display_name || "";
+            btn.className =
+              "w-full text-left px-4 py-2 cursor-pointer hover:bg-zinc-100 text-sm";
+            btn.addEventListener("click", () => {
+              isProgrammaticUpdate = true;
+              input.value = shortAddress || item.display_name || "";
+              syncMapLinkFromInput();
+              input.dispatchEvent(new Event("input", { bubbles: true }));
+              input.dispatchEvent(new Event("change", { bubbles: true }));
+              isProgrammaticUpdate = false;
+              box.classList.add("hidden");
+            });
+            box.appendChild(btn);
+          });
+
+          box.classList.remove("hidden");
+        } catch (error) {
+          box.classList.add("hidden");
+        }
+      }, 250);
+    });
+
+    document.addEventListener("click", (e) => {
+      const target = e.target;
+      if (!(target instanceof Node)) return;
+      if (!root.contains(target)) {
+        box.classList.add("hidden");
+      }
+    });
+  });
+</script>

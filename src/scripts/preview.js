@@ -11,11 +11,62 @@ import {formatDateRange, escapeHtml, isDataUrl } from '../utils/utilitaires.js';
 // raccourcis pour sélectionner des éléments DOM
 const selectOne = (selector, context = document) => context.querySelector(selector);
 
+const IMAGE_DESCRIPTION_MAP = {
+  hero: 'description_hero',
+  photo_partie_1: 'description_photo_partie_1',
+  photo_partie_2: 'description_photo_partie_2',
+  photo_partie_3: 'description_photo_partie_3',
+};
+
+function hasImageValue(prop) {
+  const value = previewState[prop];
+  return String(value || '').trim() !== '';
+}
+
+function syncImageDescriptionVisibility(imageProp) {
+  const descriptionProp = IMAGE_DESCRIPTION_MAP[imageProp];
+  if (!descriptionProp) return;
+
+  const shouldShowDescription = hasImageValue(imageProp);
+  const descriptionNodes = Array.from(document.querySelectorAll(`[data-field="${descriptionProp}"]`));
+  descriptionNodes.forEach((descriptionNode) => {
+    descriptionNode.style.display = shouldShowDescription ? '' : 'none';
+  });
+}
+
+function syncAllImageDescriptionVisibility() {
+  Object.keys(IMAGE_DESCRIPTION_MAP).forEach(syncImageDescriptionVisibility);
+}
+
+function syncImageSectionLayout(imageProp) {
+  const hasImage = hasImageValue(imageProp);
+  const layoutNodes = Array.from(document.querySelectorAll(`[data-image-layout="${imageProp}"]`));
+
+  layoutNodes.forEach((layoutNode) => {
+    layoutNode.style.gridTemplateColumns = hasImage ? '' : '1fr';
+
+    const mediaNodes = Array.from(layoutNode.querySelectorAll(`[data-image-layout-media="${imageProp}"]`));
+    mediaNodes.forEach((mediaNode) => {
+      mediaNode.style.display = hasImage ? '' : 'none';
+    });
+  });
+}
+
+function syncAllImageSectionLayouts() {
+  Object.keys(IMAGE_DESCRIPTION_MAP).forEach(syncImageSectionLayout);
+}
+
 // met à jour tous les éléments ayant l'attribut data-field égal à prop
 function renderField(prop) {
   const nodes = Array.from(document.querySelectorAll(`[data-field="${prop}"]`));
-  if (!nodes.length) return;
   const value = previewState[prop];
+  if (!nodes.length) {
+    if (Object.prototype.hasOwnProperty.call(IMAGE_DESCRIPTION_MAP, prop)) {
+      syncImageDescriptionVisibility(prop);
+      syncImageSectionLayout(prop);
+    }
+    return;
+  }
   nodes.forEach((element) => {
     if (element.tagName === 'IMG') {
       // image : définir la source et paramètres de chargement
@@ -24,6 +75,10 @@ function renderField(prop) {
       element.decoding = 'async';
       // cacher l'image si pas de src
       element.style.display = value ? '' : 'none';
+      if (Object.prototype.hasOwnProperty.call(IMAGE_DESCRIPTION_MAP, prop)) {
+        syncImageDescriptionVisibility(prop);
+        syncImageSectionLayout(prop);
+      }
       return;
     }
 
@@ -428,6 +483,8 @@ function renderAll() {
     }
     renderField(key);
   });
+  syncAllImageDescriptionVisibility();
+  syncAllImageSectionLayouts();
 }
 
 // initialisation : récupérer les données placeholder et binder les handlers

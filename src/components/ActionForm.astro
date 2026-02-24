@@ -23,8 +23,10 @@ const typeDeChiffreOptions = typeDeChiffreOptionsProp || [
   "récoltes",
 ];
 import imageIcon from "../assets/image-icon.svg";
+import SearchLocation from "./searchLocation.astro";
 export let error: string = "";
 import previewDefaults from "../scripts/previewDefaults.js";
+import type { ActionsResponse } from "../pocketbase-types";
 const placeholders = {
   ...previewDefaults,
   ...(previewPlaceholder || {}),
@@ -343,15 +345,15 @@ const placeholders = {
     <label class="block text-sm font-medium mt-2"
       >Adresse du lieu (max 30 caractères)</label
     >
-    <input
-      data-prop="adresse_lieu"
-      id="input_adresse_lieu"
-      maxlength="30"
-      class="w-full border border-accent rounded px-2 py-1 mt-2 text-black bg-base-100"
+    <SearchLocation
+      inputId="input_adresse_lieu"
+      suggestionsId="suggestions_adresse_lieu"
       placeholder={placeholders.adresse_lieu}
-      {...mode === "edit" && previewData
-        ? { value: previewData.adresse_lieu }
-        : {}}
+      value={mode === "edit" && previewData ? previewData.adresse_lieu : ""}
+      dataProp="adresse_lieu"
+      maxLength={30}
+      inputClass="w-full border border-accent rounded px-2 py-1 mt-2 text-black bg-base-100"
+      mapLinkInputId="input_lien_lieu"
     />
     <input
       type="hidden"
@@ -770,7 +772,7 @@ const placeholders = {
     <button
       type="submit"
       class="btn btn-border text-base-content px-4 py-2 rounded-md! flex-1"
-      >{mode === "create" ? "Créer l'action" : "Enregistrer"}</button
+      >{mode === "create" ? "Créer l'action" : "Enregistrer les modifications"}</button
     >
   </div>
 </form>
@@ -780,6 +782,12 @@ const placeholders = {
     if (!form) return;
 
     const imageFieldNames = ["hero", "photo_partie_1", "photo_partie_2", "photo_partie_3"];
+    const imageDescriptionMap = {
+      hero: "description_hero",
+      photo_partie_1: "description_photo_partie_1",
+      photo_partie_2: "description_photo_partie_2",
+      photo_partie_3: "description_photo_partie_3",
+    };
     const deletedImages = {};
 
     // Délégation d'événement sur le formulaire — gère les boutons présents ET
@@ -807,6 +815,12 @@ const placeholders = {
             el.style.display = "none";
           }
         });
+        const descriptionFieldName = imageDescriptionMap[fieldName];
+        if (descriptionFieldName) {
+          document.querySelectorAll(`[data-field="${descriptionFieldName}"]`).forEach((el) => {
+            el.style.display = "none";
+          });
+        }
       }
     });
 
