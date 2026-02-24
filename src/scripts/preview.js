@@ -82,6 +82,16 @@ function renderField(prop) {
       return;
     }
 
+    // anchors: mettre à jour le href (ex: lien_lieu)
+    if (element.tagName === 'A') {
+      try {
+        element.href = value || '#';
+        // afficher/cacher selon la présence d'un lien explicite
+        element.style.display = value ? '' : 'none';
+      } catch (err) {}
+      return;
+    }
+
     // champs texte multi-lignes stockés avec des sauts de ligne -> paragraphes
     if (prop.startsWith('texte_partie') || prop === 'description_remerciements') {
       element.innerHTML = (String(value || '')).split('\n').map(line => `<p>${escapeHtml(line)}</p>`).join('');
@@ -452,6 +462,15 @@ function renderFormImagePreview(prop, dataUrl) {
   removeButton.className = 'absolute top-1 right-1 bg-black/60 text-white rounded-full w-6 h-6 flex items-center justify-center';
   removeButton.innerHTML = '×';
   previewWrap.appendChild(removeButton);
+
+  // add a visible label similar to server-provided previews
+  const labelWrap = document.createElement('div');
+  labelWrap.className = 'absolute top-2 left-2 z-10';
+  const labelP = document.createElement('p');
+  labelP.className = 'text-xs text-white bg-black/60 px-2 py-1 rounded';
+  labelP.textContent = 'Photo actuelle';
+  labelWrap.appendChild(labelP);
+  previewWrap.appendChild(labelWrap);
 
   container.appendChild(previewWrap);
 

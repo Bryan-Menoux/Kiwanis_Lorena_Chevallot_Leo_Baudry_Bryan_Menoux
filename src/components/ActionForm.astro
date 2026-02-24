@@ -61,7 +61,7 @@ const placeholders = {
       {...mode === "edit" && previewData ? { value: previewData.titre } : {}}
     />
 
-    <label class="block text-sm font-medium mb-1">Sous-titre de l'action</label>
+    <label class="block text-sm font-medium mt-4 mb-1">Sous-titre de l'action</label>
     <input
       data-prop="sous_titre"
       id="input_sous_titre"
@@ -82,7 +82,7 @@ const placeholders = {
 
     <div class="flex gap-4">
       <div class="w-1/2">
-        <label class="text-sm">Date début</label>
+        <label class="text-sm mt-4">Date début</label>
         <input
           data-prop="date_debut"
           id="input_date_debut"
@@ -102,7 +102,7 @@ const placeholders = {
         />
       </div>
       <div class="w-1/2">
-        <label class="text-sm">Date fin</label>
+        <label class="text-sm mt-4">Date fin</label>
         <input
           data-prop="date_fin"
           id="input_date_fin"
@@ -122,7 +122,7 @@ const placeholders = {
         />
       </div>
     </div>
-    <label class="block text-sm font-medium mb-1">Image de l'en-tête</label>
+    <label class="block text-sm font-medium mt-4 mb-1">Image de l'en-tête</label>
     <label
       for="input_hero_file"
       class="cursor-pointer w-full h-40 border-2 border-dashed rounded bg-base-100 flex items-center justify-center text-gray-500"
@@ -155,6 +155,12 @@ const placeholders = {
               style="padding-bottom:56%;"
               data-delete-image="hero"
             >
+                <div class="px-2">
+                  <p class="text-sm text-gray-500 mb-1">Photo actuelle</p>
+                </div>
+                <div class="absolute top-2 left-2 z-10">
+                  <p class="text-xs text-white bg-black/60 px-2 py-1 rounded">Photo actuelle</p>
+                </div>
               <img
                 src={previewData.hero}
                 alt="Aperçu"
@@ -174,7 +180,7 @@ const placeholders = {
         ) : null
       }
     </div>
-    <label class="block text-sm font-medium mt-2 mb-1"
+    <label class="block text-sm font-medium mt-4 mb-1"
       >Description image de l'en-têtre</label
     >
     <textarea
@@ -238,7 +244,7 @@ const placeholders = {
         ? { value: previewData.titre_partie_1 }
         : {}}
     />
-    <label class="block text-sm font-medium mt-2"
+    <label class="block text-sm font-medium mt-4"
       >Texte de la partie <span
         data-label-for="titre_partie_1"
         class="text-sm! font-medium! lowercase"
@@ -268,7 +274,7 @@ const placeholders = {
         ? { value: previewData.texte_partie_1 }
         : {}}
     />
-    <label class="block text-sm font-medium mt-2"
+    <label class="block text-sm font-medium mt-4"
       >Photo partie <span
         data-label-for="titre_partie_1"
         class="text-sm! font-medium! lowercase"
@@ -310,6 +316,12 @@ const placeholders = {
               style="padding-bottom:56%;"
               data-delete-image="photo_partie_1"
             >
+                <div class="px-2">
+                  <p class="text-sm text-gray-500 mb-1">Photo actuelle</p>
+                </div>
+                <div class="absolute top-2 left-2 z-10">
+                  <p class="text-xs text-white bg-black/60 px-2 py-1 rounded">Photo actuelle</p>
+                </div>
               <img
                 src={previewData.photo_partie_1}
                 alt="Aperçu"
@@ -329,7 +341,7 @@ const placeholders = {
         ) : null
       }
     </div>
-    <label class="block text-sm font-medium mt-2"
+    <label class="block text-sm font-medium mt-4"
       >Description photo partie <span
         data-label-for="titre_partie_1"
         class="text-sm! font-medium! lowercase"
@@ -360,7 +372,7 @@ const placeholders = {
   </div>
   <div class="p-4 bg-base-200 rounded-box border border-contrast space-y-4">
     <h4 class="font-semibold">Lieu / Chiffres / Bénéficiaires</h4>
-    <label class="block text-sm font-medium mt-2"
+    <label class="block text-sm font-medium mt-4"
       >Nom du lieu (max 30 caractères)</label
     >
     <input
@@ -368,7 +380,7 @@ const placeholders = {
       id="input_nom_lieu"
       name="nom_lieu_local"
       maxlength="30"
-      class="w-full border border-accent rounded px-2 py-1 mt-2 text-black bg-base-100"
+      class="w-full border border-accent rounded px-2 py-1 mt-1 mb-4 text-black bg-base-100"
       placeholder={placeholders.nom_lieu}
       {...mode === "edit" && previewData ? { value: previewData.nom_lieu } : {}}
     />
@@ -378,9 +390,11 @@ const placeholders = {
       id="hidden_nom_lieu"
       {...mode === "edit" && previewData ? { value: previewData.nom_lieu } : {}}
     />
-    <label class="block text-sm font-medium mt-2"
+    <label class="block text-sm font-medium mt-4"
       >Adresse du lieu (max 30 caractères)</label
     >
+    <div class="flex items-center gap-2">
+      
     <SearchLocation
       inputId="input_adresse_lieu"
       suggestionsId="suggestions_adresse_lieu"
@@ -388,7 +402,7 @@ const placeholders = {
       value={mode === "edit" && previewData ? previewData.adresse_lieu : ""}
       dataProp="adresse_lieu"
       maxLength={30}
-      inputClass="w-full border border-accent rounded px-2 py-1 mt-2 text-black bg-base-100"
+      inputClass="w-full border border-accent rounded px-2 py-1 mt-1 mb-4 text-black bg-base-100 flex-1"
       mapLinkInputId="input_lien_lieu"
     />
     <input
@@ -399,38 +413,64 @@ const placeholders = {
         ? { value: previewData.adresse_lieu }
         : {}}
     />
-    <input
-      data-prop="lien_lieu"
-      id="input_lien_lieu"
-      class="w-full border border-accent rounded px-2 py-1 mt-2 text-black bg-base-100"
-      placeholder={placeholders.lien_lieu}
-      value={mode === "edit" && previewData ? previewData.lien_lieu : ""}
-    />
+    <!-- Hidden link input used by SearchLocation (kept as data-prop so preview.js binds) -->
     <input
       type="hidden"
+      data-prop="lien_lieu"
+      id="input_lien_lieu"
       name="lien_lieu"
-      id="hidden_lien_lieu"
       value={mode === "edit" && previewData ? previewData.lien_lieu : ""}
     />
+
+    <!-- Button to open the maps link in a new tab; becomes visible when a link exists -->
+    <div class="mt-2 w-fit flex">
+      <a
+        id="btn_voir_maps"
+        class="btn btn-accent rounded-md! flex items-center justify-center whitespace-nowrap"
+        target="_blank"
+        rel="noopener noreferrer"
+        href={mode === "edit" && previewData && previewData.lien_lieu ? previewData.lien_lieu : '#'}
+        style={mode === "edit" && previewData && previewData.lien_lieu ? '' : 'display:none;'}
+      >Voir sur Maps</a>
+    </div>
+  </div>
+  <!-- Manual override link and input -->
+  <div class="mt-1">
+    <a href="#" id="manual_toggle_link" class="text-sm text-accent underline">L'adresse ciblée n'est pas la bonne ? modifiez l'adresse manuellement</a>
+  </div>
+  <div id="manual_lien_lieu_container" style="display:none;" class="mt-2">
+    <label class="block text-sm font-medium mt-4">Coller le lien Google Maps</label>
+    <input id="manual_lien_lieu" placeholder="https://www.google.com/maps/..." class="w-full border border-accent rounded px-2 py-1 mt-1 mb-4 text-black bg-base-100" />
+    <div class="flex gap-2 mt-2 justify-end">
+      <button type="button" id="manual_cancel_btn" class="btn btn-ghost">Annuler</button>
+      <button type="button" id="manual_validate_btn" class="btn btn-accent">Valider l'adresse</button>
+    </div>
+  </div>
     <div class="flex gap-2 mt-2">
-      <input
-        data-prop="chiffre"
-        id="input_chiffre"
-        type="number"
-        class="border border-accent rounded px-2 py-1 w-1/2 text-black bg-base-100"
-        placeholder={placeholders.chiffre}
-        value={mode === "edit" && previewData ? previewData.chiffre : ""}
-      />
-      <select
-        data-prop="type_de_chiffre"
-        id="input_type_de_chiffre"
-        class="border border-accent rounded px-2 py-1 w-1/2 text-black bg-base-100"
-        value={mode === "edit" && previewData
-          ? previewData.type_de_chiffre
-          : ""}
-      >
-        {typeDeChiffreOptions.map((opt) => <option value={opt}>{opt}</option>)}
-      </select>
+      <div class="w-1/2">
+        <label for="input_chiffre" class="block text-sm font-medium mt-4">Chiffre</label>
+        <input
+          data-prop="chiffre"
+          id="input_chiffre"
+          type="number"
+          class="border border-accent rounded px-2 py-1 w-full mt-1 mb-4 text-black bg-base-100"
+          placeholder={placeholders.chiffre}
+          value={mode === "edit" && previewData ? previewData.chiffre : ""}
+        />
+      </div>
+      <div class="w-1/2">
+        <label for="input_type_de_chiffre" class="block text-sm font-medium mt-4">Type de chiffre</label>
+        <select
+          data-prop="type_de_chiffre"
+          id="input_type_de_chiffre"
+          class="border border-accent rounded px-2 py-1 w-full mt-1 mb-4 text-black bg-base-100"
+          value={mode === "edit" && previewData
+            ? previewData.type_de_chiffre
+            : ""}
+        >
+          {typeDeChiffreOptions.map((opt) => <option value={opt}>{opt}</option>)}
+        </select>
+      </div>
     </div>
     <input
       type="hidden"
@@ -444,10 +484,11 @@ const placeholders = {
       id="hidden_type_de_chiffre"
       value={mode === "edit" && previewData ? previewData.type_de_chiffre : ""}
     />
+    <label for="input_beneficiaire" class="block text-sm font-medium mt-4">Bénéficiaires</label>
     <input
       data-prop="beneficiaire"
       id="input_beneficiaire"
-      class="w-full border border-accent rounded px-2 py-1 mt-2 text-black bg-base-100"
+      class="w-full border border-accent rounded px-2 py-1 mt-1 mb-4 text-black bg-base-100"
       placeholder={placeholders.beneficiaire}
       value={mode === "edit" && previewData ? previewData.beneficiaire : ""}
     />
@@ -500,7 +541,7 @@ const placeholders = {
       id="hidden_titre_partie_2"
       value={mode === "edit" && previewData ? previewData.titre_partie_2 : ""}
     />
-    <label class="block text-sm font-medium mt-2"
+    <label class="block text-sm font-medium mt-4"
       >Texte de la partie <span
         data-label-for="titre_partie_2"
         class="text-sm! font-medium! lowercase"
@@ -528,7 +569,7 @@ const placeholders = {
       id="hidden_texte_partie_2"
       value={mode === "edit" && previewData ? previewData.texte_partie_2 : ""}
     />
-    <label class="block text-sm font-medium mt-2"
+    <label class="block text-sm font-medium mt-4"
       >Photo partie <span
         data-label-for="titre_partie_2"
         class="text-sm! font-medium! lowercase"
@@ -569,6 +610,12 @@ const placeholders = {
             style="padding-bottom:56%;"
             data-delete-image="photo_partie_2"
           >
+              <div class="px-2">
+                <p class="text-sm text-gray-500 mb-1">Photo actuelle</p>
+              </div>
+              <div class="absolute top-2 left-2 z-10">
+                <p class="text-xs text-white bg-black/60 px-2 py-1 rounded">Photo actuelle</p>
+              </div>
             <img
               src={previewData.photo_partie_2}
               alt="Aperçu"
@@ -587,7 +634,7 @@ const placeholders = {
         ) : null
       }
     </div>
-    <label class="block text-sm font-medium mt-2"
+    <label class="block text-sm font-medium mt-4"
       >Description photo partie <span
         data-label-for="titre_partie_2"
         class="text-sm! font-medium! lowercase"
@@ -655,7 +702,7 @@ const placeholders = {
       id="hidden_titre_partie_3"
       value={mode === "edit" && previewData ? previewData.titre_partie_3 : ""}
     />
-    <label class="block text-sm font-medium mt-2"
+    <label class="block text-sm font-medium mt-4"
       >Texte de la partie <span
         data-label-for="titre_partie_3"
         class="text-sm! font-medium! lowercase"
@@ -683,7 +730,7 @@ const placeholders = {
       id="hidden_texte_partie_3"
       value={mode === "edit" && previewData ? previewData.texte_partie_3 : ""}
     />
-    <label class="block text-sm font-medium mt-2"
+    <label class="block text-sm font-medium mt-4"
       >Photo partie <span
         data-label-for="titre_partie_3"
         class="text-sm! font-medium! lowercase"
@@ -724,6 +771,12 @@ const placeholders = {
             style="padding-bottom:56%;"
             data-delete-image="photo_partie_3"
           >
+              <div class="px-2">
+                <p class="text-sm text-gray-500 mb-1">Photo actuelle</p>
+              </div>
+              <div class="absolute top-2 left-2 z-10">
+                <p class="text-xs text-white bg-black/60 px-2 py-1 rounded">Photo actuelle</p>
+              </div>
             <img
               src={previewData.photo_partie_3}
               alt="Aperçu"
@@ -785,7 +838,7 @@ const placeholders = {
     />
     <input
       type="hidden"
-      name="titre_remerciement"
+      name="titre_remerciements"
       id="hidden_titre_remerciement"
       value={mode === "edit" && previewData
         ? previewData.titre_remerciements
@@ -809,7 +862,7 @@ const placeholders = {
     >
     <input
       type="hidden"
-      name="description_remerciement"
+      name="description_remerciements"
       id="hidden_description_remerciement"
       value={mode === "edit" && previewData
         ? previewData.description_remerciements
@@ -956,6 +1009,92 @@ const placeholders = {
         form.appendChild(input);
       });
     });
+  });
+</script>
+
+<script>
+  // Ensure the 'Voir sur Maps' button updates when the hidden map link input changes
+  document.addEventListener('DOMContentLoaded', () => {
+    const mapInput = document.getElementById('input_lien_lieu');
+    const btn = document.getElementById('btn_voir_maps');
+    if (!mapInput || !btn) return;
+
+    const updateBtn = () => {
+      const val = (mapInput as HTMLInputElement).value || '';
+      if (val.trim()) {
+        btn.setAttribute('href', val);
+        btn.style.display = '';
+      } else {
+        btn.style.display = 'none';
+        btn.removeAttribute('href');
+      }
+    };
+
+    updateBtn();
+    mapInput.addEventListener('input', updateBtn);
+    mapInput.addEventListener('change', updateBtn);
+
+    // Manual override: show input to paste a maps link and sync it to the hidden map input
+    const manualToggle = document.getElementById('manual_toggle_link');
+    const manualContainer = document.getElementById('manual_lien_lieu_container');
+    const manualInput = document.getElementById('manual_lien_lieu');
+    if (manualToggle && manualContainer && manualInput) {
+      manualToggle.addEventListener('click', (e) => {
+        e.preventDefault();
+        if (manualContainer.style.display === 'none' || !manualContainer.style.display) {
+          // store current value for possible cancellation
+          try { manualContainer.dataset.original = (mapInput as HTMLInputElement).value || ''; } catch (err) {}
+          manualContainer.style.display = '';
+          (manualInput as HTMLInputElement).focus();
+        } else {
+          manualContainer.style.display = 'none';
+        }
+      });
+
+      const syncFromManual = () => {
+        const v = (manualInput as HTMLInputElement).value || '';
+        (mapInput as HTMLInputElement).value = v;
+        mapInput.dispatchEvent(new Event('input', { bubbles: true }));
+        mapInput.dispatchEvent(new Event('change', { bubbles: true }));
+      };
+
+      manualInput.addEventListener('input', syncFromManual);
+      manualInput.addEventListener('change', syncFromManual);
+
+      // buttons
+      const validateBtn = document.getElementById('manual_validate_btn');
+      const cancelBtn = document.getElementById('manual_cancel_btn');
+      if (validateBtn) {
+        validateBtn.addEventListener('click', (ev) => {
+          ev.preventDefault();
+          syncFromManual();
+          // show transient confirmation popup in place of the manual input
+          try {
+            const popup = document.createElement('div');
+            popup.textContent = "Adresse validée, vous pouvez refaire un test en cliquant sur le bouton 'Voir sur Maps'";
+            // Make the popup take the full available width
+            popup.className = 'block w-full min-h-8 flex items-center justify-center bg-green-600 text-white px-3 py-1 rounded';
+            popup.style.display = 'block';
+            popup.style.marginTop = '0.5rem';
+            manualContainer.parentNode?.insertBefore(popup, manualContainer.nextSibling);
+            // hide manual container
+            manualContainer.style.display = 'none';
+            setTimeout(() => { try { popup.remove(); } catch (e) {} }, 4000);
+          } catch (err) {
+            manualContainer.style.display = 'none';
+          }
+        });
+      }
+      if (cancelBtn) {
+        cancelBtn.addEventListener('click', (ev) => {
+          ev.preventDefault();
+          const orig = manualContainer.dataset.original || '';
+          (manualInput as HTMLInputElement).value = orig;
+          syncFromManual();
+          manualContainer.style.display = 'none';
+        });
+      }
+    }
   });
 </script>
 
