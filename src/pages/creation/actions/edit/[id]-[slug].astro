@@ -7,7 +7,6 @@ import slugify from "slugify";
 // Paramètre `id` optionnel provenant de l'URL (utilisé pour l'édition)
 const idParam = Astro.params?.id;
 
-import previewUrl from "../../../../scripts/preview.js?url";
 import galleryUrl from "../../../../scripts/gallery.js?url";
 import galleryDisplayUrl from "../../../../scripts/gallery-display.ts?url";
 import utilUrl from "../../../../utils/utilitaires.js?url";
@@ -336,7 +335,6 @@ if (Astro.request.method === "POST") {
   }).replace(/</g, "\\u003c")};`} />
 
   <script type="module" src={utilUrl}></script>
-  <script type="module" src={previewUrl}></script>
   <script type="module" src={galleryUrl}></script>
   <script type="module" src={galleryDisplayUrl}></script>
 </Layout>

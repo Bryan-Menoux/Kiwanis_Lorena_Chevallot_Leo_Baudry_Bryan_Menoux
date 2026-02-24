@@ -3,7 +3,6 @@ import Layout from "../../../layouts/Layout-back-office.astro";
 import ActionContent from "../../../components/ActionContent.astro";
 import ActionForm from "../../../components/ActionForm.astro";
 import slugify from "slugify";
-import previewUrl from "../../../scripts/preview.js?url";
 import galleryUrl from "../../../scripts/gallery.js?url";
 import galleryDisplayUrl from "../../../scripts/gallery-display.ts?url";
 import { ActionsTypeDeChiffreOptions } from "../../../pocketbase-types";
@@ -88,7 +87,6 @@ if (Astro.request.method === "POST") {
   </div>
 
   <script set:html={`window.__previewData = ${JSON.stringify(previewPlaceholder).replace(/</g, "\\u003c")};`} />
-  <script type="module" src={previewUrl}></script>
   <script type="module" src={galleryUrl}></script>
   <script type="module" src={galleryDisplayUrl}></script>
 </Layout>
