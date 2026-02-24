@@ -98,8 +98,7 @@ const {
         item.address?.town ||
         item.address?.village ||
         item.address?.municipality;
-      const region = item.address?.state || item.address?.region || item.address?.county;
-      const concise = joinParts([street, city, region]).join(", ");
+      const concise = joinParts([street, city]).join(", ");
       if (concise) return concise;
       return String(item.display_name || "")
         .split(",")

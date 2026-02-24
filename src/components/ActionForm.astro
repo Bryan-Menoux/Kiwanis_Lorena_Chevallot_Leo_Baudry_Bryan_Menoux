@@ -150,7 +150,11 @@ const placeholders = {
       {
         mode === "edit" && previewData ? (
           previewData.hero ? (
-            <div class="relative w-full overflow-hidden rounded-md" style="padding-bottom:56%;" data-delete-image="hero">
+            <div
+              class="relative w-full overflow-hidden rounded-md"
+              style="padding-bottom:56%;"
+              data-delete-image="hero"
+            >
               <img
                 src={previewData.hero}
                 alt="Aperçu"
@@ -234,7 +238,17 @@ const placeholders = {
         ? { value: previewData.titre_partie_1 }
         : {}}
     />
-    <label class="block text-sm font-medium mt-2">Texte partie 1</label>
+    <label class="block text-sm font-medium mt-2"
+      >Texte de la partie <span
+        data-label-for="titre_partie_1"
+        class="text-sm! font-medium! lowercase"
+        >{
+          mode === "edit" && previewData
+            ? previewData.titre_partie_1
+            : placeholders.titre_partie_1
+        }</span
+      ></label
+    >
     <textarea
       data-prop="texte_partie_1"
       name="texte_partie_1"
@@ -254,7 +268,17 @@ const placeholders = {
         ? { value: previewData.texte_partie_1 }
         : {}}
     />
-    <label class="block text-sm font-medium mt-2">Photo partie 1</label>
+    <label class="block text-sm font-medium mt-2"
+      >Photo partie <span
+        data-label-for="titre_partie_1"
+        class="text-sm! font-medium! lowercase"
+        >{
+          mode === "edit" && previewData
+            ? previewData.titre_partie_1
+            : placeholders.titre_partie_1
+        }</span
+      ></label
+    >
     <label
       for="input_photo_partie_1"
       class="cursor-pointer w-full h-36 border-2 border-dashed rounded bg-base-100 flex items-center justify-center text-gray-500"
@@ -281,7 +305,11 @@ const placeholders = {
       {
         mode === "edit" && previewData ? (
           previewData.photo_partie_1 ? (
-            <div class="relative w-full overflow-hidden rounded-md" style="padding-bottom:56%;" data-delete-image="photo_partie_1">
+            <div
+              class="relative w-full overflow-hidden rounded-md"
+              style="padding-bottom:56%;"
+              data-delete-image="photo_partie_1"
+            >
               <img
                 src={previewData.photo_partie_1}
                 alt="Aperçu"
@@ -302,7 +330,15 @@ const placeholders = {
       }
     </div>
     <label class="block text-sm font-medium mt-2"
-      >Description photo partie 1</label
+      >Description photo partie <span
+        data-label-for="titre_partie_1"
+        class="text-sm! font-medium! lowercase"
+        >{
+          mode === "edit" && previewData
+            ? previewData.titre_partie_1
+            : placeholders.titre_partie_1
+        }</span
+      ></label
     >
     <input
       data-prop="description_photo_partie_1"
@@ -464,7 +500,17 @@ const placeholders = {
       id="hidden_titre_partie_2"
       value={mode === "edit" && previewData ? previewData.titre_partie_2 : ""}
     />
-    <label class="block text-sm font-medium mt-2">Texte partie 2</label>
+    <label class="block text-sm font-medium mt-2"
+      >Texte de la partie <span
+        data-label-for="titre_partie_2"
+        class="text-sm! font-medium! lowercase"
+        >{
+          mode === "edit" && previewData
+            ? previewData.titre_partie_2
+            : placeholders.titre_partie_2
+        }</span
+      ></label
+    >
     <textarea
       data-prop="texte_partie_2"
       name="texte_partie_2"
@@ -482,7 +528,17 @@ const placeholders = {
       id="hidden_texte_partie_2"
       value={mode === "edit" && previewData ? previewData.texte_partie_2 : ""}
     />
-    <label class="block text-sm font-medium mt-2">Photo partie 2</label>
+    <label class="block text-sm font-medium mt-2"
+      >Photo partie <span
+        data-label-for="titre_partie_2"
+        class="text-sm! font-medium! lowercase"
+        >{
+          mode === "edit" && previewData
+            ? previewData.titre_partie_2
+            : placeholders.titre_partie_2
+        }</span
+      ></label
+    >
     <label
       for="input_photo_partie_2"
       class="cursor-pointer w-full h-36 border-2 border-dashed rounded bg-base-100 flex items-center justify-center text-gray-500"
@@ -508,7 +564,11 @@ const placeholders = {
     <div id="preview_photo_partie_2" class="mt-2">
       {
         mode === "edit" && previewData?.photo_partie_2 ? (
-          <div class="relative w-full overflow-hidden rounded-md" style="padding-bottom:56%;" data-delete-image="photo_partie_2">
+          <div
+            class="relative w-full overflow-hidden rounded-md"
+            style="padding-bottom:56%;"
+            data-delete-image="photo_partie_2"
+          >
             <img
               src={previewData.photo_partie_2}
               alt="Aperçu"
@@ -527,11 +587,22 @@ const placeholders = {
         ) : null
       }
     </div>
+    <label class="block text-sm font-medium mt-2"
+      >Description photo partie <span
+        data-label-for="titre_partie_2"
+        class="text-sm! font-medium! lowercase"
+        >{
+          mode === "edit" && previewData
+            ? previewData.titre_partie_2
+            : placeholders.titre_partie_2
+        }</span
+      ></label
+    >
     <input
       data-prop="description_photo_partie_2"
       id="input_description_photo_partie_2"
       placeholder={placeholders.description_photo_partie_2}
-      class="w-full border border-accent rounded px-2 py-1 mt-2 text-black bg-base-100"
+      class="w-full border border-accent rounded px-2 py-1 text-black bg-base-100"
       value={mode === "edit" && previewData
         ? previewData.description_photo_partie_2
         : ""}
@@ -584,7 +655,17 @@ const placeholders = {
       id="hidden_titre_partie_3"
       value={mode === "edit" && previewData ? previewData.titre_partie_3 : ""}
     />
-    <label class="block text-sm font-medium mt-2">Texte partie 3</label>
+    <label class="block text-sm font-medium mt-2"
+      >Texte de la partie <span
+        data-label-for="titre_partie_3"
+        class="text-sm! font-medium! lowercase"
+        >{
+          mode === "edit" && previewData
+            ? previewData.titre_partie_3
+            : placeholders.titre_partie_3
+        }</span
+      ></label
+    >
     <textarea
       data-prop="texte_partie_3"
       name="texte_partie_3"
@@ -602,7 +683,17 @@ const placeholders = {
       id="hidden_texte_partie_3"
       value={mode === "edit" && previewData ? previewData.texte_partie_3 : ""}
     />
-    <label class="block text-sm font-medium mt-2">Photo partie 3</label>
+    <label class="block text-sm font-medium mt-2"
+      >Photo partie <span
+        data-label-for="titre_partie_3"
+        class="text-sm! font-medium! lowercase"
+        >{
+          mode === "edit" && previewData
+            ? previewData.titre_partie_3
+            : placeholders.titre_partie_3
+        }</span
+      ></label
+    >
     <label
       for="input_photo_partie_3"
       class="cursor-pointer w-full h-36 border-2 border-dashed rounded bg-base-100 flex items-center justify-center text-gray-500"
@@ -628,7 +719,11 @@ const placeholders = {
     <div id="preview_photo_partie_3" class="mt-2">
       {
         mode === "edit" && previewData?.photo_partie_3 ? (
-          <div class="relative w-full overflow-hidden rounded-md" style="padding-bottom:56%;" data-delete-image="photo_partie_3">
+          <div
+            class="relative w-full overflow-hidden rounded-md"
+            style="padding-bottom:56%;"
+            data-delete-image="photo_partie_3"
+          >
             <img
               src={previewData.photo_partie_3}
               alt="Aperçu"
@@ -647,11 +742,22 @@ const placeholders = {
         ) : null
       }
     </div>
+    <label class="block text-sm font-medium mt-2"
+      >Description photo partie <span
+        data-label-for="titre_partie_3"
+        class="text-sm! font-medium! lowercase"
+        >{
+          mode === "edit" && previewData
+            ? previewData.titre_partie_3
+            : placeholders.titre_partie_3
+        }</span
+      ></label
+    >
     <input
       data-prop="description_photo_partie_3"
       id="input_description_photo_partie_3"
       placeholder={placeholders.description_photo_partie_3}
-      class="w-full border border-accent rounded px-2 py-1 mt-2 text-black bg-base-100"
+      class="w-full border border-accent rounded px-2 py-1 text-black bg-base-100"
       value={mode === "edit" && previewData
         ? previewData.description_photo_partie_3
         : ""}
@@ -772,7 +878,9 @@ const placeholders = {
     <button
       type="submit"
       class="btn btn-border text-base-content px-4 py-2 rounded-md! flex-1"
-      >{mode === "create" ? "Créer l'action" : "Enregistrer les modifications"}</button
+      >{
+        mode === "create" ? "Créer l'action" : "Enregistrer les modifications"
+      }</button
     >
   </div>
 </form>
@@ -781,7 +889,12 @@ const placeholders = {
     const form = document.getElementById("leftForm");
     if (!form) return;
 
-    const imageFieldNames = ["hero", "photo_partie_1", "photo_partie_2", "photo_partie_3"];
+    const imageFieldNames = [
+      "hero",
+      "photo_partie_1",
+      "photo_partie_2",
+      "photo_partie_3",
+    ];
     const imageDescriptionMap = {
       hero: "description_hero",
       photo_partie_1: "description_photo_partie_1",
@@ -809,17 +922,21 @@ const placeholders = {
           if (fileInput.__dt) fileInput.__dt = null;
         }
         // mettre à jour la colonne preview droite
-        document.querySelectorAll(`[data-field="${fieldName}"]`).forEach((el) => {
-          if (el.tagName === "IMG") {
-            el.src = "";
-            el.style.display = "none";
-          }
-        });
+        document
+          .querySelectorAll(`[data-field="${fieldName}"]`)
+          .forEach((el) => {
+            if (el.tagName === "IMG") {
+              el.src = "";
+              el.style.display = "none";
+            }
+          });
         const descriptionFieldName = imageDescriptionMap[fieldName];
         if (descriptionFieldName) {
-          document.querySelectorAll(`[data-field="${descriptionFieldName}"]`).forEach((el) => {
-            el.style.display = "none";
-          });
+          document
+            .querySelectorAll(`[data-field="${descriptionFieldName}"]`)
+            .forEach((el) => {
+              el.style.display = "none";
+            });
         }
       }
     });
@@ -898,6 +1015,13 @@ const placeholders = {
       }
       input.setAttribute("placeholder", displayPlaceholder);
 
+      // initialize the label(s) that reference this section's title
+      document
+        .querySelectorAll(`[data-label-for="${target}"]`)
+        .forEach((el) => {
+          el.textContent = h4.textContent?.trim() || rawPlaceholder;
+        });
+
       const setEditState = (isEditing: boolean, shouldSave = false) => {
         if (isEditing) {
           h4.style.display = "none";
@@ -917,6 +1041,12 @@ const placeholders = {
           if (shouldSave) {
             hidden.value = input.value;
             h4.textContent = input.value || rawPlaceholder;
+            // update any label(s) referencing this section title
+            document
+              .querySelectorAll(`[data-label-for="${target}"]`)
+              .forEach((el) => {
+                el.textContent = input.value || rawPlaceholder;
+              });
           }
           (btn as HTMLElement).textContent = "Modifier le titre de la section";
           (btn as HTMLElement).dataset.editing = "false";

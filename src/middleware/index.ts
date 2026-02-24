@@ -15,7 +15,7 @@ export const onRequest = defineMiddleware(
 
     const pbUrl = import.meta.env.PROD 
       ? "https://pb-kiwanis.bryan-menoux.fr"
-      : "http://127.0.0.1:8091";
+      : "http://127.0.0.1:8090";
     
     locals.pb = new PocketBase(pbUrl);
 
