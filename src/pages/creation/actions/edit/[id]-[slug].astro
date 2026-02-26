@@ -15,14 +15,28 @@ import {
   normalizeImageUrl,
 } from "../../../../utils/utilitaires.js";
 import imageIcon from "../../../../assets/image-icon.svg";
-import { ActionsTypeDeChiffreOptions } from "../../../../pocketbase-types";
+import {
+  ActionsTypeActionOptions,
+  ActionsTypeDeChiffreOptions,
+} from "../../../../pocketbase-types";
 import previewDefaults from "../../../../scripts/previewDefaults.js";
 
 // Message d'erreur affiché dans le formulaire en cas d'échec serveur
 let error: string = "";
+const normalizeOptionLabel = (value: string) =>
+  /Ã|Â/.test(value) ? Buffer.from(value, "latin1").toString("utf8") : value;
+const getPbTypeActionError = (err: any) =>
+  err?.response?.data?.data?.type_action ||
+  err?.response?.data?.type_action ||
+  null;
 
 // Récupérer les options de type_de_chiffre depuis le type TypeScript généré
 let typeDeChiffreOptions: string[] = ["type de chiffre", ...(Array.isArray(ActionsTypeDeChiffreOptions) ? ActionsTypeDeChiffreOptions : Object.values(ActionsTypeDeChiffreOptions))];
+let typeActionOptions: string[] = (Array.isArray(ActionsTypeActionOptions)
+  ? ActionsTypeActionOptions
+  : Object.values(ActionsTypeActionOptions)).map((opt) =>
+  normalizeOptionLabel(String(opt)),
+);
 
 // Placeholder SVG data-URL pour la prévisualisation serveur
 const placeholderImg = `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='400' height='400' viewBox='0 0 400 400'><rect width='100%' height='100%' fill='%23f3f6f7'/><image href='${imageIcon.src}' x='50' y='50' width='300' height='300' preserveAspectRatio='xMidYMid meet' style='opacity:0.95;'/></svg>`;
@@ -74,6 +88,9 @@ const previewData: any = {
   lien_lieu: actionRecord?.lien_lieu ?? "",
   chiffre: actionRecord?.chiffre ?? "",
   type_de_chiffre: actionRecord?.type_de_chiffre ?? "",
+  type_action: Array.isArray(actionRecord?.type_action)
+    ? actionRecord.type_action
+    : [],
   beneficiaire: actionRecord?.beneficiaire ?? "",
   titre_partie_2: actionRecord?.titre_partie_2 ?? "",
   texte_partie_2: actionRecord?.texte_partie_2 ?? "",
@@ -172,6 +189,24 @@ if (Astro.request.method === "POST") {
         key.startsWith("remove_")
       )
         continue;
+      if (key === "type_action") {
+        // Le champ `type_action` n'existe pas dans la collection `brouillons`.
+        if (actionRecordFromBrouillon) {
+          continue;
+        }
+        try {
+          const parsed = JSON.parse(value.toString());
+          data[key] = Array.isArray(parsed)
+            ? parsed
+              .map((item) => normalizeOptionLabel(String(item).trim()))
+              .filter((item) => item && typeActionOptions.includes(item))
+              .slice(0, 7)
+            : [];
+        } catch (e) {
+          data[key] = [];
+        }
+        continue;
+      }
       const stringValue = value.toString().trim();
       if (stringValue !== "") {
         data[key] = stringValue;
@@ -266,6 +301,10 @@ if (Astro.request.method === "POST") {
       if (actionRecordFromBrouillon) {
         // assurer que le type reste 'action' pour que les liens redirigent correctement
         payload.type = 'action';
+        // Sécurité: ne jamais pousser `type_action` vers `brouillons`.
+        if (Object.prototype.hasOwnProperty.call(payload, "type_action")) {
+          delete payload.type_action;
+        }
 
         // copier les références de fichiers existantes depuis le brouillon si aucun upload n'a été fait
         // IMPORTANT : utiliser === undefined pour ne pas écraser '' (suppression intentionnelle)
@@ -283,7 +322,20 @@ if (Astro.request.method === "POST") {
       }
 
       // Mise à jour classique d'une action
-      await Astro.locals.pb.collection("actions").update(idParam, payload);
+      try {
+        await Astro.locals.pb.collection("actions").update(idParam, payload);
+      } catch (updateErr: any) {
+        const typeActionErr = getPbTypeActionError(updateErr);
+        if (typeActionErr) {
+          const details = typeof typeActionErr === "object"
+            ? JSON.stringify(typeActionErr)
+            : String(typeActionErr);
+          throw new Error(
+            `Le champ "type_action" a été refusé par PocketBase: ${details}`,
+          );
+        }
+        throw updateErr;
+      }
 
       return Astro.redirect(
         `/creation/actions/${idParam}-${slug}?success=Action mise à jour`,
@@ -300,6 +352,12 @@ if (Astro.request.method === "POST") {
     }
   } catch (err) {
     console.error("Erreur lors de la création:", err);
+    try {
+      const details = (err as any)?.response?.data;
+      if (details) {
+        console.error("Détails PocketBase:", JSON.stringify(details, null, 2));
+      }
+    } catch (logErr) {}
     error =
       err instanceof Error ? err.message : "Une erreur inconnue est survenue";
   }
@@ -316,6 +374,7 @@ if (Astro.request.method === "POST") {
           previewPlaceholder={previewPlaceholder}
           previewData={previewData}
           typeDeChiffreOptions={typeDeChiffreOptions}
+          typeActionOptions={typeActionOptions}
           imageIcon={imageIcon}
           actionRecord={actionRecord}
         />

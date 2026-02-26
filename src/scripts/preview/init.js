@@ -26,14 +26,36 @@ function handleInputElement(inputElement) {
   const prop = inputElement.getAttribute('data-prop');
   if (!prop) return;
 
-  const rawValue = inputElement.value ?? '';
-  const isEmpty = String(rawValue).trim() === '';
+  const isMultiSelect = inputElement instanceof HTMLSelectElement && inputElement.multiple;
+  const maxSelect = isMultiSelect
+    ? Number.parseInt(inputElement.dataset.maxSelect || '', 10)
+    : NaN;
+  const maxAllowed = Number.isFinite(maxSelect) && maxSelect > 0 ? maxSelect : Infinity;
+  const rawValue = isMultiSelect
+    ? Array.from(inputElement.selectedOptions)
+      .map((option) => option.value)
+      .filter((value) => String(value).trim() !== '')
+    : (inputElement.value ?? '');
+  if (isMultiSelect && prop === 'type_action' && rawValue.length > maxAllowed) {
+    const keptValues = rawValue.slice(0, maxAllowed);
+    const keptSet = new Set(keptValues);
+    Array.from(inputElement.options).forEach((option) => {
+      option.selected = keptSet.has(option.value);
+    });
+    rawValue.length = 0;
+    keptValues.forEach((value) => rawValue.push(value));
+  }
+  const isEmpty = isMultiSelect
+    ? rawValue.length === 0
+    : String(rawValue).trim() === '';
 
-  const previewValue = isEmpty
-    ? (typeof PREVIEW_DEFAULTS !== 'undefined' && PREVIEW_DEFAULTS[prop] !== undefined
-        ? PREVIEW_DEFAULTS[prop]
-        : (DEFAULT_PLACEHOLDERS[prop] ?? ''))
-    : rawValue;
+  const previewValue = isMultiSelect
+    ? rawValue
+    : (isEmpty
+      ? (typeof PREVIEW_DEFAULTS !== 'undefined' && PREVIEW_DEFAULTS[prop] !== undefined
+          ? PREVIEW_DEFAULTS[prop]
+          : (DEFAULT_PLACEHOLDERS[prop] ?? ''))
+      : rawValue);
 
   previewState[prop] = previewValue;
 
@@ -41,9 +63,9 @@ function handleInputElement(inputElement) {
   if (prop === 'description_remerciement') previewState.description_remerciements = previewValue;
 
   const hiddenField = document.getElementById(`hidden_${prop}`);
-  if (hiddenField) hiddenField.value = rawValue;
+  if (hiddenField) hiddenField.value = isMultiSelect ? JSON.stringify(rawValue) : rawValue;
 
-  if (!isEmpty) updateHidden(prop);
+  if (isMultiSelect || !isEmpty) updateHidden(prop);
 
   if (prop === 'date_debut' || prop === 'date_fin') renderField('dates');
   renderField(prop);
@@ -64,6 +86,13 @@ function initPreview() {
     Array.from(formElement.querySelectorAll('[data-prop]')).forEach((fieldElement) => {
       const prop = fieldElement.getAttribute('data-prop');
       if (!prop || previewState[prop] === undefined || !('value' in fieldElement)) return;
+      if (fieldElement instanceof HTMLSelectElement && fieldElement.multiple && Array.isArray(previewState[prop])) {
+        const selectedValues = new Set(previewState[prop].map((v) => String(v)));
+        Array.from(fieldElement.options).forEach((option) => {
+          option.selected = selectedValues.has(option.value);
+        });
+        return;
+      }
       if (fieldElement.hasAttribute('value')) {
         fieldElement.value = previewState[prop];
       }
@@ -89,6 +118,28 @@ function initPreview() {
   }
 
   if (formElement) {
+    const typeActionSelect = formElement.querySelector('#input_type_action[data-prop="type_action"][multiple]');
+    if (typeActionSelect instanceof HTMLSelectElement && !typeActionSelect.__toggleBound) {
+      typeActionSelect.addEventListener('mousedown', (event) => {
+        const target = event.target;
+        if (!(target instanceof HTMLOptionElement)) return;
+        event.preventDefault();
+
+        const maxSelect = Number.parseInt(typeActionSelect.dataset.maxSelect || '', 10);
+        const maxAllowed = Number.isFinite(maxSelect) && maxSelect > 0 ? maxSelect : Infinity;
+        const selectedCount = Array.from(typeActionSelect.selectedOptions).length;
+
+        if (target.selected) {
+          target.selected = false;
+        } else if (selectedCount < maxAllowed) {
+          target.selected = true;
+        }
+
+        typeActionSelect.dispatchEvent(new Event('change', { bubbles: true }));
+      });
+      typeActionSelect.__toggleBound = true;
+    }
+
     Array.from(formElement.querySelectorAll('[data-prop]')).forEach((fieldElement) => {
       const eventName = fieldElement.tagName === 'SELECT' || fieldElement.type === 'date' ? 'change' : 'input';
       fieldElement.addEventListener(eventName, (event) => {
@@ -152,7 +203,14 @@ function initPreview() {
         if (!prop) return;
         const hiddenField = document.getElementById(`hidden_${prop}`);
         if (hiddenField) {
-          hiddenField.value = fieldElement.value ?? '';
+          if (fieldElement instanceof HTMLSelectElement && fieldElement.multiple) {
+            const selected = Array.from(fieldElement.selectedOptions)
+              .map((option) => option.value)
+              .filter((value) => String(value).trim() !== '');
+            hiddenField.value = JSON.stringify(selected);
+          } else {
+            hiddenField.value = fieldElement.value ?? '';
+          }
         }
       });
 

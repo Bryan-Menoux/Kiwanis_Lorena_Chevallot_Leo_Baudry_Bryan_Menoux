@@ -5,13 +5,23 @@ import ActionForm from "../../../components/ActionForm.astro";
 import slugify from "slugify";
 import galleryUrl from "../../../scripts/gallery.js?url";
 import galleryDisplayUrl from "../../../scripts/gallery-display.ts?url";
-import { ActionsTypeDeChiffreOptions } from "../../../pocketbase-types";
+import {
+  ActionsTypeActionOptions,
+  ActionsTypeDeChiffreOptions,
+} from "../../../pocketbase-types";
 import previewDefaults from "../../../scripts/previewDefaults.js";
 
 let error: string = "";
+const normalizeOptionLabel = (value: string) =>
+  /Ã|Â/.test(value) ? Buffer.from(value, "latin1").toString("utf8") : value;
 
 // Récupérer les options de type_de_chiffre depuis le type TypeScript généré
 let typeDeChiffreOptions: string[] = ["type de chiffre", ...(Array.isArray(ActionsTypeDeChiffreOptions) ? ActionsTypeDeChiffreOptions : Object.values(ActionsTypeDeChiffreOptions))];
+let typeActionOptions: string[] = (Array.isArray(ActionsTypeActionOptions)
+  ? ActionsTypeActionOptions
+  : Object.values(ActionsTypeActionOptions)).map((opt) =>
+  normalizeOptionLabel(String(opt)),
+);
 
 // Placeholder partagé (source unique injecté côté serveur depuis `previewDefaults.js`)
 const previewPlaceholder: any = {
@@ -40,6 +50,20 @@ if (Astro.request.method === "POST") {
     for (const [key, value] of formData.entries()) {
       if (value instanceof File) continue;
       if (key === "galerie_photos" || key.startsWith("remove_")) continue;
+      if (key === "type_action") {
+        try {
+          const parsed = JSON.parse(value.toString());
+          data[key] = Array.isArray(parsed)
+            ? parsed
+              .map((item) => normalizeOptionLabel(String(item).trim()))
+              .filter((item) => item && typeActionOptions.includes(item))
+              .slice(0, 7)
+            : [];
+        } catch (e) {
+          data[key] = [];
+        }
+        continue;
+      }
       const s = value?.toString?.()?.trim?.();
       if (s) data[key] = s;
     }
@@ -77,6 +101,7 @@ if (Astro.request.method === "POST") {
           mode="create"
           previewPlaceholder={previewPlaceholder}
           typeDeChiffreOptions={typeDeChiffreOptions}
+          typeActionOptions={typeActionOptions}
         />
       </div>
     </div>

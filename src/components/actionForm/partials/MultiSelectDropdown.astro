@@ -1,0 +1,171 @@
+---
+export interface Props {
+  id: string;
+  dataProp: string;
+  options: string[];
+  selectedValues?: string[];
+  maxSelect?: number;
+  placeholder?: string;
+}
+
+const {
+  id,
+  dataProp,
+  options = [],
+  selectedValues = [],
+  maxSelect = 7,
+  placeholder = "Selectionner des options",
+} = Astro.props;
+
+const selectedSet = new Set((selectedValues || []).map((v) => String(v)));
+---
+
+<div
+  data-kc-ms-root
+  data-select-id={id}
+  class="relative w-full"
+>
+  <button
+    type="button"
+    data-kc-ms-toggle
+    class="w-full border border-accent rounded px-3 py-2 text-black bg-base-100 text-left"
+    aria-haspopup="listbox"
+    aria-expanded="false"
+  >
+    <span data-kc-ms-label>{placeholder}</span>
+  </button>
+
+  <div
+    data-kc-ms-menu
+    class="hidden absolute z-40 mt-1 w-full max-h-64 overflow-auto border border-accent rounded bg-base-100 p-2 shadow"
+  >
+    {
+      options.map((opt, idx) => {
+        const optionId = `${id}_opt_${idx}`;
+        return (
+          <label
+            for={optionId}
+            class="flex items-center gap-2 px-2 py-1 rounded hover:bg-base-200 cursor-pointer"
+          >
+            <input
+              id={optionId}
+              type="checkbox"
+              class="checkbox checkbox-sm"
+              data-kc-ms-check
+              value={opt}
+              checked={selectedSet.has(String(opt))}
+            />
+            <span>{opt}</span>
+          </label>
+        );
+      })
+    }
+  </div>
+
+  <select
+    id={id}
+    data-prop={dataProp}
+    multiple
+    data-max-select={maxSelect}
+    class="hidden"
+    aria-hidden="true"
+    tabindex="-1"
+  >
+    {
+      options.map((opt) => (
+        <option value={opt} selected={selectedSet.has(String(opt))}>{opt}</option>
+      ))
+    }
+  </select>
+</div>
+
+<script is:inline>
+  (() => {
+    const init = () => {
+      document.querySelectorAll("[data-kc-ms-root]").forEach((root) => {
+        if (!(root instanceof HTMLElement)) return;
+        if (root.dataset.kcMsBound === "true") return;
+
+        const selectId = root.dataset.selectId;
+        if (!selectId) return;
+
+        const select = document.getElementById(selectId);
+        const toggle = root.querySelector("[data-kc-ms-toggle]");
+        const menu = root.querySelector("[data-kc-ms-menu]");
+        const label = root.querySelector("[data-kc-ms-label]");
+        const checks = Array.from(root.querySelectorAll("[data-kc-ms-check]"));
+
+        if (!(select instanceof HTMLSelectElement)) return;
+        if (!(toggle instanceof HTMLButtonElement)) return;
+        if (!(menu instanceof HTMLElement)) return;
+        if (!(label instanceof HTMLElement)) return;
+
+        const maxRaw = Number.parseInt(select.dataset.maxSelect || "", 10);
+        const maxAllowed = Number.isFinite(maxRaw) && maxRaw > 0 ? maxRaw : Infinity;
+        const placeholderText = label.textContent || "Selectionner des options";
+
+        const syncLabel = () => {
+          const selected = Array.from(select.selectedOptions).map((opt) => opt.value);
+          label.textContent = selected.length ? selected.join(", ") : placeholderText;
+        };
+
+        const syncChecksFromSelect = () => {
+          const selected = new Set(
+            Array.from(select.selectedOptions).map((opt) => opt.value),
+          );
+          checks.forEach((node) => {
+            if (node instanceof HTMLInputElement) {
+              node.checked = selected.has(node.value);
+            }
+          });
+          syncLabel();
+        };
+
+        toggle.addEventListener("click", () => {
+          const isHidden = menu.classList.contains("hidden");
+          menu.classList.toggle("hidden", !isHidden);
+          toggle.setAttribute("aria-expanded", isHidden ? "true" : "false");
+        });
+
+        document.addEventListener("click", (event) => {
+          const target = event.target;
+          if (!(target instanceof Node)) return;
+          if (root.contains(target)) return;
+          menu.classList.add("hidden");
+          toggle.setAttribute("aria-expanded", "false");
+        });
+
+        checks.forEach((node) => {
+          if (!(node instanceof HTMLInputElement)) return;
+          node.addEventListener("change", () => {
+            const selectedCount = checks.filter(
+              (item) => item instanceof HTMLInputElement && item.checked,
+            ).length;
+
+            if (selectedCount > maxAllowed) {
+              node.checked = false;
+              return;
+            }
+
+            const option = Array.from(select.options).find(
+              (opt) => opt.value === node.value,
+            );
+            if (option) option.selected = node.checked;
+
+            syncLabel();
+            select.dispatchEvent(new Event("change", { bubbles: true }));
+          });
+        });
+
+        syncChecksFromSelect();
+        root.dataset.kcMsBound = "true";
+      });
+    };
+
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", init);
+    } else {
+      init();
+    }
+  })();
+</script>

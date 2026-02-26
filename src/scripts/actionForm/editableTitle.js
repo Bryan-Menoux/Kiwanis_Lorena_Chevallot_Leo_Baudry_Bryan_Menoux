@@ -24,23 +24,37 @@ document.addEventListener("DOMContentLoaded", () => {
       input.dataset.example ||
       (input.getAttribute("placeholder") || h4.textContent?.trim() || "").replace(/^Ex :\s*/i, "");
     const displayPlaceholder = "Ex : " + rawPlaceholder;
+    const getDisplayText = (value) => String(value || "").trim() || rawPlaceholder;
+    const setLinkedLabels = (value) => {
+      const labelText = getDisplayText(value);
+      h4.textContent = labelText;
+      document.querySelectorAll(`[data-label-for="${target}"]`).forEach((el) => {
+        el.textContent = labelText;
+      });
+    };
+    const syncPreview = () => {
+      input.dispatchEvent(new Event("input", { bubbles: true }));
+    };
 
     if (!h4.textContent?.trim() || h4.textContent.trim() === rawPlaceholder) {
       h4.textContent = rawPlaceholder;
     }
     input.setAttribute("placeholder", displayPlaceholder);
 
-    document.querySelectorAll(`[data-label-for="${target}"]`).forEach((el) => {
-      el.textContent = h4.textContent?.trim() || rawPlaceholder;
-    });
+    let valueBeforeEdit = hidden.value || "";
+    if (!valueBeforeEdit && h4.textContent?.trim() && h4.textContent.trim() !== rawPlaceholder) {
+      valueBeforeEdit = h4.textContent.trim();
+      hidden.value = valueBeforeEdit;
+    }
+    input.value = valueBeforeEdit;
+    setLinkedLabels(valueBeforeEdit);
 
     const setEditState = (isEditing, shouldSave = false) => {
       if (isEditing) {
+        valueBeforeEdit = hidden.value || "";
         h4.style.display = "none";
         input.style.display = "";
-        input.value =
-          hidden.value ||
-          (h4.textContent?.trim() === rawPlaceholder ? "" : h4.textContent?.trim() || "");
+        input.value = valueBeforeEdit;
         input.focus();
         btn.textContent = "Valider";
         btn.dataset.editing = "true";
@@ -50,10 +64,12 @@ document.addEventListener("DOMContentLoaded", () => {
         h4.style.display = "";
         if (shouldSave) {
           hidden.value = input.value;
-          h4.textContent = input.value || rawPlaceholder;
-          document.querySelectorAll(`[data-label-for="${target}"]`).forEach((el) => {
-            el.textContent = input.value || rawPlaceholder;
-          });
+          setLinkedLabels(input.value);
+        } else {
+          hidden.value = valueBeforeEdit;
+          input.value = valueBeforeEdit;
+          setLinkedLabels(valueBeforeEdit);
+          syncPreview();
         }
         btn.textContent = "Modifier le titre de la section";
         btn.dataset.editing = "false";
@@ -87,9 +103,11 @@ document.addEventListener("DOMContentLoaded", () => {
       if (e.key === "Enter") {
         e.preventDefault();
         setEditState(false, true);
+        cancelBtn.style.display = "none";
       } else if (e.key === "Escape") {
         e.preventDefault();
         setEditState(false, false);
+        cancelBtn.style.display = "none";
       }
     });
   });

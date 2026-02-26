@@ -96,6 +96,16 @@ export type SuperusersRecord = {
 	verified?: boolean
 }
 
+export enum ActionsTypeActionOptions {
+	"Événement solidaire" = "Événement solidaire",
+	"Intervention en milieu scolaire" = "Intervention en milieu scolaire",
+	"Soutien médical" = "Soutien médical",
+	"Action ponctuelle" = "Action ponctuelle",
+	"Atelier éducatif et culturel" = "Atelier éducatif et culturel",
+	"Animations" = "Animations",
+	"Rencontre intergénération" = "Rencontre intergénération",
+}
+
 export enum ActionsTypeDeChiffreOptions {
 	"dépenses" = "dépenses",
 	"récoltes" = "récoltes",
@@ -129,6 +139,7 @@ export type ActionsRecord = {
 	titre_partie_2?: string
 	titre_partie_3?: string
 	titre_remerciements?: string
+	type_action?: ActionsTypeActionOptions[]
 	type_de_chiffre?: ActionsTypeDeChiffreOptions
 	updated: IsoAutoDateString
 }

@@ -47,7 +47,7 @@ const partie3Img =
   @container (max-width: 950px) {
     [data-kc="compact"] {
       flex-direction: column !important;
-      /* make immediate children behave like `w-full` */
+      /* forcer les enfants directs à se comporter comme `w-full` */
       > * {
         flex-basis: 100% !important;
         max-width: 100% !important;
@@ -218,19 +218,15 @@ const partie3Img =
             <h2 data-field="chiffre" class="text-5xl! md:text-7xl!">
               {action.chiffre} €
             </h2>
-            {Object.prototype.hasOwnProperty.call(action, "type_de_chiffre") &&
-            action.type_de_chiffre ? (
-              <p
-                data-field="type_de_chiffre"
-                class="text-base md:text-xl! uppercase self-end"
-              >
-                {action.type_de_chiffre}
-              </p>
-            ) : (
-              <p class="text-base md:text-xl! uppercase self-end">
-                chiffres clés
-              </p>
-            )}
+            {/* inclure l'élément systématiquement pour que le script de preview puisse le cibler */}
+            <p
+              data-field="type_de_chiffre"
+              class="text-base md:text-xl! uppercase self-end"
+            >
+              {action.type_de_chiffre && String(action.type_de_chiffre) !== 'type de chiffre'
+                ? action.type_de_chiffre
+                : "chiffre clé"}
+            </p>
           </div>
         )}
         {Object.prototype.hasOwnProperty.call(action, "beneficiaire") && (
@@ -433,23 +429,23 @@ const partie3Img =
       action.galerie_photos.length > 0 && (
         <div
           id="imageModal"
-          class="fixed inset-0 bg-accent/60 items-center justify-center z-50 hidden lg:mt-16"
+          class="fixed inset-0 bg-accent/60 items-center justify-center z-120 hidden"
         >
           <button
             id="closeButton"
-            class="absolute top-16 right-4 text-xl! bg-base-100 bg-opacity-80 rounded-full w-8 h-8 md:w-10 md:h-10 flex items-center justify-center"
+            class="absolute top-16 right-4 text-xl! bg-base-100 bg-opacity-80 rounded-full w-8 h-8 md:w-10 md:h-10 flex items-center justify-center z-110 cursor-pointer"
           >
             ×
           </button>
           <button
             id="prevButton"
-            class="absolute left-4 top-1/2 -translate-y-1/2 text-xl! bg-base-100 bg-opacity-80 rounded-full w-8 h-8 md:w-10 md:h-10 flex items-center justify-center"
+            class="absolute left-4 top-1/2 -translate-y-1/2 text-xl! bg-base-100 bg-opacity-80 rounded-full w-8 h-8 md:w-10 md:h-10 flex items-center justify-center z-110"
           >
             ‹
           </button>
           <button
             id="nextButton"
-            class="absolute right-4 top-1/2 -translate-y-1/2 text-xl! bg-base-100 bg-opacity-80 rounded-full w-8 h-8 md:w-10 md:h-10 flex items-center justify-center"
+            class="absolute right-4 top-1/2 -translate-y-1/2 text-xl! bg-base-100 bg-opacity-80 rounded-full w-8 h-8 md:w-10 md:h-10 flex items-center justify-center z-110"
           >
             ›
           </button>

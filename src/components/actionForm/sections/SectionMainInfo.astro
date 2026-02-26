@@ -1,15 +1,28 @@
----
+﻿---
 import HiddenField from "../partials/HiddenField.astro";
 import ImageUpload from "../partials/ImageUpload.astro";
+import MultiSelectDropdown from "../partials/MultiSelectDropdown.astro";
 
 export interface Props {
   mode?: string;
   previewData?: any;
   placeholders: any;
   imageIcon?: any;
+  typeActionOptions?: string[];
 }
 
-const { mode = "create", previewData, placeholders, imageIcon } = Astro.props;
+const {
+  mode = "create",
+  previewData,
+  placeholders,
+  imageIcon,
+  typeActionOptions = [],
+} = Astro.props;
+
+const selectedTypeActions =
+  mode === "edit" && previewData && Array.isArray(previewData.type_action)
+    ? previewData.type_action
+    : [];
 ---
 
 <div class="p-4 bg-base-200 rounded-box border border-contrast space-y-4">
@@ -103,4 +116,27 @@ const { mode = "create", previewData, placeholders, imageIcon } = Astro.props;
       ? previewData.description_hero
       : undefined}
   />
+
+  <label class="block text-sm font-medium mt-3 mb-1">
+    Type d'action (vous pouvez en sélectionner plusieurs)
+  </label>
+  <MultiSelectDropdown
+    id="input_type_action"
+    dataProp="type_action"
+    options={typeActionOptions}
+    selectedValues={selectedTypeActions}
+    maxSelect={7}
+    placeholder="Sélectionner des types d'action"
+  />
+  <p class="text-xs text-base-content/70">
+    Vous pouvez sélectionner jusqu'à 7 types.
+  </p>
+  <HiddenField
+    name="type_action"
+    id="hidden_type_action"
+    value={mode === "edit" && previewData
+      ? JSON.stringify(selectedTypeActions)
+      : "[]"}
+  />
 </div>
+

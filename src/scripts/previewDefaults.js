@@ -18,6 +18,7 @@ const PREVIEW_DEFAULTS = {
   adresse_lieu: "12 rue Exemple, 75000 Ville",
   lien_lieu: "https://maps.google.com/",
   chiffre: "150",
+  type_action: [],
   // ne pas prioriser : valeur vide par défaut — la liste des options est fournie
   type_de_chiffre: "",
   beneficiaire: "Association Exemple",

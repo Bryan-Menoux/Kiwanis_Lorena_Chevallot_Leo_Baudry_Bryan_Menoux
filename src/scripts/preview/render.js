@@ -98,6 +98,10 @@ function renderField(prop) {
       } else {
         element.textContent = '\u00A0€';
       }
+    } else if (prop === 'type_de_chiffre') {
+      // treat placeholder value as absence and display singular label
+      const v = String(value || '').trim();
+      element.textContent = v && v !== 'type de chiffre' ? v : 'chiffre clé';
     } else {
       element.textContent = value ?? '';
     }
