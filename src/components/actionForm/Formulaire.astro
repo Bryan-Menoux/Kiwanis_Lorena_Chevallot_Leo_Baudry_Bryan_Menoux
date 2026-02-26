@@ -7,12 +7,6 @@ import SectionGallery from "./sections/SectionGallery.astro";
 
 import imageIcon from "../../assets/image-icon.svg";
 import previewDefaults from "../../scripts/previewDefaults.js";
-import previewUrl from "../../scripts/preview/index.js?url";
-
-import imageDeletionUrl from "../../scripts/actionForm/imageDeletion.js?url";
-import mapsToggleUrl from "../../scripts/actionForm/mapsToggle.js?url";
-import editableTitleUrl from "../../scripts/actionForm/editableTitle.js?url";
-import placeholdersUrl from "../../scripts/actionForm/placeholders.js?url";
 
 export interface Props {
   mode?: string;
@@ -123,8 +117,10 @@ const placeholders = {
   </div>
 </form>
 
-<script type="module" src={imageDeletionUrl}></script>
-<script type="module" src={mapsToggleUrl}></script>
-<script type="module" src={placeholdersUrl}></script>
-<script type="module" src={editableTitleUrl}></script>
-<script type="module" src={previewUrl}></script>
+<script>
+  import "../../scripts/actionForm/imageDeletion.js";
+  import "../../scripts/actionForm/mapsToggle.js";
+  import "../../scripts/actionForm/placeholders.js";
+  import "../../scripts/actionForm/editableTitle.js";
+  import "../../scripts/preview/index.js";
+</script>
