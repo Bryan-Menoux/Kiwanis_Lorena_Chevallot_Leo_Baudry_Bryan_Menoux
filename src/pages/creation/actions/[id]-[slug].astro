@@ -4,13 +4,15 @@ import ActionContent from "../../../components/ActionContent.astro";
 import backArrow from "../../../assets/back-arrow.svg";
 
 const id = Astro.params.id;
+const normalizedId =
+  typeof id === "string" ? (id.match(/^[a-zA-Z0-9]{15}/)?.[0] ?? id) : id;
 let action = null;
 try {
-  action = await Astro.locals.pb.collection("actions").getOne(id!);
+  action = await Astro.locals.pb.collection("actions").getOne(normalizedId!);
 } catch (err) {
   const isNotFound = (err instanceof Error && err.message?.includes("The requested resource wasn't found")) || ((err as any)?.response?.status === 404);
   if (isNotFound) {
-    const message = 'Action introuvable (identifiant: ' + id + ')';
+    const message = 'Action introuvable (identifiant: ' + normalizedId + ')';
     return new Response(`<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Action introuvable</title><style>body{background:#0b1220;color:#e6eef8;font-family:system-ui,-apple-system,Segoe UI,Roboto,'Helvetica Neue',Arial;padding:40px}a{color:#9fe7c4}</style></head><body><h1>Action introuvable</h1><p>${message}</p><p><a href="/creation/actions">Retour aux actions</a></p></body></html>`, { status: 404, headers: { 'Content-Type': 'text/html' } });
   }
   throw err;

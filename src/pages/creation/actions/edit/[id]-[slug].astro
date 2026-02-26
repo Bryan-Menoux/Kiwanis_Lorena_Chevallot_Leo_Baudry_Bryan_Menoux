@@ -5,7 +5,11 @@ import ActionContent from "../../../../components/ActionContent.astro";
 import ActionForm from "../../../../components/ActionForm.astro";
 import slugify from "slugify";
 // Paramètre `id` optionnel provenant de l'URL (utilisé pour l'édition)
-const idParam = Astro.params?.id;
+const rawIdParam = Astro.params?.id;
+const idParam =
+  typeof rawIdParam === "string"
+    ? (rawIdParam.match(/^[a-zA-Z0-9]{15}/)?.[0] ?? rawIdParam)
+    : rawIdParam;
 
 import galleryUrl from "../../../../scripts/gallery.js?url";
 import galleryDisplayUrl from "../../../../scripts/gallery-display.js?url";
