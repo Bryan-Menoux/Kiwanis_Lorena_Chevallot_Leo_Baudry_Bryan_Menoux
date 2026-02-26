@@ -65,6 +65,7 @@ jobs:
 
             cd dist
             npm ci --omit=dev
+            node -e "const p=require('./package.json'); const deps=Object.keys(p.dependencies||{}); for (const d of deps){ try { require.resolve(d); console.log('[OK]', d); } catch (e) { console.error('[MISSING]', d); process.exit(1); } }"
 
             cd /var/www/kiwanis
 

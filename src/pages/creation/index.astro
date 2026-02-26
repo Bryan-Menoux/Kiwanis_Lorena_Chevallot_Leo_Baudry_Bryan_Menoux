@@ -16,6 +16,16 @@ interface Page {
   beneficiary?: string;
 }
 
+function asSafeText(value: unknown, fallback = ""): string {
+  return typeof value === "string" && value.trim() !== "" ? value.trim() : fallback;
+}
+
+function safeSlug(value: unknown, fallback = "element"): string {
+  const base = asSafeText(value, fallback);
+  const slug = slugify(base, { lower: true, strict: true });
+  return slug || fallback;
+}
+
 const actions = await Astro.locals.pb.collection('actions').getFullList(200, { sort: '-updated' });
 const projets = await Astro.locals.pb.collection('projets').getFullList(200, { sort: '-updated' });
 const produits = await Astro.locals.pb.collection('produits').getFullList(200, { sort: '-updated' });
@@ -25,8 +35,8 @@ const brouillons = await Astro.locals.pb.collection('brouillons').getFullList(20
 const pages: Page[] = [
   ...actions.map(action => ({
     id: action.id,
-    title: action.titre,
-    slug: slugify(action.titre, { lower: true, strict: true }),
+    title: asSafeText(action.titre, "Action sans titre"),
+    slug: safeSlug(action.titre, "action"),
     status: 'actions' as const,
     updatedAt: action.updated,
     authorName: 'Admin', // Valeur par défaut
@@ -34,16 +44,16 @@ const pages: Page[] = [
   })),
   ...projets.map(projet => ({
     id: projet.id,
-    title: projet.titre,
-    slug: slugify(projet.titre, { lower: true, strict: true }),
+    title: asSafeText(projet.titre, "Projet sans titre"),
+    slug: safeSlug(projet.titre, "projet"),
     status: 'projets' as const,
     updatedAt: projet.updated,
     authorName: 'Admin' // Valeur par défaut
   })),
   ...produits.map(produit => ({
     id: produit.id,
-    title: produit.titre,
-    slug: slugify(produit.titre, { lower: true, strict: true }),
+    title: asSafeText(produit.titre, "Produit sans titre"),
+    slug: safeSlug(produit.titre, "produit"),
     status: 'produits' as const,
     updatedAt: produit.updated,
     authorName: 'Admin' // Valeur par défaut
@@ -58,8 +68,8 @@ const pages: Page[] = [
 
     return ({
       id: brouillon.id,
-      title: brouillon.titre,
-      slug: slugify(brouillon.titre || 'brouillon', { lower: true, strict: true }),
+      title: asSafeText(brouillon.titre, "Brouillon sans titre"),
+      slug: safeSlug(brouillon.titre, "brouillon"),
       status: 'brouillon' as const,
       updatedAt: brouillon.updated,
       authorName: 'Admin', // Valeur par défaut
@@ -134,7 +144,10 @@ let list = db.pages.slice();
 if (status && status !== 'all') list = list.filter(p => p.status === status);
 if (q) {
   const token = q.toLowerCase();
-  list = list.filter(p => p.title.toLowerCase().includes(token) || p.slug.toLowerCase().includes(token));
+  list = list.filter((p) =>
+    asSafeText(p.title).toLowerCase().includes(token) ||
+    asSafeText(p.slug).toLowerCase().includes(token),
+  );
 }
 // tri par updatedAt desc
 list.sort((a,b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
