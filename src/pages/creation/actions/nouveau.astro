@@ -84,7 +84,9 @@ if (Astro.request.method === "POST") {
     // Créer le record
     const payload = { ...data, slug, ...files };
     const newAction = await Astro.locals.pb.collection("actions").create(payload);
-    return Astro.redirect(`/creation/actions/${newAction.id}-${slug}?success=Action créée`);
+    return Astro.redirect(
+      `/creation/actions/${newAction.id}-${slug}?success=${encodeURIComponent("Action créée")}`,
+    );
   } catch (err) {
     console.error("Erreur lors de la création:", err);
     error = err instanceof Error ? err.message : "Une erreur inconnue est survenue";
