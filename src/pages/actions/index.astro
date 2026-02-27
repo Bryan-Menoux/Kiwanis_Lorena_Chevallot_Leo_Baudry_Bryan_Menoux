@@ -1,0 +1,83 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import Hero from "../../components/Hero.astro";
+import heroImg from "../../assets/action-page/hero-action-page.webp";
+import SearchActions from "../../components/SearchActions.astro";
+
+const actions = await Astro.locals.pb.collection("actions").getFullList();
+
+const actionsWithUrls = actions.map((action) => ({
+  ...action,
+  heroUrl: action.hero
+    ? Astro.locals.pb.files.getURL(action, action.hero)
+    : null,
+}));
+
+const membres = await Astro.locals.pb.collection("users").getFullList({
+  filter: "role = 'membre' || role = 'président' || role = 'présidente'",
+});
+// Récupère la date
+const date = new Date().getFullYear();
+const dureeEngagement = date - 2019;
+---
+
+<Layout>
+  <Hero
+    image={heroImg.src}
+    title="Actions"
+    subtitle="Découvrez les actions menées par notre communauté."
+  />
+  <!-- Section données -->
+  <div
+    class="w-full max-w-[95dvw] mt-32 mx-auto rounded-box bg-accent h-64 flex items-center justify-between px-32"
+  >
+    <div class="flex flex-col gap-2">
+      <h2 class="text-6xl! text-base-100 font-bold">{actions.length}</h2>
+      <h3 class="text-base-100">Actions réalisées</h3>
+    </div>
+    <div class="flex flex-col gap-2">
+      <h2 class="text-6xl! text-base-100 font-bold">+150</h2>
+      <h3 class="text-base-100">Enfants aidés</h3>
+    </div>
+    <div class="flex flex-col gap-2">
+      <h2 class="text-6xl! text-base-100 font-bold">{membres.length}</h2>
+      <h3 class="text-base-100">Bénévoles engagé(e)s</h3>
+    </div>
+    <div class="flex flex-col gap-2">
+      <h2 class="text-6xl! text-base-100 font-bold">{dureeEngagement}</h2>
+      <h3 class="text-base-100">Années d'engagement</h3>
+    </div>
+  </div>
+  <div class="flex flex-col px-64 mt-32">
+    <p class="text-xl!">
+      Découvrez les actions que le club Kiwanis Pays de Montbéliard ont mené, et
+      continuent de mener.
+    </p>
+    <SearchActions />
+  </div>
+  <div class="flex flex-col gap-8 w-full h-fit mt-32 px-64">
+    {
+      actionsWithUrls.map((action) => {
+        return (
+          <div class="flex w-full bg-red-600 h-164">
+            <img
+              src={action.heroUrl}
+              alt={action.description_hero}
+              class="w-full max-w-1/2 flex-1 object-cover "
+            />
+            <div class="flex-1 w-full bg-blue-600 flex flex-col">
+              <div class="flex gap-4">
+                {action.type_action.map((type, index) => {
+                  if (index < 3) {
+                    return <div class="btn btn-secondary">{type}</div>;
+                  }
+                  return null;
+                })}
+              </div>
+            </div>
+          </div>
+        );
+      })
+    }
+  </div>
+</Layout>

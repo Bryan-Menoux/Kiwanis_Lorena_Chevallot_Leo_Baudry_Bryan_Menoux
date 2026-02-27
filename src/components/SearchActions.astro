@@ -1,0 +1,95 @@
+---
+import { ActionsTypeActionOptions } from "../pocketbase-types";
+
+const props = Astro.props || {};
+const {
+  value = "",
+  yearOptions = [],
+  typeOptions = Object.values(ActionsTypeActionOptions),
+  initialYear = "",
+  initialType = "",
+} = props;
+---
+
+<!--
+  SearchActions component
+  - input for title search
+  - select for available years
+  - select for type_action
+  emits `search-actions-change` events with {search, year, type}
+-->
+
+<div
+  class="p-4 bg-base-100 rounded-lg border border-base-300 search-actions w-full"
+  data-initial-search={value}
+  data-initial-year={initialYear}
+  data-initial-type={initialType}
+>
+  <div class="flex flex-col md:flex-row gap-4 items-center w-full">
+    <input
+      id="search-input"
+      class="input input-bordered flex-1 w-full"
+      type="text"
+      placeholder="Rechercher le titre d'une action..."
+    />
+    {yearOptions.length > 0 && (
+      <select id="year-select" class="select select-bordered w-32">
+        <option value="">Toutes les années</option>
+        {yearOptions.map((y: string) => <option value={y}>{y}</option>)}
+      </select>
+    )}
+    {typeOptions.length > 0 && (
+      <select id="type-select" class="select select-bordered w-48">
+        <option value="">Tous les types</option>
+        {typeOptions.map((t: string) => <option value={t}>{t}</option>)}
+      </select>
+    )}
+  </div>
+</div>
+
+<script>
+  (function() {
+    function init() {
+      const root = document.querySelector(".search-actions");
+      if (!(root instanceof HTMLElement)) return;
+
+      const searchInput = root.querySelector("#search-input");
+      const yearSelect = root.querySelector('#year-select');
+      const typeSelect = root.querySelector('#type-select');
+      const initialSearch = root.dataset.initialSearch || "";
+      const initialYear = root.dataset.initialYear || "";
+      const initialType = root.dataset.initialType || "";
+
+      if (searchInput instanceof HTMLInputElement) searchInput.value = initialSearch;
+      if (yearSelect instanceof HTMLSelectElement && initialYear) yearSelect.value = initialYear;
+      if (typeSelect instanceof HTMLSelectElement && initialType) typeSelect.value = initialType;
+
+      function emit() {
+        const detail: any = {
+          search: (searchInput instanceof HTMLInputElement) ? searchInput.value.trim() : "",
+        };
+        if (yearSelect instanceof HTMLSelectElement) detail.year = yearSelect.value;
+        if (typeSelect instanceof HTMLSelectElement) detail.type = typeSelect.value;
+        document.dispatchEvent(new CustomEvent("search-actions-change", { detail, bubbles: true }));
+      }
+
+      if (searchInput instanceof Element) {
+        searchInput.addEventListener('input', emit);
+        searchInput.addEventListener('change', emit);
+      }
+      if (yearSelect instanceof Element) {
+        yearSelect.addEventListener('change', emit);
+      }
+      if (typeSelect instanceof Element) {
+        typeSelect.addEventListener('change', emit);
+      }
+
+      emit();
+    }
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', init);
+    } else {
+      init();
+    }
+  })();
+</script>

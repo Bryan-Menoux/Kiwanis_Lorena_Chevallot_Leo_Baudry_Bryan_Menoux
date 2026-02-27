@@ -4,12 +4,18 @@ const {
   value = "",
   showStatus = false,
   statusOptions = [],
+  yearOptions = [],
+  typeOptions = [],
+  initialYear = "",
+  initialType = "",
 } = props;
 ---
 
 <div
   class="p-4 bg-base-100 rounded-lg border border-base-300 actions-search w-full"
   data-initial-search={value}
+  data-initial-year={initialYear}
+  data-initial-type={initialType}
 >
   <div class="flex flex-col md:flex-row gap-4 items-center w-full">
     <input
@@ -24,6 +30,18 @@ const {
       type="text"
       placeholder="Filtre bénéficiaire"
     />
+    {yearOptions.length > 0 && (
+      <select id="year-select" class="select select-bordered w-32">
+        <option value="">Toutes les années</option>
+        {yearOptions.map((y: string) => <option value={y}>{y}</option>)}
+      </select>
+    )}
+    {typeOptions.length > 0 && (
+      <select id="type-select" class="select select-bordered w-48">
+        <option value="">Tous les types</option>
+        {typeOptions.map((t: string) => <option value={t}>{t}</option>)}
+      </select>
+    )}
     {showStatus && (
       <select id="status-select" class="select select-bordered w-44">
         {statusOptions.map((s: string) => <option value={s}>{s}</option>)}
@@ -44,20 +62,29 @@ const {
 
       const searchInput = root.querySelector("#search-input");
       const beneficiaryInput = root.querySelector("#beneficiary-input");
+      const yearSelect = root.querySelector('#year-select');
+      const typeSelect = root.querySelector('#type-select');
       const statusSelect = root.querySelector('#status-select');
       const initialSearch = root.dataset.initialSearch || "";
 
       if (typeof console !== 'undefined' && console.debug) console.debug('ActionsSearch init');
       
       if (searchInput instanceof HTMLInputElement) searchInput.value = initialSearch;
+      const initialYear = root.dataset.initialYear || "";
+      const initialType = root.dataset.initialType || "";
+      if (yearSelect instanceof HTMLSelectElement && initialYear) yearSelect.value = initialYear;
+      if (typeSelect instanceof HTMLSelectElement && initialType) typeSelect.value = initialType;
       if (typeof console !== 'undefined' && console.debug) console.debug('ActionsSearch inputs initialized');
 
       function emit() {
-        const detail = {
+        const detail: any = {
           search: (searchInput instanceof HTMLInputElement) ? searchInput.value.trim() : "",
           beneficiary: (beneficiaryInput instanceof HTMLInputElement) ? beneficiaryInput.value.trim() : "",
-          status: (statusSelect instanceof HTMLSelectElement) ? statusSelect.value : "",
         };
+        if (yearSelect instanceof HTMLSelectElement) detail.year = yearSelect.value;
+        if (typeSelect instanceof HTMLSelectElement) detail.type = typeSelect.value;
+        if (statusSelect instanceof HTMLSelectElement) detail.status = statusSelect.value;
+
         if (typeof console !== 'undefined' && console.debug) console.debug('ActionsSearch emit', detail);
         document.dispatchEvent(new CustomEvent("actions-filter-change", { detail, bubbles: true }));
       }
@@ -78,6 +105,12 @@ const {
           emit();
         });
         beneficiaryInput.addEventListener('change', emit);
+      }
+      if (yearSelect instanceof Element) {
+        yearSelect.addEventListener('change', emit);
+      }
+      if (typeSelect instanceof Element) {
+        typeSelect.addEventListener('change', emit);
       }
       if (statusSelect instanceof Element) {
         statusSelect.addEventListener('change', emit);
