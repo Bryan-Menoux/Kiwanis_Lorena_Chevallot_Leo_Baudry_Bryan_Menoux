@@ -4,6 +4,7 @@ import ActionContent from "../../../components/ActionContent.astro";
 import backArrow from "../../../assets/back-arrow.svg";
 
 const id = Astro.params.id;
+let slug = Astro.params.slug
 const normalizedId =
   typeof id === "string" ? (id.match(/^[a-zA-Z0-9]{15}/)?.[0] ?? id) : id;
 let action = null;
@@ -21,7 +22,7 @@ try {
 
 <Layout>
   <a
-    href="/creation/actions"
+    href="/actions"
     class="hidden fixed px-4 py-3 min-h-11 lg:flex items-center justify-center z-50 bg-base-100 bg-opacity-80 rounded-box text-sm lg:text-base lg:left-[2%] lg:top-[12%]"
   >
     <img
@@ -30,12 +31,24 @@ try {
       class="inline-block mr-2 invert w-4 h-4 md:w-5 md:h-5"
     />Retour aux actions</a
   >
-  <a href="/creation/actions" class="flex lg:hidden items-center text-sm mb-8">
+  <div class="flex w-full justify-between mb-8 mt-24 px-4">
+    <a href="/actions" class="flex lg:hidden items-center text-sm">
     <img
       src={backArrow.src}
       alt="Retour aux actions"
       class="inline-block mr-2 invert w-4 h-4 md:w-5 md:h-5"
     />Retour aux actions</a
+  >
+  
+  <a href={`/creation/actions/edit/${id}-${slug}`} class="flex lg:hidden items-center text-sm w-fit btn btn-accent">
+    Modifier l'action</a
+  >
+  </div>
+  <a
+    href={`/creation/actions/edit/${id}-${slug}`}
+    class="hidden fixed px-4 py-3 min-h-11 lg:flex items-center justify-center z-50 bg-opacity-80 rounded-box text-sm lg:text-base lg:right-[2%] lg:top-[12%] btn btn-accent"
+  >
+    Modifier l'action</a
   >
   <ActionContent action={action} />
 </Layout>

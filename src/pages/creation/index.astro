@@ -78,12 +78,12 @@ const pages: Page[] = [
   })
 ];
 
-// Simple fake DB: only pages (id, title, slug, status, updatedAt, authorName)
+// Base de données factice : uniquement « pages » (id, titre, slug, statut, updatedAt, authorName)
 const db: { pages: Page[] } = {
   pages: pages
 };
 
-// use shared util
+// utilisation de l'utilitaire partagé
 
 function getStatusBadge(status: Page['status']) {
   if (status === 'actions') return { label: 'Actions', className: 'badge badge-success' };
@@ -164,46 +164,46 @@ const allPages = db.pages;
     <!-- Header -->
     <div class="flex justify-between ">
         <div class="flex flex-col mb-12">
-      <h1 class="text-4xl font-bold text-primary mb-4 font-poppins">Mes Pages</h1>
+      <h1 class="text-4xl font-bold text-accent mb-4 font-poppins">Mes Pages</h1>
       <p class="text-lg text-base-content/70">Bienvenue dans votre tableau de bord de gestion</p>
     </div>
     <div class="flex items-center gap-4">
         <!-- voir la page des actions -->
         <a href="/actions" class="btn btn-border">Voir les actions</a>
-        <a href="/creation/actions/nouveau" class="btn btn-primary">Créer une action</a>
+        <a href="/creation/actions/nouveau" class="btn btn-accent">Créer une action</a>
     </div>
     </div>
 
     <!-- Statistiques -->
     <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-12">
-      <div class="card bg-base-100 shadow-sm">
+      <div class="card bg-base-100 shadow-md">
         <div class="card-body text-center p-4">
-          <div class="text-2xl font-bold text-base-content">{stats.total}</div>
-          <div class="text-sm text-base-content/70">Total</div>
+          <div class="text-4xl! font-bold text-base-content">{stats.total}</div>
+          <div class="text-sm text-base-content">Total</div>
         </div>
       </div>
-      <div class="card bg-base-100 shadow-sm">
+      <div class="card bg-base-100 shadow-md">
         <div class="card-body text-center p-4">
-          <div class="text-2xl font-bold text-base-content">{stats.actions}</div>
-          <div class="text-sm text-base-content/70">Actions</div>
+          <div class="text-4xl! font-bold text-base-content">{stats.actions}</div>
+          <div class="text-sm text-base-content">Actions</div>
         </div>
       </div>
-      <div class="card bg-base-100 shadow-sm">
+      <div class="card bg-base-100 shadow-md">
         <div class="card-body text-center p-4">
-          <div class="text-2xl font-bold text-base-content">{stats.projets}</div>
-          <div class="text-sm text-base-content/70">Projets</div>
+          <div class="text-4xl! font-bold text-base-content">{stats.projets}</div>
+          <div class="text-sm text-base-content">Projets</div>
         </div>
       </div>
-      <div class="card bg-base-100 shadow-sm">
+      <div class="card bg-base-100 shadow-md">
         <div class="card-body text-center p-4">
-          <div class="text-2xl font-bold text-base-content">{stats.produits}</div>
-          <div class="text-sm text-base-content/70">Produits</div>
+          <div class="text-4xl! font-bold text-base-content">{stats.produits}</div>
+          <div class="text-sm text-base-content">Produits</div>
         </div>
       </div>
-      <div class="card bg-base-100 shadow-sm">
+      <div class="card bg-base-100 shadow-md">
         <div class="card-body text-center p-4">
-          <div class="text-2xl font-bold text-base-content">{stats.brouillons}</div>
-          <div class="text-sm text-base-content/70">Brouillons</div>
+          <div class="text-4xl! font-bold text-base-content">{stats.brouillons}</div>
+          <div class="text-sm text-base-content">Brouillons</div>
         </div>
       </div>
     </div>
@@ -220,8 +220,12 @@ const allPages = db.pages;
           <button id="clear-filters" class="btn btn-ghost btn-sm absolute right-0 top-1/2 -translate-y-1/2">Effacer</button>
         </div>
 
-        <div class="flex flex-col md:flex-row gap-4">
+        <div class="flex items-center md:flex-row gap-4">
           <ActionsSearch showStatus={true} value={q} statusOptions={["all","actions","projets","produits","brouillon"]} />
+          <select id="sort-select" class="select select-bordered w-44">
+            <option value="updated_desc">Récent → Ancien</option>
+            <option value="updated_asc">Ancien → Récent</option>
+          </select>
         </div>
       </div>
     </div>
@@ -277,6 +281,8 @@ const allPages = db.pages;
   let currentSearch = q;
   let currentStatus = status;
   let currentBenef = '';
+  // garder en mémoire l'ordre de tri choisi (par défaut décroissant)
+  let currentSort = 'updated_desc';
 
   function formatDate(d) {
     if (!d) return "";
@@ -295,7 +301,7 @@ const allPages = db.pages;
       if (type === 'action') return `/creation/actions/edit/${id}-${slug}`;
       if (type === 'projet') return `/creation/projets/edit/${id}-${slug}`;
       if (type === 'produit') return `/creation/produits/edit/${id}-${slug}`;
-      // fallback -> ouvrir l'éditeur actions
+      // cas de repli : ouvrir l'éditeur actions
       return `/creation/actions/edit/${id}-${slug}`;
     }
 
@@ -323,7 +329,7 @@ const allPages = db.pages;
     return { label: status, className: 'badge' };
   }
 
-  function filterPages(search, statusFilter, benef) {
+  function filterPages(search, statusFilter, benef, sort = 'updated_desc') {
     let filtered = pages.slice();
 
     // Filtre par statut
@@ -348,8 +354,12 @@ const allPages = db.pages;
       );
     }
 
-    // Tri par date décroissante
-    filtered.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
+    // Tri par date selon l'ordre sélectionné
+    filtered.sort((a, b) => {
+      const da = new Date(a.updatedAt).getTime();
+      const db = new Date(b.updatedAt).getTime();
+      return sort === 'updated_asc' ? da - db : db - da;
+    });
 
     // Limiter à 6 résultats
     return filtered.slice(0, 6);
@@ -411,7 +421,7 @@ const allPages = db.pages;
           currentSearch = '';
           currentStatus = 'all';
           updateActiveFilters(currentSearch, currentStatus);
-          renderPages(filterPages(currentSearch, currentStatus));
+          renderPages(filterPages(currentSearch, currentStatus, currentBenef, currentSort));
         }
       });
     } else {
@@ -447,7 +457,7 @@ const allPages = db.pages;
   document.addEventListener('DOMContentLoaded', () => {
     const clearFiltersBtn = document.getElementById('clear-filters');
 
-    // Listen to the shared ActionsSearch events
+    // écouter les événements partagés d'ActionsSearch
     document.addEventListener('actions-filter-change', (ev) => {
       const d = ev.detail || {};
       currentSearch = d.search || '';
@@ -455,30 +465,39 @@ const allPages = db.pages;
       // prefer status if provided, else keep existing
       if (typeof d.status !== 'undefined') currentStatus = d.status || 'all';
       updateActiveFilters(currentSearch, currentStatus);
-      renderPages(filterPages(currentSearch, currentStatus, currentBenef));
+      renderPages(filterPages(currentSearch, currentStatus, currentBenef, currentSort));
     });
 
-    // initial render and active filters
+    // rendu initial et affichage des filtres actifs
+    // lire la valeur initiale du tri si présente
+    const sortSelect = document.getElementById('sort-select');
+    if (sortSelect instanceof HTMLSelectElement) {
+      currentSort = sortSelect.value;
+      sortSelect.addEventListener('change', () => {
+        currentSort = sortSelect.value;
+        renderPages(filterPages(currentSearch, currentStatus, currentBenef, currentSort));
+      });
+    }
     updateActiveFilters(currentSearch, currentStatus);
-    renderPages(filterPages(currentSearch, currentStatus, currentBenef));
+    renderPages(filterPages(currentSearch, currentStatus, currentBenef, currentSort));
 
     clearFiltersBtn.addEventListener('click', () => {
-      // Reset component inputs if present
+      // réinitialiser les entrées du composant si présent
       const root = document.querySelector('.actions-search');
       if (root instanceof HTMLElement) {
         const si = root.querySelector('#search-input');
         const st = root.querySelector('#status-select');
         if (si instanceof HTMLInputElement) si.value = '';
         if (st instanceof HTMLSelectElement) st.value = 'all';
-        // emit cleared state
+        // émettre l'état réinitialisé
         document.dispatchEvent(new CustomEvent('actions-filter-change', { detail: { search: '', status: 'all' } }));
       } else {
-        // fallback
+        // cas de repli
         currentSearch = '';
         currentBenef = '';
         currentStatus = 'all';
         updateActiveFilters(currentSearch, currentStatus);
-        renderPages(filterPages(currentSearch, currentStatus, currentBenef));
+        renderPages(filterPages(currentSearch, currentStatus, currentBenef, currentSort));
       }
     });
   });
