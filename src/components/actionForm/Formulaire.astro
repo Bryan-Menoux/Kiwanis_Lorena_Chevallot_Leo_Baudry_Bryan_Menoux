@@ -47,7 +47,7 @@ const placeholders = {
   class="space-y-8 text-accent"
   method="POST"
   enctype="multipart/form-data"
->
+>  <!-- cards within will be animated sequentially -->
   <h1 class="text-4xl! font-bold mb-8 mt-24 text-white">
     Créer une nouvelle action
   </h1>
@@ -123,4 +123,29 @@ const placeholders = {
   import "../../scripts/actionForm/placeholders.js";
   import "../../scripts/actionForm/editableTitle.js";
   import "../../scripts/preview/index.js";
+
+  // aide à l'animation des cartes de section
+  function animateCards() {
+    const cards = Array.from(document.querySelectorAll('#leftForm .p-4'));
+    cards.forEach((card, idx) => {
+      // état initial : invisible et décalée à gauche
+      card.classList.add('opacity-0', '-translate-x-4', 'transition-all', 'duration-300', 'ease-out');
+      setTimeout(() => {
+        card.classList.remove('opacity-0', '-translate-x-4');
+      }, idx * 100 + 50); // décalage de 100 ms entre les cartes, démarrage rapide (50 ms) après le sidebar
+    });
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const sidebar = document.getElementById('sidebar');
+    if (sidebar) {
+      // quand l'animation du sidebar est terminée, démarrer l'animation des cartes
+      sidebar.addEventListener('transitionend', () => {
+        animateCards();
+      }, { once: true });
+      // déclencher l'entrée du sidebar (géré ailleurs)
+    } else {
+      animateCards();
+    }
+  });
 </script>
