@@ -2,15 +2,16 @@
 import Layout from "../../../layouts/Layout.astro";
 import ActionContent from "../../../components/ActionContent.astro";
 import backArrow from "../../../assets/back-arrow.svg";
+import type { ActionsResponse } from "../../../pocketbase-types";
 
 const id = Astro.params.id;
 const slug = Astro.params.slug;
 const normalizedId =
   typeof id === "string" ? (id.match(/^[a-zA-Z0-9]{15}/)?.[0] ?? id) : id;
-let draft = null;
+let draft: ActionsResponse | null = null;
 
 try {
-  draft = await Astro.locals.pb.collection("brouillons").getOne(normalizedId!);
+  draft = (await Astro.locals.pb.collection("brouillons").getOne(normalizedId!)) as ActionsResponse;
 } catch (err) {
   const isNotFound =
     (err instanceof Error &&
@@ -68,5 +69,5 @@ try {
     </div>
   </div>
 
-  <ActionContent action={draft} />
+  <ActionContent action={draft!} />
 </Layout>
