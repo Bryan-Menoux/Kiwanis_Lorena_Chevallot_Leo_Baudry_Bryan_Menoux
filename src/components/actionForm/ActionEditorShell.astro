@@ -12,10 +12,19 @@ const { animateDesktopSidebar = false } = Astro.props;
   data-animate-desktop-sidebar={animateDesktopSidebar ? "true" : "false"}
 >
   <div class="lg:hidden sticky top-[5.25rem] z-40 px-4 mb-4">
-    <div class="bg-base-200 border border-base-300 rounded-full p-1 flex gap-1">
+    <div
+      class="bg-base-200 border border-base-300 rounded-full p-1 flex gap-1"
+      data-shell-tab-list
+      role="tablist"
+      aria-label="Navigation éditeur"
+    >
       <button
         type="button"
         class="btn btn-sm rounded-full flex-1 btn-accent"
+        id="editor-form-tab"
+        role="tab"
+        aria-selected="true"
+        tabindex="0"
         data-shell-tab-trigger="form"
         aria-controls="editor-form-panel"
       >
@@ -24,6 +33,10 @@ const { animateDesktopSidebar = false } = Astro.props;
       <button
         type="button"
         class="btn btn-sm rounded-full flex-1 btn-ghost"
+        id="editor-preview-tab"
+        role="tab"
+        aria-selected="false"
+        tabindex="-1"
         data-shell-tab-trigger="preview"
         aria-controls="editor-preview-panel"
       >
@@ -36,11 +49,14 @@ const { animateDesktopSidebar = false } = Astro.props;
     <section
       id="editor-form-panel"
       data-shell-tab-panel="form"
+      role="tabpanel"
+      aria-labelledby="editor-form-tab"
       class="w-full lg:w-1/3"
       aria-hidden="false"
     >
       <div
         id="sidebar"
+        data-shell-sidebar
         class:list={[
           "bg-accent pb-8 p-4 lg:p-6 lg:pb-24 lg:h-[105dvh] lg:sticky lg:left-0 lg:top-0 lg:rounded-br-box lg:overflow-auto",
           animateDesktopSidebar
@@ -55,6 +71,8 @@ const { animateDesktopSidebar = false } = Astro.props;
     <section
       id="editor-preview-panel"
       data-shell-tab-panel="preview"
+      role="tabpanel"
+      aria-labelledby="editor-preview-tab"
       class="hidden w-full lg:block lg:w-2/3 px-4 lg:px-8"
       aria-hidden="true"
     >
@@ -68,10 +86,27 @@ const { animateDesktopSidebar = false } = Astro.props;
   const mediaQuery = window.matchMedia(MOBILE_QUERY);
   const DESKTOP_QUERY = "(min-width: 1024px)";
   const desktopMediaQuery = window.matchMedia(DESKTOP_QUERY);
+  const VALID_TABS = new Set(["form", "preview"]);
+
+  const normalizeTab = (rawTab: string | null | undefined) =>
+    VALID_TABS.has(rawTab || "") ? (rawTab as string) : "form";
+
+  const setPanelVisibility = (panel: HTMLElement, isVisible: boolean) => {
+    panel.classList.toggle("hidden", !isVisible);
+    if (isVisible) {
+      panel.style.removeProperty("display");
+      panel.setAttribute("aria-hidden", "false");
+      return;
+    }
+
+    panel.style.setProperty("display", "none");
+    panel.setAttribute("aria-hidden", "true");
+  };
 
   const syncShell = (shell: HTMLElement) => {
     const isMobile = mediaQuery.matches;
-    const activeTab = shell.dataset.activeTab || "form";
+    const activeTab = normalizeTab(shell.dataset.activeTab);
+    shell.dataset.activeTab = activeTab;
     const triggers = Array.from(
       shell.querySelectorAll("[data-shell-tab-trigger]"),
     ) as HTMLElement[];
@@ -80,33 +115,30 @@ const { animateDesktopSidebar = false } = Astro.props;
     ) as HTMLElement[];
 
     triggers.forEach((btn) => {
+      const tabName = normalizeTab(btn.getAttribute("data-shell-tab-trigger"));
+      const isActive = tabName === activeTab;
+      btn.setAttribute("aria-selected", isActive ? "true" : "false");
+      btn.setAttribute("tabindex", isActive ? "0" : "-1");
+
       if (!isMobile) {
         btn.classList.add("hidden");
         return;
       }
 
       btn.classList.remove("hidden");
-      const isActive = btn.getAttribute("data-shell-tab-trigger") === activeTab;
       btn.classList.toggle("btn-accent", isActive);
       btn.classList.toggle("btn-ghost", !isActive);
     });
 
     panels.forEach((panel) => {
       if (!isMobile) {
-        panel.classList.remove("hidden");
-        panel.style.removeProperty("display");
-        panel.setAttribute("aria-hidden", "false");
+        setPanelVisibility(panel, true);
         return;
       }
 
-      const isActive = panel.getAttribute("data-shell-tab-panel") === activeTab;
-      panel.classList.toggle("hidden", !isActive);
-      if (isActive) {
-        panel.style.removeProperty("display");
-      } else {
-        panel.style.setProperty("display", "none");
-      }
-      panel.setAttribute("aria-hidden", isActive ? "false" : "true");
+      const isActive =
+        normalizeTab(panel.getAttribute("data-shell-tab-panel")) === activeTab;
+      setPanelVisibility(panel, isActive);
     });
   };
 
@@ -126,19 +158,44 @@ const { animateDesktopSidebar = false } = Astro.props;
       }
 
       shell.dataset.tabsInit = "true";
-      shell.dataset.activeTab = "form";
+      shell.dataset.activeTab = normalizeTab(shell.dataset.activeTab);
 
-      const triggers = Array.from(
-        shell.querySelectorAll("[data-shell-tab-trigger]"),
-      ) as HTMLElement[];
+      shell.addEventListener("click", (event) => {
+        const target = event.target;
+        if (!(target instanceof Element)) return;
+        const trigger = target.closest("[data-shell-tab-trigger]");
+        if (!(trigger instanceof HTMLElement)) return;
+        event.preventDefault();
+        shell.dataset.activeTab = normalizeTab(
+          trigger.getAttribute("data-shell-tab-trigger"),
+        );
+        syncShell(shell);
+      });
 
-      triggers.forEach((trigger) => {
-        trigger.addEventListener("click", (event) => {
-          event.preventDefault();
-          shell.dataset.activeTab =
-            trigger.getAttribute("data-shell-tab-trigger") || "form";
-          syncShell(shell);
-        });
+      shell.addEventListener("keydown", (event) => {
+        const target = event.target;
+        if (!(target instanceof HTMLElement)) return;
+        if (!target.matches("[data-shell-tab-trigger]")) return;
+        if (!(event.key === "ArrowLeft" || event.key === "ArrowRight")) return;
+        event.preventDefault();
+        const currentTab = normalizeTab(shell.dataset.activeTab);
+        const nextTab =
+          event.key === "ArrowRight"
+            ? currentTab === "form"
+              ? "preview"
+              : "form"
+            : currentTab === "preview"
+              ? "form"
+              : "preview";
+        shell.dataset.activeTab = nextTab;
+        syncShell(shell);
+
+        const nextTrigger = shell.querySelector(
+          `[data-shell-tab-trigger="${nextTab}"]`,
+        );
+        if (nextTrigger instanceof HTMLElement) {
+          nextTrigger.focus();
+        }
       });
 
       syncShell(shell);
@@ -149,7 +206,7 @@ const { animateDesktopSidebar = false } = Astro.props;
     if (!desktopMediaQuery.matches) return;
     getShells().forEach((shell) => {
       if (shell.dataset.animateDesktopSidebar !== "true") return;
-      const sidebar = shell.querySelector("#sidebar");
+      const sidebar = shell.querySelector("[data-shell-sidebar]");
       if (!(sidebar instanceof HTMLElement)) return;
       sidebar.classList.remove("lg:-translate-x-full", "lg:opacity-0");
     });
@@ -159,19 +216,27 @@ const { animateDesktopSidebar = false } = Astro.props;
     getShells().forEach((shell) => syncShell(shell));
   };
 
+  const bootActionEditorShell = () => {
+    initActionEditorShellTabs();
+    syncDesktopSidebarAnimation();
+  };
+
   if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", initActionEditorShellTabs, {
+    document.addEventListener("DOMContentLoaded", bootActionEditorShell, {
       once: true,
     });
   } else {
-    initActionEditorShellTabs();
+    bootActionEditorShell();
   }
 
-  mediaQuery.addEventListener("change", syncAllShells);
-  desktopMediaQuery.addEventListener("change", syncDesktopSidebarAnimation);
+  const windowState = window as Window & {
+    __kcActionEditorShellListenersBound?: boolean;
+  };
 
-  syncDesktopSidebarAnimation();
-
-  document.addEventListener("astro:page-load", initActionEditorShellTabs);
-  document.addEventListener("astro:page-load", syncDesktopSidebarAnimation);
+  if (!windowState.__kcActionEditorShellListenersBound) {
+    mediaQuery.addEventListener("change", syncAllShells);
+    desktopMediaQuery.addEventListener("change", syncDesktopSidebarAnimation);
+    document.addEventListener("astro:page-load", bootActionEditorShell);
+    windowState.__kcActionEditorShellListenersBound = true;
+  }
 </script>
