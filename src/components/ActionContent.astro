@@ -11,9 +11,14 @@ import type { ActionsResponse } from "../pocketbase-types";
 export interface Props {
   action: ActionsResponse;
   forcePreviewLocationSection?: boolean;
+  tabletPreviewAsMobile?: boolean;
 }
 
-const { action, forcePreviewLocationSection = false } = Astro.props;
+const {
+  action,
+  forcePreviewLocationSection = false,
+  tabletPreviewAsMobile = false,
+} = Astro.props;
 
 // runtime helper importé (on conserve le guard TypeScript localement)
 const isDataUrl = isDataUrlRuntime as (v: unknown) => v is string;
@@ -91,6 +96,7 @@ const hasThanksSection = hasNonEmptyText(action?.description_remerciements);
 
 <div
   id="actionPreview"
+  data-tablet-mobile-preview={tabletPreviewAsMobile ? "true" : "false"}
   style="container-type: inline-size;"
   class="w-full max-w-7xl mx-auto lg:mt-48 relative px-4 md:px-8"
 >
@@ -508,6 +514,68 @@ const hasThanksSection = hasNonEmptyText(action?.description_remerciements);
       )
   }
 </div>
+
+{
+  tabletPreviewAsMobile && (
+    <script is:inline>
+      (() => {
+        const rootSelector = '[data-tablet-mobile-preview="true"]';
+        const snapshotAttr = "data-md-class-snapshot";
+        const tabletQuery = window.matchMedia(
+          "(min-width: 768px) and (max-width: 1023px)",
+        );
+
+        const syncElement = (element, stripMdClasses) => {
+          if (!(element instanceof HTMLElement)) return;
+          const currentSnapshot = element.getAttribute(snapshotAttr);
+
+          if (stripMdClasses) {
+            if (currentSnapshot) return;
+            const mdClasses = Array.from(element.classList).filter((className) =>
+              className.startsWith("md:"),
+            );
+            if (!mdClasses.length) return;
+            element.setAttribute(snapshotAttr, mdClasses.join(" "));
+            mdClasses.forEach((className) => element.classList.remove(className));
+            return;
+          }
+
+          if (!currentSnapshot) return;
+          currentSnapshot
+            .split(" ")
+            .filter(Boolean)
+            .forEach((className) => element.classList.add(className));
+          element.removeAttribute(snapshotAttr);
+        };
+
+        const syncRoots = () => {
+          const stripMdClasses = tabletQuery.matches;
+          document.querySelectorAll(rootSelector).forEach((root) => {
+            syncElement(root, stripMdClasses);
+            root
+              .querySelectorAll("*")
+              .forEach((child) => syncElement(child, stripMdClasses));
+          });
+        };
+
+        const init = () => {
+          syncRoots();
+          if (typeof tabletQuery.addEventListener === "function") {
+            tabletQuery.addEventListener("change", syncRoots);
+          } else if (typeof tabletQuery.addListener === "function") {
+            tabletQuery.addListener(syncRoots);
+          }
+        };
+
+        if (document.readyState === "loading") {
+          document.addEventListener("DOMContentLoaded", init, { once: true });
+        } else {
+          init();
+        }
+      })();
+    </script>
+  )
+}
 
 {
   action.galerie_photos && action.galerie_photos.length > 0 && (

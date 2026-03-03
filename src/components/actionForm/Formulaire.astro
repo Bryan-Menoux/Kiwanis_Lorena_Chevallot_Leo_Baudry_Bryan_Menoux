@@ -301,21 +301,39 @@ const formTitle =
     });
   }
 
-  document.addEventListener("DOMContentLoaded", () => {
+  const initCardAnimation = () => {
     const sidebar = document.getElementById("sidebar");
     const canUseSidebarAnimation = window.matchMedia("(min-width: 1024px)")
       .matches;
+    const shouldWaitForSidebarTransition =
+      sidebar instanceof HTMLElement &&
+      canUseSidebarAnimation &&
+      sidebar.classList.contains("lg:transition-all");
 
-    if (sidebar && canUseSidebarAnimation) {
-      sidebar.addEventListener(
-        "transitionend",
-        () => {
-          animateCards();
-        },
-        { once: true },
-      );
-    } else {
+    if (!shouldWaitForSidebarTransition) {
       animateCards();
+      return;
     }
-  });
+
+    let hasAnimated = false;
+    const runOnce = () => {
+      if (hasAnimated) return;
+      hasAnimated = true;
+      animateCards();
+    };
+
+    sidebar.addEventListener("transitionend", runOnce, { once: true });
+    // Filet de securite: si aucun event ne part, on anime quand meme.
+    window.setTimeout(runOnce, 700);
+  };
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initCardAnimation, {
+      once: true,
+    });
+  } else {
+    initCardAnimation();
+  }
+
+  document.addEventListener("astro:page-load", initCardAnimation);
 </script>

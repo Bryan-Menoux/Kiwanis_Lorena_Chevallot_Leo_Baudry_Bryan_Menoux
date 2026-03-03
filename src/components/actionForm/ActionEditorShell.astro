@@ -51,7 +51,7 @@ const { animateDesktopSidebar = false } = Astro.props;
     <section
       id="editor-preview-panel"
       data-shell-tab-panel="preview"
-      class="w-full lg:w-2/3 px-4 lg:px-8"
+      class="hidden w-full lg:block lg:w-2/3 px-4 lg:px-8"
       aria-hidden="true"
     >
       <slot name="preview" />
@@ -73,59 +73,102 @@ const { animateDesktopSidebar = false } = Astro.props;
 }
 
 <script>
-  document.addEventListener("DOMContentLoaded", () => {
-    const shell = document.querySelector("[data-action-editor-shell]");
-    if (!shell) return;
+  const MOBILE_QUERY = "(max-width: 1023px)";
+  const mediaQuery = window.matchMedia(MOBILE_QUERY);
 
-    const mediaQuery = window.matchMedia("(max-width: 1023px)");
-    const triggers = Array.from(shell.querySelectorAll("[data-shell-tab-trigger]"));
-    const panels = Array.from(shell.querySelectorAll("[data-shell-tab-panel]"));
-
-    if (!triggers.length || !panels.length) return;
-
-    let activeTab = "form";
-
-    const syncPanels = () => {
-      const isMobile = mediaQuery.matches;
-
-      triggers.forEach((btn) => {
-        if (!isMobile) {
-          btn.classList.add("hidden");
-          return;
-        }
-
-        btn.classList.remove("hidden");
-        const isActive = btn.getAttribute("data-shell-tab-trigger") === activeTab;
-        btn.classList.toggle("btn-accent", isActive);
-        btn.classList.toggle("btn-ghost", !isActive);
-      });
-
-      panels.forEach((panel) => {
-        if (!isMobile) {
-          panel.classList.remove("hidden");
-          panel.setAttribute("aria-hidden", "false");
-          return;
-        }
-
-        const isActive = panel.getAttribute("data-shell-tab-panel") === activeTab;
-        panel.classList.toggle("hidden", !isActive);
-        panel.setAttribute("aria-hidden", isActive ? "false" : "true");
-      });
-    };
+  const syncShell = (shell: HTMLElement) => {
+    const isMobile = mediaQuery.matches;
+    const activeTab = shell.dataset.activeTab || "form";
+    const triggers = Array.from(
+      shell.querySelectorAll("[data-shell-tab-trigger]"),
+    ) as HTMLElement[];
+    const panels = Array.from(
+      shell.querySelectorAll("[data-shell-tab-panel]"),
+    ) as HTMLElement[];
 
     triggers.forEach((btn) => {
-      btn.addEventListener("click", () => {
-        activeTab = btn.getAttribute("data-shell-tab-trigger") || "form";
-        syncPanels();
-      });
+      if (!isMobile) {
+        btn.classList.add("hidden");
+        return;
+      }
+
+      btn.classList.remove("hidden");
+      const isActive = btn.getAttribute("data-shell-tab-trigger") === activeTab;
+      btn.classList.toggle("btn-accent", isActive);
+      btn.classList.toggle("btn-ghost", !isActive);
     });
 
-    if (typeof mediaQuery.addEventListener === "function") {
-      mediaQuery.addEventListener("change", syncPanels);
-    } else if (typeof mediaQuery.addListener === "function") {
-      mediaQuery.addListener(syncPanels);
-    }
+    panels.forEach((panel) => {
+      if (!isMobile) {
+        panel.classList.remove("hidden");
+        panel.style.removeProperty("display");
+        panel.setAttribute("aria-hidden", "false");
+        return;
+      }
 
-    syncPanels();
-  });
+      const isActive = panel.getAttribute("data-shell-tab-panel") === activeTab;
+      panel.classList.toggle("hidden", !isActive);
+      if (isActive) {
+        panel.style.removeProperty("display");
+      } else {
+        panel.style.setProperty("display", "none");
+      }
+      panel.setAttribute("aria-hidden", isActive ? "false" : "true");
+    });
+  };
+
+  const getShells = () =>
+    Array.from(
+      document.querySelectorAll("[data-action-editor-shell]"),
+    ) as HTMLElement[];
+
+  const initActionEditorShellTabs = () => {
+    const shells = getShells();
+    if (!shells.length) return;
+
+    shells.forEach((shell) => {
+      if (shell.dataset.tabsInit === "true") {
+        syncShell(shell);
+        return;
+      }
+
+      shell.dataset.tabsInit = "true";
+      shell.dataset.activeTab = "form";
+
+      const triggers = Array.from(
+        shell.querySelectorAll("[data-shell-tab-trigger]"),
+      ) as HTMLElement[];
+
+      triggers.forEach((trigger) => {
+        trigger.addEventListener("click", (event) => {
+          event.preventDefault();
+          shell.dataset.activeTab =
+            trigger.getAttribute("data-shell-tab-trigger") || "form";
+          syncShell(shell);
+        });
+      });
+
+      syncShell(shell);
+    });
+  };
+
+  const syncAllShells = () => {
+    getShells().forEach((shell) => syncShell(shell));
+  };
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initActionEditorShellTabs, {
+      once: true,
+    });
+  } else {
+    initActionEditorShellTabs();
+  }
+
+  if (typeof mediaQuery.addEventListener === "function") {
+    mediaQuery.addEventListener("change", syncAllShells);
+  } else if (typeof mediaQuery.addListener === "function") {
+    mediaQuery.addListener(syncAllShells);
+  }
+
+  document.addEventListener("astro:page-load", initActionEditorShellTabs);
 </script>
