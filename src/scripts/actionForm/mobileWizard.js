@@ -1,5 +1,9 @@
 const MOBILE_QUERY = "(max-width: 1023px)";
 const TOTAL_STEPS = 7;
+const INIT_FLAG_ATTR = "data-mobile-wizard-init";
+const SYNC_FN_KEY = "__kcMobileWizardSync";
+const CLEANUP_FN_KEY = "__kcMobileWizardCleanup";
+const ASTRO_PAGE_LOAD_FLAG = "__kcMobileWizardPageLoadBound";
 
 function parseStep(value, fallback = 1) {
   const n = Number.parseInt(String(value || ""), 10);
@@ -127,6 +131,17 @@ function initMobileWizard() {
         : null;
   if (!(form instanceof HTMLFormElement)) return;
   if (form.dataset.uiMode !== "mobile-wizard") return;
+  const storedSync = form[SYNC_FN_KEY];
+  if (form.getAttribute(INIT_FLAG_ATTR) === "true" && typeof storedSync === "function") {
+    storedSync();
+    return;
+  }
+
+  const storedCleanup = form[CLEANUP_FN_KEY];
+  if (typeof storedCleanup === "function") {
+    storedCleanup();
+  }
+  form.setAttribute(INIT_FLAG_ATTR, "true");
 
   const mediaQuery = window.matchMedia(MOBILE_QUERY);
   const initialFromMarkup = parseStep(form.dataset.initialStep || "1", 1);
@@ -134,6 +149,7 @@ function initMobileWizard() {
 
   const sync = () => {
     const isMobile = mediaQuery.matches;
+    currentStep = parseStep(currentStep, initialFromMarkup);
     form.dataset.isMobileWizard = isMobile ? "true" : "false";
 
     const wizardHeader = form.querySelector("[data-mobile-wizard-header]");
@@ -172,29 +188,36 @@ function initMobileWizard() {
 
   const prevButton = form.querySelector("[data-mobile-prev]");
   const nextButton = form.querySelector("[data-mobile-next]");
+  const prevHandler = () => goToStep(currentStep - 1);
+  const nextHandler = () => {
+    goToStep(currentStep + 1, true);
+  };
   if (prevButton instanceof HTMLButtonElement) {
-    prevButton.addEventListener("click", () => goToStep(currentStep - 1));
+    prevButton.addEventListener("click", prevHandler);
   }
   if (nextButton instanceof HTMLButtonElement) {
-    nextButton.addEventListener("click", () => {
-      goToStep(currentStep + 1, true);
-    });
+    nextButton.addEventListener("click", nextHandler);
   }
 
   const quickStepButtons = Array.from(
     form.querySelectorAll("[data-mobile-go-step]"),
   );
+  const quickStepHandlers = new Map();
   quickStepButtons.forEach((button) => {
-    button.addEventListener("click", () => {
+    const handler = () => {
       const target = parseStep(button.getAttribute("data-mobile-go-step"), 1);
       const isForward = target > currentStep;
       goToStep(target, isForward);
-    });
+    };
+    quickStepHandlers.set(button, handler);
+    button.addEventListener("click", handler);
   });
 
-  form.addEventListener("submit", (event) => {
+  const submitHandler = (event) => {
     if (!mediaQuery.matches) return;
-    if (currentStep !== TOTAL_STEPS && !(event.submitter?.name === "save_as" || event.submitter?.name === "publish_action")) {
+    const submitterName = event.submitter?.name || "";
+    const isDraftOrPublish = submitterName === "save_as" || submitterName === "publish_action";
+    if (currentStep !== TOTAL_STEPS && !isDraftOrPublish) {
       event.preventDefault();
       setError(form, "Passe à l'étape 7 pour enregistrer l'action.");
       return;
@@ -204,15 +227,39 @@ function initMobileWizard() {
       return;
     }
     persistStep(form, currentStep);
-  });
+  };
+  form.addEventListener("submit", submitHandler);
 
-  mediaQuery.addEventListener("change", sync);
+  const mediaChangeHandler = () => sync();
+  mediaQuery.addEventListener("change", mediaChangeHandler);
+
+  form[SYNC_FN_KEY] = sync;
+  form[CLEANUP_FN_KEY] = () => {
+    if (prevButton instanceof HTMLButtonElement) {
+      prevButton.removeEventListener("click", prevHandler);
+    }
+    if (nextButton instanceof HTMLButtonElement) {
+      nextButton.removeEventListener("click", nextHandler);
+    }
+    quickStepButtons.forEach((button) => {
+      const handler = quickStepHandlers.get(button);
+      if (!handler) return;
+      button.removeEventListener("click", handler);
+    });
+    form.removeEventListener("submit", submitHandler);
+    mediaQuery.removeEventListener("change", mediaChangeHandler);
+  };
 
   sync();
 }
 
 if (document.readyState === "loading") {
-  document.addEventListener("DOMContentLoaded", initMobileWizard);
+  document.addEventListener("DOMContentLoaded", initMobileWizard, { once: true });
 } else {
   initMobileWizard();
+}
+
+if (!window[ASTRO_PAGE_LOAD_FLAG]) {
+  document.addEventListener("astro:page-load", initMobileWizard);
+  window[ASTRO_PAGE_LOAD_FLAG] = true;
 }
