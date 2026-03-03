@@ -521,6 +521,8 @@ const hasThanksSection = hasNonEmptyText(action?.description_remerciements);
       (() => {
         const rootSelector = '[data-tablet-mobile-preview="true"]';
         const snapshotAttr = "data-md-class-snapshot";
+        const appliedAttr = "data-md-class-applied";
+        const globalStateKey = "__kcTabletPreviewAsMobileState";
         const tabletQuery = window.matchMedia(
           "(min-width: 768px) and (max-width: 1023px)",
         );
@@ -548,19 +550,74 @@ const hasThanksSection = hasNonEmptyText(action?.description_remerciements);
           element.removeAttribute(snapshotAttr);
         };
 
+        const hasSnapshots = (root) =>
+          root.hasAttribute(snapshotAttr) ||
+          root.querySelector(`[${snapshotAttr}]`);
+
+        const stripRootMdClasses = (root) => {
+          if (!(root instanceof HTMLElement)) return;
+          if (root.getAttribute(appliedAttr) === "true") return;
+          let hasAppliedMutation = false;
+
+          syncElement(root, true);
+          if (root.hasAttribute(snapshotAttr)) hasAppliedMutation = true;
+
+          root.querySelectorAll("*").forEach((child) => {
+            syncElement(child, true);
+            if (child instanceof HTMLElement && child.hasAttribute(snapshotAttr)) {
+              hasAppliedMutation = true;
+            }
+          });
+
+          if (hasAppliedMutation) {
+            root.setAttribute(appliedAttr, "true");
+          } else {
+            root.removeAttribute(appliedAttr);
+          }
+        };
+
+        const restoreRootMdClasses = (root) => {
+          if (!(root instanceof HTMLElement)) return;
+          const wasApplied = root.getAttribute(appliedAttr) === "true";
+          if (!wasApplied && !hasSnapshots(root)) return;
+
+          syncElement(root, false);
+          root
+            .querySelectorAll(`[${snapshotAttr}]`)
+            .forEach((child) => syncElement(child, false));
+          root.removeAttribute(appliedAttr);
+        };
+
         const syncRoots = () => {
-          const stripMdClasses = tabletQuery.matches;
+          const isTablet = tabletQuery.matches;
           document.querySelectorAll(rootSelector).forEach((root) => {
-            syncElement(root, stripMdClasses);
-            root
-              .querySelectorAll("*")
-              .forEach((child) => syncElement(child, stripMdClasses));
+            if (!(root instanceof HTMLElement)) return;
+            if (isTablet) {
+              stripRootMdClasses(root);
+              return;
+            }
+            restoreRootMdClasses(root);
           });
         };
 
+        const globalState = window[globalStateKey] || {
+          listenersBound: false,
+          syncRoots: null,
+        };
+        globalState.syncRoots = syncRoots;
+        window[globalStateKey] = globalState;
+
         const init = () => {
-          syncRoots();
-          tabletQuery.addEventListener("change", syncRoots);
+          if (!globalState.listenersBound) {
+            tabletQuery.addEventListener("change", () => {
+              window[globalStateKey]?.syncRoots?.();
+            });
+            document.addEventListener("astro:page-load", () => {
+              window[globalStateKey]?.syncRoots?.();
+            });
+            globalState.listenersBound = true;
+          }
+          window[globalStateKey]?.syncRoots?.();
         };
 
         if (document.readyState === "loading") {
