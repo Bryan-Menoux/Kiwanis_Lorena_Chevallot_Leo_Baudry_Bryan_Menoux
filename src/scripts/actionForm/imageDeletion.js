@@ -12,6 +12,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const deletedImages = {};
 
   form.addEventListener("click", (e) => {
+    // Délégation d'événement : un seul listener pour toutes les images supprimables.
     const target = e.target;
     const btn = target && target.closest ? target.closest(".delete-image-btn") : null;
     if (!btn) return;
@@ -23,6 +24,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const fieldName = container.getAttribute("data-delete-image");
     if (!fieldName) return;
 
+    // On garde la trace de la suppression pour l'envoyer au submit.
     deletedImages[fieldName] = true;
     container.remove();
 
@@ -41,6 +43,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const descriptionFieldName = imageDescriptionMap[fieldName];
     if (descriptionFieldName) {
+      // Si l'image disparaît, sa description ne doit plus s'afficher en preview.
       document.querySelectorAll(`[data-field="${descriptionFieldName}"]`).forEach((el) => {
         el.style.display = "none";
       });
@@ -48,6 +51,7 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   form.addEventListener("submit", () => {
+    // Au submit, on génère remove_{champ} seulement si aucun nouveau fichier n'a remplacé l'ancien.
     imageFieldNames.forEach((fieldName) => {
       if (!deletedImages[fieldName]) return;
 

@@ -1,8 +1,10 @@
-// Execution state for live preview
+// État source de la prévisualisation en direct.
+// Tous les scripts de preview lisent/écrivent dans ces variables.
 let previewState = {};
 
-// Gallery files selected by user
+// Fichiers galerie ajoutés côté client (non encore persistés serveur).
 let galleryFiles = [];
+// Versions Data URL des fichiers galerie pour affichage immédiat.
 let galleryDataUrls = [];
 
 function setPreviewState(value) {

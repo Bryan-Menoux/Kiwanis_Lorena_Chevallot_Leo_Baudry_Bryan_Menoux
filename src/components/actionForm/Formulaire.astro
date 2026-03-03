@@ -38,12 +38,16 @@ const {
   recordKey = "new",
 } = Astro.props;
 
+// Valeurs de select robustes: on retombe sur une liste metier par defaut
+// si aucune option n'est injectee par la page.
 const typeDeChiffreOptions = typeDeChiffreOptionsProp || [
   "type de chiffre",
   "dépenses",
   "récoltes",
 ];
 
+// Fusion placeholder "socle + surcharge eventuelle" pour garder
+// un comportement identique entre create et edit.
 const placeholders = {
   ...previewDefaults,
   ...(previewPlaceholder || {}),
@@ -266,6 +270,13 @@ const formTitle =
 </form>
 
 <script>
+  // Scripts métier du formulaire:
+  // - suppression d'images
+  // - gestion Maps
+  // - placeholders
+  // - édition des titres
+  // - wizard mobile
+  // - prévisualisation en direct
   import "../../scripts/actionForm/imageDeletion.js";
   import "../../scripts/actionForm/mapsToggle.js";
   import "../../scripts/actionForm/placeholders.js";
@@ -281,6 +292,7 @@ const formTitle =
       window.matchMedia("(max-width: 1023px)").matches;
 
     if (isMobileWizard) {
+      // En wizard mobile, on désactive l'animation pour garder une navigation instantanée.
       cards.forEach((card) => {
         card.classList.remove("opacity-0", "-translate-x-4");
       });
@@ -311,6 +323,7 @@ const formTitle =
       sidebar.classList.contains("lg:transition-all");
 
     if (!shouldWaitForSidebarTransition) {
+      // Pas d'animation sidebar: on anime les cartes immédiatement.
       animateCards();
       return;
     }
@@ -323,7 +336,7 @@ const formTitle =
     };
 
     sidebar.addEventListener("transitionend", runOnce, { once: true });
-    // Filet de securite: si aucun event ne part, on anime quand meme.
+    // Filet de sécurité: si aucun event ne part, on anime quand même.
     window.setTimeout(runOnce, 700);
   };
 

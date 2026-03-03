@@ -19,11 +19,15 @@ const {
   imageIcon,
 } = Astro.props;
 
+// Chaque section "partie" reutilise le meme composant: on derive donc les cles
+// de champs a partir du numero (`partie_1`, `partie_2`, `partie_3`).
 const titleKey = `titre_partie_${partNumber}`;
 const textKey = `texte_partie_${partNumber}`;
 const photoKey = `photo_partie_${partNumber}`;
 const descriptionKey = `description_photo_partie_${partNumber}`;
 
+// La partie 1 a des placeholders "metier" predefinis.
+// Les parties suivantes restent vides par defaut pour laisser l'utilisateur choisir.
 const isPartOne = partNumber === 1;
 
 const titleDisplayValue = mode === "edit" && previewData
@@ -53,6 +57,8 @@ const descriptionInputValue = mode === "edit" && previewData
   : isPartOne
     ? undefined
     : "";
+// On n'ajoute l'attribut `value` que s'il y a une vraie valeur.
+// Cela evite d'ecraser le placeholder avec une chaine vide.
 const hasDescriptionInputValue =
   typeof descriptionInputValue === "string"
     ? descriptionInputValue.trim() !== ""

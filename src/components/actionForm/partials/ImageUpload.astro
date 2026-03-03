@@ -19,6 +19,11 @@ const {
   heightClass,
 } = Astro.props;
 
+// Convention d'ID:
+// - hero garde un ID historique pour compatibilite avec les scripts existants,
+// - les autres champs suivent `input_<fieldName>`.
+// L'attribut `data-delete-image` est lu par imageDeletion.js
+// pour brancher le bouton de suppression.
 const inputId = fieldName === "hero" ? "input_hero_file" : `input_${fieldName}`;
 const blockHeight = heightClass || (fieldName === "hero" ? "h-40" : "h-36");
 const currentImage = mode === "edit" && previewData ? previewData[fieldName] : null;

@@ -12,6 +12,8 @@ export interface Props {
 const { target, displayValue, placeholderValue, inputValue, hiddenValue } =
   Astro.props;
 
+// Convention d'IDs partagee avec editableTitle.js:
+// le script trouve le label, l'input et le hidden via ces motifs.
 const labelId = `titre_label_${target.replace(/^titre_/, "")}`;
 const inputId = `input_${target}`;
 const hiddenId = `hidden_${target}`;

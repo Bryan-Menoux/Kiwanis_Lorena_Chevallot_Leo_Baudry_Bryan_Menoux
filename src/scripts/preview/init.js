@@ -22,6 +22,7 @@ const NO_DEFAULT_FALLBACK_PROPS = new Set([
   'beneficiaire',
 ]);
 
+// Certains champs (lieu/chiffres) ne doivent jamais retomber sur un placeholder visuel.
 function getPreviewFallbackValue(prop) {
   if (NO_DEFAULT_FALLBACK_PROPS.has(prop)) return '';
   return Object.prototype.hasOwnProperty.call(PREVIEW_DEFAULTS, prop)
@@ -39,6 +40,10 @@ function safeParseJson(rawValue, fallbackValue = {}) {
   }
 }
 
+// Source de vérité initiale du preview :
+// 1) window.__previewData injecté côté serveur
+// 2) script #previewData (repli historique)
+// 3) objet vide si rien n'est disponible
 function readPlaceholderData(placeholderScript) {
   const fromWindow = typeof window !== 'undefined' ? window.__previewData : undefined;
   if (fromWindow && typeof fromWindow === 'object') return fromWindow;
@@ -69,6 +74,8 @@ function handleInputElement(inputElement) {
       .map((option) => option.value)
       .filter((value) => String(value).trim() !== '')
     : (inputElement.value ?? '');
+
+  // Limite de sécurité sur le multi-select "type_action".
   if (isMultiSelect && prop === 'type_action' && rawValue.length > maxAllowed) {
     const keptValues = rawValue.slice(0, maxAllowed);
     const keptSet = new Set(keptValues);
@@ -90,6 +97,7 @@ function handleInputElement(inputElement) {
 
   previewState[prop] = previewValue;
 
+  // Compat : les clés historiques sans "s" sont remappées vers les clés preview actuelles.
   if (prop === 'titre_remerciement') previewState.titre_remerciements = previewValue;
   if (prop === 'description_remerciement') previewState.description_remerciements = previewValue;
 
@@ -132,6 +140,7 @@ function initPreview() {
   renderAll();
 
   if (formElement) {
+    // Au chargement, on recopie l'état courant vers les hidden inputs du formulaire.
     Object.keys(previewState).forEach((key) => {
       if (key === 'galerie_photos') return;
       const hiddenElement = document.getElementById(`hidden_${key}`);
@@ -150,6 +159,7 @@ function initPreview() {
   if (formElement) {
     const typeActionSelect = formElement.querySelector('#input_type_action[data-prop="type_action"][multiple]');
     if (typeActionSelect instanceof HTMLSelectElement && !typeActionSelect.__toggleBound) {
+      // Interaction spécifique: cliquer une option la bascule sans fermer la liste native immédiatement.
       typeActionSelect.addEventListener('mousedown', (event) => {
         const target = event.target;
         if (!(target instanceof HTMLOptionElement)) return;
@@ -186,6 +196,7 @@ function initPreview() {
         if (!selectedFiles || selectedFiles.length === 0) return;
 
         if (prop === 'galerie_photos') {
+          // La galerie est plafonnée à 8 images (existantes + nouvelles).
           const existingCount = Array.isArray(previewState.galerie_photos)
             ? previewState.galerie_photos.filter((u) => typeof u === 'string' && !isDataUrl(u)).length
             : 0;
@@ -228,6 +239,7 @@ function initPreview() {
     });
 
     formElement.addEventListener('submit', () => {
+      // Dernière synchronisation defensive avant envoi serveur.
       Array.from(formElement.querySelectorAll('[data-prop]')).forEach((fieldElement) => {
         const prop = fieldElement.getAttribute('data-prop');
         if (!prop) return;
@@ -251,6 +263,7 @@ function initPreview() {
 
 try {
   if (typeof window !== 'undefined') {
+    // Point d'entrée manuel utile pour les tests depuis la console.
     window.__initPreview = initPreview;
   }
 } catch (e) {}

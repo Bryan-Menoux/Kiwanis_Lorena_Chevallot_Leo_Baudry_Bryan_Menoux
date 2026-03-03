@@ -3,6 +3,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const btn = document.getElementById("btn_voir_maps");
   if (!(mapInput instanceof HTMLInputElement) || !(btn instanceof HTMLElement)) return;
 
+  // Le bouton "Voir sur Maps" doit être visible uniquement si l'URL est renseignée.
   const updateBtn = () => {
     const val = mapInput.value || "";
     if (val.trim()) {
@@ -29,6 +30,7 @@ document.addEventListener("DOMContentLoaded", () => {
   manualToggle.addEventListener("click", (e) => {
     e.preventDefault();
 
+    // On mémorise la valeur courante pour pouvoir annuler proprement.
     if (manualContainer.style.display === "none" || !manualContainer.style.display) {
       try {
         manualContainer.dataset.original = mapInput.value || "";
@@ -44,6 +46,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const syncFromManual = () => {
     const v = manualInput.value || "";
     mapInput.value = v;
+    // Les events gardent le preview et les hidden inputs synchronisés.
     mapInput.dispatchEvent(new Event("input", { bubbles: true }));
     mapInput.dispatchEvent(new Event("change", { bubbles: true }));
   };
@@ -59,6 +62,7 @@ document.addEventListener("DOMContentLoaded", () => {
       ev.preventDefault();
       syncFromManual();
 
+      // Message flash simple : la valeur est acceptée et réutilisable immédiatement.
       try {
         const popup = document.createElement("div");
         popup.textContent =
@@ -85,6 +89,7 @@ document.addEventListener("DOMContentLoaded", () => {
   if (cancelBtn instanceof HTMLElement) {
     cancelBtn.addEventListener("click", (ev) => {
       ev.preventDefault();
+      // Annulation = restauration exacte de la valeur initiale.
       const orig = manualContainer.dataset.original || "";
       manualInput.value = orig;
       syncFromManual();

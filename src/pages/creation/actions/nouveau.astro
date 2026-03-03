@@ -13,6 +13,7 @@ import {
 import previewDefaults from "../../../scripts/previewDefaults.js";
 
 let error: string = "";
+// Champs autorisés à être explicitement vides (on évite de les "drop" au trim).
 const EMPTYABLE_FIELDS = new Set([
   "nom_lieu",
   "adresse_lieu",
@@ -61,14 +62,17 @@ if (Astro.request.method === "POST") {
 
     // PrÃ©parer les donnÃ©es pour PocketBase
     const data: any = {};
+    // Première passe: champs texte/JSON (sans fichiers).
     for (const [key, value] of formData.entries()) {
       if (value instanceof File) continue;
       if (key === "galerie_photos" || key.startsWith("remove_")) continue;
       if (key === "type_action") {
         if (isBrouillon) {
+          // La collection brouillons ne porte pas ce champ.
           continue;
         }
         try {
+          // On protège la donnée: parse JSON, nettoyage, whitelist, limite à 7.
           const parsed = JSON.parse(value.toString());
           data[key] = Array.isArray(parsed)
             ? parsed
@@ -83,6 +87,7 @@ if (Astro.request.method === "POST") {
       }
       const s = value?.toString?.()?.trim?.() ?? "";
       if (key === "chiffre") {
+        // "chiffre" reste numérique si possible, sinon chaîne vide.
         if (s === "") {
           data[key] = "";
         } else {
@@ -104,12 +109,15 @@ if (Astro.request.method === "POST") {
 
     // GÃ©rer les fichiers
     const files: any = {};
+    // Deuxième passe: fichiers uploadés.
     for (const [key, value] of formData.entries()) {
       if (value instanceof File && value.size > 0) {
         if (key === "galerie_photos") {
+          // La galerie accepte plusieurs fichiers.
           if (!files[key]) files[key] = [];
           files[key].push(value);
         } else {
+          // Les autres champs image sont mono-fichier.
           files[key] = value;
         }
       }
@@ -118,6 +126,7 @@ if (Astro.request.method === "POST") {
     // Créer le record
     if (isBrouillon) {
       const draftSlug = slug || "brouillon";
+      // On garde type="action" pour réutiliser le même flux de back-office.
       const draftPayload = { ...data, slug: draftSlug, type: "action", ...files };
       const newDraft = await Astro.locals.pb
         .collection("brouillons")

@@ -15,6 +15,9 @@ export interface Props {
   initialStep?: number;
   recordKey?: string;
 }
+
+// Composant passerelle: on expose une API stable (`ActionForm`) et on delegue
+// toute la logique au composant `Formulaire`.
 ---
 
-  <Formulaire {...Astro.props} />
+<Formulaire {...Astro.props} />

@@ -9,6 +9,7 @@ const IMAGE_DESCRIPTION_MAP = {
   photo_partie_3: 'description_photo_partie_3',
 };
 
+// Vérifie qu'un champ image contient une valeur exploitable.
 function hasImageValue(prop) {
   const value = previewState[prop];
   return String(value || '').trim() !== '';
@@ -34,6 +35,7 @@ function syncImageSectionLayout(imageProp) {
   const layoutNodes = Array.from(document.querySelectorAll(`[data-image-layout="${imageProp}"]`));
 
   layoutNodes.forEach((layoutNode) => {
+    // Sans image, on force un layout texte pleine largeur.
     layoutNode.style.gridTemplateColumns = hasImage ? '' : '1fr';
 
     const mediaNodes = Array.from(layoutNode.querySelectorAll(`[data-image-layout-media="${imageProp}"]`));
@@ -98,6 +100,7 @@ function syncLocationCardsVisibility() {
   const hasLieu =
     hasNonEmptyValue(previewState.nom_lieu) || hasNonEmptyValue(previewState.adresse_lieu);
   const chiffreRaw = previewState.chiffre;
+  // Règle métier : "0" ne déclenche pas la carte chiffre.
   const chiffreIsZero =
     chiffreRaw === 0 || (typeof chiffreRaw === 'string' && chiffreRaw.trim() === '0');
   const hasChiffre = chiffreIsZero
@@ -163,6 +166,7 @@ function renderField(prop) {
     }
 
     if (prop.startsWith('texte_partie') || prop === 'description_remerciements') {
+      // Chaque retour ligne devient un paragraphe; escapeHtml protège le rendu.
       element.innerHTML = (String(value || '')).split('\n').map(line => `<p>${escapeHtml(line)}</p>`).join('');
       return;
     }
@@ -183,6 +187,7 @@ function renderField(prop) {
         element.textContent = '\u00A0€';
       }
     } else if (prop === 'type_de_chiffre') {
+      // Si aucun type n'est choisi et que le chiffre est négatif, on affiche un libellé par défaut.
       const v = String(value || '').trim();
       const chiffreNum = Number(previewState.chiffre);
       const chiffreIsNegative = Number.isFinite(chiffreNum) && chiffreNum < 0;
@@ -201,6 +206,7 @@ function renderField(prop) {
     prop === 'type_de_chiffre' ||
     prop === 'beneficiaire'
   ) {
+    // Ces champs pilotent l'affichage conditionnel de la section "cartes".
     syncLocationCardsVisibility();
   }
 
@@ -214,6 +220,7 @@ function renderField(prop) {
 }
 
 function renderAll() {
+  // Passage principal : rendu de chaque champ stocké dans l'état.
   Object.keys(previewState).forEach((key) => {
     if (key === 'galerie_photos') {
       if (Array.isArray(previewState.galerie_photos) && previewState.galerie_photos.length) renderGallery(previewState.galerie_photos);
@@ -221,6 +228,7 @@ function renderAll() {
     }
     renderField(key);
   });
+  // Passage de consolidation : dépendances visuelles transverses.
   syncAllImageDescriptionVisibility();
   syncAllImageSectionLayouts();
   syncLocationCardsVisibility();

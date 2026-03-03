@@ -47,11 +47,13 @@ function renderGallery(photoUrls) {
   const galleryImageElements = photoGrid.querySelectorAll('img');
   let loadedCount = 0;
   const applyAndReveal = () => {
+    // Recalcule la grille seulement quand toutes les images sont prêtes.
     if (typeof window !== 'undefined' && typeof window.setGridStyles === 'function') {
       try { window.setGridStyles(); } catch (error) {}
     }
 
     if (!photoGrid.__previewBound) {
+      // Délégation d'événement: évite un listener par vignette.
       photoGrid.addEventListener('click', function (event) {
         const photoElement = event.target.closest && event.target.closest('[data-photo-index]') ? event.target.closest('[data-photo-index]') : null;
         if (photoElement) {
@@ -124,6 +126,7 @@ function renderFormGalleryThumbnails() {
 
       const fileInput = document.getElementById('input_galerie_photos');
       if (fileInput) {
+        // On reconstruit FileList via DataTransfer (FileList natif est en lecture seule).
         const dt = new DataTransfer();
         galleryFiles.forEach((f) => dt.items.add(f));
         fileInput.files = dt.files;
@@ -175,6 +178,7 @@ function renderExistingThumbnails(existingPhotoUrls) {
       if (!photoUrl) return;
 
       const hiddenRemoveInput = document.getElementById('hidden_remove_galerie_photos');
+      // On accumule les suppressions pour que le serveur retire aussi les anciennes images.
       container.__removed = container.__removed || [];
       container.__removed.push(photoUrl);
       if (hiddenRemoveInput) hiddenRemoveInput.value = JSON.stringify(container.__removed);

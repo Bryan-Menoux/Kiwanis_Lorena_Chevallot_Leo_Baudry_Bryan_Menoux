@@ -17,6 +17,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const example = PREVIEW_DEFAULTS[target] || input.dataset.example || "";
     if (example) input.dataset.example = example;
 
+    // Le champ est masqué par défaut : on affiche d'abord la version "lecture".
     input.style.display = "none";
     btn.dataset.editing = "false";
 
@@ -26,6 +27,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const displayPlaceholder = "Ex : " + rawPlaceholder;
     const getDisplayText = (value) => String(value || "").trim() || rawPlaceholder;
     const setLinkedLabels = (value) => {
+      // Plusieurs labels affichent le même titre (cartes/form). On les met à jour ensemble.
       const labelText = getDisplayText(value);
       h4.textContent = labelText;
       document.querySelectorAll(`[data-label-for="${target}"]`).forEach((el) => {
@@ -33,6 +35,7 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     };
     const syncPreview = () => {
+      // Le preview écoute l'event input : on le réémet après annulation.
       input.dispatchEvent(new Event("input", { bubbles: true }));
     };
 
@@ -51,6 +54,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const setEditState = (isEditing, shouldSave = false) => {
       if (isEditing) {
+        // Entrée en édition : on garde une copie pour pouvoir annuler sans perte.
         valueBeforeEdit = hidden.value || "";
         h4.style.display = "none";
         input.style.display = "";
@@ -63,9 +67,11 @@ document.addEventListener("DOMContentLoaded", () => {
         input.style.display = "none";
         h4.style.display = "";
         if (shouldSave) {
+          // Validation : hidden + labels sont alignés sur la nouvelle valeur.
           hidden.value = input.value;
           setLinkedLabels(input.value);
         } else {
+          // Annulation : restauration stricte de l'état initial.
           hidden.value = valueBeforeEdit;
           input.value = valueBeforeEdit;
           setLinkedLabels(valueBeforeEdit);

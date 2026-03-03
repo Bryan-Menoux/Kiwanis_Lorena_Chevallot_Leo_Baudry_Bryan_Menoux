@@ -20,7 +20,7 @@ const {
   tabletPreviewAsMobile = false,
 } = Astro.props;
 
-// runtime helper importé (on conserve le guard TypeScript localement)
+// Helper d'exécution importé (on conserve le garde TypeScript localement).
 const isDataUrl = isDataUrlRuntime as (v: unknown) => v is string;
 // Préparation des URLs d'images : si c'est une URL de données, on l'utilise directement, sinon on génère l'URL via `Astro.locals.pb.files.getURL`
 const heroImg =
@@ -532,6 +532,7 @@ const hasThanksSection = hasNonEmptyText(action?.description_remerciements);
           const currentSnapshot = element.getAttribute(snapshotAttr);
 
           if (stripMdClasses) {
+            // On retire temporairement les classes md:* en conservant un snapshot pour restauration.
             if (currentSnapshot) return;
             const mdClasses = Array.from(element.classList).filter((className) =>
               className.startsWith("md:"),
@@ -543,6 +544,7 @@ const hasThanksSection = hasNonEmptyText(action?.description_remerciements);
           }
 
           if (!currentSnapshot) return;
+          // Sortie du mode tablette: on restaure les classes md:* sauvegardées.
           currentSnapshot
             .split(" ")
             .filter(Boolean)
@@ -589,6 +591,7 @@ const hasThanksSection = hasNonEmptyText(action?.description_remerciements);
         };
 
         const syncRoots = () => {
+          // Le comportement "preview tablette comme mobile" est limité strictement à 768-1023.
           const isTablet = tabletQuery.matches;
           document.querySelectorAll(rootSelector).forEach((root) => {
             if (!(root instanceof HTMLElement)) return;
@@ -609,6 +612,7 @@ const hasThanksSection = hasNonEmptyText(action?.description_remerciements);
 
         const init = () => {
           if (!globalState.listenersBound) {
+            // Garde globale: un seul binding même si Astro recharge la page côté client.
             tabletQuery.addEventListener("change", () => {
               window[globalStateKey]?.syncRoots?.();
             });

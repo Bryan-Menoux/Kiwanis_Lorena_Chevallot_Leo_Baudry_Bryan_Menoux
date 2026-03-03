@@ -28,6 +28,7 @@ import previewDefaults from "../../../../scripts/previewDefaults.js";
 
 // Message d'erreur affichÃ© dans le formulaire en cas d'Ã©chec serveur
 let error: string = "";
+// Construit une URL de redirection avec un message de succès uniforme.
 const withSuccess = (path: string, message: string) =>
   `${path}?success=${encodeURIComponent(message)}`;
 const normalizeOptionLabel = (value: string) =>
@@ -79,6 +80,7 @@ if (idParam) {
   }
 }
 
+// Ce bloc normalise les valeurs base de données pour la prévisualisation en direct et les champs du formulaire.
 const previewData: any = {
   titre: actionRecord?.titre ?? "Titre de l'action",
   sous_titre: actionRecord?.sous_titre ?? "",
@@ -150,7 +152,8 @@ if (Astro.request.method === "POST") {
   try {
     const formData = await Astro.request.formData();
     const publishRequested = formData.get("publish_action")?.toString() === "true";
-      try {
+    // Diagnostic local: utile pour inspecter rapidement le payload brut du formulaire.
+    try {
       const entries = [];
       for (const e of formData.entries()) {
         const [k, v] = e;
@@ -162,7 +165,7 @@ if (Astro.request.method === "POST") {
         }
       }
     } catch (e) {
-      // ignore serialization diagnostics
+      // Ce diagnostic ne doit jamais bloquer le flux métier.
     }
 
     // Support suppression envoyÃ©e par POST depuis la liste
@@ -179,7 +182,7 @@ if (Astro.request.method === "POST") {
         await Astro.locals.pb.collection("actions").delete(idParam);
         return Astro.redirect(withSuccess("/creation/actions", "Action supprimée"));
       } catch (e) {
-        // ignore
+        // On laisse l'exécution continuer pour remonter vers le flux standard.
       }
     }
 
@@ -190,6 +193,7 @@ if (Astro.request.method === "POST") {
         strict: true,
       });
       const publishPayload: any = {};
+      // Liste blanche explicite: seuls ces champs sont copiés vers la collection `actions`.
       const allowedKeys = [
         "adresse_lieu",
         "beneficiaire",
@@ -431,6 +435,7 @@ if (Astro.request.method === "POST") {
       try {
         await Astro.locals.pb.collection("actions").update(idParam, payload);
       } catch (updateErr: any) {
+        // On enrichit l'erreur `type_action` pour faciliter le débogage côté back-office.
         const typeActionErr = getPbTypeActionError(updateErr);
         if (typeActionErr) {
           const details = typeof typeActionErr === "object"

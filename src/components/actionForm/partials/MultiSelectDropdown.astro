@@ -17,6 +17,7 @@ const {
   placeholder = "Selectionner des options",
 } = Astro.props;
 
+// Structure Set pour des tests d'appartenance O(1) lors du pre-cochage initial.
 const selectedSet = new Set((selectedValues || []).map((v) => String(v)));
 ---
 
@@ -84,6 +85,7 @@ const selectedSet = new Set((selectedValues || []).map((v) => String(v)));
     const init = () => {
       document.querySelectorAll("[data-kc-ms-root]").forEach((root) => {
         if (!(root instanceof HTMLElement)) return;
+        // Garde anti double-initialisation (navigation Astro / nouveau rendu partiel).
         if (root.dataset.kcMsBound === "true") return;
 
         const selectId = root.dataset.selectId;
@@ -104,11 +106,13 @@ const selectedSet = new Set((selectedValues || []).map((v) => String(v)));
         const maxAllowed = Number.isFinite(maxRaw) && maxRaw > 0 ? maxRaw : Infinity;
         const placeholderText = label.textContent || "Selectionner des options";
 
+        // Le libelle du bouton reflète toujours la valeur reelle du <select>.
         const syncLabel = () => {
           const selected = Array.from(select.selectedOptions).map((opt) => opt.value);
           label.textContent = selected.length ? selected.join(", ") : placeholderText;
         };
 
+        // Synchronise l'UI checkbox depuis la source de verite: le <select> cache.
         const syncChecksFromSelect = () => {
           const selected = new Set(
             Array.from(select.selectedOptions).map((opt) => opt.value),
@@ -121,12 +125,14 @@ const selectedSet = new Set((selectedValues || []).map((v) => String(v)));
           syncLabel();
         };
 
+        // Bascule d'ouverture/fermeture du menu.
         toggle.addEventListener("click", () => {
           const isHidden = menu.classList.contains("hidden");
           menu.classList.toggle("hidden", !isHidden);
           toggle.setAttribute("aria-expanded", isHidden ? "true" : "false");
         });
 
+        // Clic exterieur: on referme le menu pour garder un vrai comportement de menu deroulant.
         document.addEventListener("click", (event) => {
           const target = event.target;
           if (!(target instanceof Node)) return;
@@ -142,6 +148,7 @@ const selectedSet = new Set((selectedValues || []).map((v) => String(v)));
               (item) => item instanceof HTMLInputElement && item.checked,
             ).length;
 
+            // Limite metier configurable (par defaut 7).
             if (selectedCount > maxAllowed) {
               node.checked = false;
               return;
@@ -150,9 +157,11 @@ const selectedSet = new Set((selectedValues || []).map((v) => String(v)));
             const option = Array.from(select.options).find(
               (opt) => opt.value === node.value,
             );
+            // On met a jour le <select> pour conserver une soumission HTML native.
             if (option) option.selected = node.checked;
 
             syncLabel();
+            // Le preview ecoute l'evenement "change" sur data-prop.
             select.dispatchEvent(new Event("change", { bubbles: true }));
           });
         });

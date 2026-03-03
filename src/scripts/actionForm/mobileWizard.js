@@ -5,6 +5,7 @@ const SYNC_FN_KEY = "__kcMobileWizardSync";
 const CLEANUP_FN_KEY = "__kcMobileWizardCleanup";
 const ASTRO_PAGE_LOAD_FLAG = "__kcMobileWizardPageLoadBound";
 
+// Force une étape valide entre 1 et TOTAL_STEPS.
 function parseStep(value, fallback = 1) {
   const n = Number.parseInt(String(value || ""), 10);
   if (!Number.isFinite(n)) return fallback;
@@ -13,9 +14,11 @@ function parseStep(value, fallback = 1) {
 
 function getStorageKey(form) {
   const key = form?.dataset?.wizardStorageKey || "new";
+  // Une clé dédiée par enregistrement évite de mélanger les progressions.
   return `kc_action_wizard_step_${key}`;
 }
 
+// Affiche uniquement la section correspondant à l'étape courante.
 function setStepVisibility(form, step) {
   const wrappers = Array.from(
     form.querySelectorAll("[data-mobile-step-wrapper]"),
@@ -49,6 +52,7 @@ function setNavState(form, step) {
   const quickStepButtons = Array.from(
     form.querySelectorAll("[data-mobile-go-step]"),
   );
+  // Le style de chaque pastille reflète l'étape active.
   quickStepButtons.forEach((button) => {
     const targetStep = parseStep(button.getAttribute("data-mobile-go-step"), 1);
     const isActive = targetStep === step;
@@ -79,6 +83,7 @@ function validateStep(form, step) {
   if (!(currentStep instanceof HTMLElement)) return true;
 
   if (step === 1) {
+    // Règle métier minimale : le titre est obligatoire hors brouillon.
     const titleInput = form.querySelector("#input_titre");
     if (
       titleInput instanceof HTMLInputElement &&
@@ -106,6 +111,7 @@ function validateStep(form, step) {
 
 function persistStep(form, step) {
   try {
+    // Erreur de storage non bloquante : on continue sans casser l'UI.
     localStorage.setItem(getStorageKey(form), String(step));
   } catch (e) {}
 }
@@ -131,6 +137,8 @@ function initMobileWizard() {
         : null;
   if (!(form instanceof HTMLFormElement)) return;
   if (form.dataset.uiMode !== "mobile-wizard") return;
+
+  // Idempotence : si déjà initialisé, on resynchronise sans rebinder tous les listeners.
   const storedSync = form[SYNC_FN_KEY];
   if (form.getAttribute(INIT_FLAG_ATTR) === "true" && typeof storedSync === "function") {
     storedSync();
@@ -149,6 +157,7 @@ function initMobileWizard() {
 
   const sync = () => {
     const isMobile = mediaQuery.matches;
+    // Sécurité : une étape valide est conservée même après resize.
     currentStep = parseStep(currentStep, initialFromMarkup);
     form.dataset.isMobileWizard = isMobile ? "true" : "false";
 
@@ -161,6 +170,7 @@ function initMobileWizard() {
       form.querySelectorAll("[data-mobile-step-wrapper]"),
     );
     if (!isMobile) {
+      // En desktop/tablette large, on repasse en affichage complet.
       stepWrappers.forEach((wrapper) => wrapper.classList.remove("hidden"));
       setError(form, "");
       return;
@@ -173,6 +183,7 @@ function initMobileWizard() {
   const goToStep = (nextStep, shouldValidateCurrent = false) => {
     const safeStep = parseStep(nextStep, currentStep);
     if (safeStep === currentStep) return;
+    // La validation n'est bloquante que lors d'une avancée volontaire.
     if (mediaQuery.matches && shouldValidateCurrent && !validateStep(form, currentStep)) {
       return;
     }
@@ -216,6 +227,7 @@ function initMobileWizard() {
   const submitHandler = (event) => {
     if (!mediaQuery.matches) return;
     const submitterName = event.submitter?.name || "";
+    // Les actions "brouillon" / "publication" restent possibles hors étape 7.
     const isDraftOrPublish = submitterName === "save_as" || submitterName === "publish_action";
     if (currentStep !== TOTAL_STEPS && !isDraftOrPublish) {
       event.preventDefault();
@@ -235,6 +247,7 @@ function initMobileWizard() {
 
   form[SYNC_FN_KEY] = sync;
   form[CLEANUP_FN_KEY] = () => {
+    // Fonction de nettoyage appelée avant un éventuel rebind.
     if (prevButton instanceof HTMLButtonElement) {
       prevButton.removeEventListener("click", prevHandler);
     }
@@ -260,6 +273,7 @@ if (document.readyState === "loading") {
 }
 
 if (!window[ASTRO_PAGE_LOAD_FLAG]) {
+  // Avec le routeur Astro, la page peut se recharger sans rechargement complet.
   document.addEventListener("astro:page-load", initMobileWizard);
   window[ASTRO_PAGE_LOAD_FLAG] = true;
 }

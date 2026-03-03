@@ -82,6 +82,8 @@ const { animateDesktopSidebar = false } = Astro.props;
 </div>
 
 <script>
+  // Mobile/tablette: on affiche un onglet à la fois.
+  // Bureau: les deux panneaux restent visibles en parallèle.
   const MOBILE_QUERY = "(max-width: 1023px)";
   const mediaQuery = window.matchMedia(MOBILE_QUERY);
   const DESKTOP_QUERY = "(min-width: 1024px)";
@@ -92,6 +94,7 @@ const { animateDesktopSidebar = false } = Astro.props;
     VALID_TABS.has(rawTab || "") ? (rawTab as string) : "form";
 
   const setPanelVisibility = (panel: HTMLElement, isVisible: boolean) => {
+    // On force les 3 sources de vérité (classe, style inline, aria) pour éviter les états fantômes.
     panel.classList.toggle("hidden", !isVisible);
     if (isVisible) {
       panel.style.removeProperty("display");
@@ -121,6 +124,7 @@ const { animateDesktopSidebar = false } = Astro.props;
       btn.setAttribute("tabindex", isActive ? "0" : "-1");
 
       if (!isMobile) {
+        // En vue bureau, les boutons d'onglet sont masqués.
         btn.classList.add("hidden");
         return;
       }
@@ -132,6 +136,7 @@ const { animateDesktopSidebar = false } = Astro.props;
 
     panels.forEach((panel) => {
       if (!isMobile) {
+        // En vue bureau, le mode onglet est désactivé: les deux panneaux sont visibles.
         setPanelVisibility(panel, true);
         return;
       }
@@ -153,6 +158,7 @@ const { animateDesktopSidebar = false } = Astro.props;
 
     shells.forEach((shell) => {
       if (shell.dataset.tabsInit === "true") {
+        // Si déjà initialisé (navigation Astro), on resynchronise uniquement l'affichage.
         syncShell(shell);
         return;
       }
@@ -161,6 +167,7 @@ const { animateDesktopSidebar = false } = Astro.props;
       shell.dataset.activeTab = normalizeTab(shell.dataset.activeTab);
 
       shell.addEventListener("click", (event) => {
+        // Délégation de clic: un seul listener pour les deux boutons.
         const target = event.target;
         if (!(target instanceof Element)) return;
         const trigger = target.closest("[data-shell-tab-trigger]");
@@ -173,6 +180,7 @@ const { animateDesktopSidebar = false } = Astro.props;
       });
 
       shell.addEventListener("keydown", (event) => {
+        // Navigation clavier gauche/droite entre onglets pour l'accessibilité.
         const target = event.target;
         if (!(target instanceof HTMLElement)) return;
         if (!target.matches("[data-shell-tab-trigger]")) return;
@@ -208,6 +216,7 @@ const { animateDesktopSidebar = false } = Astro.props;
       if (shell.dataset.animateDesktopSidebar !== "true") return;
       const sidebar = shell.querySelector("[data-shell-sidebar]");
       if (!(sidebar instanceof HTMLElement)) return;
+      // On retire l'état de départ de l'animation une fois en desktop.
       sidebar.classList.remove("lg:-translate-x-full", "lg:opacity-0");
     });
   };
@@ -234,6 +243,7 @@ const { animateDesktopSidebar = false } = Astro.props;
   };
 
   if (!windowState.__kcActionEditorShellListenersBound) {
+    // Garde globale: évite de doubler les listeners à chaque astro:page-load.
     mediaQuery.addEventListener("change", syncAllShells);
     desktopMediaQuery.addEventListener("change", syncDesktopSidebarAnimation);
     document.addEventListener("astro:page-load", bootActionEditorShell);
