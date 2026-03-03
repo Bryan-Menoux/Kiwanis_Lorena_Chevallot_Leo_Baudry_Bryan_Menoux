@@ -11,6 +11,7 @@ interface ActionItem {
   id: string;
   titre: string;
   slug: string;
+  source: "action" | "brouillon";
   sous_titre?: string;
   hero?: string;
   updated?: string;
@@ -24,10 +25,19 @@ interface ActionItem {
 const actionsRaw: any[] = await Astro.locals.pb
   .collection("actions")
   .getFullList(200, { sort: "-updated" });
-const actions: ActionItem[] = actionsRaw.map((a) => ({
+const brouillonsRaw: any[] = await Astro.locals.pb
+  .collection("brouillons")
+  .getFullList(200, {
+    sort: "-updated",
+    filter: 'type = "action"',
+  });
+
+const actions: ActionItem[] = [
+  ...actionsRaw.map((a) => ({
   id: a.id,
   titre: a.titre,
   slug: slugify(a.titre || "", { lower: true, strict: true }),
+  source: "action" as const,
   sous_titre: a.sous_titre,
   hero: a.hero,
   updated: a.updated,
@@ -36,7 +46,24 @@ const actions: ActionItem[] = actionsRaw.map((a) => ({
   beneficiaire: a.beneficiaire,
   type_de_chiffre: a.type_de_chiffre,
   type_action: a.type_action,
-}));
+  })),
+  ...brouillonsRaw.map((b) => ({
+    id: b.id,
+    titre: b.titre || "Brouillon sans titre",
+    slug: slugify(b.titre || "brouillon", { lower: true, strict: true }),
+    source: "brouillon" as const,
+    sous_titre: b.sous_titre,
+    hero: b.hero,
+    updated: b.updated,
+    date_debut: b.date_debut,
+    date_fin: b.date_fin,
+    beneficiaire: b.beneficiaire,
+    type_de_chiffre: b.type_de_chiffre,
+    type_action: [],
+  })),
+].sort(
+  (a, b) => new Date(b.updated || 0).getTime() - new Date(a.updated || 0).getTime(),
+);
 
 const stats = { total: actions.length };
 
@@ -76,7 +103,7 @@ const allActions = actions;
         <a href="/actions" class="btn btn-ghost">Voir le site</a>
         <a
           href="/creation/actions/nouveau"
-          class="btn btn-primary btn-md shadow-lg rounded-full"
+          class="btn btn-accent btn-md shadow-lg rounded-full"
           >Créer une action</a
         >
       </div>
@@ -114,6 +141,7 @@ const allActions = actions;
               class="bg-base-100 border border-base-300 rounded-xl p-6 shadow-sm min-h-35 flex flex-col justify-between"
               data-action-id={a.id}
               data-action-slug={a.slug}
+              data-source={a.source}
               data-title={a.titre}
               data-type={a.type_de_chiffre}
             >
@@ -122,31 +150,97 @@ const allActions = actions;
                   <h3 class="text-2xl md:text-2xl font-bold leading-tight mr-4 truncate">
                     {a.titre}
                   </h3>
+                  {
+                    a.source === "brouillon" && (
+                      <span class="badge badge-secondary text-secondary-content shrink-0">Brouillon</span>
+                    )
+                  }
                 </div>
-                <p class="text-sm text-base-content/70 mt-3 mb-2 truncate">
-                  {a.sous_titre}
-                </p>
-
-                <p class="text-sm text-base-content/70 mb-4">
-                  {a.beneficiaire}
-                </p>
-                <p class="text-xs text-base-content/60 mb-2">
-                  {a.updated ? formatDateShort(a.updated) : ""}
-                </p>
+                {
+                  (a.sous_titre || a.beneficiaire) ? (
+                    <div class="mt-2 space-y-1.5">
+                      {a.sous_titre && (
+                        <div>
+                          <p class="text-[11px] uppercase tracking-wide text-base-content/45">
+                            Sous-titre
+                          </p>
+                          <p class="text-sm text-base-content/75 truncate leading-tight">
+                            {a.sous_titre}
+                          </p>
+                        </div>
+                      )}
+                      {a.beneficiaire && (
+                        <div>
+                          <p class="text-[11px] uppercase tracking-wide text-base-content/45">
+                            Bénéficiaire
+                          </p>
+                          <p class="text-sm text-base-content/75 leading-tight">
+                            {a.beneficiaire}
+                          </p>
+                        </div>
+                      )}
+                      <div>
+                        <p class="text-[11px] uppercase tracking-wide text-base-content/45">
+                          Mis à jour
+                        </p>
+                        <p class="text-xs text-base-content/65 leading-tight">
+                          {a.updated ? formatDateShort(a.updated) : ""}
+                        </p>
+                      </div>
+                    </div>
+                  ) : (
+                    <div class="mt-2 space-y-1">
+                      <p class="text-[11px] uppercase tracking-wide text-base-content/45">
+                        Mis à jour
+                      </p>
+                      <p class="text-xs text-base-content/65 leading-tight">
+                        {a.updated ? formatDateShort(a.updated) : ""}
+                      </p>
+                    </div>
+                  )
+                }
               </div>
               <div class="flex items-center justify-end gap-3">
-                <a
-                  class="text-sm text-base-content hover:underline"
-                  href={`/actions/${a.id}-${a.slug}`}
-                >
-                  Voir
-                </a>
+                {
+                  a.source === "action" ? (
+                    <a
+                      class="text-sm text-base-content hover:underline"
+                      href={`/actions/${a.id}-${a.slug}`}
+                    >
+                      Voir
+                    </a>
+                  ) : (
+                    <a
+                      class="text-sm text-base-content hover:underline"
+                      href={`/creation/brouillons/${a.id}-${a.slug}`}
+                    >
+                      Voir
+                    </a>
+                  )
+                }
                 <a
                   class="btn btn-sm btn-outline rounded-full"
                   href={`/creation/actions/edit/${a.id}-${a.slug}`}
                 >
                   Modifier
                 </a>
+                {
+                  a.source === "brouillon" && (
+                    <form
+                      method="POST"
+                      action={`/creation/actions/edit/${a.id}-${a.slug}`}
+                      class="inline"
+                    >
+                      <input type="hidden" name="publish_action" value="true" />
+                      <button
+                        type="submit"
+                        class="btn btn-sm btn-accent rounded-full"
+                      >
+                        Publier
+                      </button>
+                    </form>
+                  )
+                }
               </div>
             </div>
           ))
@@ -180,7 +274,8 @@ const allActions = actions;
     });
   }
 
-  function getViewUrl(id, slug) {
+  function getViewUrl(id, slug, source) {
+    if (source === "brouillon") return `/creation/brouillons/${id}-${slug}`;
     return `/actions/${id}-${slug}`;
   }
   function getEditUrl(id, slug) {
@@ -232,20 +327,32 @@ const allActions = actions;
           ${list
             .map(
               (a) => `
-                    <div class="card bg-base-100 border" data-action-id="${a.id}" data-action-slug="${a.slug}">
+                    <div class="card bg-base-100 border" data-action-id="${a.id}" data-action-slug="${a.slug}" data-source="${a.source}">
               <div class="card-body p-4">
                 <div class="flex justify-between items-start mb-2">
-                  <h3 class="card-title text-lg truncate">${a.titre}</h3>
+                  <h3 class="card-title text-lg truncate">${a.titre}</h3>${a.source === 'brouillon' ? '<span class="badge badge-secondary text-secondary-content">Brouillon</span>' : ''}
                   </div>
-                  <p class="text-sm text-base-content/70 mb-2 truncate">${a.sous_titre || ""}</p>
-                  <p class="text-sm text-base-content/70 mb-2">${a.beneficiaire || ""}</p>
-                  <p class="text-xs text-base-content/60 mb-2">
-                  ${a.updated ? formatDate(a.updated) : ""}
-                </p>
+                  ${
+                    (a.sous_titre && String(a.sous_titre).trim() !== '') ||
+                    (a.beneficiaire && String(a.beneficiaire).trim() !== '')
+                      ? `
+                  <div class="mt-2 space-y-1.5">
+                    ${a.sous_titre ? `<div><p class="text-[11px] uppercase tracking-wide text-base-content/45">Sous-titre</p><p class="text-sm text-base-content/75 truncate leading-tight">${a.sous_titre}</p></div>` : ''}
+                    ${a.beneficiaire ? `<div><p class="text-[11px] uppercase tracking-wide text-base-content/45">Bénéficiaire</p><p class="text-sm text-base-content/75 leading-tight">${a.beneficiaire}</p></div>` : ''}
+                    <div><p class="text-[11px] uppercase tracking-wide text-base-content/45">Mis à jour</p><p class="text-xs text-base-content/65 leading-tight">${a.updated ? formatDate(a.updated) : ""}</p></div>
+                  </div>
+                  `
+                      : `
+                  <div class="mt-2 space-y-1">
+                    <p class="text-[11px] uppercase tracking-wide text-base-content/45">Mis à jour</p>
+                    <p class="text-xs text-base-content/65 leading-tight">${a.updated ? formatDate(a.updated) : ""}</p>
+                  </div>
+                  `
+                  }
                   <div class="card-actions justify-end mt-4">
-                    <a class="btn btn-sm" href="${getViewUrl(a.id, a.slug)}">Voir</a>
+                    <a class="btn btn-sm" href="${getViewUrl(a.id, a.slug, a.source)}">Voir</a>
                                 <a class="btn btn-sm" href="${getEditUrl(a.id, a.slug)}">Modifier</a>
-                                
+                                ${a.source === 'brouillon' ? `<form method="POST" action="${getEditUrl(a.id, a.slug)}" class="inline"><input type="hidden" name="publish_action" value="true" /><button type="submit" class="btn btn-sm btn-accent">Publier</button></form>` : ''}
                 </div>
               </div>
             </div>

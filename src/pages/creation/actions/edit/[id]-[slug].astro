@@ -182,6 +182,62 @@ if (Astro.request.method === "POST") {
       }
     }
 
+    // Publication directe depuis la liste (sans charger tout le formulaire d'édition)
+    if (publishRequested && actionRecordFromBrouillon && !formData.has("titre")) {
+      const publishSlug = slugify(actionRecord?.titre || slug || "action", {
+        lower: true,
+        strict: true,
+      });
+      const publishPayload: any = {};
+      const allowedKeys = [
+        "adresse_lieu",
+        "beneficiaire",
+        "chiffre",
+        "date_debut",
+        "date_fin",
+        "description_hero",
+        "description_photo_partie_1",
+        "description_photo_partie_2",
+        "description_photo_partie_3",
+        "description_remerciements",
+        "galerie_photos",
+        "hero",
+        "lien_lieu",
+        "nom_lieu",
+        "photo_partie_1",
+        "photo_partie_2",
+        "photo_partie_3",
+        "sous_titre",
+        "texte_partie_1",
+        "texte_partie_2",
+        "texte_partie_3",
+        "titre",
+        "titre_partie_1",
+        "titre_partie_2",
+        "titre_partie_3",
+        "titre_remerciements",
+        "type_de_chiffre",
+      ];
+      for (const key of allowedKeys) {
+        if (actionRecord?.[key] !== undefined && actionRecord?.[key] !== null) {
+          publishPayload[key] = actionRecord[key];
+        }
+      }
+      publishPayload.slug = publishSlug;
+
+      const publishedAction = await Astro.locals.pb
+        .collection("actions")
+        .create(publishPayload);
+      await Astro.locals.pb.collection("brouillons").delete(idParam);
+
+      return Astro.redirect(
+        withSuccess(
+          `/creation/actions/${publishedAction.id}-${publishSlug}`,
+          "Brouillon publié",
+        ),
+      );
+    }
+
     // VÃ©rifier que le titre est fourni
     const titre = formData.get("titre")?.toString();
     if (!titre || titre.trim() === "") {
