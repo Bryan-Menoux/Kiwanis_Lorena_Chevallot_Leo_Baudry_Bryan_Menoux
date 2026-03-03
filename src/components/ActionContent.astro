@@ -560,11 +560,7 @@ const hasThanksSection = hasNonEmptyText(action?.description_remerciements);
 
         const init = () => {
           syncRoots();
-          if (typeof tabletQuery.addEventListener === "function") {
-            tabletQuery.addEventListener("change", syncRoots);
-          } else if (typeof tabletQuery.addListener === "function") {
-            tabletQuery.addListener(syncRoots);
-          }
+          tabletQuery.addEventListener("change", syncRoots);
         };
 
         if (document.readyState === "loading") {

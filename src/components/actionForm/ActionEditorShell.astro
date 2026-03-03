@@ -6,7 +6,11 @@ export interface Props {
 const { animateDesktopSidebar = false } = Astro.props;
 ---
 
-<div class="w-full pt-24 lg:pt-0" data-action-editor-shell>
+<div
+  class="w-full pt-24 lg:pt-0"
+  data-action-editor-shell
+  data-animate-desktop-sidebar={animateDesktopSidebar ? "true" : "false"}
+>
   <div class="lg:hidden sticky top-[5.25rem] z-40 px-4 mb-4">
     <div class="bg-base-200 border border-base-300 rounded-full p-1 flex gap-1">
       <button
@@ -59,22 +63,11 @@ const { animateDesktopSidebar = false } = Astro.props;
   </div>
 </div>
 
-{
-  animateDesktopSidebar && (
-    <script>
-      document.addEventListener("DOMContentLoaded", () => {
-        const sidebar = document.getElementById("sidebar");
-        if (sidebar && window.matchMedia("(min-width: 1024px)").matches) {
-          sidebar.classList.remove("lg:-translate-x-full", "lg:opacity-0");
-        }
-      });
-    </script>
-  )
-}
-
 <script>
   const MOBILE_QUERY = "(max-width: 1023px)";
   const mediaQuery = window.matchMedia(MOBILE_QUERY);
+  const DESKTOP_QUERY = "(min-width: 1024px)";
+  const desktopMediaQuery = window.matchMedia(DESKTOP_QUERY);
 
   const syncShell = (shell: HTMLElement) => {
     const isMobile = mediaQuery.matches;
@@ -152,6 +145,16 @@ const { animateDesktopSidebar = false } = Astro.props;
     });
   };
 
+  const syncDesktopSidebarAnimation = () => {
+    if (!desktopMediaQuery.matches) return;
+    getShells().forEach((shell) => {
+      if (shell.dataset.animateDesktopSidebar !== "true") return;
+      const sidebar = shell.querySelector("#sidebar");
+      if (!(sidebar instanceof HTMLElement)) return;
+      sidebar.classList.remove("lg:-translate-x-full", "lg:opacity-0");
+    });
+  };
+
   const syncAllShells = () => {
     getShells().forEach((shell) => syncShell(shell));
   };
@@ -164,11 +167,11 @@ const { animateDesktopSidebar = false } = Astro.props;
     initActionEditorShellTabs();
   }
 
-  if (typeof mediaQuery.addEventListener === "function") {
-    mediaQuery.addEventListener("change", syncAllShells);
-  } else if (typeof mediaQuery.addListener === "function") {
-    mediaQuery.addListener(syncAllShells);
-  }
+  mediaQuery.addEventListener("change", syncAllShells);
+  desktopMediaQuery.addEventListener("change", syncDesktopSidebarAnimation);
+
+  syncDesktopSidebarAnimation();
 
   document.addEventListener("astro:page-load", initActionEditorShellTabs);
+  document.addEventListener("astro:page-load", syncDesktopSidebarAnimation);
 </script>

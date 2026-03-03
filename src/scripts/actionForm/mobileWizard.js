@@ -206,11 +206,7 @@ function initMobileWizard() {
     persistStep(form, currentStep);
   });
 
-  if (typeof mediaQuery.addEventListener === "function") {
-    mediaQuery.addEventListener("change", sync);
-  } else if (typeof mediaQuery.addListener === "function") {
-    mediaQuery.addListener(sync);
-  }
+  mediaQuery.addEventListener("change", sync);
 
   sync();
 }
