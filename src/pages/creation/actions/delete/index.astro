@@ -72,16 +72,16 @@ try {
 ---
 
 <Layout>
-  <div class="container mx-auto px-6 py-12 my-20">
-    <div class="flex items-center justify-between mb-6">
+  <div class="container mx-auto mt-20 px-4 py-6 md:px-6 md:py-8 lg:mt-24 lg:px-8 lg:py-10">
+    <div class="mb-6 flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
       <div>
-        <h1 class="text-4xl font-bold">Supprimer des actions</h1>
+        <h1 class="text-3xl font-bold md:text-4xl">Supprimer des actions</h1>
         <p class="text-sm text-base-content/70 mt-2">
           Sélectionnez plusieurs actions puis cliquez sur "Supprimer sélection".
         </p>
       </div>
       <div>
-        <a href="/creation/actions" class="btn">Retour</a>
+        <a href="/creation/actions" class="btn w-full md:w-auto">Retour</a>
       </div>
     </div>
 
@@ -89,15 +89,15 @@ try {
     {error && <div class="alert alert-error mb-4">{error}</div>}
 
     <form method="POST" id="deleteForm">
-      <div class="mb-4 flex-col gap-8">
-        <div class="flex items-center gap-4 w-full mb-4">
+      <div class="mb-4 space-y-4">
+        <div class="mb-4 flex w-full flex-col gap-3 md:flex-row md:items-center">
           <ActionsSearch />
-          <select id="sort-select" class="select select-bordered w-44">
+          <select id="sort-select" class="select select-bordered w-full md:w-52">
             <option value="updated_desc">Récent → Ancien</option>
             <option value="updated_asc">Ancien → Récent</option>
           </select>
         </div>
-        <div class="flex items-center gap-3 select-none">
+        <div class="flex flex-col gap-2 select-none sm:flex-row sm:items-center sm:justify-between">
           <label class="flex items-center gap-2">
             <input type="checkbox" id="selectAll" />
             <span class="text-sm">Tout sélectionner</span>
@@ -105,7 +105,7 @@ try {
           <button
             type="submit"
             id="bulkDelete"
-            class="btn btn-error"
+            class="btn btn-error w-full sm:w-auto"
             onclick="return confirm('Confirmer la suppression des éléments sélectionnés ?')"
             >Supprimer sélection</button
           >
@@ -114,12 +114,12 @@ try {
 
       <div
         id="cards-grid"
-        class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+        class="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-5 lg:grid-cols-3 lg:gap-6"
       >
         {
           actions.map((a: any) => (
             <label
-              class="bg-base-100 border border-base-300 rounded-xl p-6 shadow-sm min-h-[140px] flex flex-col justify-between"
+              class="flex min-h-[220px] flex-col justify-between gap-4 rounded-xl border border-base-300 bg-base-100 p-4 shadow-sm md:p-5 lg:p-6"
               for={`id_${a.id}`}
               data-action-id={a.id}
               data-action-slug={a.slug}
@@ -128,36 +128,40 @@ try {
               data-beneficiary={a.beneficiaire}
               data-updated={a.updated}
             >
-              <div>
-                <div class="flex items-start">
+              <div class="space-y-3">
+                <div class="flex items-start gap-3">
                   <input
-                    class="checkbox checkbox-primary mt-1 mr-4"
+                    class="checkbox checkbox-primary mt-1 shrink-0"
                     type="checkbox"
                     name="ids"
                     id={`id_${a.id}`}
                     value={a.id}
                   />
-                  <h3 class="text-2xl md:text-2xl font-bold leading-tight mr-4 truncate">
+                  <h3 class="break-words text-xl font-bold leading-tight md:text-2xl">
                     {a.titre}
                   </h3>
                 </div>
-                <p class="text-sm text-base-content/70 mt-3 mb-2 truncate">
-                  {a.sous_titre}
+                {a.sous_titre && (
+                  <p class="text-sm leading-relaxed break-words text-base-content/75">
+                    {a.sous_titre}
+                  </p>
+                )}
+                {a.beneficiaire && (
+                  <p class="text-sm leading-relaxed break-words text-base-content/75">
+                    {a.beneficiaire}
+                  </p>
+                )}
+                <p class="text-xs leading-tight text-base-content/60">
+                  {a.updated ? formatDateShort(a.updated) : ""}
                 </p>
-
-                <p class="text-sm text-base-content/70 mb-4">
-                  {a.beneficiaire}
-                </p>
-                <p class="text-xs text-base-content/60 mb-2">{a.updated ? formatDateShort(a.updated) : ""}</p>
               </div>
-              <div class="flex items-center justify-end gap-3">
+              <div class="flex justify-end">
                 <a
-                  class="text-sm text-base-content hover:underline"
+                  class="btn btn-sm btn-ghost w-full sm:w-auto"
                   href={`/actions/${a.id}-${a.slug}`}
                 >
                   Voir
                 </a>
-                
               </div>
             </label>
           ))

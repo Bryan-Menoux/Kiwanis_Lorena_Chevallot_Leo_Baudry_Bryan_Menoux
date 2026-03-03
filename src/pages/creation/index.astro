@@ -159,15 +159,15 @@ const allPages = db.pages;
 <Layout>
   <div class="container mx-auto px-4 py-8 my-32">
     <!-- Header -->
-    <div class="flex justify-between ">
-        <div class="flex flex-col mb-12">
-      <h1 class="text-4xl font-bold text-accent mb-4 font-poppins">Mes Pages</h1>
-      <p class="text-lg text-base-content/70">Bienvenue dans votre tableau de bord de gestion</p>
+    <div class="mb-10">
+        <div class="mb-4">
+      <h1 class="mb-3 text-3xl font-bold text-accent font-poppins md:text-4xl">Mes Pages</h1>
+      <p class="text-base text-base-content/70 md:text-lg">Bienvenue dans votre tableau de bord de gestion</p>
     </div>
-    <div class="flex items-center gap-4">
+    <div class="flex flex-wrap items-center gap-3">
         <!-- voir la page des actions -->
-        <a href="/actions" class="btn btn-border">Voir les actions</a>
-        <a href="/creation/actions/nouveau" class="btn btn-accent">Créer une action</a>
+        <a href="/actions" class="btn btn-border btn-sm rounded-full md:btn-md">Voir les actions</a>
+        <a href="/creation/actions/nouveau" class="btn btn-accent btn-sm rounded-full md:btn-md">Creer une action</a>
     </div>
     </div>
 
@@ -206,23 +206,35 @@ const allPages = db.pages;
     </div>
 
     <!-- Recherche et filtres -->
-    <div class="card bg-base-100 shadow-sm mb-8">
-      <div class="card-body">
-        <h2 class="card-title mb-4">Rechercher</h2>
+    <div class="card bg-base-100 border border-base-300 shadow-sm mb-8 rounded-2xl">
+      <div class="card-body p-4 md:p-6">
+        <div class="mb-4">
+          <h2 class="card-title text-2xl">Rechercher</h2>
+          <p class="mt-1 text-sm text-base-content/60">
+            Filtrez rapidement vos pages puis triez l'affichage.
+          </p>
+        </div>
 
-        <div id="active-filters" class="hidden alert alert-info mb-4 w-full relative items-center justify-between">
+        <div id="active-filters" class="hidden mb-4 w-full rounded-xl border border-info/20 bg-info/10 px-3 py-2 md:px-4 relative items-center justify-between">
           <div class="flex items-center w-full pr-12">
-            <div class="flex gap-2" id="filter-badges"></div>
+            <div class="flex flex-wrap gap-2" id="filter-badges"></div>
           </div>
           <button id="clear-filters" class="btn btn-ghost btn-sm absolute right-0 top-1/2 -translate-y-1/2">Effacer</button>
         </div>
 
-        <div class="flex items-center md:flex-row gap-4">
-          <ActionsSearch showStatus={true} value={q} statusOptions={["all","actions","projets","produits","brouillon"]} />
-          <select id="sort-select" class="select select-bordered w-44">
-            <option value="updated_desc">Récent → Ancien</option>
-            <option value="updated_asc">Ancien → Récent</option>
-          </select>
+        <div class="flex flex-col gap-4 lg:flex-row lg:items-end">
+          <div class="w-full">
+            <ActionsSearch showStatus={true} value={q} statusOptions={["all","actions","projets","produits","brouillon"]} />
+          </div>
+          <div class="w-full lg:w-auto">
+            <label for="sort-select" class="mb-1 block text-sm font-medium text-base-content/70">
+              Trier par date
+            </label>
+            <select id="sort-select" class="select select-bordered w-full lg:w-56">
+              <option value="updated_desc">Recent -> Ancien</option>
+              <option value="updated_asc">Ancien -> Recent</option>
+            </select>
+          </div>
         </div>
       </div>
     </div>

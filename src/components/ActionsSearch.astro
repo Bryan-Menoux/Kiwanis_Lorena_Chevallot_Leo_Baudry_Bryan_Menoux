@@ -12,12 +12,12 @@ const {
 ---
 
 <div
-  class="p-4 bg-base-100 rounded-lg border border-base-300 actions-search w-full"
+  class="w-full rounded-2xl border border-base-300 bg-base-100 p-3 md:p-4 actions-search"
   data-initial-search={value}
   data-initial-year={initialYear}
   data-initial-type={initialType}
 >
-  <div class="flex flex-col md:flex-row gap-4 items-center w-full">
+  <div class="grid w-full grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
     <input
       id="search-input"
       class="input input-bordered flex-1 w-full"
@@ -26,24 +26,24 @@ const {
     />
     <input
       id="beneficiary-input"
-      class="input input-bordered w-44"
+      class="input input-bordered w-full"
       type="text"
       placeholder="Filtre bénéficiaire"
     />
     {yearOptions.length > 0 && (
-      <select id="year-select" class="select select-bordered w-32">
+      <select id="year-select" class="select select-bordered w-full">
         <option value="">Toutes les années</option>
         {yearOptions.map((y: string) => <option value={y}>{y}</option>)}
       </select>
     )}
     {typeOptions.length > 0 && (
-      <select id="type-select" class="select select-bordered w-48">
+      <select id="type-select" class="select select-bordered w-full">
         <option value="">Tous les types</option>
         {typeOptions.map((t: string) => <option value={t}>{t}</option>)}
       </select>
     )}
     {showStatus && (
-      <select id="status-select" class="select select-bordered w-44">
+      <select id="status-select" class="select select-bordered w-full">
         {statusOptions.map((s: string) => <option value={s}>{s}</option>)}
       </select>
     )}

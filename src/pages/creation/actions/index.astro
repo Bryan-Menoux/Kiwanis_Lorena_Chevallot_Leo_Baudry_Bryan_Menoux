@@ -1,7 +1,6 @@
 ---
 import Layout from "../../../layouts/Layout-back-office.astro";
 import slugify from "slugify";
-import ActionsSearch from "../../../components/ActionsSearch.astro";
 import SearchActions from "../../../components/SearchActions.astro";
 import utilUrl from "../../../utils/utilitaires.js?url";
 import { formatDateShort } from "../../../utils/utilitaires.js";
@@ -87,31 +86,31 @@ const allActions = actions;
 ---
 
 <Layout>
-  <div class="container mx-auto px-6 py-12 my-20">
+  <div class="container mx-auto mt-20 px-4 py-6 md:px-6 md:py-8 lg:mt-24 lg:px-8 lg:py-10">
     <div
-      class="flex flex-col md:flex-row justify-between items-start gap-6 mb-8"
+      class="mb-6 flex flex-col gap-4 md:mb-8 md:flex-row md:items-start md:justify-between md:gap-6"
     >
       <div class="flex-1">
-        <h1 class="text-5xl md:text-6xl font-extrabold leading-tight">
+        <h1 class="text-3xl font-extrabold leading-tight md:text-5xl lg:text-6xl">
           Actions
         </h1>
         <p class="text-base text-base-content/70 mt-2">
           Gérez vos actions — rechercher, filtrer et modifier rapidement.
         </p>
       </div>
-      <div class="flex items-center gap-4">
-        <a href="/actions" class="btn btn-ghost">Voir le site</a>
+      <div class="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center sm:gap-3">
+        <a href="/actions" class="btn btn-ghost w-full sm:w-auto">Voir le site</a>
         <a
           href="/creation/actions/nouveau"
-          class="btn btn-accent btn-md shadow-lg rounded-full"
+          class="btn btn-accent w-full rounded-full shadow-lg sm:w-auto"
           >Créer une action</a
         >
       </div>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 items-start mb-8">
+    <div class="mb-6 grid grid-cols-1 items-start gap-4 md:mb-8 lg:grid-cols-4 lg:gap-6">
       <div
-        class="p-4 bg-base-100 rounded-lg h-full max-h-full flex items-center gap-4 border border-base-300"
+        class="flex h-full max-h-full items-center gap-3 rounded-xl border border-base-300 bg-base-100 p-4"
       >
         <p class="text-sm text-base-content/70">
           Nombre d'actions total - <span class="text-accent font-bold text-2xl!"
@@ -119,13 +118,13 @@ const allActions = actions;
           >
         </p>
       </div>
-      <div class="md:col-span-3 flex items-center gap-4">
+      <div class="flex flex-col gap-3 md:flex-row md:items-center lg:col-span-3">
         <SearchActions
           value={q}
           yearOptions={yearOptions}
           typeOptions={typeOptions}
         />
-        <select id="sort-select" class="select select-bordered w-44">
+        <select id="sort-select" class="select select-bordered w-full md:w-52">
           <option value="updated_desc">Récent → Ancien</option>
           <option value="updated_asc">Ancien → Récent</option>
         </select>
@@ -134,20 +133,20 @@ const allActions = actions;
 
     <div id="pages-container" class="mb-8" data-initial-search={q}>
       <!-- rendu initial fait côté serveur -->
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div class="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-5 lg:grid-cols-3 lg:gap-6">
         {
           actions.map((a) => (
             <div
-              class="bg-base-100 border border-base-300 rounded-xl p-6 shadow-sm min-h-35 flex flex-col justify-between"
+              class="flex min-h-[220px] flex-col justify-between gap-4 rounded-xl border border-base-300 bg-base-100 p-4 shadow-sm md:p-5 lg:p-6"
               data-action-id={a.id}
               data-action-slug={a.slug}
               data-source={a.source}
               data-title={a.titre}
               data-type={a.type_de_chiffre}
             >
-              <div>
-                <div class="flex items-start">
-                  <h3 class="text-2xl md:text-2xl font-bold leading-tight mr-4 truncate">
+              <div class="space-y-3">
+                <div class="flex items-start justify-between gap-3">
+                  <h3 class="break-words text-xl font-bold leading-tight md:text-2xl">
                     {a.titre}
                   </h3>
                   {
@@ -156,62 +155,32 @@ const allActions = actions;
                     )
                   }
                 </div>
-                {
-                  (a.sous_titre || a.beneficiaire) ? (
-                    <div class="mt-2 space-y-1.5">
-                      {a.sous_titre && (
-                        <div>
-                          <p class="text-[11px] uppercase tracking-wide text-base-content/45">
-                            Sous-titre
-                          </p>
-                          <p class="text-sm text-base-content/75 truncate leading-tight">
-                            {a.sous_titre}
-                          </p>
-                        </div>
-                      )}
-                      {a.beneficiaire && (
-                        <div>
-                          <p class="text-[11px] uppercase tracking-wide text-base-content/45">
-                            Bénéficiaire
-                          </p>
-                          <p class="text-sm text-base-content/75 leading-tight">
-                            {a.beneficiaire}
-                          </p>
-                        </div>
-                      )}
-                      <div>
-                        <p class="text-[11px] uppercase tracking-wide text-base-content/45">
-                          Mis à jour
-                        </p>
-                        <p class="text-xs text-base-content/65 leading-tight">
-                          {a.updated ? formatDateShort(a.updated) : ""}
-                        </p>
-                      </div>
-                    </div>
-                  ) : (
-                    <div class="mt-2 space-y-1">
-                      <p class="text-[11px] uppercase tracking-wide text-base-content/45">
-                        Mis à jour
-                      </p>
-                      <p class="text-xs text-base-content/65 leading-tight">
-                        {a.updated ? formatDateShort(a.updated) : ""}
-                      </p>
-                    </div>
-                  )
-                }
+                {a.sous_titre && (
+                  <p class="text-sm leading-relaxed break-words text-base-content/75">
+                    {a.sous_titre}
+                  </p>
+                )}
+                {a.beneficiaire && (
+                  <p class="text-sm leading-relaxed break-words text-base-content/75">
+                    {a.beneficiaire}
+                  </p>
+                )}
+                <p class="text-xs leading-tight text-base-content/60">
+                  {a.updated ? formatDateShort(a.updated) : ""}
+                </p>
               </div>
-              <div class="flex items-center justify-end gap-3">
+              <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-end">
                 {
                   a.source === "action" ? (
                     <a
-                      class="text-sm text-base-content hover:underline"
+                      class="btn btn-sm btn-ghost w-full sm:w-auto"
                       href={`/actions/${a.id}-${a.slug}`}
                     >
                       Voir
                     </a>
                   ) : (
                     <a
-                      class="text-sm text-base-content hover:underline"
+                      class="btn btn-sm btn-ghost w-full sm:w-auto"
                       href={`/creation/brouillons/${a.id}-${a.slug}`}
                     >
                       Voir
@@ -219,7 +188,7 @@ const allActions = actions;
                   )
                 }
                 <a
-                  class="btn btn-sm btn-outline rounded-full"
+                  class="btn btn-sm btn-outline w-full rounded-full sm:w-auto"
                   href={`/creation/actions/edit/${a.id}-${a.slug}`}
                 >
                   Modifier
@@ -229,12 +198,12 @@ const allActions = actions;
                     <form
                       method="POST"
                       action={`/creation/actions/edit/${a.id}-${a.slug}`}
-                      class="inline"
+                      class="w-full sm:w-auto"
                     >
                       <input type="hidden" name="publish_action" value="true" />
                       <button
                         type="submit"
-                        class="btn btn-sm btn-accent rounded-full"
+                        class="btn btn-sm btn-accent w-full rounded-full sm:w-auto"
                       >
                         Publier
                       </button>
@@ -323,44 +292,31 @@ const allActions = actions;
       return;
     }
     const html = `
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div class="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-5 lg:grid-cols-3 lg:gap-6">
           ${list
             .map(
               (a) => `
-                    <div class="card bg-base-100 border" data-action-id="${a.id}" data-action-slug="${a.slug}" data-source="${a.source}">
-              <div class="card-body p-4">
-                <div class="flex justify-between items-start mb-2">
-                  <h3 class="card-title text-lg truncate">${a.titre}</h3>${a.source === 'brouillon' ? '<span class="badge badge-secondary text-secondary-content">Brouillon</span>' : ''}
-                  </div>
-                  ${
-                    (a.sous_titre && String(a.sous_titre).trim() !== '') ||
-                    (a.beneficiaire && String(a.beneficiaire).trim() !== '')
-                      ? `
-                  <div class="mt-2 space-y-1.5">
-                    ${a.sous_titre ? `<div><p class="text-[11px] uppercase tracking-wide text-base-content/45">Sous-titre</p><p class="text-sm text-base-content/75 truncate leading-tight">${a.sous_titre}</p></div>` : ''}
-                    ${a.beneficiaire ? `<div><p class="text-[11px] uppercase tracking-wide text-base-content/45">Bénéficiaire</p><p class="text-sm text-base-content/75 leading-tight">${a.beneficiaire}</p></div>` : ''}
-                    <div><p class="text-[11px] uppercase tracking-wide text-base-content/45">Mis à jour</p><p class="text-xs text-base-content/65 leading-tight">${a.updated ? formatDate(a.updated) : ""}</p></div>
-                  </div>
-                  `
-                      : `
-                  <div class="mt-2 space-y-1">
-                    <p class="text-[11px] uppercase tracking-wide text-base-content/45">Mis à jour</p>
-                    <p class="text-xs text-base-content/65 leading-tight">${a.updated ? formatDate(a.updated) : ""}</p>
-                  </div>
-                  `
-                  }
-                  <div class="card-actions justify-end mt-4">
-                    <a class="btn btn-sm" href="${getViewUrl(a.id, a.slug, a.source)}">Voir</a>
-                                <a class="btn btn-sm" href="${getEditUrl(a.id, a.slug)}">Modifier</a>
-                                ${a.source === 'brouillon' ? `<form method="POST" action="${getEditUrl(a.id, a.slug)}" class="inline"><input type="hidden" name="publish_action" value="true" /><button type="submit" class="btn btn-sm btn-accent">Publier</button></form>` : ''}
+                    <div class="flex min-h-[220px] flex-col justify-between gap-4 rounded-xl border border-base-300 bg-base-100 p-4 shadow-sm md:p-5 lg:p-6" data-action-id="${a.id}" data-action-slug="${a.slug}" data-source="${a.source}">
+              <div class="space-y-3">
+                <div class="flex items-start justify-between gap-3">
+                  <h3 class="break-words text-xl font-bold leading-tight md:text-2xl">${a.titre}</h3>
+                  ${a.source === 'brouillon' ? '<span class="badge badge-secondary text-secondary-content shrink-0">Brouillon</span>' : ""}
                 </div>
+                ${a.sous_titre ? `<p class="text-sm leading-relaxed break-words text-base-content/75">${a.sous_titre}</p>` : ""}
+                ${a.beneficiaire ? `<p class="text-sm leading-relaxed break-words text-base-content/75">${a.beneficiaire}</p>` : ""}
+                <p class="text-xs leading-tight text-base-content/60">${a.updated ? formatDate(a.updated) : ""}</p>
+              </div>
+              <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-end">
+                <a class="btn btn-sm btn-ghost w-full sm:w-auto" href="${getViewUrl(a.id, a.slug, a.source)}">Voir</a>
+                <a class="btn btn-sm btn-outline w-full rounded-full sm:w-auto" href="${getEditUrl(a.id, a.slug)}">Modifier</a>
+                ${a.source === 'brouillon' ? `<form method="POST" action="${getEditUrl(a.id, a.slug)}" class="w-full sm:w-auto"><input type="hidden" name="publish_action" value="true" /><button type="submit" class="btn btn-sm btn-accent w-full rounded-full sm:w-auto">Publier</button></form>` : ""}
               </div>
             </div>
-				`,
+        `,
             )
             .join("")}
-			</div>
-		`;
+      </div>
+    `;
     container.innerHTML = html;
   }
 
