@@ -53,6 +53,10 @@ const descriptionInputValue = mode === "edit" && previewData
   : isPartOne
     ? undefined
     : "";
+const hasDescriptionInputValue =
+  typeof descriptionInputValue === "string"
+    ? descriptionInputValue.trim() !== ""
+    : descriptionInputValue !== undefined && descriptionInputValue !== null;
 
 const descriptionHiddenValue = mode === "edit" && previewData
   ? previewData[descriptionKey]
@@ -117,7 +121,7 @@ const descriptionHiddenValue = mode === "edit" && previewData
     id={`input_${descriptionKey}`}
     placeholder={placeholders[descriptionKey]}
     class="w-full border border-accent rounded px-2 py-1 text-black bg-base-100"
-    value={descriptionInputValue}
+    {...hasDescriptionInputValue ? { value: descriptionInputValue } : {}}
   />
   <HiddenField
     name={descriptionKey}
