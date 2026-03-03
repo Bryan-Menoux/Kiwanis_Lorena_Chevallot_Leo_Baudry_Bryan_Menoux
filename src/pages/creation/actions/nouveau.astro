@@ -2,6 +2,7 @@
 import Layout from "../../../layouts/Layout-back-office.astro";
 import ActionContent from "../../../components/ActionContent.astro";
 import ActionForm from "../../../components/ActionForm.astro";
+import ActionEditorShell from "../../../components/actionForm/ActionEditorShell.astro";
 import slugify from "slugify";
 import galleryUrl from "../../../scripts/gallery.js?url";
 import galleryDisplayUrl from "../../../scripts/gallery-display.js?url";
@@ -140,25 +141,25 @@ if (Astro.request.method === "POST") {
 ---
 
 <Layout>
-  <div class="flex h-fit w-full">
-    <div class="w-1/3">
-      <div class="h-[105dvh] bg-accent pb-24 rounded-br-lg sticky left-0 top-0 overflow-auto p-6">
-        <ActionForm
-          mode="create"
-          previewPlaceholder={previewPlaceholder}
-          typeDeChiffreOptions={typeDeChiffreOptions}
-          typeActionOptions={typeActionOptions}
-        />
-      </div>
-    </div>
-
-    <div class="w-2/3 px-8">
+  <ActionEditorShell>
+    <Fragment slot="form">
+      <ActionForm
+        mode="create"
+        previewPlaceholder={previewPlaceholder}
+        typeDeChiffreOptions={typeDeChiffreOptions}
+        typeActionOptions={typeActionOptions}
+        uiMode="mobile-wizard"
+        initialStep={1}
+        recordKey="new"
+      />
+    </Fragment>
+    <Fragment slot="preview">
       <ActionContent
         action={previewPlaceholder}
         forcePreviewLocationSection={true}
       />
-    </div>
-  </div>
+    </Fragment>
+  </ActionEditorShell>
 
   <script set:html={`window.__previewData = ${JSON.stringify(previewPlaceholder).replace(/</g, "\\u003c")};`} />
   <script type="module" src={galleryUrl}></script>

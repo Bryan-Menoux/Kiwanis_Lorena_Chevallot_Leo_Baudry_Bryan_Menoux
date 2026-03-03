@@ -32,14 +32,17 @@ export const onRequest = defineMiddleware(
         locals.pb.authStore.clear();
       }
 
-      // Redirect non-authenticated or non-admin requests for protected routes (back-office)
+      // Redirect non-authenticated requests for protected routes.
+      // Allow access to `/creation` for authenticated users who are either admins or verified.
       const url = new URL(request.url);
       const protectedPrefixes = ["/creation"];
       if (protectedPrefixes.some((p) => url.pathname.startsWith(p))) {
         const userRecord = locals.pb.authStore.record;
         const isAuthenticated = Boolean(locals.pb.authStore.isValid && userRecord);
         const isAdmin = userRecord?.administrateur === true;
-        if (!isAuthenticated || !isAdmin) {
+        const isVerified = userRecord?.verified === true;
+        // require BOTH admin and verified to access /creation
+        if (!isAuthenticated || !(isAdmin && isVerified)) {
           const redirectUrl = new URL("/connexion", request.url).toString();
           return Response.redirect(redirectUrl, 302);
         }

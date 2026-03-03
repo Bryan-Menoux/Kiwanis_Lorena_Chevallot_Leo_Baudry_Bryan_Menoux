@@ -18,6 +18,9 @@ export interface Props {
   actionRecord?: any;
   isDraft?: boolean;
   error?: string;
+  uiMode?: "desktop" | "mobile-wizard";
+  initialStep?: number;
+  recordKey?: string;
 }
 
 const {
@@ -30,6 +33,9 @@ const {
   actionRecord,
   isDraft = false,
   error = "",
+  uiMode = "desktop",
+  initialStep = 1,
+  recordKey = "new",
 } = Astro.props;
 
 const typeDeChiffreOptions = typeDeChiffreOptionsProp || [
@@ -42,68 +48,128 @@ const placeholders = {
   ...previewDefaults,
   ...(previewPlaceholder || {}),
 };
+
+const resolvedImageIcon = imageIconProp || imageIcon;
+const isMobileWizard = uiMode === "mobile-wizard";
+const formTitle =
+  mode === "create" ? "Créer une nouvelle action" : "Modifier l'action";
 ---
 
 <form
   id="leftForm"
-  class="space-y-8 text-accent"
+  class:list={["space-y-8 text-accent", isMobileWizard ? "pb-10" : ""]}
   method="POST"
   enctype="multipart/form-data"
+  data-ui-mode={uiMode}
+  data-initial-step={String(initialStep)}
+  data-wizard-storage-key={recordKey}
 >
-  <!-- cards within will be animated sequentially -->
-  <h1 class="text-4xl! font-bold mb-8 mt-24 text-white">
-    Créer une nouvelle action
+  <h1 class="text-4xl! font-bold mb-6 mt-6 lg:mb-8 lg:mt-16 text-white">
+    {formTitle}
   </h1>
+
+  {
+    isMobileWizard && (
+      <div data-mobile-wizard-header class="lg:hidden space-y-3">
+        <div class="flex items-center justify-between">
+          <p class="text-sm text-base-100/80">Progression</p>
+          <p data-mobile-step-label class="text-sm text-base-100">Étape 1/7</p>
+        </div>
+        <div class="grid grid-cols-7 gap-1">
+          {
+            Array.from({ length: 7 }, (_, i) => i + 1).map((step) => (
+              <button
+                type="button"
+                data-mobile-go-step={String(step)}
+                class="btn btn-xs rounded-full border border-base-100/30 bg-transparent text-base-100/60 hover:bg-base-100/10"
+              >
+                {step}
+              </button>
+            ))
+          }
+        </div>
+        <p
+          data-mobile-step-error
+          class="hidden text-sm text-error bg-base-100 rounded-md px-3 py-2"
+        >
+        </p>
+      </div>
+    )
+  }
+
   {error && <p class="text-red-300 mb-2">{error}</p>}
 
-  <SectionMainInfo
-    mode={mode}
-    previewData={previewData}
-    placeholders={placeholders}
-    imageIcon={imageIcon}
-    typeActionOptions={typeActionOptionsProp}
-  />
+  <div data-mobile-step-wrapper data-mobile-step="1">
+    <SectionMainInfo
+      mode={mode}
+      previewData={previewData}
+      placeholders={placeholders}
+      imageIcon={resolvedImageIcon}
+      typeActionOptions={typeActionOptionsProp}
+    />
+  </div>
 
-  <SectionPart
-    partNumber={1}
-    mode={mode}
-    previewData={previewData}
-    placeholders={placeholders}
-    imageIcon={imageIcon}
-  />
+  <div data-mobile-step-wrapper data-mobile-step="2">
+    <SectionPart
+      partNumber={1}
+      mode={mode}
+      previewData={previewData}
+      placeholders={placeholders}
+      imageIcon={resolvedImageIcon}
+    />
+  </div>
 
-  <SectionLocation
-    mode={mode}
-    previewData={previewData}
-    placeholders={placeholders}
-    typeDeChiffreOptions={typeDeChiffreOptions}
-  />
+  <div data-mobile-step-wrapper data-mobile-step="3">
+    <SectionLocation
+      mode={mode}
+      previewData={previewData}
+      placeholders={placeholders}
+      typeDeChiffreOptions={typeDeChiffreOptions}
+    />
+  </div>
 
-  <SectionPart
-    partNumber={2}
-    mode={mode}
-    previewData={previewData}
-    placeholders={placeholders}
-    imageIcon={imageIcon}
-  />
+  <div data-mobile-step-wrapper data-mobile-step="4">
+    <SectionPart
+      partNumber={2}
+      mode={mode}
+      previewData={previewData}
+      placeholders={placeholders}
+      imageIcon={resolvedImageIcon}
+    />
+  </div>
 
-  <SectionPart
-    partNumber={3}
-    mode={mode}
-    previewData={previewData}
-    placeholders={placeholders}
-    imageIcon={imageIcon}
-  />
+  <div data-mobile-step-wrapper data-mobile-step="5">
+    <SectionPart
+      partNumber={3}
+      mode={mode}
+      previewData={previewData}
+      placeholders={placeholders}
+      imageIcon={resolvedImageIcon}
+    />
+  </div>
 
-  <SectionThanks
-    mode={mode}
-    previewData={previewData}
-    placeholders={placeholders}
-  />
+  <div data-mobile-step-wrapper data-mobile-step="6">
+    <SectionThanks
+      mode={mode}
+      previewData={previewData}
+      placeholders={placeholders}
+    />
+  </div>
 
-  <SectionGallery mode={mode} previewData={previewData} imageIcon={imageIcon} />
+  <div data-mobile-step-wrapper data-mobile-step="7">
+    <SectionGallery
+      mode={mode}
+      previewData={previewData}
+      imageIcon={resolvedImageIcon}
+    />
+  </div>
 
-  <div class="pt-4 flex gap-2">
+  <div
+    class:list={[
+      "pt-4 gap-2",
+      isMobileWizard ? "hidden lg:flex" : "flex",
+    ]}
+  >
     {
       mode === "create" && (
         <button
@@ -119,27 +185,84 @@ const placeholders = {
 
     <div class="flex flex-col w-full gap-4">
       <button
-      type="submit"
-      class="btn btn-border text-base-content px-4 py-2 rounded-md! flex-1"
-      >{
-        mode === "create" ? "Créer l'action" : "Enregistrer les modifications"
-      }</button
-    >
+        type="submit"
+        class="btn btn-border text-base-content px-4 py-2 rounded-md! flex-1"
+      >
+        {mode === "create" ? "Créer l'action" : "Enregistrer les modifications"}
+      </button>
       {
-      mode === "edit" && isDraft && (
-        <button
-          type="submit"
-          name="publish_action"
-          value="true"
-          class="btn btn-ghost px-4 py-2 rounded-md! text-base-100 hover:text-accent"
-        >
-          Publier l'action
-        </button>
-      )
-    }
-    
+        mode === "edit" && isDraft && (
+          <button
+            type="submit"
+            name="publish_action"
+            value="true"
+            class="btn btn-ghost px-4 py-2 rounded-md! text-base-100 hover:text-accent"
+          >
+            Publier l'action
+          </button>
+        )
+      }
     </div>
   </div>
+
+  {
+    isMobileWizard && (
+      <div
+        data-mobile-wizard-footer
+        class="lg:hidden sticky bottom-2 z-40 bg-base-100/95 backdrop-blur border border-base-300 rounded-2xl px-3 py-3 space-y-2"
+      >
+        <div class="flex gap-2">
+          <button
+            type="button"
+            data-mobile-prev
+            class="btn btn-outline rounded-full flex-1"
+          >
+            Précédent
+          </button>
+          <button
+            type="button"
+            data-mobile-next
+            class="btn btn-accent rounded-full flex-1"
+          >
+            Suivant
+          </button>
+          <button
+            type="submit"
+            data-mobile-submit
+            class="btn btn-accent rounded-full flex-1 hidden"
+          >
+            {mode === "create" ? "Créer l'action" : "Enregistrer"}
+          </button>
+        </div>
+        <div class="flex gap-2">
+          {
+            mode === "create" && (
+              <button
+                type="submit"
+                name="save_as"
+                value="brouillon"
+                class="btn btn-ghost rounded-full flex-1"
+              >
+                Enregistrer en brouillon
+              </button>
+            )
+          }
+          {
+            mode === "edit" && isDraft && (
+              <button
+                type="submit"
+                name="publish_action"
+                value="true"
+                class="btn btn-outline rounded-full flex-1"
+              >
+                Publier
+              </button>
+            )
+          }
+        </div>
+      </div>
+    )
+  }
 </form>
 
 <script>
@@ -147,13 +270,24 @@ const placeholders = {
   import "../../scripts/actionForm/mapsToggle.js";
   import "../../scripts/actionForm/placeholders.js";
   import "../../scripts/actionForm/editableTitle.js";
+  import "../../scripts/actionForm/mobileWizard.js";
   import "../../scripts/preview/index.js";
 
-  // aide à l'animation des cartes de section
   function animateCards() {
     const cards = Array.from(document.querySelectorAll("#leftForm .p-4"));
+    const form = document.getElementById("leftForm");
+    const isMobileWizard =
+      form?.getAttribute("data-ui-mode") === "mobile-wizard" &&
+      window.matchMedia("(max-width: 1023px)").matches;
+
+    if (isMobileWizard) {
+      cards.forEach((card) => {
+        card.classList.remove("opacity-0", "-translate-x-4");
+      });
+      return;
+    }
+
     cards.forEach((card, idx) => {
-      // état initial : invisible et décalée à gauche
       card.classList.add(
         "opacity-0",
         "-translate-x-4",
@@ -161,19 +295,18 @@ const placeholders = {
         "duration-300",
         "ease-out",
       );
-      setTimeout(
-        () => {
-          card.classList.remove("opacity-0", "-translate-x-4");
-        },
-        idx * 100 + 50,
-      ); // décalage de 100 ms entre les cartes, démarrage rapide (50 ms) après le sidebar
+      setTimeout(() => {
+        card.classList.remove("opacity-0", "-translate-x-4");
+      }, idx * 100 + 50);
     });
   }
 
   document.addEventListener("DOMContentLoaded", () => {
     const sidebar = document.getElementById("sidebar");
-    if (sidebar) {
-      // quand l'animation du sidebar est terminée, démarrer l'animation des cartes
+    const canUseSidebarAnimation = window.matchMedia("(min-width: 1024px)")
+      .matches;
+
+    if (sidebar && canUseSidebarAnimation) {
       sidebar.addEventListener(
         "transitionend",
         () => {
@@ -181,7 +314,6 @@ const placeholders = {
         },
         { once: true },
       );
-      // déclencher l'entrée du sidebar (géré ailleurs)
     } else {
       animateCards();
     }

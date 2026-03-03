@@ -4,7 +4,7 @@ import Logo from "../assets/logo-kiwanis-full.svg";
 import user from "../assets/user.svg";
 import userWhite from "../assets/user-white.svg";
 
-const brandBlue = "bg-[oklch(0.2903_0.0643_289.42)]";
+const currentUser = Astro.locals.pb.authStore.record;
 ---
 
 <header
@@ -26,20 +26,20 @@ const brandBlue = "bg-[oklch(0.2903_0.0643_289.42)]";
     </a>
 
     <nav
-      class="flex items-center gap-3 xl:gap-8 select-none text-[11px] xl:text-sm font-semibold text-gray-800 tracking-tight xl:tracking-normal"
+      class="flex items-center gap-3 xl:gap-8 select-none text-[11px] xl:text-sm font-semibold text-base-content tracking-tight xl:tracking-normal"
     >
       <a
         href="/membres"
-        class="hover:text-blue-900 transition-colors uppercase whitespace-nowrap"
+        class="hover:text-accent transition-colors uppercase whitespace-nowrap"
         >Nos membres</a
       >
 
-      <div class="h-4 xl:h-6 w-px bg-gray-300"></div>
+      <div class="h-4 xl:h-6 w-px bg-base-100"></div>
 
       <div class="relative cursor-pointer py-2">
         <div
           id="discover-toggle"
-          class="nav-item hover:text-blue-900 transition-colors uppercase flex items-center gap-2 xl:gap-8"
+          class="nav-item hover:text-accent transition-colors uppercase flex items-center gap-2 xl:gap-8"
           role="button"
           aria-expanded="false"
           aria-controls="discover-dropdown"
@@ -54,65 +54,64 @@ const brandBlue = "bg-[oklch(0.2903_0.0643_289.42)]";
         </div>
         <div
           id="discover-dropdown"
-          class="absolute left-0 mt-2 w-44 xl:w-52 bg-white border border-gray-100 shadow-xl rounded-lg overflow-hidden opacity-0 invisible transition-all duration-300 translate-y-2 pointer-events-none"
+          class="absolute left-0 mt-2 w-44 xl:w-52 bg-base-100 border border-base-100 shadow-xl rounded-lg overflow-hidden opacity-0 invisible transition-all duration-300 translate-y-2 pointer-events-none"
           role="menu"
           aria-hidden="true"
         >
           <a
             href="/actions"
-            class="block px-4 py-3 text-gray-700 hover:bg-gray-50 hover:text-blue-900 border-b border-gray-50 transition-colors uppercase text-[10px] xl:text-xs font-bold"
+            class="block px-4 py-3 text-base-content hover:bg-base-100 hover:text-accent border-b border-base-100 transition-colors uppercase text-[10px] xl:text-xs font-bold"
             role="menuitem">Nos actions</a
           >
           <a
             href="/projets"
-            class="block px-4 py-3 text-gray-700 hover:bg-gray-50 hover:text-blue-900 border-b border-gray-50 transition-colors uppercase text-[10px] xl:text-xs font-bold"
+            class="block px-4 py-3 text-base-content hover:bg-base-100 hover:text-accent border-b border-base-100 transition-colors uppercase text-[10px] xl:text-xs font-bold"
             role="menuitem">Nos projets</a
           >
           <a
             href="/produits"
-            class="block px-4 py-3 text-gray-700 hover:bg-gray-50 hover:text-blue-900 transition-colors uppercase text-[10px] xl:text-xs font-bold"
+            class="block px-4 py-3 text-base-content hover:bg-base-100 hover:text-accent transition-colors uppercase text-[10px] xl:text-xs font-bold"
             role="menuitem">Nos produits</a
           >
         </div>
       </div>
 
-      <div class="h-4 xl:h-6 w-px bg-gray-300"></div>
+      <div class="h-4 xl:h-6 w-px bg-base-100"></div>
 
       <a
         href="/don"
-        class="hover:text-blue-900 transition-colors uppercase whitespace-nowrap"
+        class="hover:text-accent transition-colors uppercase whitespace-nowrap"
         >Faire un don</a
       >
       {
-        Astro.locals.pb.authStore.isValid && (
-          <>
-            <div class="h-4 xl:h-6 w-px bg-gray-300" />
+        Astro.locals.pb.authStore.isValid &&
+          currentUser?.verified &&
+          currentUser?.administrateur === true && (
+            <>
+              <div class="h-4 xl:h-6 w-px bg-base-100" />
 
-            <a
-              href="/creation"
-              class="hover:text-blue-900 transition-colors uppercase whitespace-nowrap"
-            >
-              Espace création
-            </a>
-          </>
-        )
+              <a
+                href="/creation"
+                class="hover:text-accent transition-colors uppercase whitespace-nowrap"
+              >
+                Espace création
+              </a>
+            </>
+          )
       }
     </nav>
 
     <div class="flex items-center gap-3">
-      <a
-        href="/contact"
-        class="px-5 py-2 border-[1.5px] text-black border-gray-900 rounded-lg text-xs font-semibold uppercase hover:bg-gray-900 hover:text-white transition-all"
-        >Contact</a
-      >
       {
-        (await Astro.locals.pb.authStore.isValid) ? (
-          <a id="account-link" href="/mon-compte">
-            <div
-              class="w-10 h-10 icon-accent"
-              style={`--icon-url: url(${user.src})`}
-            />
-          </a>
+        currentUser ? (
+          <>
+            <a id="account-link" href="/mon-compte">
+              <div
+                class="w-10 h-10 icon-accent"
+                style={`--icon-url: url(${user.src})`}
+              />
+            </a>
+          </>
         ) : (
           <a
             id="connexion-link"
@@ -126,15 +125,15 @@ const brandBlue = "bg-[oklch(0.2903_0.0643_289.42)]";
     </div>
   </div>
 
-  <div class="lg:hidden flex flex-col items-center p-4 gap-3">
-    <div class="w-full flex items-center justify-between gap-4 max-w-100">
+  <div class="lg:hidden flex flex-col items-center p-4 gap-3 w-full">
+    <div class="w-full flex items-center justify-between gap-4 max-w-[90dvw]">
       <a href="/" class="shrink-0">
         <img src={Logo.src} alt="Logo" class="h-12 w-auto" />
       </a>
 
       <button
         id="menu-toggle"
-        class={`flex-1 flex items-center justify-between px-5 py-3 rounded-xl text-white ${brandBlue}`}
+        class="flex-1 flex items-center justify-between px-5 py-3 rounded-xl text-white bg-accent"
         aria-expanded="false"
         aria-controls="mobile-dropdown"
         aria-label="Ouvrir le menu"
@@ -143,31 +142,24 @@ const brandBlue = "bg-[oklch(0.2903_0.0643_289.42)]";
         <div class="relative w-6 h-6">
           <svg
             id="ham-icon"
-            class="w-6 h-6 absolute transition-opacity"
+            class="w-6 h-6 absolute"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
             aria-hidden="true"
           >
             <path
+              id="ham-top"
               stroke-linecap="round"
               stroke-linejoin="round"
               stroke-width="1.5"
-              d="M4 8h16M4 16h16"></path>
-          </svg>
-          <svg
-            id="close-icon"
-            class="w-6 h-6 absolute opacity-0 scale-50 transition-all"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            aria-hidden="true"
-          >
+              d="M4 8h16"></path>
             <path
+              id="ham-bottom"
               stroke-linecap="round"
               stroke-linejoin="round"
               stroke-width="1.5"
-              d="M6 18L18 6M6 6l12 12"></path>
+              d="M4 16h16"></path>
           </svg>
         </div>
       </button>
@@ -175,7 +167,7 @@ const brandBlue = "bg-[oklch(0.2903_0.0643_289.42)]";
 
     <div
       id="mobile-dropdown"
-      class={`w-full max-w-100 rounded-2xl p-7 text-white shadow-2xl ${brandBlue}`}
+      class="w-full max-w-[90dvw] rounded-2xl p-7 text-white shadow-2xl bg-accent"
       style="display: none;"
       role="menu"
       aria-hidden="true"
@@ -236,31 +228,59 @@ const brandBlue = "bg-[oklch(0.2903_0.0643_289.42)]";
         >
         </div>
 
-        <div class="mob-link grid grid-cols-2 gap-3 mt-2">
+        <div class="mob-actions mt-4 grid grid-cols-1 md:grid-cols-2 gap-3">
           <a
             href="/contact"
-            class="py-3 border border-white/30 rounded-lg text-center text-[11px] font-bold uppercase"
-            role="menuitem">Contact</a
+            class="btn btn-ghost border-base-100 rounded-lg! w-full"
+            role="menuitem"
           >
+            Contact
+          </a>
+
           {
-            (await Astro.locals.pb.authStore.isValid) ? (
-              <a
-                id="mobile-account-link"
-                href="/mon-compte"
-                role="menuitem"
-                class="self-center"
-              >
-                <img
-                  src={userWhite.src}
-                  alt="icône utilisateur"
-                  class="h-10 w-auto"
-                />
-              </a>
+            currentUser ? (
+              <>
+                {currentUser.verified &&
+                  currentUser.administrateur === true && (
+                    <a
+                      href="/creation"
+                      class="btn btn-secondary rounded-lg! w-full"
+                      role="menuitem"
+                    >
+                      Espace création
+                    </a>
+                  )}
+
+                <div class="flex items-center gap-3 w-full md:col-span-2">
+                  <a
+                    id="mobile-account-link"
+                    href="/mon-compte"
+                    role="menuitem"
+                    class="flex items-center gap-3 flex-1"
+                  >
+                    <div class="avatar">
+                      <div class="w-10 rounded-full ring ring-offset-base-100 ring-white/30 overflow-hidden">
+                        <img src={userWhite.src} alt="icône utilisateur" />
+                      </div>
+                    </div>
+                    <span class="text-sm font-semibold">Mon compte</span>
+                  </a>
+
+                  <button
+                    id="mobile-logout-btn"
+                    type="button"
+                    class="btn btn-block w-fit px-4 py-2 md:px-8 md:py-4 btn-sm"
+                    role="menuitem"
+                  >
+                    Déconnexion
+                  </button>
+                </div>
+              </>
             ) : (
               <a
                 id="mobile-connexion-link"
                 href="/connexion"
-                class="py-3 border border-white/30 rounded-lg text-center text-[11px] font-bold uppercase"
+                class="btn btn-block border-base-100 rounded-lg! w-full"
                 role="menuitem"
               >
                 Connexion
@@ -295,6 +315,16 @@ const brandBlue = "bg-[oklch(0.2903_0.0643_289.42)]";
     let isOpen = false;
     gsap.set(dropdown, { display: "none", opacity: 0, y: -10 });
 
+    const hamTop = document.getElementById("ham-top");
+    const hamBottom = document.getElementById("ham-bottom");
+    if (hamTop && hamBottom) {
+      gsap.set([hamTop, hamBottom], {
+        transformOrigin: "50% 50%",
+        y: 0,
+        rotate: 0,
+      });
+    }
+
     const toggleMenu = (e?: Event) => {
       e?.stopPropagation();
       isOpen = !isOpen;
@@ -314,11 +344,39 @@ const brandBlue = "bg-[oklch(0.2903_0.0643_289.42)]";
             { opacity: 1, y: 0, stagger: 0.02, duration: 0.15 },
             "-=0.1",
           );
+        if (hamTop && hamBottom) {
+          gsap.to(hamTop, {
+            y: 4,
+            rotate: 45,
+            duration: 0.18,
+            ease: "power2.out",
+          });
+          gsap.to(hamBottom, {
+            y: -4,
+            rotate: -45,
+            duration: 0.18,
+            ease: "power2.out",
+          });
+        }
       } else {
         gsap
           .timeline()
           .to(dropdown, { opacity: 0, y: -10, duration: 0.15 })
           .set(dropdown, { display: "none" });
+        if (hamTop && hamBottom) {
+          gsap.to(hamTop, {
+            y: 0,
+            rotate: 0,
+            duration: 0.12,
+            ease: "power2.in",
+          });
+          gsap.to(hamBottom, {
+            y: 0,
+            rotate: 0,
+            duration: 0.12,
+            ease: "power2.in",
+          });
+        }
       }
     };
 
@@ -338,6 +396,20 @@ const brandBlue = "bg-[oklch(0.2903_0.0643_289.42)]";
         dropdown.style.display = "none";
         toggle.setAttribute("aria-expanded", "false");
         dropdown.setAttribute("aria-hidden", "true");
+        if (hamTop && hamBottom) {
+          gsap.to(hamTop, {
+            y: 0,
+            rotate: 0,
+            duration: 0.12,
+            ease: "power2.in",
+          });
+          gsap.to(hamBottom, {
+            y: 0,
+            rotate: 0,
+            duration: 0.12,
+            ease: "power2.in",
+          });
+        }
       }
     });
   }
@@ -445,6 +517,22 @@ const brandBlue = "bg-[oklch(0.2903_0.0643_289.42)]";
   }
 
   document.addEventListener("DOMContentLoaded", () => {
+    const mobileLogoutBtn = document.getElementById(
+      "mobile-logout-btn",
+    ) as HTMLButtonElement | null;
+    if (mobileLogoutBtn) {
+      mobileLogoutBtn.addEventListener("click", async () => {
+        try {
+          const response = await fetch("/api/logout", { method: "POST" });
+          if (response.ok) {
+            window.location.href = "/connexion";
+          }
+        } catch (error) {
+          console.error("Erreur lors de la déconnexion:", error);
+        }
+      });
+    }
+
     initMenu();
     initDiscoverDropdown();
   });

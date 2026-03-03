@@ -1,0 +1,131 @@
+---
+export interface Props {
+  animateDesktopSidebar?: boolean;
+}
+
+const { animateDesktopSidebar = false } = Astro.props;
+---
+
+<div class="w-full pt-24 lg:pt-0" data-action-editor-shell>
+  <div class="lg:hidden sticky top-[5.25rem] z-40 px-4 mb-4">
+    <div class="bg-base-200 border border-base-300 rounded-full p-1 flex gap-1">
+      <button
+        type="button"
+        class="btn btn-sm rounded-full flex-1 btn-accent"
+        data-shell-tab-trigger="form"
+        aria-controls="editor-form-panel"
+      >
+        Formulaire
+      </button>
+      <button
+        type="button"
+        class="btn btn-sm rounded-full flex-1 btn-ghost"
+        data-shell-tab-trigger="preview"
+        aria-controls="editor-preview-panel"
+      >
+        Aperçu
+      </button>
+    </div>
+  </div>
+
+  <div class="flex flex-col lg:flex-row h-fit w-full">
+    <section
+      id="editor-form-panel"
+      data-shell-tab-panel="form"
+      class="w-full lg:w-1/3"
+      aria-hidden="false"
+    >
+      <div
+        id="sidebar"
+        class:list={[
+          "bg-accent pb-8 p-4 lg:p-6 lg:pb-24 lg:h-[105dvh] lg:sticky lg:left-0 lg:top-0 lg:rounded-br-box lg:overflow-auto",
+          animateDesktopSidebar
+            ? "lg:transform lg:-translate-x-full lg:opacity-0 lg:transition-all lg:duration-500 lg:ease-out"
+            : "",
+        ]}
+      >
+        <slot name="form" />
+      </div>
+    </section>
+
+    <section
+      id="editor-preview-panel"
+      data-shell-tab-panel="preview"
+      class="w-full lg:w-2/3 px-4 lg:px-8"
+      aria-hidden="true"
+    >
+      <slot name="preview" />
+    </section>
+  </div>
+</div>
+
+{
+  animateDesktopSidebar && (
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        const sidebar = document.getElementById("sidebar");
+        if (sidebar && window.matchMedia("(min-width: 1024px)").matches) {
+          sidebar.classList.remove("lg:-translate-x-full", "lg:opacity-0");
+        }
+      });
+    </script>
+  )
+}
+
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const shell = document.querySelector("[data-action-editor-shell]");
+    if (!shell) return;
+
+    const mediaQuery = window.matchMedia("(max-width: 1023px)");
+    const triggers = Array.from(shell.querySelectorAll("[data-shell-tab-trigger]"));
+    const panels = Array.from(shell.querySelectorAll("[data-shell-tab-panel]"));
+
+    if (!triggers.length || !panels.length) return;
+
+    let activeTab = "form";
+
+    const syncPanels = () => {
+      const isMobile = mediaQuery.matches;
+
+      triggers.forEach((btn) => {
+        if (!isMobile) {
+          btn.classList.add("hidden");
+          return;
+        }
+
+        btn.classList.remove("hidden");
+        const isActive = btn.getAttribute("data-shell-tab-trigger") === activeTab;
+        btn.classList.toggle("btn-accent", isActive);
+        btn.classList.toggle("btn-ghost", !isActive);
+      });
+
+      panels.forEach((panel) => {
+        if (!isMobile) {
+          panel.classList.remove("hidden");
+          panel.setAttribute("aria-hidden", "false");
+          return;
+        }
+
+        const isActive = panel.getAttribute("data-shell-tab-panel") === activeTab;
+        panel.classList.toggle("hidden", !isActive);
+        panel.setAttribute("aria-hidden", isActive ? "false" : "true");
+      });
+    };
+
+    triggers.forEach((btn) => {
+      btn.addEventListener("click", () => {
+        activeTab = btn.getAttribute("data-shell-tab-trigger") || "form";
+        syncPanels();
+      });
+    });
+
+    if (typeof mediaQuery.addEventListener === "function") {
+      mediaQuery.addEventListener("change", syncPanels);
+    } else if (typeof mediaQuery.addListener === "function") {
+      mediaQuery.addListener(syncPanels);
+    }
+
+    syncPanels();
+  });
+</script>
