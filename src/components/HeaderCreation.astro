@@ -3,173 +3,486 @@ import Logo from "../assets/logo-kiwanis-full.svg";
 import userIcon from "../assets/user.svg";
 ---
 
-<header
-  class="flex items-center justify-center gap-8 py-6 fixed top-0 left-0 right-0 z-50"
->
-  <a href="/">
-    <img src={Logo.src} alt="Kiwanis Logo" class="w-14 h-14 object-fit" />
-  </a>
-  <div
-    class="w-full h-14 max-w-[80dvw] flex items-center justify-between gap-4 bg-accent rounded-xl px-4"
-  >
-    <div class="flex items-center gap-4 text-white">
-      <div class="relative w-fit text-white group">
-        <summary
-          class="flex w-full items-center justify-between gap-4 h-12 px-6 rounded-lg text-sm text-white cursor-pointer list-none transition hover:bg-white/10"
-        >
-          <span>Ajouter du contenu</span>
-          <svg
-            class="w-4 h-4 text-slate-500 transition-transform duration-200 group-hover:-rotate-180"
-            viewBox="0 0 20 20"
-            fill="none"
-            stroke="currentColor"
-          >
-            <path
-              d="M6 8l4 4 4-4"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"></path>
-          </svg>
-        </summary>
-        <ul
-          class="absolute inset-x-0 top-full z-10 rounded-lg bg-white shadow-lg ring-1 ring-black/5 opacity-0 invisible pointer-events-none group-hover:visible group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-150"
-          role="listbox"
-        >
-          <li>
-            <a
-              class="block px-6 py-2 text-sm text-slate-700 hover:bg-slate-100 rounded-lg"
-              href="/creation/actions/nouveau"
-            >
-              Actions
-            </a>
-          </li>
-          <li>
-            <a
-              class="block px-6 py-2 text-sm text-slate-700 hover:bg-slate-100 rounded-lg"
-              href="/creation/projets/nouveau"
-            >
-              Projets
-            </a>
-          </li>
-          <li>
-            <a
-              class="block px-6 py-2 text-sm text-slate-700 hover:bg-slate-100 rounded-lg"
-              href="/creation/produits/nouveau"
-            >
-              Produits
-            </a>
-          </li>
-        </ul>
-      </div>
-      <span>|</span>
-      <div class="relative w-fit text-white group">
-        <div
-          class="flex w-full items-center justify-between gap-4 h-12 px-6 rounded-lg text-sm text-white cursor-pointer transition hover:bg-white/10"
-        >
-          <span>Supprimer du contenu</span>
-          <svg
-            class="w-4 h-4 text-slate-500 transition-transform duration-200 group-hover:-rotate-180"
-            viewBox="0 0 20 20"
-            fill="none"
-            stroke="currentColor"
-          >
-            <path
-              d="M6 8l4 4 4-4"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"></path>
-          </svg>
-        </div>
-        <ul
-          class="absolute inset-x-0 top-full z-10 rounded-lg bg-white shadow-lg ring-1 ring-black/5 opacity-0 invisible pointer-events-none group-hover:visible group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-150"
-          role="listbox"
-        >
-          <li>
-            <a
-              class="block px-6 py-2 text-sm text-slate-700 hover:bg-slate-100 rounded-lg"
-              href="/creation/actions/delete"
-            >
-              Actions
-            </a>
-          </li>
-          <li>
-            <a
-              class="block px-6 py-2 text-sm text-slate-700 hover:bg-slate-100 rounded-lg"
-              href="/creation/projets/delete"
-            >
-              Projets
-            </a>
-          </li>
-          <li>
-            <a
-              class="block px-6 py-2 text-sm text-slate-700 hover:bg-slate-100 rounded-lg"
-              href="/creation/produits/delete"
-            >
-              Produits
-            </a>
-          </li>
-        </ul>
-      </div>
-      <span>|</span>
-      <div class="relative w-fit text-white group">
-        <div
-          class="flex w-full items-center justify-between gap-4 h-12 px-6 rounded-lg text-sm text-white cursor-pointer transition hover:bg-white/10"
-        >
-          <span>Modifier du contenu</span>
-          <svg
-            class="w-4 h-4 text-slate-500 transition-transform duration-200 group-hover:-rotate-180"
-            viewBox="0 0 20 20"
-            fill="none"
-            stroke="currentColor"
-          >
-            <path
-              d="M6 8l4 4 4-4"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"></path>
-          </svg>
-        </div>
-        <ul
-          class="absolute inset-x-0 top-full z-10 rounded-lg bg-white shadow-lg ring-1 ring-black/5 opacity-0 invisible pointer-events-none group-hover:visible group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-150"
-          role="listbox"
-        >
-          <li>
-            <a
-              class="block px-6 py-2 text-sm text-slate-700 hover:bg-slate-100 rounded-lg"
-              href="/creation/actions"
-            >
-              Actions
-            </a>
-          </li>
-          <li>
-            <a
-              class="block px-6 py-2 text-sm text-slate-700 hover:bg-slate-100 rounded-lg"
-              href="/creation/projets"
-            >
-              Projets
-            </a>
-          </li>
-          <li>
-            <a
-              class="block px-6 py-2 text-sm text-slate-700 hover:bg-slate-100 rounded-lg"
-              href="/creation/produits"
-            >
-              Produits
-            </a>
-          </li>
-        </ul>
-      </div>
-
-      <span>|</span>
-      <a href="/creation">Espace création</a>
-    </div>
-    <a href="/mon-compte" class="flex items-center gap-4">
-      <span class="text-sm text-white">Mon compte</span>
-      <img
-        src={userIcon.src}
-        alt="User Icon"
-        class="w-8 h-8 rounded-full invert"
-      />
+<header class="fixed top-0 left-0 right-0 z-50">
+  <div class="hidden lg:flex items-center justify-center gap-8 py-6">
+    <a href="/">
+      <img src={Logo.src} alt="Kiwanis Logo" class="w-14 h-14 object-fit" />
     </a>
+    <div
+      class="w-full h-14 max-w-[80dvw] flex items-center justify-between gap-4 bg-accent rounded-xl px-4"
+    >
+      <div class="flex items-center gap-4 text-white">
+        <div class="relative w-fit text-white group">
+          <summary
+            class="flex w-full items-center justify-between gap-4 h-12 px-6 rounded-lg text-sm text-white cursor-pointer list-none transition hover:bg-white/10"
+          >
+            <span>Ajouter du contenu</span>
+            <svg
+              class="w-4 h-4 text-slate-500 transition-transform duration-200 group-hover:-rotate-180"
+              viewBox="0 0 20 20"
+              fill="none"
+              stroke="currentColor"
+            >
+              <path
+                d="M6 8l4 4 4-4"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"></path>
+            </svg>
+          </summary>
+          <ul
+            class="absolute inset-x-0 top-full z-10 rounded-lg bg-white shadow-lg ring-1 ring-black/5 opacity-0 invisible pointer-events-none group-hover:visible group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-150"
+            role="listbox"
+          >
+            <li>
+              <a
+                class="block px-6 py-2 text-sm text-slate-700 hover:bg-slate-100 rounded-lg"
+                href="/creation/actions/nouveau"
+              >
+                Actions
+              </a>
+            </li>
+            <li>
+              <a
+                class="block px-6 py-2 text-sm text-slate-700 hover:bg-slate-100 rounded-lg"
+                href="/creation/projets/nouveau"
+              >
+                Projets
+              </a>
+            </li>
+            <li>
+              <a
+                class="block px-6 py-2 text-sm text-slate-700 hover:bg-slate-100 rounded-lg"
+                href="/creation/produits/nouveau"
+              >
+                Produits
+              </a>
+            </li>
+          </ul>
+        </div>
+        <span>|</span>
+        <div class="relative w-fit text-white group">
+          <div
+            class="flex w-full items-center justify-between gap-4 h-12 px-6 rounded-lg text-sm text-white cursor-pointer transition hover:bg-white/10"
+          >
+            <span>Supprimer du contenu</span>
+            <svg
+              class="w-4 h-4 text-slate-500 transition-transform duration-200 group-hover:-rotate-180"
+              viewBox="0 0 20 20"
+              fill="none"
+              stroke="currentColor"
+            >
+              <path
+                d="M6 8l4 4 4-4"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"></path>
+            </svg>
+          </div>
+          <ul
+            class="absolute inset-x-0 top-full z-10 rounded-lg bg-white shadow-lg ring-1 ring-black/5 opacity-0 invisible pointer-events-none group-hover:visible group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-150"
+            role="listbox"
+          >
+            <li>
+              <a
+                class="block px-6 py-2 text-sm text-slate-700 hover:bg-slate-100 rounded-lg"
+                href="/creation/actions/delete"
+              >
+                Actions
+              </a>
+            </li>
+            <li>
+              <a
+                class="block px-6 py-2 text-sm text-slate-700 hover:bg-slate-100 rounded-lg"
+                href="/creation/projets/delete"
+              >
+                Projets
+              </a>
+            </li>
+            <li>
+              <a
+                class="block px-6 py-2 text-sm text-slate-700 hover:bg-slate-100 rounded-lg"
+                href="/creation/produits/delete"
+              >
+                Produits
+              </a>
+            </li>
+          </ul>
+        </div>
+        <span>|</span>
+        <div class="relative w-fit text-white group">
+          <div
+            class="flex w-full items-center justify-between gap-4 h-12 px-6 rounded-lg text-sm text-white cursor-pointer transition hover:bg-white/10"
+          >
+            <span>Modifier du contenu</span>
+            <svg
+              class="w-4 h-4 text-slate-500 transition-transform duration-200 group-hover:-rotate-180"
+              viewBox="0 0 20 20"
+              fill="none"
+              stroke="currentColor"
+            >
+              <path
+                d="M6 8l4 4 4-4"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"></path>
+            </svg>
+          </div>
+          <ul
+            class="absolute inset-x-0 top-full z-10 rounded-lg bg-white shadow-lg ring-1 ring-black/5 opacity-0 invisible pointer-events-none group-hover:visible group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-150"
+            role="listbox"
+          >
+            <li>
+              <a
+                class="block px-6 py-2 text-sm text-slate-700 hover:bg-slate-100 rounded-lg"
+                href="/creation/actions"
+              >
+                Actions
+              </a>
+            </li>
+            <li>
+              <a
+                class="block px-6 py-2 text-sm text-slate-700 hover:bg-slate-100 rounded-lg"
+                href="/creation/projets"
+              >
+                Projets
+              </a>
+            </li>
+            <li>
+              <a
+                class="block px-6 py-2 text-sm text-slate-700 hover:bg-slate-100 rounded-lg"
+                href="/creation/produits"
+              >
+                Produits
+              </a>
+            </li>
+          </ul>
+        </div>
+
+        <span>|</span>
+        <a href="/creation">Espace cr&eacute;ation</a>
+      </div>
+      <a href="/mon-compte" class="flex items-center gap-4">
+        <span class="text-sm text-white">Mon compte</span>
+        <img
+          src={userIcon.src}
+          alt="User Icon"
+          class="w-8 h-8 rounded-full invert"
+        />
+      </a>
+    </div>
+  </div>
+
+  <div class="lg:hidden flex flex-col items-center p-4 gap-3 w-full">
+    <div class="w-full flex items-center justify-between gap-4 max-w-[90dvw]">
+      <a href="/" class="shrink-0">
+        <img src={Logo.src} alt="Kiwanis Logo" class="h-12 w-auto" />
+      </a>
+
+      <button
+        id="menu-toggle"
+        class="flex-1 flex items-center justify-between px-5 py-3 rounded-xl text-white bg-accent"
+        aria-expanded="false"
+        aria-controls="mobile-dropdown"
+        aria-label="Ouvrir le menu"
+      >
+        <span class="text-base font-medium">Menu</span>
+        <div class="relative w-6 h-6">
+          <svg
+            class="w-6 h-6 absolute"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            aria-hidden="true"
+          >
+            <path
+              id="ham-top"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="1.5"
+              d="M4 8h16"></path>
+            <path
+              id="ham-bottom"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="1.5"
+              d="M4 16h16"></path>
+          </svg>
+        </div>
+      </button>
+    </div>
+
+    <div
+      id="mobile-dropdown"
+      class="w-full max-w-[90dvw] rounded-2xl p-7 text-white shadow-2xl bg-accent"
+      style="display: none;"
+      role="menu"
+      aria-hidden="true"
+    >
+      <h2 class="text-xs font-bold tracking-widest mb-6 opacity-90 uppercase">
+        Espace cr&eacute;ation
+      </h2>
+
+      <nav class="flex flex-col select-none gap-3" role="navigation">
+        <details class="mob-link rounded-xl border border-white/20 bg-white/5">
+          <summary class="flex items-center justify-between px-4 py-3 cursor-pointer list-none">
+            <span class="text-sm uppercase tracking-wide">Ajouter du contenu</span>
+            <span class="submenu-arrow text-base opacity-70" aria-hidden="true"
+              >&#8250;</span
+            >
+          </summary>
+          <div class="flex flex-col px-4 pb-3">
+            <a
+              href="/creation/actions/nouveau"
+              class="py-2 flex justify-between items-center text-base"
+              role="menuitem"
+            >
+              Actions <span class="opacity-40" aria-hidden="true">&nearr;</span>
+            </a>
+            <a
+              href="/creation/projets/nouveau"
+              class="py-2 flex justify-between items-center text-base"
+              role="menuitem"
+            >
+              Projets <span class="opacity-40" aria-hidden="true">&nearr;</span>
+            </a>
+            <a
+              href="/creation/produits/nouveau"
+              class="py-2 flex justify-between items-center text-base"
+              role="menuitem"
+            >
+              Produits <span class="opacity-40" aria-hidden="true">&nearr;</span>
+            </a>
+          </div>
+        </details>
+
+        <details class="mob-link rounded-xl border border-white/20 bg-white/5">
+          <summary class="flex items-center justify-between px-4 py-3 cursor-pointer list-none">
+            <span class="text-sm uppercase tracking-wide">Supprimer du contenu</span>
+            <span class="submenu-arrow text-base opacity-70" aria-hidden="true"
+              >&#8250;</span
+            >
+          </summary>
+          <div class="flex flex-col px-4 pb-3">
+            <a
+              href="/creation/actions/delete"
+              class="py-2 flex justify-between items-center text-base"
+              role="menuitem"
+            >
+              Actions <span class="opacity-40" aria-hidden="true">&nearr;</span>
+            </a>
+            <a
+              href="/creation/projets/delete"
+              class="py-2 flex justify-between items-center text-base"
+              role="menuitem"
+            >
+              Projets <span class="opacity-40" aria-hidden="true">&nearr;</span>
+            </a>
+            <a
+              href="/creation/produits/delete"
+              class="py-2 flex justify-between items-center text-base"
+              role="menuitem"
+            >
+              Produits <span class="opacity-40" aria-hidden="true">&nearr;</span>
+            </a>
+          </div>
+        </details>
+
+        <details class="mob-link rounded-xl border border-white/20 bg-white/5">
+          <summary class="flex items-center justify-between px-4 py-3 cursor-pointer list-none">
+            <span class="text-sm uppercase tracking-wide">Modifier du contenu</span>
+            <span class="submenu-arrow text-base opacity-70" aria-hidden="true"
+              >&#8250;</span
+            >
+          </summary>
+          <div class="flex flex-col px-4 pb-3">
+            <a
+              href="/creation/actions"
+              class="py-2 flex justify-between items-center text-base"
+              role="menuitem"
+            >
+              Actions <span class="opacity-40" aria-hidden="true">&nearr;</span>
+            </a>
+            <a
+              href="/creation/projets"
+              class="py-2 flex justify-between items-center text-base"
+              role="menuitem"
+            >
+              Projets <span class="opacity-40" aria-hidden="true">&nearr;</span>
+            </a>
+            <a
+              href="/creation/produits"
+              class="py-2 flex justify-between items-center text-base"
+              role="menuitem"
+            >
+              Produits <span class="opacity-40" aria-hidden="true">&nearr;</span>
+            </a>
+          </div>
+        </details>
+
+        <div
+          class="mob-link h-px w-full bg-white/20 my-2"
+          role="separator"
+          aria-hidden="true"
+        >
+        </div>
+
+        <a
+          href="/creation"
+          class="mob-link flex justify-between items-center py-2 text-base"
+          role="menuitem"
+        >
+          Espace cr&eacute;ation <span class="opacity-40" aria-hidden="true">&nearr;</span>
+        </a>
+
+        <div class="mob-actions mt-4 grid grid-cols-1 gap-3">
+          <a
+            href="/mon-compte"
+            class="btn btn-block border-base-100 rounded-lg! w-full flex items-center justify-center gap-2"
+            role="menuitem"
+          >
+            <img
+              src={userIcon.src}
+              alt="User Icon"
+              class="w-5 h-5 rounded-full invert"
+            />
+            Mon compte
+          </a>
+        </div>
+      </nav>
+    </div>
   </div>
 </header>
+
+<style>
+  #mobile-dropdown details > summary::-webkit-details-marker {
+    display: none;
+  }
+
+  #mobile-dropdown details > summary .submenu-arrow {
+    transition: transform 0.2s ease;
+  }
+
+  #mobile-dropdown details[open] > summary .submenu-arrow {
+    transform: rotate(90deg);
+  }
+</style>
+
+<script>
+  import { gsap } from "gsap";
+
+  function initMenu() {
+    const toggle = document.getElementById("menu-toggle") as HTMLButtonElement;
+    const dropdown = document.getElementById("mobile-dropdown") as HTMLElement;
+    const links = document.querySelectorAll(".mob-link");
+    const subMenus = dropdown?.querySelectorAll("details");
+
+    if (!toggle || !dropdown) return;
+
+    let isOpen = false;
+    gsap.set(dropdown, { display: "none", opacity: 0, y: -10 });
+
+    const hamTop = document.getElementById("ham-top");
+    const hamBottom = document.getElementById("ham-bottom");
+    if (hamTop && hamBottom) {
+      gsap.set([hamTop, hamBottom], {
+        transformOrigin: "50% 50%",
+        y: 0,
+        rotate: 0,
+      });
+    }
+
+    const toggleMenu = (e?: Event) => {
+      e?.stopPropagation();
+      isOpen = !isOpen;
+
+      toggle.setAttribute("aria-expanded", isOpen.toString());
+      dropdown.setAttribute("aria-hidden", (!isOpen).toString());
+
+      if (isOpen) {
+        dropdown.style.display = "block";
+        gsap
+          .timeline()
+          .to(dropdown, { opacity: 1, y: 0, duration: 0.2, ease: "power2.out" })
+          .fromTo(
+            links,
+            { opacity: 0, y: 5 },
+            { opacity: 1, y: 0, stagger: 0.02, duration: 0.15 },
+            "-=0.1",
+          );
+        if (hamTop && hamBottom) {
+          gsap.to(hamTop, {
+            y: 4,
+            rotate: 45,
+            duration: 0.18,
+            ease: "power2.out",
+          });
+          gsap.to(hamBottom, {
+            y: -4,
+            rotate: -45,
+            duration: 0.18,
+            ease: "power2.out",
+          });
+        }
+      } else {
+        gsap
+          .timeline()
+          .to(dropdown, { opacity: 0, y: -10, duration: 0.15 })
+          .set(dropdown, { display: "none" });
+        subMenus?.forEach((menu) => menu.removeAttribute("open"));
+        if (hamTop && hamBottom) {
+          gsap.to(hamTop, {
+            y: 0,
+            rotate: 0,
+            duration: 0.12,
+            ease: "power2.in",
+          });
+          gsap.to(hamBottom, {
+            y: 0,
+            rotate: 0,
+            duration: 0.12,
+            ease: "power2.in",
+          });
+        }
+      }
+    };
+
+    toggle.addEventListener("click", toggleMenu);
+
+    toggle.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        toggleMenu();
+      }
+    });
+
+    window.addEventListener("resize", () => {
+      if (window.innerWidth >= 1024 && isOpen) {
+        isOpen = false;
+        dropdown.style.display = "none";
+        subMenus?.forEach((menu) => menu.removeAttribute("open"));
+        toggle.setAttribute("aria-expanded", "false");
+        dropdown.setAttribute("aria-hidden", "true");
+        if (hamTop && hamBottom) {
+          gsap.to(hamTop, {
+            y: 0,
+            rotate: 0,
+            duration: 0.12,
+            ease: "power2.in",
+          });
+          gsap.to(hamBottom, {
+            y: 0,
+            rotate: 0,
+            duration: 0.12,
+            ease: "power2.in",
+          });
+        }
+      }
+    });
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    initMenu();
+  });
+</script>
+
