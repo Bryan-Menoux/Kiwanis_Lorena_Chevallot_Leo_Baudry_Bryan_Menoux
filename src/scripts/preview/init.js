@@ -22,6 +22,31 @@ const NO_DEFAULT_FALLBACK_PROPS = new Set([
   'beneficiaire',
 ]);
 
+function getPreviewFallbackValue(prop) {
+  if (NO_DEFAULT_FALLBACK_PROPS.has(prop)) return '';
+  return Object.prototype.hasOwnProperty.call(PREVIEW_DEFAULTS, prop)
+    ? PREVIEW_DEFAULTS[prop]
+    : '';
+}
+
+function safeParseJson(rawValue, fallbackValue = {}) {
+  if (!rawValue || typeof rawValue !== 'string') return fallbackValue;
+  try {
+    const parsedValue = JSON.parse(rawValue);
+    return parsedValue && typeof parsedValue === 'object' ? parsedValue : fallbackValue;
+  } catch (error) {
+    return fallbackValue;
+  }
+}
+
+function readPlaceholderData(placeholderScript) {
+  const fromWindow = typeof window !== 'undefined' ? window.__previewData : undefined;
+  if (fromWindow && typeof fromWindow === 'object') return fromWindow;
+  if (typeof fromWindow === 'string') return safeParseJson(fromWindow, {});
+  if (placeholderScript) return safeParseJson(placeholderScript.textContent || '{}', {});
+  return {};
+}
+
 function updateHidden(prop) {
   const hiddenInput = document.getElementById(`hidden_${prop}`);
   if (!hiddenInput) return;
@@ -60,11 +85,7 @@ function handleInputElement(inputElement) {
   const previewValue = isMultiSelect
     ? rawValue
     : (isEmpty
-      ? (NO_DEFAULT_FALLBACK_PROPS.has(prop)
-        ? ''
-        : (typeof PREVIEW_DEFAULTS !== 'undefined' && PREVIEW_DEFAULTS[prop] !== undefined
-          ? PREVIEW_DEFAULTS[prop]
-          : (DEFAULT_PLACEHOLDERS[prop] ?? '')))
+      ? getPreviewFallbackValue(prop)
       : rawValue);
 
   previewState[prop] = previewValue;
@@ -86,8 +107,7 @@ function handleInputElement(inputElement) {
 function initPreview() {
   const previewRoot = document.getElementById('actionPreview');
   const placeholderScript = selectOne('#previewData');
-  const placeholderFromWindow = typeof window !== 'undefined' && (window.__previewData !== undefined) ? window.__previewData : null;
-  const placeholder = placeholderFromWindow || (placeholderScript ? JSON.parse(placeholderScript.textContent || '{}') : {});
+  const placeholder = readPlaceholderData(placeholderScript);
   setPreviewState(Object.assign({}, placeholder));
 
   const formElement = document.getElementById('leftForm');
