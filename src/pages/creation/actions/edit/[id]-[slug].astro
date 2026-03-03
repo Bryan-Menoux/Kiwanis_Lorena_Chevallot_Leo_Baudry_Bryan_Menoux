@@ -35,6 +35,13 @@ const getPbTypeActionError = (err: any) =>
   err?.response?.data?.data?.type_action ||
   err?.response?.data?.type_action ||
   null;
+const EMPTYABLE_FIELDS = new Set([
+  "nom_lieu",
+  "adresse_lieu",
+  "lien_lieu",
+  "chiffre",
+  "type_de_chiffre",
+]);
 
 // RÃ©cupÃ©rer les options de type_de_chiffre depuis le type TypeScript gÃ©nÃ©rÃ©
 let typeDeChiffreOptions: string[] = ["type de chiffre", ...(Array.isArray(ActionsTypeDeChiffreOptions) ? ActionsTypeDeChiffreOptions : Object.values(ActionsTypeDeChiffreOptions))];
@@ -214,6 +221,23 @@ if (Astro.request.method === "POST") {
         continue;
       }
       const stringValue = value.toString().trim();
+      if (key === "chiffre") {
+        if (stringValue === "") {
+          data[key] = "";
+        } else {
+          const parsedNumber = Number(stringValue);
+          data[key] = Number.isFinite(parsedNumber) ? parsedNumber : "";
+        }
+        continue;
+      }
+      if (key === "type_de_chiffre" && stringValue === "type de chiffre") {
+        data[key] = "";
+        continue;
+      }
+      if (EMPTYABLE_FIELDS.has(key)) {
+        data[key] = stringValue;
+        continue;
+      }
       if (stringValue !== "") {
         data[key] = stringValue;
       }
@@ -388,7 +412,10 @@ if (Astro.request.method === "POST") {
     </div>
 
     <div class="w-2/3 px-8">
-      <ActionContent action={previewPlaceholder} />
+      <ActionContent
+        action={previewPlaceholder}
+        forcePreviewLocationSection={true}
+      />
     </div>
   </div>
   <script set:html={`window.__previewData = ${JSON.stringify({

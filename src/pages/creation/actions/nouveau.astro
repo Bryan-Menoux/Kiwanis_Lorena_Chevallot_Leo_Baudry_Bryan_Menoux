@@ -12,6 +12,13 @@ import {
 import previewDefaults from "../../../scripts/previewDefaults.js";
 
 let error: string = "";
+const EMPTYABLE_FIELDS = new Set([
+  "nom_lieu",
+  "adresse_lieu",
+  "lien_lieu",
+  "chiffre",
+  "type_de_chiffre",
+]);
 const normalizeOptionLabel = (value: string) =>
   /Ã|Â/.test(value) ? Buffer.from(value, "latin1").toString("utf8") : value;
 
@@ -26,6 +33,12 @@ let typeActionOptions: string[] = (Array.isArray(ActionsTypeActionOptions)
 // Placeholder partagé (source unique injecté côté serveur depuis `previewDefaults.js`)
 const previewPlaceholder: any = {
   ...previewDefaults,
+  nom_lieu: "",
+  adresse_lieu: "",
+  lien_lieu: "",
+  chiffre: "",
+  type_de_chiffre: "",
+  beneficiaire: "",
 };
 // Gestion de la soumission du formulaire côté serveur (création)
 if (Astro.request.method === "POST") {
@@ -64,7 +77,24 @@ if (Astro.request.method === "POST") {
         }
         continue;
       }
-      const s = value?.toString?.()?.trim?.();
+      const s = value?.toString?.()?.trim?.() ?? "";
+      if (key === "chiffre") {
+        if (s === "") {
+          data[key] = "";
+        } else {
+          const parsedNumber = Number(s);
+          data[key] = Number.isFinite(parsedNumber) ? parsedNumber : "";
+        }
+        continue;
+      }
+      if (key === "type_de_chiffre" && s === "type de chiffre") {
+        data[key] = "";
+        continue;
+      }
+      if (EMPTYABLE_FIELDS.has(key)) {
+        data[key] = s;
+        continue;
+      }
       if (s) data[key] = s;
     }
 
@@ -109,7 +139,10 @@ if (Astro.request.method === "POST") {
     </div>
 
     <div class="w-2/3 px-8">
-      <ActionContent action={previewPlaceholder} />
+      <ActionContent
+        action={previewPlaceholder}
+        forcePreviewLocationSection={true}
+      />
     </div>
   </div>
 

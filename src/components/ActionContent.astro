@@ -10,9 +10,10 @@ import {
 import type { ActionsResponse } from "../pocketbase-types";
 export interface Props {
   action: ActionsResponse;
+  forcePreviewLocationSection?: boolean;
 }
 
-const { action } = Astro.props;
+const { action, forcePreviewLocationSection = false } = Astro.props;
 
 // runtime helper importé (on conserve le guard TypeScript localement)
 const isDataUrl = isDataUrlRuntime as (v: unknown) => v is string;
@@ -41,18 +42,49 @@ const partie3Img =
       ? action.photo_partie_3
       : Astro.locals.pb.files.getURL(action, action.photo_partie_3)
     : null;
+const hasNonEmptyText = (value: unknown) => String(value ?? "").trim() !== "";
+const hasChiffreValue = (value: unknown) => {
+  if (typeof value === "number") return Number.isFinite(value);
+  if (typeof value === "string") return value.trim() !== "";
+  return value !== null && value !== undefined && String(value).trim() !== "";
+};
+const hasTypeDeChiffreValue = hasNonEmptyText(action?.type_de_chiffre) &&
+  String(action?.type_de_chiffre).trim().toLowerCase() !== "type de chiffre";
+const chiffreNumber = Number(action?.chiffre);
+const chiffreIsNegative = Number.isFinite(chiffreNumber) && chiffreNumber < 0;
+const chiffreIsZero =
+  action?.chiffre === 0 ||
+  String(action?.chiffre ?? "").trim() === "0";
+const hasLieuCard =
+  hasNonEmptyText(action?.nom_lieu) || hasNonEmptyText(action?.adresse_lieu);
+const hasChiffreCard = chiffreIsZero
+  ? false
+  : hasChiffreValue(action?.chiffre);
+const chiffreTypeLabel = hasTypeDeChiffreValue
+  ? String(action?.type_de_chiffre)
+  : (chiffreIsNegative ? "chiffre clé" : "");
+const hasBeneficiaireCard = hasNonEmptyText(action?.beneficiaire);
+const hasLocationSection = hasLieuCard || hasChiffreCard || hasBeneficiaireCard;
+const shouldRenderLocationSection =
+  hasLocationSection || forcePreviewLocationSection;
+const hasPart1Section = hasNonEmptyText(action?.texte_partie_1);
+const hasPart2Section = hasNonEmptyText(action?.texte_partie_2);
+const hasPart3Section = hasNonEmptyText(action?.texte_partie_3);
+const hasThanksSection = hasNonEmptyText(action?.description_remerciements);
 ---
 
 <style>
-  @container (max-width: 950px) {
-    [data-kc="compact"] {
-      flex-direction: column !important;
-      /* forcer les enfants directs à se comporter comme `w-full` */
-      > * {
-        flex-basis: 100% !important;
-        max-width: 100% !important;
-        width: 100% !important;
-      }
+  [data-location-section] {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+    align-items: stretch;
+  }
+
+  @media (min-width: 1024px) {
+    [data-location-section] {
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 2rem;
     }
   }
 </style>
@@ -113,10 +145,12 @@ const partie3Img =
 
   <!-- Section Partie 1 -->
   {
-    (Object.prototype.hasOwnProperty.call(action, "titre_partie_1") ||
-      Object.prototype.hasOwnProperty.call(action, "texte_partie_1") ||
-      Object.prototype.hasOwnProperty.call(action, "photo_partie_1")) && (
-      <div class="flex flex-col max-w-7xl mx-auto my-16 md:my-32 gap-4 px-4 md:px-8">
+    (hasPart1Section || forcePreviewLocationSection) && (
+      <div
+        data-part-section="1"
+        style={hasPart1Section ? "" : "display:none;"}
+        class="flex flex-col max-w-7xl mx-auto my-12 md:my-20 lg:mb-48 gap-4 px-4 md:px-0"
+      >
         {Object.prototype.hasOwnProperty.call(action, "titre_partie_1") && (
           <h2
             data-field="titre_partie_1"
@@ -127,7 +161,7 @@ const partie3Img =
         )}
         <div
           data-image-layout="photo_partie_1"
-          class={`grid grid-cols-1 ${action.photo_partie_1 ? "lg:grid-cols-[1fr_1fr]" : "lg:grid-cols-1"} gap-8 lg:gap-16 min-h-[40dvh]`}
+          class={`grid grid-cols-1 ${action.photo_partie_1 ? "lg:grid-cols-[1fr_1fr] min-h-[40dvh]" : "lg:grid-cols-1"} gap-8 lg:gap-16`}
         >
           {Object.prototype.hasOwnProperty.call(action, "texte_partie_1") && (
             <div data-field="texte_partie_1" class="flex flex-col gap-8">
@@ -138,9 +172,10 @@ const partie3Img =
               </div>
             </div>
           )}
-          {
+          {(action.photo_partie_1 || forcePreviewLocationSection) && (
             <div
               data-image-layout-media="photo_partie_1"
+              style={action.photo_partie_1 ? "" : "display:none;"}
               class="flex flex-col items-end w-full mx-auto max-h-[50dvh] lg:max-w-full"
             >
               {action.photo_partie_1 && (
@@ -159,7 +194,7 @@ const partie3Img =
                 </p>
               )}
             </div>
-          }
+          )}
         </div>
       </div>
     )
@@ -167,37 +202,35 @@ const partie3Img =
 
   <!-- Section Lieu, Chiffres, Bénéficiaires -->
   {
-    (Object.prototype.hasOwnProperty.call(action, "nom_lieu") ||
-      Object.prototype.hasOwnProperty.call(action, "adresse_lieu") ||
-      Object.prototype.hasOwnProperty.call(action, "chiffre") ||
-      Object.prototype.hasOwnProperty.call(action, "beneficiaire")) && (
+    shouldRenderLocationSection && (
       <div
+        data-location-section
         data-kc="compact"
-        class="flex flex-col lg:flex-row justify-between gap-6 md:gap-8 w-full h-auto mx-auto my-16 md:my-32 px-4 md:px-0"
+        style={hasLocationSection ? "" : "display:none;"}
+        class="w-full h-auto mx-auto my-16 md:my-32 px-4 md:px-0"
       >
-        {Object.prototype.hasOwnProperty.call(action, "nom_lieu") ||
-        Object.prototype.hasOwnProperty.call(action, "adresse_lieu") ? (
-          <div class="bg-accent text-base-100 w-full lg:min-w-1/3 lg:max-w-fit h-fit rounded-2xl px-6 md:px-8 py-4 md:py-6 flex flex-col gap-4 justify-between min-h-30 md:min-h-48">
+        {(hasLieuCard || forcePreviewLocationSection) ? (
+          <div
+            data-location-card="lieu"
+            style={hasLieuCard ? "" : "display:none;"}
+            class="bg-accent text-base-100 w-full h-full rounded-2xl px-6 md:px-8 py-4 md:py-6 flex flex-col gap-4 justify-between min-h-30 md:min-h-48"
+          >
             <div class="flex flex-col gap-2 min-w-fit max-w-fit">
-              {Object.prototype.hasOwnProperty.call(action, "nom_lieu") && (
-                <h2
-                  data-field="nom_lieu"
-                  class="text-lg md:text-xl leading-tight min-w-fit max-w-fit"
-                  title={action.nom_lieu}
-                  style={`display:-webkit-box;-webkit-box-orient:vertical;overflow:hidden;-webkit-line-clamp:3;`}
-                >
-                  {action.nom_lieu}
-                  {action.adresse_lieu ? "," : ""}
-                </h2>
-              )}
-              {Object.prototype.hasOwnProperty.call(action, "adresse_lieu") && (
-                <p
-                  data-field="adresse_lieu"
-                  class="text-lg md:text-2xl! min-w-fit max-w-fit"
-                >
-                  {action.adresse_lieu}
-                </p>
-              )}
+              <h2
+                data-field="nom_lieu"
+                class="text-lg md:text-xl leading-tight min-w-fit max-w-fit"
+                title={action.nom_lieu}
+                style={`${hasNonEmptyText(action.nom_lieu) ? "display:-webkit-box;-webkit-box-orient:vertical;overflow:hidden;-webkit-line-clamp:3;" : "display:none;"}`}
+              >
+                {action.nom_lieu}
+              </h2>
+              <p
+                data-field="adresse_lieu"
+                class="text-lg md:text-2xl! min-w-fit max-w-fit"
+                style={hasNonEmptyText(action.adresse_lieu) ? "" : "display:none;"}
+              >
+                {action.adresse_lieu}
+              </p>
             </div>
             <div class="flex items-center justify-between w-full">
               <a
@@ -213,8 +246,12 @@ const partie3Img =
             </div>
           </div>
         ) : null}
-        {Object.prototype.hasOwnProperty.call(action, "chiffre") && (
-          <div class="bg-accent text-base-100 w-full lg:min-w-fit lg:w-1/3 max-w-full rounded-2xl px-6 md:px-8 py-4 md:py-6 flex flex-col justify-between min-h-30 md:min-h-48">
+        {(hasChiffreCard || forcePreviewLocationSection) && (
+          <div
+            data-location-card="chiffre"
+            style={hasChiffreCard ? "" : "display:none;"}
+            class="bg-accent text-base-100 w-full h-full max-w-full rounded-2xl px-6 md:px-8 py-4 md:py-6 flex flex-col justify-between min-h-30 md:min-h-48"
+          >
             <h2 data-field="chiffre" class="text-5xl! md:text-7xl!">
               {action.chiffre} €
             </h2>
@@ -222,15 +259,18 @@ const partie3Img =
             <p
               data-field="type_de_chiffre"
               class="text-base md:text-xl! uppercase self-end"
+              style={chiffreTypeLabel ? "" : "display:none;"}
             >
-              {action.type_de_chiffre && String(action.type_de_chiffre) !== 'type de chiffre'
-                ? action.type_de_chiffre
-                : "chiffre clé"}
+              {chiffreTypeLabel}
             </p>
           </div>
         )}
-        {Object.prototype.hasOwnProperty.call(action, "beneficiaire") && (
-          <div class="bg-accent text-base-100 lg:min-w-0 lg:grow-0 rounded-2xl px-6 md:px-8 py-4 md:py-6 flex flex-col justify-between min-h-30 md:min-h-48 w-full">
+        {(hasBeneficiaireCard || forcePreviewLocationSection) && (
+          <div
+            data-location-card="beneficiaire"
+            style={hasBeneficiaireCard ? "" : "display:none;"}
+            class="bg-accent text-base-100 rounded-2xl px-6 md:px-8 py-4 md:py-6 flex flex-col justify-between min-h-30 md:min-h-48 w-full h-full"
+          >
             <h2
               data-field="beneficiaire"
               class="text-lg md:text-xl w-full"
@@ -249,12 +289,12 @@ const partie3Img =
 
   <!-- Section Partie 2 -->
   {
-    (Object.prototype.hasOwnProperty.call(action, "titre_partie_2") ||
-      Object.prototype.hasOwnProperty.call(action, "texte_partie_2") ||
-      Object.prototype.hasOwnProperty.call(action, "photo_partie_2")) && (
+    (hasPart2Section || forcePreviewLocationSection) && (
       <div
+        data-part-section="2"
+        style={hasPart2Section ? "" : "display:none;"}
         data-image-layout="photo_partie_2"
-        class={`grid grid-cols-1 ${action.photo_partie_2 ? "lg:grid-cols-[1fr_1fr]" : "lg:grid-cols-1"} gap-6 md:gap-8 lg:gap-16 min-h-[40dvh] my-16 md:my-32 px-4 md:px-0`}
+        class={`grid grid-cols-1 ${action.photo_partie_2 ? "lg:grid-cols-[1fr_1fr] min-h-[40dvh]" : "lg:grid-cols-1"} gap-6 md:gap-8 lg:gap-16 my-12 md:my-20 lg:my-32 px-4 md:px-0`}
       >
         <div class="flex flex-col gap-8">
           {Object.prototype.hasOwnProperty.call(action, "titre_partie_2") && (
@@ -276,62 +316,68 @@ const partie3Img =
             </div>
           )}
         </div>
-        <div
-          data-image-layout-media="photo_partie_2"
-          class="flex flex-col items-end w-full mx-auto max-h-[50dvh] lg:max-w-full"
-        >
-          {action.photo_partie_2 && (
-            <img
-              data-field="photo_partie_2"
-              src={partie2Img}
-              alt={action.description_photo_partie_2}
-              loading="lazy"
-              decoding="async"
-              class="w-full h-[50dvh] min-h-[50dvh] object-cover rounded-lg"
-            />
-          )}
-          {action.photo_partie_2 && action.description_photo_partie_2 && (
-            <p data-field="description_photo_partie_2" class="text-sm mt-4">
-              {action.description_photo_partie_2}
-            </p>
-          )}
-        </div>
+        {(action.photo_partie_2 || forcePreviewLocationSection) && (
+          <div
+            data-image-layout-media="photo_partie_2"
+            style={action.photo_partie_2 ? "" : "display:none;"}
+            class="flex flex-col items-end w-full mx-auto max-h-[50dvh] lg:max-w-full"
+          >
+            {action.photo_partie_2 && (
+              <img
+                data-field="photo_partie_2"
+                src={partie2Img}
+                alt={action.description_photo_partie_2}
+                loading="lazy"
+                decoding="async"
+                class="w-full h-[50dvh] min-h-[50dvh] object-cover rounded-lg"
+              />
+            )}
+            {action.photo_partie_2 && action.description_photo_partie_2 && (
+              <p data-field="description_photo_partie_2" class="text-sm mt-4">
+                {action.description_photo_partie_2}
+              </p>
+            )}
+          </div>
+        )}
       </div>
     )
   }
 
   <!-- Section Partie 3 -->
   {
-    (Object.prototype.hasOwnProperty.call(action, "titre_partie_3") ||
-      Object.prototype.hasOwnProperty.call(action, "texte_partie_3") ||
-      Object.prototype.hasOwnProperty.call(action, "photo_partie_3")) && (
+    (hasPart3Section || forcePreviewLocationSection) && (
       <div
+        data-part-section="3"
+        style={hasPart3Section ? "" : "display:none;"}
         data-image-layout="photo_partie_3"
-        class={`flex flex-col-reverse lg:grid ${action.photo_partie_3 ? "lg:grid-cols-[1fr_1fr]" : "lg:grid-cols-1"} gap-6 md:gap-8 lg:gap-16 min-h-[40dvh] mt-16 mb-16 md:mt-16 md:mb-32 px-4 md:px-0`}
+        class={`flex flex-col-reverse lg:grid ${action.photo_partie_3 ? "lg:grid-cols-[1fr_1fr] min-h-[40dvh]" : "lg:grid-cols-1"} gap-6 md:gap-8 lg:gap-16 mt-12 mb-12 md:mt-12 md:mb-20 lg:mt-10 lg:mb-14 px-4 md:px-0`}
       >
-        <div
-          data-image-layout-media="photo_partie_3"
-          class="flex flex-col w-full mx-auto max-h-[50dvh] lg:max-w-full"
-        >
-          {action.photo_partie_3 && (
-            <img
-              data-field="photo_partie_3"
-              src={partie3Img}
-              alt={action.description_photo_partie_3}
-              loading="lazy"
-              decoding="async"
-              class="w-full h-[50dvh] min-h-[50dvh] object-cover rounded-lg"
-            />
-          )}
-          {action.photo_partie_3 && action.description_photo_partie_3 && (
-            <p
-              data-field="description_photo_partie_3"
-              class="text-sm mt-4 self-end lg:self-auto"
-            >
-              {action.description_photo_partie_3}
-            </p>
-          )}
-        </div>
+        {(action.photo_partie_3 || forcePreviewLocationSection) && (
+          <div
+            data-image-layout-media="photo_partie_3"
+            style={action.photo_partie_3 ? "" : "display:none;"}
+            class="flex flex-col w-full mx-auto max-h-[50dvh] lg:max-w-full"
+          >
+            {action.photo_partie_3 && (
+              <img
+                data-field="photo_partie_3"
+                src={partie3Img}
+                alt={action.description_photo_partie_3}
+                loading="lazy"
+                decoding="async"
+                class="w-full h-[50dvh] min-h-[50dvh] object-cover rounded-lg"
+              />
+            )}
+            {action.photo_partie_3 && action.description_photo_partie_3 && (
+              <p
+                data-field="description_photo_partie_3"
+                class="text-sm mt-4 self-end lg:self-auto"
+              >
+                {action.description_photo_partie_3}
+              </p>
+            )}
+          </div>
+        )}
         <div class="flex flex-col gap-8">
           {Object.prototype.hasOwnProperty.call(action, "titre_partie_3") && (
             <h2
@@ -358,11 +404,12 @@ const partie3Img =
 
   <!-- Section Remerciements -->
   {
-    Object.prototype.hasOwnProperty.call(
-      action,
-      "description_remerciements",
-    ) && (
-      <div class="flex flex-col max-w-full md:max-w-1/2 px-4 md:px-0 gap-4 md:gap-8 my-16 md:my-32">
+    (hasThanksSection || forcePreviewLocationSection) && (
+      <div
+        data-thanks-section
+        style={hasThanksSection ? "" : "display:none;"}
+        class="flex flex-col max-w-full md:max-w-1/2 px-4 md:px-0 gap-4 md:gap-8 my-16 md:my-32"
+      >
         {action.titre_remerciements && (
           <h2
             data-field="titre_remerciements"

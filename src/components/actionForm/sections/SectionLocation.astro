@@ -15,6 +15,22 @@ const {
   placeholders,
   typeDeChiffreOptions,
 } = Astro.props;
+
+const hasValue = (value: unknown) => {
+  if (typeof value === "number") return Number.isFinite(value);
+  if (typeof value === "string") return value.trim() !== "";
+  return value !== null && value !== undefined;
+};
+
+const hasNomLieu = mode === "edit" && hasValue(previewData?.nom_lieu);
+const hasAdresseLieu = mode === "edit" && hasValue(previewData?.adresse_lieu);
+const hasLienLieu = mode === "edit" && hasValue(previewData?.lien_lieu);
+const hasChiffre = mode === "edit" && hasValue(previewData?.chiffre);
+const hasTypeDeChiffre =
+  mode === "edit" &&
+  hasValue(previewData?.type_de_chiffre) &&
+  String(previewData?.type_de_chiffre).trim() !== "type de chiffre";
+const hasBeneficiaire = mode === "edit" && hasValue(previewData?.beneficiaire);
 ---
 
 <div class="p-4 bg-base-200 rounded-box border border-contrast space-y-4 opacity-0 -translate-x-4">
@@ -27,12 +43,12 @@ const {
     maxlength="30"
     class="w-full border border-accent rounded px-2 py-1 text-black bg-base-100"
     placeholder={placeholders.nom_lieu}
-    {...mode === "edit" && previewData ? { value: previewData.nom_lieu } : {}}
+    {...hasNomLieu ? { value: previewData.nom_lieu } : {}}
   />
   <HiddenField
     name="nom_lieu"
     id="hidden_nom_lieu"
-    value={mode === "edit" && previewData ? previewData.nom_lieu : undefined}
+    value={hasNomLieu ? previewData.nom_lieu : undefined}
   />
 
   <label class="block text-sm font-medium mt-3 mb-1">Adresse du lieu (max 30 caractères)</label>
@@ -41,7 +57,7 @@ const {
       inputId="input_adresse_lieu"
       suggestionsId="suggestions_adresse_lieu"
       placeholder={placeholders.adresse_lieu}
-      value={mode === "edit" && previewData ? previewData.adresse_lieu : ""}
+      value={hasAdresseLieu ? previewData.adresse_lieu : undefined}
       dataProp="adresse_lieu"
       maxLength={30}
       inputClass="w-full border border-accent rounded px-2 py-1 text-black bg-base-100 flex-1"
@@ -50,9 +66,7 @@ const {
     <HiddenField
       name="adresse_lieu"
       id="hidden_adresse_lieu"
-      value={mode === "edit" && previewData
-        ? previewData.adresse_lieu
-        : undefined}
+      value={hasAdresseLieu ? previewData.adresse_lieu : undefined}
     />
 
     <input
@@ -60,7 +74,7 @@ const {
       data-prop="lien_lieu"
       id="input_lien_lieu"
       name="lien_lieu"
-      value={mode === "edit" && previewData ? previewData.lien_lieu : ""}
+      {...hasLienLieu ? { value: previewData.lien_lieu } : {}}
     />
 
     <div class="w-fit flex items-stretch shrink-0">
@@ -69,12 +83,8 @@ const {
         class="btn btn-accent rounded-md! flex items-center justify-center whitespace-nowrap h-full"
         target="_blank"
         rel="noopener noreferrer"
-        href={mode === "edit" && previewData && previewData.lien_lieu
-          ? previewData.lien_lieu
-          : "#"}
-        style={mode === "edit" && previewData && previewData.lien_lieu
-          ? ""
-          : "display:none;"}>Voir sur Maps</a
+        href={hasLienLieu ? previewData.lien_lieu : "#"}
+        style={hasLienLieu ? "" : "display:none;"}>Voir sur Maps</a
       >
     </div>
   </div>
@@ -115,7 +125,7 @@ const {
         type="number"
         class="border border-accent rounded px-2 py-1 w-full text-black bg-base-100"
         placeholder={placeholders.chiffre}
-        value={mode === "edit" && previewData ? previewData.chiffre : ""}
+        {...hasChiffre ? { value: previewData.chiffre } : {}}
       />
     </div>
     <div class="w-1/2">
@@ -127,9 +137,7 @@ const {
         data-prop="type_de_chiffre"
         id="input_type_de_chiffre"
         class="border border-accent rounded px-2 py-1 w-full text-black bg-base-100"
-        value={mode === "edit" && previewData
-          ? previewData.type_de_chiffre
-          : ""}
+        {...hasTypeDeChiffre ? { value: previewData.type_de_chiffre } : {}}
       >
         {
           typeDeChiffreOptions.map((opt) => (
@@ -143,12 +151,12 @@ const {
   <HiddenField
     name="chiffre"
     id="hidden_chiffre"
-    value={mode === "edit" && previewData ? previewData.chiffre : ""}
+    value={hasChiffre ? previewData.chiffre : undefined}
   />
   <HiddenField
     name="type_de_chiffre"
     id="hidden_type_de_chiffre"
-    value={mode === "edit" && previewData ? previewData.type_de_chiffre : ""}
+    value={hasTypeDeChiffre ? previewData.type_de_chiffre : undefined}
   />
 
   <label for="input_beneficiaire" class="block text-sm font-medium mt-3 mb-1"
@@ -159,11 +167,11 @@ const {
     id="input_beneficiaire"
     class="w-full border border-accent rounded px-2 py-1 text-black bg-base-100"
     placeholder={placeholders.beneficiaire}
-    value={mode === "edit" && previewData ? previewData.beneficiaire : ""}
+    {...hasBeneficiaire ? { value: previewData.beneficiaire } : {}}
   />
   <HiddenField
     name="beneficiaire"
     id="hidden_beneficiaire"
-    value={mode === "edit" && previewData ? previewData.beneficiaire : ""}
+    value={hasBeneficiaire ? previewData.beneficiaire : undefined}
   />
 </div>

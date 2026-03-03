@@ -13,6 +13,14 @@ import { handleFileElement, bindExistingSingleRemoveButtons } from './singleImag
 import { renderGallery, renderFormGalleryThumbnails, renderExistingThumbnails } from './gallery.js';
 
 const selectOne = (selector, context = document) => context.querySelector(selector);
+const NO_DEFAULT_FALLBACK_PROPS = new Set([
+  'nom_lieu',
+  'adresse_lieu',
+  'lien_lieu',
+  'chiffre',
+  'type_de_chiffre',
+  'beneficiaire',
+]);
 
 function updateHidden(prop) {
   const hiddenInput = document.getElementById(`hidden_${prop}`);
@@ -52,9 +60,11 @@ function handleInputElement(inputElement) {
   const previewValue = isMultiSelect
     ? rawValue
     : (isEmpty
-      ? (typeof PREVIEW_DEFAULTS !== 'undefined' && PREVIEW_DEFAULTS[prop] !== undefined
+      ? (NO_DEFAULT_FALLBACK_PROPS.has(prop)
+        ? ''
+        : (typeof PREVIEW_DEFAULTS !== 'undefined' && PREVIEW_DEFAULTS[prop] !== undefined
           ? PREVIEW_DEFAULTS[prop]
-          : (DEFAULT_PLACEHOLDERS[prop] ?? ''))
+          : (DEFAULT_PLACEHOLDERS[prop] ?? '')))
       : rawValue);
 
   previewState[prop] = previewValue;

@@ -47,6 +47,90 @@ function syncAllImageSectionLayouts() {
   Object.keys(IMAGE_DESCRIPTION_MAP).forEach(syncImageSectionLayout);
 }
 
+function syncPartSectionsVisibility() {
+  const part1Nodes = Array.from(document.querySelectorAll('[data-part-section="1"]'));
+  const part2Nodes = Array.from(document.querySelectorAll('[data-part-section="2"]'));
+  const part3Nodes = Array.from(document.querySelectorAll('[data-part-section="3"]'));
+
+  const showPart1 = hasNonEmptyValue(previewState.texte_partie_1);
+  const showPart2 = hasNonEmptyValue(previewState.texte_partie_2);
+  const showPart3 = hasNonEmptyValue(previewState.texte_partie_3);
+
+  part1Nodes.forEach((node) => {
+    node.style.display = showPart1 ? '' : 'none';
+  });
+  part2Nodes.forEach((node) => {
+    node.style.display = showPart2 ? '' : 'none';
+  });
+  part3Nodes.forEach((node) => {
+    node.style.display = showPart3 ? '' : 'none';
+  });
+}
+
+function syncThanksSectionVisibility() {
+  const thanksNodes = Array.from(document.querySelectorAll('[data-thanks-section]'));
+  if (!thanksNodes.length) return;
+  const showThanks = hasNonEmptyValue(previewState.description_remerciements);
+  thanksNodes.forEach((node) => {
+    node.style.display = showThanks ? '' : 'none';
+  });
+}
+
+function hasNonEmptyValue(value) {
+  return String(value ?? '').trim() !== '';
+}
+
+function hasChiffreValue(value) {
+  if (typeof value === 'number') return Number.isFinite(value);
+  if (typeof value === 'string') return value.trim() !== '';
+  return value !== null && value !== undefined && String(value).trim() !== '';
+}
+
+function hasTypeDeChiffreValue(value) {
+  const normalized = String(value ?? '').trim().toLowerCase();
+  return normalized !== '' && normalized !== 'type de chiffre';
+}
+
+function syncLocationCardsVisibility() {
+  const sectionNodes = Array.from(document.querySelectorAll('[data-location-section]'));
+  if (!sectionNodes.length) return;
+
+  const hasLieu =
+    hasNonEmptyValue(previewState.nom_lieu) || hasNonEmptyValue(previewState.adresse_lieu);
+  const chiffreRaw = previewState.chiffre;
+  const chiffreIsZero =
+    chiffreRaw === 0 || (typeof chiffreRaw === 'string' && chiffreRaw.trim() === '0');
+  const hasChiffre = chiffreIsZero
+    ? false
+    : hasChiffreValue(chiffreRaw);
+  const hasBeneficiaire = hasNonEmptyValue(previewState.beneficiaire);
+  const hasAny = hasLieu || hasChiffre || hasBeneficiaire;
+
+  sectionNodes.forEach((sectionNode) => {
+    sectionNode.style.display = hasAny ? '' : 'none';
+
+    const lieuCard = sectionNode.querySelector('[data-location-card="lieu"]');
+    const chiffreCard = sectionNode.querySelector('[data-location-card="chiffre"]');
+    const beneficiaireCard = sectionNode.querySelector('[data-location-card="beneficiaire"]');
+
+    if (lieuCard) lieuCard.style.display = hasLieu ? '' : 'none';
+    if (chiffreCard) chiffreCard.style.display = hasChiffre ? '' : 'none';
+    if (beneficiaireCard) beneficiaireCard.style.display = hasBeneficiaire ? '' : 'none';
+  });
+
+  const nomLieuNodes = Array.from(document.querySelectorAll('[data-field="nom_lieu"]'));
+  const adresseLieuNodes = Array.from(document.querySelectorAll('[data-field="adresse_lieu"]'));
+  const showNomLieu = hasNonEmptyValue(previewState.nom_lieu);
+  const showAdresseLieu = hasNonEmptyValue(previewState.adresse_lieu);
+
+  nomLieuNodes.forEach((node) => {
+    node.style.display = showNomLieu ? '' : 'none';
+  });
+  adresseLieuNodes.forEach((node) => {
+    node.style.display = showAdresseLieu ? '' : 'none';
+  });
+}
+
 function renderField(prop) {
   const nodes = Array.from(document.querySelectorAll(`[data-field="${prop}"]`));
   const value = previewState[prop];
@@ -99,13 +183,34 @@ function renderField(prop) {
         element.textContent = '\u00A0€';
       }
     } else if (prop === 'type_de_chiffre') {
-      // treat placeholder value as absence and display singular label
       const v = String(value || '').trim();
-      element.textContent = v && v !== 'type de chiffre' ? v : 'chiffre clé';
+      const chiffreNum = Number(previewState.chiffre);
+      const chiffreIsNegative = Number.isFinite(chiffreNum) && chiffreNum < 0;
+      const label = v && v !== 'type de chiffre' ? v : (chiffreIsNegative ? 'chiffre clé' : '');
+      element.textContent = label;
+      element.style.display = label ? '' : 'none';
     } else {
       element.textContent = value ?? '';
     }
   });
+
+  if (
+    prop === 'nom_lieu' ||
+    prop === 'adresse_lieu' ||
+    prop === 'chiffre' ||
+    prop === 'type_de_chiffre' ||
+    prop === 'beneficiaire'
+  ) {
+    syncLocationCardsVisibility();
+  }
+
+  if (prop === 'texte_partie_1' || prop === 'texte_partie_2' || prop === 'texte_partie_3') {
+    syncPartSectionsVisibility();
+  }
+
+  if (prop === 'description_remerciements') {
+    syncThanksSectionVisibility();
+  }
 }
 
 function renderAll() {
@@ -118,6 +223,9 @@ function renderAll() {
   });
   syncAllImageDescriptionVisibility();
   syncAllImageSectionLayouts();
+  syncLocationCardsVisibility();
+  syncPartSectionsVisibility();
+  syncThanksSectionVisibility();
 }
 
 export {
@@ -127,6 +235,9 @@ export {
   syncAllImageDescriptionVisibility,
   syncImageSectionLayout,
   syncAllImageSectionLayouts,
+  syncPartSectionsVisibility,
+  syncThanksSectionVisibility,
+  syncLocationCardsVisibility,
   renderField,
   renderAll,
 };

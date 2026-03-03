@@ -15,13 +15,16 @@ const {
   inputId = "input_adresse_lieu",
   suggestionsId = "suggestions_adresse_lieu",
   placeholder = "Tape l'adresse du lieu",
-  value = "",
+  value,
   inputClass = "w-full border border-accent rounded px-2 py-1 mt-2 text-black bg-base-100",
   dataProp = "adresse_lieu",
   name,
   maxLength,
   mapLinkInputId = "input_lien_lieu",
 } = Astro.props;
+
+const hasInitialValue =
+  typeof value === "string" ? value.trim() !== "" : value !== undefined;
 ---
 
 <div
@@ -35,7 +38,7 @@ const {
     placeholder={placeholder}
     autocomplete="off"
     class={inputClass}
-    value={value}
+    {...hasInitialValue ? { value } : {}}
     data-prop={dataProp}
     name={name}
     maxlength={maxLength}
@@ -88,24 +91,32 @@ const {
       parts
         .map((part) => String(part || "").trim())
         .filter((part, index, arr) => part && arr.indexOf(part) === index);
-    // formatShortAddress: returns a concise address string without department
-    const formatShortAddress = (item: NominatimResult) => {
+    // Format cible :
+    // - si rue présente : "rue, ville" (sans département)
+    // - sinon : "ville, département"
+    const formatAddressForField = (item: NominatimResult) => {
       const street = joinParts([
         item.address?.house_number,
-        item.address?.road || item.address?.pedestrian || item.address?.footway || item.address?.path,
+        item.address?.road ||
+          item.address?.pedestrian ||
+          item.address?.footway ||
+          item.address?.path,
       ]).join(" ");
       const city =
         item.address?.city ||
         item.address?.town ||
         item.address?.village ||
         item.address?.municipality;
-      const concise = joinParts([street, city]).join(", ");
-      if (concise) return concise;
+      const department = item.address?.county || item.address?.state || "";
+
+      if (street) return joinParts([street, city]).join(", ");
+      if (city) return joinParts([city, department]).join(", ");
+
       return String(item.display_name || "")
         .split(",")
         .map((part) => part.trim())
         .filter(Boolean)
-        .slice(0, 3)
+        .slice(0, 2)
         .join(", ");
     };
     const buildMapsLink = (query: string) =>
@@ -150,16 +161,12 @@ const {
           data.forEach((item) => {
             const btn = document.createElement("button");
             btn.type = "button";
-            const shortAddressNoDept = formatShortAddress(item);
-            // try to get a department/county label from the result (Nominatim uses `county` for departments)
-            const dept = item.address?.county || item.address?.state || "";
-            const displayLabel = dept ? joinParts([shortAddressNoDept, dept]).join(", ") : (shortAddressNoDept || item.display_name || "");
-            btn.textContent = displayLabel;
+            const formattedAddress = formatAddressForField(item);
+            btn.textContent = formattedAddress || item.display_name || "";
             btn.className = "w-full text-left px-4 py-2 cursor-pointer hover:bg-zinc-100 text-sm";
             btn.addEventListener("click", () => {
               isProgrammaticUpdate = true;
-              // set the input value WITHOUT the department
-              input.value = shortAddressNoDept || item.display_name || "";
+              input.value = formattedAddress || item.display_name || "";
               syncMapLinkFromInput();
               input.dispatchEvent(new Event("input", { bubbles: true }));
               input.dispatchEvent(new Event("change", { bubbles: true }));
