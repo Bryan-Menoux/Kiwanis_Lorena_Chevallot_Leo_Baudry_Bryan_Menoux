@@ -1,0 +1,72 @@
+---
+import Layout from "../../../layouts/Layout.astro";
+import ActionContent from "../../../components/ActionContent.astro";
+import backArrow from "../../../assets/back-arrow.svg";
+
+const id = Astro.params.id;
+const slug = Astro.params.slug;
+const normalizedId =
+  typeof id === "string" ? (id.match(/^[a-zA-Z0-9]{15}/)?.[0] ?? id) : id;
+let draft = null;
+
+try {
+  draft = await Astro.locals.pb.collection("brouillons").getOne(normalizedId!);
+} catch (err) {
+  const isNotFound =
+    (err instanceof Error &&
+      err.message?.includes("The requested resource wasn't found")) ||
+    (err as any)?.response?.status === 404;
+  if (isNotFound) {
+    const message = "Brouillon introuvable (identifiant: " + normalizedId + ")";
+    return new Response(
+      `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Brouillon introuvable</title><style>body{background:#0b1220;color:#e6eef8;font-family:system-ui,-apple-system,Segoe UI,Roboto,'Helvetica Neue',Arial;padding:40px}a{color:#9fe7c4}</style></head><body><h1>Brouillon introuvable</h1><p>${message}</p><p><a href="/creation">Retour à la création</a></p></body></html>`,
+      { status: 404, headers: { "Content-Type": "text/html" } },
+    );
+  }
+  throw err;
+}
+---
+
+<Layout>
+  <a
+    href="/creation"
+    class="hidden fixed px-4 py-3 min-h-11 lg:flex items-center justify-center z-50 bg-base-100 bg-opacity-80 rounded-box text-sm lg:text-base lg:left-[2%] lg:top-[12%]"
+  >
+    <img
+      src={backArrow.src}
+      alt="Retour à la création"
+      class="inline-block mr-2 invert w-4 h-4 md:w-5 md:h-5"
+    />Retour à la création</a
+  >
+
+  <div class="flex w-full justify-between mb-8 mt-24 px-4">
+    <a href="/creation" class="flex lg:hidden items-center text-sm">
+      <img
+        src={backArrow.src}
+        alt="Retour à la création"
+        class="inline-block mr-2 invert w-4 h-4 md:w-5 md:h-5"
+      />Retour à la création</a
+    >
+    <a
+      href={`/creation/actions/edit/${id}-${slug}`}
+      class="flex lg:hidden items-center text-sm w-fit btn btn-accent"
+    >
+      Modifier le brouillon</a
+    >
+  </div>
+
+  <a
+    href={`/creation/actions/edit/${id}-${slug}`}
+    class="hidden fixed px-4 py-3 min-h-11 lg:flex items-center justify-center z-50 bg-opacity-80 rounded-box text-sm lg:text-base lg:right-[2%] lg:top-[12%] btn btn-accent"
+  >
+    Modifier le brouillon</a
+  >
+
+  <div class="w-full max-w-7xl mx-auto px-4 md:px-8 mt-6">
+    <div class="alert border border-warning bg-warning/10 text-warning!">
+      <span>Ce contenu est un brouillon (non publié).</span>
+    </div>
+  </div>
+
+  <ActionContent action={draft} />
+</Layout>

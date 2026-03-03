@@ -1,4 +1,4 @@
----
+﻿---
 import Layout from "../../../layouts/Layout-back-office.astro";
 import ActionContent from "../../../components/ActionContent.astro";
 import ActionForm from "../../../components/ActionForm.astro";
@@ -20,9 +20,9 @@ const EMPTYABLE_FIELDS = new Set([
   "type_de_chiffre",
 ]);
 const normalizeOptionLabel = (value: string) =>
-  /Ã|Â/.test(value) ? Buffer.from(value, "latin1").toString("utf8") : value;
+  /Ãƒ|Ã‚/.test(value) ? Buffer.from(value, "latin1").toString("utf8") : value;
 
-// Récupérer les options de type_de_chiffre depuis le type TypeScript généré
+// RÃ©cupÃ©rer les options de type_de_chiffre depuis le type TypeScript gÃ©nÃ©rÃ©
 let typeDeChiffreOptions: string[] = ["type de chiffre", ...(Array.isArray(ActionsTypeDeChiffreOptions) ? ActionsTypeDeChiffreOptions : Object.values(ActionsTypeDeChiffreOptions))];
 let typeActionOptions: string[] = (Array.isArray(ActionsTypeActionOptions)
   ? ActionsTypeActionOptions
@@ -30,7 +30,7 @@ let typeActionOptions: string[] = (Array.isArray(ActionsTypeActionOptions)
   normalizeOptionLabel(String(opt)),
 );
 
-// Placeholder partagé (source unique injecté côté serveur depuis `previewDefaults.js`)
+// Placeholder partagÃ© (source unique injectÃ© cÃ´tÃ© serveur depuis `previewDefaults.js`)
 const previewPlaceholder: any = {
   ...previewDefaults,
   nom_lieu: "",
@@ -40,12 +40,12 @@ const previewPlaceholder: any = {
   type_de_chiffre: "",
   beneficiaire: "",
 };
-// Gestion de la soumission du formulaire côté serveur (création)
+// Gestion de la soumission du formulaire cÃ´tÃ© serveur (crÃ©ation)
 if (Astro.request.method === "POST") {
   try {
     const formData = await Astro.request.formData();
 
-    // Détecter si l'utilisateur veut enregistrer en brouillon
+    // DÃ©tecter si l'utilisateur veut enregistrer en brouillon
     const saveAs = formData.get("save_as")?.toString();
     const isBrouillon = saveAs === "brouillon";
 
@@ -55,15 +55,18 @@ if (Astro.request.method === "POST") {
       throw new Error("Le titre est obligatoire");
     }
 
-    // Générer le slug
+    // GÃ©nÃ©rer le slug
     const slug = titre ? slugify(titre, { lower: true, strict: true }) : "";
 
-    // Préparer les données pour PocketBase
+    // PrÃ©parer les donnÃ©es pour PocketBase
     const data: any = {};
     for (const [key, value] of formData.entries()) {
       if (value instanceof File) continue;
       if (key === "galerie_photos" || key.startsWith("remove_")) continue;
       if (key === "type_action") {
+        if (isBrouillon) {
+          continue;
+        }
         try {
           const parsed = JSON.parse(value.toString());
           data[key] = Array.isArray(parsed)
@@ -98,7 +101,7 @@ if (Astro.request.method === "POST") {
       if (s) data[key] = s;
     }
 
-    // Gérer les fichiers
+    // GÃ©rer les fichiers
     const files: any = {};
     for (const [key, value] of formData.entries()) {
       if (value instanceof File && value.size > 0) {
@@ -112,13 +115,24 @@ if (Astro.request.method === "POST") {
     }
 
     // Créer le record
+    if (isBrouillon) {
+      const draftSlug = slug || "brouillon";
+      const draftPayload = { ...data, slug: draftSlug, type: "action", ...files };
+      const newDraft = await Astro.locals.pb
+        .collection("brouillons")
+        .create(draftPayload);
+      return Astro.redirect(
+        `/creation/brouillons/${newDraft.id}-${draftSlug}?success=${encodeURIComponent("Brouillon créé")}`
+      );
+    }
+
     const payload = { ...data, slug, ...files };
     const newAction = await Astro.locals.pb.collection("actions").create(payload);
     return Astro.redirect(
-      `/creation/actions/${newAction.id}-${slug}?success=${encodeURIComponent("Action créée")}`,
+      `/creation/actions/${newAction.id}-${slug}?success=${encodeURIComponent("Action créée")}`
     );
   } catch (err) {
-    console.error("Erreur lors de la création:", err);
+    console.error("Erreur lors de la crÃ©ation:", err);
     error = err instanceof Error ? err.message : "Une erreur inconnue est survenue";
   }
 }

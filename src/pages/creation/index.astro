@@ -116,10 +116,7 @@ function getViewUrl(status: Page['status'], id: string, slug: string, type?: str
   if (status === 'projets') return `/projets/${id}-${slug}`;
   if (status === 'produits') return `/produits/${id}-${slug}`;
   if (status === 'brouillon') {
-    if (type === 'action') return `/actions/${id}-${slug}`;
-    if (type === 'projet') return `/projets/${id}-${slug}`;
-    if (type === 'produit') return `/produits/${id}-${slug}`;
-    return getEditUrl(status, id, slug);
+    return `/creation/brouillons/${id}-${slug}`;
   }
   return getEditUrl(status, id, slug);
 }
@@ -301,7 +298,7 @@ const allPages = db.pages;
       if (type === 'action') return `/creation/actions/edit/${id}-${slug}`;
       if (type === 'projet') return `/creation/projets/edit/${id}-${slug}`;
       if (type === 'produit') return `/creation/produits/edit/${id}-${slug}`;
-      // cas de repli : ouvrir l'éditeur actions
+      // cas de repli : ouvrir l'éditeur actions
       return `/creation/actions/edit/${id}-${slug}`;
     }
 
@@ -313,10 +310,7 @@ const allPages = db.pages;
     if (status === 'projets') return `/projets/${id}-${slug}`;
     if (status === 'produits') return `/produits/${id}-${slug}`;
     if (status === 'brouillon') {
-      if (type === 'action') return `/actions/${id}-${slug}`;
-      if (type === 'projet') return `/projets/${id}-${slug}`;
-      if (type === 'produit') return `/produits/${id}-${slug}`;
-      return getEditUrl(status, id, slug);
+      return `/creation/brouillons/${id}-${slug}`;
     }
     return getEditUrl(status, id, slug);
   }

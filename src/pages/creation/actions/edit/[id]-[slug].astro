@@ -148,6 +148,7 @@ const previewPlaceholder: any = {
 if (Astro.request.method === "POST") {
   try {
     const formData = await Astro.request.formData();
+    const publishRequested = formData.get("publish_action")?.toString() === "true";
       try {
       const entries = [];
       for (const e of formData.entries()) {
@@ -204,7 +205,7 @@ if (Astro.request.method === "POST") {
         continue;
       if (key === "type_action") {
         // Le champ `type_action` n'existe pas dans la collection `brouillons`.
-        if (actionRecordFromBrouillon) {
+        if (actionRecordFromBrouillon && !publishRequested) {
           continue;
         }
         try {
@@ -329,6 +330,24 @@ if (Astro.request.method === "POST") {
 
       // Si le record provient d'un brouillon, on met Ã  jour la collection `brouillons`
       if (actionRecordFromBrouillon) {
+        if (publishRequested) {
+          const publishPayload: any = { ...payload };
+          if (Object.prototype.hasOwnProperty.call(publishPayload, "type")) {
+            delete publishPayload.type;
+          }
+          const publishedAction = await Astro.locals.pb
+            .collection("actions")
+            .create(publishPayload);
+          await Astro.locals.pb.collection("brouillons").delete(idParam);
+
+          return Astro.redirect(
+            withSuccess(
+              `/creation/actions/${publishedAction.id}-${slug}`,
+              "Brouillon publié",
+            ),
+          );
+        }
+
         // assurer que le type reste 'action' pour que les liens redirigent correctement
         payload.type = 'action';
         // SÃ©curitÃ©: ne jamais pousser `type_action` vers `brouillons`.
@@ -407,6 +426,7 @@ if (Astro.request.method === "POST") {
           typeActionOptions={typeActionOptions}
           imageIcon={imageIcon}
           actionRecord={actionRecord}
+          isDraft={actionRecordFromBrouillon}
         />
       </div>
     </div>
