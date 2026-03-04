@@ -105,7 +105,11 @@ const currentUser = Astro.locals.pb.authStore.record;
       {
         currentUser ? (
           <>
-            <a id="account-link" href="/mon-compte" class="flex items-center gap-4">
+            <a
+              id="account-link"
+              href="/mon-compte"
+              class="flex items-center gap-4"
+            >
               <span class="text-sm font-semibold">Mon compte</span>
               <div
                 class="w-10 h-10 icon-accent"
@@ -302,10 +306,9 @@ const currentUser = Astro.locals.pb.authStore.record;
 
 <script>
   import { gsap } from "gsap";
-
   let discoverIsOpen = false;
   let globalClickHandler: ((e: Event) => void) | null = null;
-
+  
   function initMenu() {
     const toggle = document.getElementById("menu-toggle") as HTMLButtonElement;
     const dropdown = document.getElementById("mobile-dropdown") as HTMLElement;
@@ -538,4 +541,3 @@ const currentUser = Astro.locals.pb.authStore.record;
     initDiscoverDropdown();
   });
 </script>
-
