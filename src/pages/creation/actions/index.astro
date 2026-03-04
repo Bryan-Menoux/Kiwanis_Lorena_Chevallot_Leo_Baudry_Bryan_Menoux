@@ -33,18 +33,18 @@ const brouillonsRaw: any[] = await Astro.locals.pb
 
 const actions: ActionItem[] = [
   ...actionsRaw.map((a) => ({
-  id: a.id,
-  titre: a.titre,
-  slug: slugify(a.titre || "", { lower: true, strict: true }),
-  source: "action" as const,
-  sous_titre: a.sous_titre,
-  hero: a.hero,
-  updated: a.updated,
-  date_debut: a.date_debut,
-  date_fin: a.date_fin,
-  beneficiaire: a.beneficiaire,
-  type_de_chiffre: a.type_de_chiffre,
-  type_action: a.type_action,
+    id: a.id,
+    titre: a.titre,
+    slug: slugify(a.titre || "", { lower: true, strict: true }),
+    source: "action" as const,
+    sous_titre: a.sous_titre,
+    hero: a.hero,
+    updated: a.updated,
+    date_debut: a.date_debut,
+    date_fin: a.date_fin,
+    beneficiaire: a.beneficiaire,
+    type_de_chiffre: a.type_de_chiffre,
+    type_action: a.type_action,
   })),
   ...brouillonsRaw.map((b) => ({
     id: b.id,
@@ -61,7 +61,8 @@ const actions: ActionItem[] = [
     type_action: [],
   })),
 ].sort(
-  (a, b) => new Date(b.updated || 0).getTime() - new Date(a.updated || 0).getTime(),
+  (a, b) =>
+    new Date(b.updated || 0).getTime() - new Date(a.updated || 0).getTime(),
 );
 
 const stats = { total: actions.length };
@@ -87,9 +88,13 @@ const allActions = actions;
 
 <Layout>
   <div class="container mx-auto px-4 py-8 my-16 md:my-32">
-    <div class="mb-10 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+    <div
+      class="mb-10 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between"
+    >
       <div class="mb-0">
-        <h1 class="mb-3 text-3xl font-bold text-accent font-poppins md:text-4xl">
+        <h1
+          class="mb-3 text-3xl font-bold text-accent font-poppins md:text-4xl"
+        >
           Actions
         </h1>
         <p class="text-base text-base-content/70 md:text-lg">
@@ -97,7 +102,9 @@ const allActions = actions;
         </p>
       </div>
       <div class="flex flex-wrap items-center gap-3 lg:justify-end">
-        <a href="/actions" class="btn btn-border btn-sm rounded-full md:btn-md">Voir le site</a>
+        <a href="/actions" class="btn btn-border btn-sm rounded-full md:btn-md"
+          >Voir le site</a
+        >
         <a
           href="/creation/actions/nouveau"
           class="btn btn-accent btn-sm rounded-full md:btn-md"
@@ -110,31 +117,40 @@ const allActions = actions;
       <div class="card bg-base-100 shadow-md">
         <div class="card-body text-center p-4">
           <div class="text-4xl! font-bold text-base-content">{stats.total}</div>
-          <div class="text-sm text-base-content">Actions</div>
+          <div class="text-base-content">Actions</div>
         </div>
       </div>
     </div>
 
-    <div class="card mb-8 rounded-2xl border border-base-300 bg-base-100 shadow-sm">
+    <div
+      class="card mb-8 rounded-2xl border border-base-300 bg-base-100 shadow-sm"
+    >
       <div class="card-body p-4 md:p-6">
         <div class="mb-4">
           <h2 class="card-title text-2xl">Rechercher</h2>
-          <p class="mt-1 text-sm text-base-content/60">
+          <p class="mt-1 text-base-content/60">
             Filtrez rapidement vos actions puis triez l'affichage.
           </p>
         </div>
 
         <div class="flex flex-col gap-4">
           <div class="w-full">
-            <p class="mb-2 text-sm font-medium text-base-content/70">Filtres</p>
+            <p class="mb-2 font-medium text-base-content/70">Filtres</p>
             <ActionsSearch
               value={q}
               yearOptions={yearOptions}
               typeOptions={typeOptions}
               embedded={true}
             >
-              <label slot="secondary-extra" class="form-control w-full gap-1" for="sort-select">
-                <span class="text-xs font-medium uppercase tracking-wide text-base-content/60">Trier par date</span>
+              <label
+                slot="secondary-extra"
+                class="form-control w-full gap-1"
+                for="sort-select"
+              >
+                <span
+                  class="text-xs font-medium uppercase tracking-wide text-base-content/60"
+                  >Trier par date</span
+                >
                 <select id="sort-select" class="select select-bordered w-full">
                   <option value="updated_desc">Recent -> Ancien</option>
                   <option value="updated_asc">Ancien -> Recent</option>
@@ -148,11 +164,13 @@ const allActions = actions;
 
     <div id="pages-container" class="mb-8" data-initial-search={q}>
       <!-- rendu initial fait côté serveur -->
-      <div class="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-5 lg:grid-cols-3 lg:gap-6">
+      <div
+        class="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-5 lg:grid-cols-3 lg:gap-6"
+      >
         {
           actions.map((a) => (
             <div
-                class="flex min-h-55 flex-col justify-between gap-4 rounded-xl border border-base-300 bg-base-100 p-4 shadow-sm md:p-5 lg:p-6"
+              class="flex min-h-55 flex-col justify-between gap-4 rounded-xl border border-base-300 bg-base-100 p-4 shadow-sm md:p-5 lg:p-6"
               data-action-id={a.id}
               data-action-slug={a.slug}
               data-source={a.source}
@@ -161,22 +179,22 @@ const allActions = actions;
             >
               <div class="space-y-3">
                 <div class="flex items-start justify-between gap-3">
-                    <h3 class="wrap-break-word text-xl font-bold leading-tight md:text-2xl">
+                  <h3 class="wrap-break-word text-xl font-bold leading-tight md:text-2xl">
                     {a.titre}
                   </h3>
-                  {
-                    a.source === "brouillon" && (
-                      <span class="badge badge-secondary text-secondary-content shrink-0">Brouillon</span>
-                    )
-                  }
+                  {a.source === "brouillon" && (
+                    <span class="badge badge-secondary text-secondary-content shrink-0">
+                      Brouillon
+                    </span>
+                  )}
                 </div>
                 {a.sous_titre && (
-                    <p class="text-sm leading-relaxed wrap-break-word text-base-content/75">
+                  <p class=" leading-relaxed wrap-break-word text-base-content/75">
                     {a.sous_titre}
                   </p>
                 )}
                 {a.beneficiaire && (
-                    <p class="text-sm leading-relaxed wrap-break-word text-base-content/75">
+                  <p class=" leading-relaxed wrap-break-word text-base-content/75">
                     {a.beneficiaire}
                   </p>
                 )}
@@ -184,47 +202,43 @@ const allActions = actions;
                   {a.updated ? formatDateShort(a.updated) : ""}
                 </p>
               </div>
-              <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-end">
-                {
-                  a.source === "action" ? (
-                    <a
-                      class="btn btn-sm btn-ghost w-full sm:w-auto"
-                      href={`/actions/${a.id}-${a.slug}`}
-                    >
-                      Voir
-                    </a>
-                  ) : (
-                    <a
-                      class="btn btn-sm btn-ghost w-full sm:w-auto"
-                      href={`/creation/brouillons/${a.id}-${a.slug}`}
-                    >
-                      Voir
-                    </a>
-                  )
-                }
+              <div class="grid grid-cols-2 gap-2 md:flex md:flex-row md:items-center md:justify-end">
+                {a.source === "action" ? (
+                  <a
+                    class="btn btn-sm btn-ghost action-btn-text w-full md:w-auto"
+                    href={`/actions/${a.id}-${a.slug}`}
+                  >
+                    Voir
+                  </a>
+                ) : (
+                  <a
+                    class="btn btn-sm btn-ghost action-btn-text w-full md:w-auto"
+                    href={`/creation/brouillons/${a.id}-${a.slug}`}
+                  >
+                    Voir
+                  </a>
+                )}
                 <a
-                  class="btn btn-sm btn-outline w-full rounded-full sm:w-auto"
+                  class="btn btn-sm btn-accent action-btn-text w-full rounded-full md:w-auto"
                   href={`/creation/actions/edit/${a.id}-${a.slug}`}
                 >
                   Modifier
                 </a>
-                {
-                  a.source === "brouillon" && (
-                    <form
-                      method="POST"
-                      action={`/creation/actions/edit/${a.id}-${a.slug}`}
-                      class="w-full sm:w-auto"
+                {a.source === "brouillon" && (
+                  <form
+                    method="POST"
+                    action={`/creation/actions/edit/${a.id}-${a.slug}`}
+                    class="col-span-2 w-full md:w-auto"
+                  >
+                    <input type="hidden" name="publish_action" value="true" />
+                    <button
+                      type="submit"
+                      class="btn btn-sm btn-accent action-btn-text w-full rounded-full md:w-auto"
                     >
-                      <input type="hidden" name="publish_action" value="true" />
-                      <button
-                        type="submit"
-                        class="btn btn-sm btn-accent w-full rounded-full sm:w-auto"
-                      >
-                        Publier
-                      </button>
-                    </form>
-                  )
-                }
+                      Publier
+                    </button>
+                  </form>
+                )}
               </div>
             </div>
           ))
@@ -237,7 +251,6 @@ const allActions = actions;
 <script type="module" src={utilUrl}></script>
 <script define:vars={{ allActions, q }}>
   const actions = allActions;
-  let currentSearch = q || "";
   let currentBeneficiary = "";
   const PAGE_SIZE = 9;
   let currentPage = 1;
@@ -342,16 +355,16 @@ const allActions = actions;
               <div class="space-y-3">
                 <div class="flex items-start justify-between gap-3">
                   <h3 class="wrap-break-word text-xl font-bold leading-tight md:text-2xl">${a.titre}</h3>
-                  ${a.source === 'brouillon' ? '<span class="badge badge-secondary text-secondary-content shrink-0">Brouillon</span>' : ""}
+                  ${a.source === "brouillon" ? '<span class="badge badge-secondary text-secondary-content shrink-0">Brouillon</span>' : ""}
                 </div>
-                ${a.sous_titre ? `<p class="text-sm leading-relaxed wrap-break-word text-base-content/75">${a.sous_titre}</p>` : ""}
-                ${a.beneficiaire ? `<p class="text-sm leading-relaxed wrap-break-word text-base-content/75">${a.beneficiaire}</p>` : ""}
+                ${a.sous_titre ? `<p class=" leading-relaxed wrap-break-word text-base-content/75">${a.sous_titre}</p>` : ""}
+                ${a.beneficiaire ? `<p class=" leading-relaxed wrap-break-word text-base-content/75">${a.beneficiaire}</p>` : ""}
                 <p class="text-xs leading-tight text-base-content/60">${a.updated ? formatDate(a.updated) : ""}</p>
               </div>
-              <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-end">
-                <a class="btn btn-sm btn-ghost w-full sm:w-auto" href="${getViewUrl(a.id, a.slug, a.source)}">Voir</a>
-                <a class="btn btn-sm btn-outline w-full rounded-full sm:w-auto" href="${getEditUrl(a.id, a.slug)}">Modifier</a>
-                ${a.source === 'brouillon' ? `<form method="POST" action="${getEditUrl(a.id, a.slug)}" class="w-full sm:w-auto"><input type="hidden" name="publish_action" value="true" /><button type="submit" class="btn btn-sm btn-accent w-full rounded-full sm:w-auto">Publier</button></form>` : ""}
+              <div class="grid grid-cols-2 gap-2 md:flex md:flex-row md:items-center md:justify-end">
+                <a class="btn btn-sm btn-ghost action-btn-text w-full md:w-auto" href="${getViewUrl(a.id, a.slug, a.source)}">Voir</a>
+                <a class="btn btn-sm btn-accent action-btn-text w-full rounded-full md:w-auto" href="${getEditUrl(a.id, a.slug)}">Modifier</a>
+                ${a.source === "brouillon" ? `<form method="POST" action="${getEditUrl(a.id, a.slug)}" class="col-span-2 w-full md:w-auto"><input type="hidden" name="publish_action" value="true" /><button type="submit" class="btn btn-sm btn-accent action-btn-text w-full rounded-full md:w-auto">Publier</button></form>` : ""}
               </div>
             </div>
         `,
@@ -373,7 +386,12 @@ const allActions = actions;
     const sortSelect = document.getElementById("sort-select");
 
     function applyAndRender() {
-      let filtered = filterActions(currentSearch, currentBeneficiary, currentYear, currentType);
+      let filtered = filterActions(
+        currentSearch,
+        currentBeneficiary,
+        currentYear,
+        currentType,
+      );
       const sort =
         sortSelect instanceof HTMLSelectElement
           ? sortSelect.value
@@ -397,9 +415,10 @@ const allActions = actions;
     }
 
     pagesContainer?.addEventListener("click", (event) => {
-      const target = event.target instanceof HTMLElement
-        ? event.target.closest("[data-page-action]")
-        : null;
+      const target =
+        event.target instanceof HTMLElement
+          ? event.target.closest("[data-page-action]")
+          : null;
       if (!(target instanceof HTMLElement)) return;
 
       const action = target.getAttribute("data-page-action");
@@ -443,3 +462,15 @@ const allActions = actions;
     // Pas de bouton de suppression unitaire sur cette page ; la suppression groupée est gérée par le formulaire.
   });
 </script>
+
+<style is:global>
+  a.action-btn-text,
+  button.action-btn-text {
+    font-size: 1rem !important;
+    font-weight: 700 !important;
+    line-height: 1.5rem !important;
+    font-family: inherit !important;
+    letter-spacing: normal !important;
+    text-transform: none !important;
+  }
+</style>

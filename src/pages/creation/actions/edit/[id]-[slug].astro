@@ -147,6 +147,9 @@ const previewPlaceholder: any = {
 if (Astro.request.method === "POST") {
   try {
     const formData = await Astro.request.formData();
+    // slug value will be generated later when titre is known; declare early to
+    // avoid TypeScript errors when referenced in the publish shortcut branch.
+    let slug: string = "";
     const publishRequested = formData.get("publish_action")?.toString() === "true";
     // Diagnostic local: utile pour inspecter rapidement le payload brut du formulaire.
     try {
@@ -166,11 +169,11 @@ if (Astro.request.method === "POST") {
 
     // Prise en charge de la suppression envoyée par POST depuis la liste.
     const action = formData.get("_action")?.toString();
-    if (action === "delete" && idParam) {
+    if (action === "delete" && idParam && typeof idParam === "string") {
       try {
         if (actionRecordFromBrouillon) {
           // supprimer le brouillon
-          await Astro.locals.pb.collection("brouillons").delete(idParam);
+          await Astro.locals.pb.collection("brouillons").delete(String(idParam));
           return Astro.redirect(withSuccess("/creation/brouillons", "Brouillon supprimé"));
         }
 
@@ -183,11 +186,20 @@ if (Astro.request.method === "POST") {
     }
 
     // Publication directe depuis la liste (sans charger tout le formulaire d'édition)
-    if (publishRequested && actionRecordFromBrouillon && !formData.has("titre")) {
-      const publishSlug = slugify(actionRecord?.titre || slug || "action", {
-        lower: true,
-        strict: true,
-      });
+    if (
+      publishRequested &&
+      actionRecordFromBrouillon &&
+      typeof idParam === "string" &&
+      !formData.has("titre")
+    ) {
+      const draftId = idParam;
+      const publishSlug = slugify(
+        actionRecord?.titre ?? actionRecord?.slug ?? "action",
+        {
+          lower: true,
+          strict: true,
+        },
+      );
       const publishPayload: any = {};
       // Liste blanche explicite: seuls ces champs sont copiés vers la collection `actions`.
       const allowedKeys = [
@@ -229,7 +241,7 @@ if (Astro.request.method === "POST") {
       const publishedAction = await Astro.locals.pb
         .collection("actions")
         .create(publishPayload);
-      await Astro.locals.pb.collection("brouillons").delete(idParam);
+      await Astro.locals.pb.collection("brouillons").delete(draftId);
 
       return Astro.redirect(
         withSuccess(
@@ -246,7 +258,7 @@ if (Astro.request.method === "POST") {
     }
 
     // Générer le slug
-    const slug = slugify(titre, { lower: true, strict: true });
+    slug = slugify(titre, { lower: true, strict: true });
 
     // Préparer les données pour PocketBase
     const data: any = { slug };
