@@ -4,6 +4,8 @@ import userIcon from "../assets/user.svg";
 import userWhite from "../assets/user-white.svg";
 
 const currentUser = Astro.locals.pb.authStore.record;
+
+import diagArrow from "../assets/diag-arrow.svg";
 ---
 
 <header class="fixed top-0 left-0 right-0 z-50">
@@ -239,21 +241,21 @@ const currentUser = Astro.locals.pb.authStore.record;
               class="py-2 flex justify-between items-center text-base"
               role="menuitem"
             >
-              Actions <span class="opacity-40" aria-hidden="true">-></span>
+              Actions <span class="opacity-40" aria-hidden="true"><img src={diagArrow.src} class="h-3 w-auto" aria-hidden="true"> </span>
             </a>
             <a
               href="/creation/projets/nouveau"
               class="py-2 flex justify-between items-center text-base"
               role="menuitem"
             >
-              Projets <span class="opacity-40" aria-hidden="true">-></span>
+              Projets <span class="opacity-40" aria-hidden="true"><img src={diagArrow.src} class="h-3 w-auto" aria-hidden="true"> </span>
             </a>
             <a
               href="/creation/produits/nouveau"
               class="py-2 flex justify-between items-center text-base"
               role="menuitem"
             >
-              Produits <span class="opacity-40" aria-hidden="true">-></span>
+              Produits <span class="opacity-40" aria-hidden="true"><img src={diagArrow.src} class="h-3 w-auto" aria-hidden="true"> </span>
             </a>
           </div>
         </details>
@@ -269,21 +271,21 @@ const currentUser = Astro.locals.pb.authStore.record;
               class="py-2 flex justify-between items-center text-base"
               role="menuitem"
             >
-              Actions <span class="opacity-40" aria-hidden="true">-></span>
+              Actions <span class="opacity-40" aria-hidden="true"><img src={diagArrow.src} class="h-3 w-auto" aria-hidden="true"> </span>
             </a>
             <a
               href="/creation/projets/delete"
               class="py-2 flex justify-between items-center text-base"
               role="menuitem"
             >
-              Projets <span class="opacity-40" aria-hidden="true">-></span>
+              Projets <span class="opacity-40" aria-hidden="true"><img src={diagArrow.src} class="h-3 w-auto" aria-hidden="true"> </span>
             </a>
             <a
               href="/creation/produits/delete"
               class="py-2 flex justify-between items-center text-base"
               role="menuitem"
             >
-              Produits <span class="opacity-40" aria-hidden="true">-></span>
+              Produits <span class="opacity-40" aria-hidden="true"><img src={diagArrow.src} class="h-3 w-auto" aria-hidden="true"> </span>
             </a>
           </div>
         </details>
@@ -299,21 +301,21 @@ const currentUser = Astro.locals.pb.authStore.record;
               class="py-2 flex justify-between items-center text-base"
               role="menuitem"
             >
-              Actions <span class="opacity-40" aria-hidden="true">-></span>
+              Actions <span class="opacity-40" aria-hidden="true"><img src={diagArrow.src} class="h-3 w-auto" aria-hidden="true"> </span>
             </a>
             <a
               href="/creation/projets"
               class="py-2 flex justify-between items-center text-base"
               role="menuitem"
             >
-              Projets <span class="opacity-40" aria-hidden="true">-></span>
+              Projets <span class="opacity-40" aria-hidden="true"><img src={diagArrow.src} class="h-3 w-auto" aria-hidden="true"> </span>
             </a>
             <a
               href="/creation/produits"
               class="py-2 flex justify-between items-center text-base"
               role="menuitem"
             >
-              Produits <span class="opacity-40" aria-hidden="true">-></span>
+              Produits <span class="opacity-40" aria-hidden="true"><img src={diagArrow.src} class="h-3 w-auto" aria-hidden="true"> </span>
             </a>
           </div>
         </details>
