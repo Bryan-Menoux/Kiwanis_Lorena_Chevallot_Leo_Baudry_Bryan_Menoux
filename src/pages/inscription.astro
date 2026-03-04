@@ -1,4 +1,4 @@
----
+﻿---
 import Layout from "../layouts/Layout-login.astro";
 import shapesLeft from "../assets/login-page/shapes-left.svg";
 import shapesRight from "../assets/login-page/shapes-right.svg";
@@ -77,11 +77,6 @@ if (isPostForm) {
 
       <form method="post" class="flex flex-col w-full relative">
 
-        <div id="errorText"
-          class="absolute left-0 right-0 text-sm text-start font-semibold opacity-0 pointer-events-none px-4 py-2 rounded-md max-w-xl mx-auto"
-          style="bottom: calc(100% + 0.5rem);">
-        </div>
-
         <div class="relative my-2">
           <img src={userIcon.src} class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 opacity-70" />
           <input type="text" name="firstName" placeholder="Prénom"
@@ -125,48 +120,16 @@ if (isPostForm) {
 </Layout>
 
 <script>
-  import { gsap } from "gsap";
+  import { showAlert } from "../utils/alerts";
 
-  const errorText = document.getElementById("errorText");
   const flags = document.getElementById("auth-flags");
 
-  function showError(message:string, type = "error") {
-    if (!errorText) return;
+  type AuthAlertType = "error" | "warning" | "success" | "info";
 
-    gsap.killTweensOf(errorText);
-    gsap.set(errorText, { opacity: 0, y: 60 });
-
-    // Retirer anciennes classes de couleur et d'arrière-plan
-    errorText.classList.remove(
-      "text-red-500",
-      "text-secondary",
-      "bg-error",
-      "bg-success",
-      "bg-warning",
-      "text-error-content",
-      "text-success-content",
-      "text-warning-content"
-    );
-
-    // Appliquer les classes daisyUI correspondantes
-    if (type === "warning") {
-      errorText.classList.add("bg-warning", "text-warning-content");
-    } else if (type === "success") {
-      errorText.classList.add("bg-success", "text-success-content");
-    } else {
-      errorText.classList.add("bg-error", "text-error-content");
-    }
-
-    errorText.textContent = message;
-    errorText.style.pointerEvents = "auto";
-
-    requestAnimationFrame(() => {
-      gsap.to(errorText, {
-        opacity: 1,
-        y: 0,
-        duration: 0.5,
-        ease: "power2.out",
-      });
+  function showError(message: string, type: AuthAlertType = "error") {
+    showAlert({
+      message,
+      type,
     });
   }
 

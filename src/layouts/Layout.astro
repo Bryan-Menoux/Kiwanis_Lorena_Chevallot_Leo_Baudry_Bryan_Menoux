@@ -1,7 +1,8 @@
----
+﻿---
 import "../styles/global.css";
 import Footer from "../components/Footer.astro";
 import Header from "../components/Header.astro";
+import AlertProvider from "../components/AlertProvider.astro";
 ---
 
 <!doctype html>
@@ -55,6 +56,7 @@ import Header from "../components/Header.astro";
     <title>Kiwanis Pays de Montbéliard</title>
   </head>
   <body>
+    <AlertProvider />
     <Header/>
     <slot />
     <Footer />
@@ -68,3 +70,4 @@ import Header from "../components/Header.astro";
     height: 100%;
   }
 </style>
+

@@ -1,0 +1,80 @@
+﻿---
+export type AlertType = "success" | "error" | "warning" | "info";
+
+interface Props {
+  message: string;
+  type?: AlertType;
+  dismissible?: boolean;
+  toastId?: string;
+}
+
+const { message, type = "info", dismissible = true, toastId = "" } =
+  Astro.props as Props;
+
+const variants: Record<
+  AlertType,
+  {
+    container: string;
+    iconWrapper: string;
+    icon: string;
+  }
+> = {
+  success: {
+    container: "bg-success text-success-content border-success",
+    iconWrapper: "bg-base-100/20 text-success-content",
+    icon: "✓",
+  },
+  error: {
+    container: "bg-error text-error-content border-error",
+    iconWrapper: "bg-base-100/20 text-error-content",
+    icon: "X",
+  },
+  warning: {
+    container: "bg-warning text-warning-content border-warning",
+    iconWrapper: "bg-base-100/20 text-warning-content",
+    icon: "!",
+  },
+  info: {
+    container: "bg-info text-info-content border-info",
+    iconWrapper: "bg-base-100/20 text-info-content",
+    icon: "i",
+  },
+};
+
+const variant = variants[type];
+---
+
+<article
+  class={`kiwanis-alert pointer-events-auto w-full rounded-xl border p-3 sm:p-4 shadow-xl backdrop-blur-sm flex items-start gap-3 ${variant.container}`}
+  role="status"
+  aria-live="polite"
+  aria-atomic="true"
+  data-alert-id={toastId}
+  data-alert-type={type}
+>
+  <span
+    class={`inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold ${variant.iconWrapper}`}
+    aria-hidden="true"
+    data-alert-icon
+  >
+    {variant.icon}
+  </span>
+
+  <p class="text-sm sm:text-base leading-snug flex-1" data-alert-message>
+    {message}
+  </p>
+
+  {
+    dismissible && (
+      <button
+        type="button"
+        class="btn btn-ghost btn-xs h-7 min-h-0 w-7 px-0 text-current hover:bg-black/15"
+        aria-label="Fermer l'alerte"
+        data-alert-close
+      >
+        X
+      </button>
+    )
+  }
+</article>
+

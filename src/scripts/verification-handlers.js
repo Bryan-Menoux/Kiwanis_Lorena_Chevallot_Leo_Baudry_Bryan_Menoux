@@ -1,3 +1,4 @@
+﻿import { showAlert } from "../utils/alerts";
 // Initialisation des compteurs de vérification
 // Les compteurs sont maintenant calculés à la volée depuis le DOM
 
@@ -232,6 +233,10 @@ async function handleButtonClick(e) {
         if (userCard) {
           await processUserAction(userCard, action);
         }
+        showAlert({
+          type: "success",
+          message: result.message || "Action effectuée avec succès",
+        });
       } else {
         // Gestion des erreurs côté serveur
         handleError(result.error, button, originalHTML);
@@ -286,6 +291,10 @@ async function handleFormSubmit(e) {
           // Application de l'action sur la carte
           await processUserAction(userCard, action);
         }
+        showAlert({
+          type: "success",
+          message: result.message || "Action effectuée avec succès",
+        });
       } else {
         // Gestion des erreurs
         handleError(result.error, submitButton, originalHTML);
@@ -301,7 +310,10 @@ async function handleFormSubmit(e) {
 // Gestion des erreurs
 // Affiche un message d'erreur et restaure l'état de l'élément
 function handleError(errorMessage, element, originalHTML) {
-  alert(`Une erreur est survenue: ${errorMessage}`);
+  showAlert({
+    type: "error",
+    message: `Une erreur est survenue: ${errorMessage}`,
+  });
 
   if (element && originalHTML) {
     setElementLoading(element, false, originalHTML);
@@ -379,7 +391,7 @@ function setupPagination(listId) {
   if (totalPages >= 2) {
     const prevBtn = document.createElement("button");
     prevBtn.className = "btn btn-sm";
-    prevBtn.textContent = "← Précédent";
+    prevBtn.textContent = "Précédent";
     prevBtn.disabled = true;
     prevBtn.addEventListener("click", () => {
       if (currentPage > 1) {
@@ -398,7 +410,7 @@ function setupPagination(listId) {
 
     const nextBtn = document.createElement("button");
     nextBtn.className = "btn btn-sm";
-    nextBtn.textContent = "Suivant →";
+    nextBtn.textContent = "Suivant";
     nextBtn.disabled = totalPages === 1;
     nextBtn.addEventListener("click", () => {
       if (currentPage < totalPages) {
@@ -624,3 +636,5 @@ export function initVerifications() {
   // Mise à jour initiale des badges depuis le DOM
   updateBadges();
 }
+
+

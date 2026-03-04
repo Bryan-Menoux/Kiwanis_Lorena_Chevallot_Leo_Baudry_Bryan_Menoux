@@ -1,0 +1,439 @@
+﻿---
+import Alert from "./Alert.astro";
+---
+
+<div
+  id="kiwanis-alert-root"
+  class="pointer-events-none fixed left-3 right-3 top-0 z-250 flex flex-col gap-3 lg:left-auto lg:right-4 lg:w-full lg:max-w-md"
+  aria-live="polite"
+  aria-atomic="true"
+></div>
+
+<template id="kiwanis-alert-template">
+  <Alert message="" type="info" />
+</template>
+
+<div
+  id="kiwanis-confirm-root"
+  class="pointer-events-none fixed inset-0 z-260 hidden items-center justify-center p-4 sm:p-6"
+>
+  <div class="absolute inset-0 bg-black/45 opacity-0" data-confirm-backdrop></div>
+
+  <section
+    class="relative pointer-events-auto w-full max-w-md rounded-2xl border border-base-300 bg-base-100 p-5 shadow-2xl opacity-0 scale-95 sm:p-6"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="kiwanis-confirm-title"
+    aria-describedby="kiwanis-confirm-message"
+    data-confirm-panel
+  >
+    <h2 id="kiwanis-confirm-title" class="text-lg font-bold text-base-content" data-confirm-title>
+      Confirmation
+    </h2>
+    <p id="kiwanis-confirm-message" class="mt-2 text-sm leading-relaxed text-base-content/80 sm:text-base" data-confirm-message>
+      Confirmez votre action.
+    </p>
+    <div class="mt-6 flex items-center justify-end gap-3">
+      <button type="button" class="btn btn-ghost btn-sm sm:btn-md" data-confirm-cancel>
+        Annuler
+      </button>
+      <button type="button" class="btn btn-accent btn-sm sm:btn-md" data-confirm-confirm>
+        Confirmer
+      </button>
+    </div>
+  </section>
+</div>
+
+<script type="module">
+  import { gsap } from "gsap";
+
+  const MAX_ALERTS = 4;
+  const DEFAULT_DURATION = 5000;
+  const BASE_TOAST_CLASS =
+    "kiwanis-alert pointer-events-auto w-full rounded-xl border p-3 sm:p-4 shadow-xl backdrop-blur-sm flex items-start gap-3";
+  const BASE_ICON_CLASS =
+    "inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold";
+
+  const variants = {
+    success: {
+      toast: "bg-success text-success-content border-success",
+      iconWrapper: "bg-base-100/20 text-success-content",
+      icon: "✓",
+    },
+    error: {
+      toast: "bg-error text-error-content border-error",
+      iconWrapper: "bg-base-100/20 text-error-content",
+      icon: "X",
+    },
+    warning: {
+      toast: "bg-warning text-warning-content border-warning",
+      iconWrapper: "bg-base-100/20 text-warning-content",
+      icon: "!",
+    },
+    info: {
+      toast: "bg-info text-info-content border-info",
+      iconWrapper: "bg-base-100/20 text-info-content",
+      icon: "i",
+    },
+  };
+
+  const confirmVariantClass = {
+    success: "btn-success",
+    error: "btn-error",
+    warning: "btn-warning",
+    info: "btn-accent",
+  };
+
+  const root = document.getElementById("kiwanis-alert-root");
+  const template = document.getElementById("kiwanis-alert-template");
+
+  const confirmRoot = document.getElementById("kiwanis-confirm-root");
+  const confirmBackdrop = confirmRoot?.querySelector("[data-confirm-backdrop]");
+  const confirmPanel = confirmRoot?.querySelector("[data-confirm-panel]");
+  const confirmTitle = confirmRoot?.querySelector("[data-confirm-title]");
+  const confirmMessage = confirmRoot?.querySelector("[data-confirm-message]");
+  const confirmCancelBtn = confirmRoot?.querySelector("[data-confirm-cancel]");
+  const confirmConfirmBtn = confirmRoot?.querySelector("[data-confirm-confirm]");
+
+  if (!root || !(template instanceof HTMLTemplateElement)) {
+    console.warn("Provider d'alertes indisponible.");
+  } else {
+    const ALERT_MARGIN_MOBILE = 12;
+    const ALERT_MARGIN_DESKTOP = 16;
+    const timers = new WeakMap();
+
+    let activeConfirm = null;
+    const confirmQueue = [];
+    let observedHeader = null;
+    let headerResizeObserver = null;
+    const headerMutationObserver = new MutationObserver(() => {
+      scheduleAlertOffsetUpdate();
+    });
+
+    function getMainHeader() {
+      return (
+        document.getElementById("main-header") ||
+        document.querySelector("header.fixed.top-0") ||
+        document.querySelector("header")
+      );
+    }
+
+    function updateAlertOffset() {
+      const margin = window.matchMedia("(min-width: 1024px)").matches
+        ? ALERT_MARGIN_DESKTOP
+        : ALERT_MARGIN_MOBILE;
+
+      const header = getMainHeader();
+      if (!(header instanceof HTMLElement)) {
+        root.style.top = `${margin}px`;
+        return;
+      }
+
+      const headerBottom = Math.max(0, header.getBoundingClientRect().bottom);
+      root.style.top = `${Math.round(headerBottom + margin)}px`;
+    }
+
+    function scheduleAlertOffsetUpdate() {
+      requestAnimationFrame(() => {
+        updateAlertOffset();
+        window.setTimeout(updateAlertOffset, 120);
+      });
+    }
+
+    function observeHeaderChanges() {
+      const header = getMainHeader();
+      if (!(header instanceof HTMLElement)) {
+        root.style.top = `${ALERT_MARGIN_MOBILE}px`;
+        return;
+      }
+
+      if (observedHeader === header) return;
+
+      if (headerResizeObserver && observedHeader instanceof HTMLElement) {
+        headerResizeObserver.unobserve(observedHeader);
+      }
+      headerMutationObserver.disconnect();
+
+      observedHeader = header;
+
+      if ("ResizeObserver" in window && !headerResizeObserver) {
+        headerResizeObserver = new ResizeObserver(() => {
+          updateAlertOffset();
+        });
+      }
+      if (headerResizeObserver) {
+        headerResizeObserver.observe(header);
+      }
+
+      headerMutationObserver.observe(header, {
+        attributes: true,
+        childList: true,
+        subtree: true,
+        attributeFilter: ["class", "style", "aria-expanded", "aria-hidden"],
+      });
+    }
+
+    function normalizeAlert(payload) {
+      if (typeof payload === "string") {
+        return {
+          message: payload,
+          type: "info",
+          duration: DEFAULT_DURATION,
+          dismissible: true,
+        };
+      }
+
+      return {
+        message: payload?.message || "Une notification est disponible.",
+        type: payload?.type || "info",
+        duration: payload?.duration ?? DEFAULT_DURATION,
+        dismissible: payload?.dismissible ?? true,
+      };
+    }
+
+    function normalizeConfirm(payload) {
+      if (typeof payload === "string") {
+        return {
+          message: payload,
+          title: "Confirmation",
+          confirmLabel: "Confirmer",
+          cancelLabel: "Annuler",
+          type: "warning",
+        };
+      }
+
+      return {
+        message: payload?.message || "Confirmez votre action.",
+        title: payload?.title || "Confirmation",
+        confirmLabel: payload?.confirmLabel || "Confirmer",
+        cancelLabel: payload?.cancelLabel || "Annuler",
+        type: payload?.type || "warning",
+      };
+    }
+
+    function removeAlert(toast) {
+      if (!toast || toast.dataset.removing === "true") return;
+      toast.dataset.removing = "true";
+
+      const timeoutId = timers.get(toast);
+      if (timeoutId) {
+        window.clearTimeout(timeoutId);
+        timers.delete(toast);
+      }
+
+      gsap.to(toast, {
+        opacity: 0,
+        y: -12,
+        scale: 0.98,
+        duration: 0.2,
+        ease: "power2.in",
+        onComplete: () => {
+          toast.remove();
+        },
+      });
+    }
+
+    function createAlert(payload) {
+      const toast = template.content.firstElementChild?.cloneNode(true);
+      if (!(toast instanceof HTMLElement)) return null;
+
+      const variant = variants[payload.type] || variants.info;
+      const messageEl = toast.querySelector("[data-alert-message]");
+      const iconEl = toast.querySelector("[data-alert-icon]");
+      const closeBtn = toast.querySelector("[data-alert-close]");
+
+      toast.className = `${BASE_TOAST_CLASS} ${variant.toast}`;
+      toast.dataset.alertType = payload.type;
+      toast.dataset.removing = "false";
+
+      if (messageEl instanceof HTMLElement) {
+        messageEl.textContent = payload.message;
+      }
+
+      if (iconEl instanceof HTMLElement) {
+        iconEl.className = `${BASE_ICON_CLASS} ${variant.iconWrapper}`;
+        iconEl.textContent = variant.icon;
+      }
+
+      if (closeBtn instanceof HTMLButtonElement) {
+        if (payload.dismissible) {
+          closeBtn.addEventListener("click", () => removeAlert(toast));
+        } else {
+          closeBtn.remove();
+        }
+      }
+
+      return toast;
+    }
+
+    function show(payload) {
+      const normalized = normalizeAlert(payload);
+      const toast = createAlert(normalized);
+      if (!toast) return;
+
+      while (root.childElementCount >= MAX_ALERTS) {
+        const oldest = root.firstElementChild;
+        if (!(oldest instanceof HTMLElement)) break;
+        oldest.remove();
+      }
+
+      root.appendChild(toast);
+
+      gsap.fromTo(
+        toast,
+        { opacity: 0, y: -16, scale: 0.98 },
+        {
+          opacity: 1,
+          y: 0,
+          scale: 1,
+          duration: 0.28,
+          ease: "power2.out",
+        },
+      );
+
+      if (normalized.duration > 0) {
+        const timeoutId = window.setTimeout(() => {
+          removeAlert(toast);
+        }, normalized.duration);
+        timers.set(toast, timeoutId);
+      }
+    }
+
+    function closeConfirm(answer) {
+      if (!activeConfirm) return;
+
+      const current = activeConfirm;
+      activeConfirm = null;
+
+      gsap.to([confirmBackdrop, confirmPanel], {
+        opacity: 0,
+        duration: 0.18,
+        ease: "power2.in",
+      });
+
+      gsap.to(confirmPanel, {
+        scale: 0.96,
+        duration: 0.18,
+        ease: "power2.in",
+        onComplete: () => {
+          if (confirmRoot instanceof HTMLElement) {
+            confirmRoot.classList.add("hidden", "pointer-events-none");
+            confirmRoot.classList.remove("flex");
+          }
+          current.resolve(answer);
+          processConfirmQueue();
+        },
+      });
+    }
+
+    function processConfirmQueue() {
+      if (activeConfirm || confirmQueue.length === 0) return;
+
+      if (
+        !(confirmRoot instanceof HTMLElement) ||
+        !(confirmBackdrop instanceof HTMLElement) ||
+        !(confirmPanel instanceof HTMLElement) ||
+        !(confirmTitle instanceof HTMLElement) ||
+        !(confirmMessage instanceof HTMLElement) ||
+        !(confirmCancelBtn instanceof HTMLButtonElement) ||
+        !(confirmConfirmBtn instanceof HTMLButtonElement)
+      ) {
+        const fallback = confirmQueue.shift();
+        fallback?.resolve(false);
+        return;
+      }
+
+      activeConfirm = confirmQueue.shift();
+      const { payload } = activeConfirm;
+
+      confirmTitle.textContent = payload.title;
+      confirmMessage.textContent = payload.message;
+      confirmCancelBtn.textContent = payload.cancelLabel;
+      confirmConfirmBtn.textContent = payload.confirmLabel;
+
+      const confirmTypeClass = confirmVariantClass[payload.type] || "btn-accent";
+      confirmConfirmBtn.className = `btn ${confirmTypeClass} btn-sm sm:btn-md`;
+
+      confirmRoot.classList.remove("hidden", "pointer-events-none");
+      confirmRoot.classList.add("flex");
+
+      gsap.fromTo(confirmBackdrop, { opacity: 0 }, { opacity: 1, duration: 0.18 });
+      gsap.fromTo(
+        confirmPanel,
+        { opacity: 0, scale: 0.96, y: 10 },
+        { opacity: 1, scale: 1, y: 0, duration: 0.24, ease: "power2.out" },
+      );
+    }
+
+    function confirm(payload) {
+      const normalized = normalizeConfirm(payload);
+
+      return new Promise((resolve) => {
+        confirmQueue.push({ payload: normalized, resolve });
+        processConfirmQueue();
+      });
+    }
+
+    if (confirmCancelBtn instanceof HTMLButtonElement) {
+      confirmCancelBtn.addEventListener("click", () => closeConfirm(false));
+    }
+
+    if (confirmConfirmBtn instanceof HTMLButtonElement) {
+      confirmConfirmBtn.addEventListener("click", () => closeConfirm(true));
+    }
+
+    if (confirmBackdrop instanceof HTMLElement) {
+      confirmBackdrop.addEventListener("click", () => closeConfirm(false));
+    }
+
+    window.addEventListener("keydown", (event) => {
+      if (event.key === "Escape" && activeConfirm) {
+        closeConfirm(false);
+      }
+    });
+
+    window.addEventListener("kiwanis:alert", (event) => {
+      if (event instanceof CustomEvent) {
+        show(event.detail);
+      }
+    });
+
+    window.addEventListener("resize", () => {
+      scheduleAlertOffsetUpdate();
+      observeHeaderChanges();
+    });
+    window.addEventListener("scroll", updateAlertOffset, { passive: true });
+    document.addEventListener("click", () => {
+      scheduleAlertOffsetUpdate();
+      observeHeaderChanges();
+    }, true);
+    window.addEventListener("load", () => {
+      observeHeaderChanges();
+      updateAlertOffset();
+    });
+
+    observeHeaderChanges();
+    updateAlertOffset();
+
+    window.KiwanisAlert = {
+      show,
+      confirm,
+    };
+
+    const queuedAlerts = window.__kiwanisAlertQueue;
+    if (Array.isArray(queuedAlerts) && queuedAlerts.length > 0) {
+      queuedAlerts.forEach((payload) => show(payload));
+      window.__kiwanisAlertQueue = [];
+    }
+
+    const queuedConfirms = window.__kiwanisConfirmQueue;
+    if (Array.isArray(queuedConfirms) && queuedConfirms.length > 0) {
+      const pending = [...queuedConfirms];
+      window.__kiwanisConfirmQueue = [];
+      pending.forEach((item) => {
+        confirm(item.payload).then(item.resolve);
+      });
+    }
+  }
+</script>
+

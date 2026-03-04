@@ -1,4 +1,4 @@
-// Valeurs par défaut partagées pour la prévisualisation (source unique)
+﻿// Valeurs par défaut partagées pour la prévisualisation (source unique)
 // Modifier uniquement ce fichier pour changer les placeholders côté création + preview.
 const placeholderImg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='800' height='400'><rect width='100%' height='100%' fill='%23e5e7eb'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='%23888' font-size='24'>Image</text></svg>";
 
@@ -19,7 +19,7 @@ const PREVIEW_DEFAULTS = {
   lien_lieu: "https://maps.google.com/",
   chiffre: "150",
   type_action: [],
-  // ne pas prioriser : valeur vide par défaut — la liste des options est fournie
+  // ne pas prioriser : valeur vide par défaut - la liste des options est fournie
   type_de_chiffre: "",
   beneficiaire: "Association Exemple",
   titre_partie_2: "Déroulement de l'action",
@@ -38,3 +38,4 @@ const PREVIEW_DEFAULTS = {
 };
 
 export default PREVIEW_DEFAULTS;
+

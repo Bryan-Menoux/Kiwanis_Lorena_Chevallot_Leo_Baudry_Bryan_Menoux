@@ -1,4 +1,4 @@
-import { isDataUrl } from '../../utils/utilitaires.js';
+﻿import { isDataUrl } from '../../utils/utilitaires.js';
 import {
   previewState,
   galleryFiles,
@@ -108,7 +108,7 @@ function renderFormGalleryThumbnails() {
     removeButton.type = 'button';
     removeButton.className = 'absolute top-1 right-1 bg-black/60 text-white rounded-full w-6 h-6 flex items-center justify-center';
     removeButton.setAttribute('data-gallery-index', String(index));
-    removeButton.innerHTML = '×';
+    removeButton.innerHTML = 'x';
     thumbnailWrap.appendChild(removeButton);
 
     container.appendChild(thumbnailWrap);
@@ -163,7 +163,7 @@ function renderExistingThumbnails(existingPhotoUrls) {
     removeButton.type = 'button';
     removeButton.className = 'absolute top-1 right-1 bg-black/60 text-white rounded-full w-6 h-6 flex items-center justify-center';
     removeButton.setAttribute('data-remove-url', photoUrl);
-    removeButton.innerHTML = '×';
+    removeButton.innerHTML = 'x';
     thumbnailWrap.appendChild(removeButton);
 
     container.appendChild(thumbnailWrap);
@@ -194,3 +194,4 @@ function renderExistingThumbnails(existingPhotoUrls) {
 }
 
 export { renderGallery, renderFormGalleryThumbnails, renderExistingThumbnails };
+

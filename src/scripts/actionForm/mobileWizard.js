@@ -1,4 +1,4 @@
-const MOBILE_QUERY = "(max-width: 1023px)";
+﻿const MOBILE_QUERY = "(max-width: 1023px)";
 const TOTAL_STEPS = 7;
 const INIT_FLAG_ATTR = "data-mobile-wizard-init";
 const SYNC_FN_KEY = "__kcMobileWizardSync";

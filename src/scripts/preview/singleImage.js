@@ -1,4 +1,4 @@
-import { isDataUrl } from '../../utils/utilitaires.js';
+﻿import { isDataUrl } from '../../utils/utilitaires.js';
 import { previewState } from './state.js';
 import { renderField } from './render.js';
 import { updateHidden } from './init.js';
@@ -63,7 +63,7 @@ function renderFormImagePreview(prop, dataUrl) {
   const removeButton = document.createElement('button');
   removeButton.type = 'button';
   removeButton.className = 'absolute top-1 right-1 bg-black/60 text-white rounded-full w-6 h-6 flex items-center justify-center';
-  removeButton.innerHTML = '×';
+  removeButton.innerHTML = 'x';
   previewWrap.appendChild(removeButton);
 
   const labelWrap = document.createElement('div');
@@ -151,3 +151,4 @@ function bindExistingSingleRemoveButtons() {
 }
 
 export { handleFileElement, renderFormImagePreview, bindExistingSingleRemoveButtons };
+

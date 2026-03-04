@@ -1,4 +1,4 @@
-import type { APIRoute } from 'astro';
+﻿import type { APIRoute } from 'astro';
 import crypto from 'crypto';
 
 export const GET: APIRoute = async ({ locals, url }) => {

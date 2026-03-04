@@ -1,4 +1,4 @@
-import PREVIEW_DEFAULTS from '../previewDefaults.js';
+﻿import PREVIEW_DEFAULTS from '../previewDefaults.js';
 import { isDataUrl } from '../../utils/utilitaires.js';
 import {
   previewState,

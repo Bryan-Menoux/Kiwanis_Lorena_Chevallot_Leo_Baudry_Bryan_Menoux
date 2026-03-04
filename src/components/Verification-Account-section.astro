@@ -194,6 +194,7 @@ const verifiedCount = verifiedUsers.length;
 
 <script>
   import { initVerifications } from "../scripts/verification-handlers.js";
+  import { showAlert, showConfirm } from "../utils/alerts";
   
   // Gestion de la sélection des utilisateurs rejetés
   function updateButtonState() {
@@ -276,11 +277,22 @@ const verifiedCount = verifiedUsers.length;
     });
 
     if (userIds.length === 0) {
-      alert('Aucun utilisateur sélectionné');
+      showAlert({
+        type: 'warning',
+        message: 'Aucun utilisateur sélectionné',
+      });
       return;
     }
 
-    if (!confirm(`Êtes-vous sûr de vouloir supprimer ${userIds.length} utilisateur(s) ?`)) {
+    const confirmed = await showConfirm({
+      title: "Supprimer les utilisateurs",
+      message: `Êtes-vous sûr de vouloir supprimer ${userIds.length} utilisateur(s) ?`,
+      type: "warning",
+      confirmLabel: "Supprimer",
+      cancelLabel: "Annuler",
+    });
+
+    if (!confirmed) {
       return;
     }
 
@@ -306,11 +318,21 @@ const verifiedCount = verifiedUsers.length;
       if (allSuccess) {
         // Recharger les listes complètement
         await reloadUserLists();
+        showAlert({
+          type: 'success',
+          message: `${userIds.length} utilisateur(s) supprimé(s) avec succès`,
+        });
       } else {
-        alert('Erreur lors de la suppression de certains utilisateurs');
+        showAlert({
+          type: 'error',
+          message: 'Erreur lors de la suppression de certains utilisateurs',
+        });
       }
     } catch (error) {
-      alert('Erreur réseau : ' + ((error as Error).message));
+      showAlert({
+        type: 'error',
+        message: 'Erreur réseau : ' + ((error as Error).message),
+      });
     }
   });
 

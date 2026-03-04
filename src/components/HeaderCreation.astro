@@ -1,6 +1,9 @@
----
+﻿---
 import Logo from "../assets/logo-kiwanis-full.svg";
 import userIcon from "../assets/user.svg";
+import userWhite from "../assets/user-white.svg";
+
+const currentUser = Astro.locals.pb.authStore.record;
 ---
 
 <header class="fixed top-0 left-0 right-0 z-50">
@@ -160,7 +163,7 @@ import userIcon from "../assets/user.svg";
         </div>
 
         <span>|</span>
-        <a href="/creation">Espace cr&eacute;ation</a>
+        <a href="/creation">Espace création</a>
       </div>
       <a href="/mon-compte" class="flex items-center gap-4">
         <span class="text-sm text-white">Mon compte</span>
@@ -189,6 +192,7 @@ import userIcon from "../assets/user.svg";
         <span class="text-base font-medium">Menu</span>
         <div class="relative w-6 h-6">
           <svg
+            id="ham-icon"
             class="w-6 h-6 absolute"
             fill="none"
             viewBox="0 0 24 24"
@@ -220,38 +224,36 @@ import userIcon from "../assets/user.svg";
       aria-hidden="true"
     >
       <h2 class="text-xs font-bold tracking-widest mb-6 opacity-90 uppercase">
-        Espace cr&eacute;ation
+        Espace création
       </h2>
 
       <nav class="flex flex-col select-none gap-3" role="navigation">
         <details class="mob-link rounded-xl border border-white/20 bg-white/5">
           <summary class="flex items-center justify-between px-4 py-3 cursor-pointer list-none">
             <span class="text-sm uppercase tracking-wide">Ajouter du contenu</span>
-            <span class="submenu-arrow text-base opacity-70" aria-hidden="true"
-              >&#8250;</span
-            >
+            <span class="submenu-arrow text-base opacity-70" aria-hidden="true">></span>
           </summary>
-          <div class="flex flex-col px-4 pb-3">
+          <div class="flex flex-col px-4 pb-3 pl-8">
             <a
               href="/creation/actions/nouveau"
               class="py-2 flex justify-between items-center text-base"
               role="menuitem"
             >
-              Actions <span class="opacity-40" aria-hidden="true">&nearr;</span>
+              Actions <span class="opacity-40" aria-hidden="true">-></span>
             </a>
             <a
               href="/creation/projets/nouveau"
               class="py-2 flex justify-between items-center text-base"
               role="menuitem"
             >
-              Projets <span class="opacity-40" aria-hidden="true">&nearr;</span>
+              Projets <span class="opacity-40" aria-hidden="true">-></span>
             </a>
             <a
               href="/creation/produits/nouveau"
               class="py-2 flex justify-between items-center text-base"
               role="menuitem"
             >
-              Produits <span class="opacity-40" aria-hidden="true">&nearr;</span>
+              Produits <span class="opacity-40" aria-hidden="true">-></span>
             </a>
           </div>
         </details>
@@ -259,31 +261,29 @@ import userIcon from "../assets/user.svg";
         <details class="mob-link rounded-xl border border-white/20 bg-white/5">
           <summary class="flex items-center justify-between px-4 py-3 cursor-pointer list-none">
             <span class="text-sm uppercase tracking-wide">Supprimer du contenu</span>
-            <span class="submenu-arrow text-base opacity-70" aria-hidden="true"
-              >&#8250;</span
-            >
+            <span class="submenu-arrow text-base opacity-70" aria-hidden="true">></span>
           </summary>
-          <div class="flex flex-col px-4 pb-3">
+          <div class="flex flex-col px-4 pb-3 pl-8">
             <a
               href="/creation/actions/delete"
               class="py-2 flex justify-between items-center text-base"
               role="menuitem"
             >
-              Actions <span class="opacity-40" aria-hidden="true">&nearr;</span>
+              Actions <span class="opacity-40" aria-hidden="true">-></span>
             </a>
             <a
               href="/creation/projets/delete"
               class="py-2 flex justify-between items-center text-base"
               role="menuitem"
             >
-              Projets <span class="opacity-40" aria-hidden="true">&nearr;</span>
+              Projets <span class="opacity-40" aria-hidden="true">-></span>
             </a>
             <a
               href="/creation/produits/delete"
               class="py-2 flex justify-between items-center text-base"
               role="menuitem"
             >
-              Produits <span class="opacity-40" aria-hidden="true">&nearr;</span>
+              Produits <span class="opacity-40" aria-hidden="true">-></span>
             </a>
           </div>
         </details>
@@ -291,31 +291,29 @@ import userIcon from "../assets/user.svg";
         <details class="mob-link rounded-xl border border-white/20 bg-white/5">
           <summary class="flex items-center justify-between px-4 py-3 cursor-pointer list-none">
             <span class="text-sm uppercase tracking-wide">Modifier du contenu</span>
-            <span class="submenu-arrow text-base opacity-70" aria-hidden="true"
-              >&#8250;</span
-            >
+            <span class="submenu-arrow text-base opacity-70" aria-hidden="true">></span>
           </summary>
-          <div class="flex flex-col px-4 pb-3">
+          <div class="flex flex-col px-4 pb-3 pl-8">
             <a
               href="/creation/actions"
               class="py-2 flex justify-between items-center text-base"
               role="menuitem"
             >
-              Actions <span class="opacity-40" aria-hidden="true">&nearr;</span>
+              Actions <span class="opacity-40" aria-hidden="true">-></span>
             </a>
             <a
               href="/creation/projets"
               class="py-2 flex justify-between items-center text-base"
               role="menuitem"
             >
-              Projets <span class="opacity-40" aria-hidden="true">&nearr;</span>
+              Projets <span class="opacity-40" aria-hidden="true">-></span>
             </a>
             <a
               href="/creation/produits"
               class="py-2 flex justify-between items-center text-base"
               role="menuitem"
             >
-              Produits <span class="opacity-40" aria-hidden="true">&nearr;</span>
+              Produits <span class="opacity-40" aria-hidden="true">-></span>
             </a>
           </div>
         </details>
@@ -327,27 +325,57 @@ import userIcon from "../assets/user.svg";
         >
         </div>
 
-        <a
-          href="/creation"
-          class="mob-link flex justify-between items-center py-2 text-base"
-          role="menuitem"
-        >
-          Espace cr&eacute;ation <span class="opacity-40" aria-hidden="true">&nearr;</span>
-        </a>
+        <div class="flex flex-col gap-4">
+          {
+            currentUser ? (
+              <>
+                {currentUser.verified &&
+                  currentUser.administrateur === true && (
+                    <a
+                      href="/creation"
+                      class="btn btn-secondary rounded-lg! w-full"
+                      role="menuitem"
+                    >
+                      Espace création
+                    </a>
+                  )}
 
-        <div class="mob-actions mt-4 grid grid-cols-1 gap-3">
-          <a
-            href="/mon-compte"
-            class="btn btn-block border-base-100 rounded-lg! w-full flex items-center justify-center gap-2"
-            role="menuitem"
-          >
-            <img
-              src={userIcon.src}
-              alt="User Icon"
-              class="w-5 h-5 rounded-full invert"
-            />
-            Mon compte
-          </a>
+                <div class="flex items-center gap-3 w-full md:col-span-2">
+                  <a
+                    id="mobile-account-link"
+                    href="/mon-compte"
+                    role="menuitem"
+                    class="flex items-center gap-3 flex-1"
+                  >
+                    <div class="avatar">
+                      <div class="w-10 rounded-full ring ring-offset-base-100 ring-white/30 overflow-hidden">
+                        <img src={userWhite.src} alt="icône utilisateur" />
+                      </div>
+                    </div>
+                    <span class="text-sm font-semibold">Mon compte</span>
+                  </a>
+
+                  <button
+                    id="mobile-logout-btn"
+                    type="button"
+                    class="btn btn-block w-fit px-4 py-2 md:px-8 md:py-4 btn-sm"
+                    role="menuitem"
+                  >
+                    Déconnexion
+                  </button>
+                </div>
+              </>
+            ) : (
+              <a
+                id="mobile-connexion-link"
+                href="/connexion"
+                class="btn btn-block border-base-100 rounded-lg! w-full"
+                role="menuitem"
+              >
+                Connexion
+              </a>
+            )
+          }
         </div>
       </nav>
     </div>
@@ -485,4 +513,5 @@ import userIcon from "../assets/user.svg";
     initMenu();
   });
 </script>
+
 

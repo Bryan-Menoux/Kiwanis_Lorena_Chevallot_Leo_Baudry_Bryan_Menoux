@@ -1,4 +1,4 @@
-document.addEventListener("DOMContentLoaded", () => {
+﻿document.addEventListener("DOMContentLoaded", () => {
   const mapInput = document.getElementById("input_lien_lieu");
   const btn = document.getElementById("btn_voir_maps");
   if (!(mapInput instanceof HTMLInputElement) || !(btn instanceof HTMLElement)) return;

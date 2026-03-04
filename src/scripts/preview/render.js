@@ -1,4 +1,4 @@
-import { formatDateRange, escapeHtml, isDataUrl } from '../../utils/utilitaires.js';
+﻿import { formatDateRange, escapeHtml, isDataUrl } from '../../utils/utilitaires.js';
 import { previewState } from './state.js';
 import { renderGallery } from './gallery.js';
 
@@ -180,11 +180,11 @@ function renderField(prop) {
     if (prop === 'chiffre') {
       const num = Number(value);
       if (Number.isFinite(num)) {
-        element.textContent = new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 0 }).format(num) + '\u00A0€';
+        element.textContent = new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 0 }).format(num) + ' EUR';
       } else if (value && String(value).trim() !== '') {
-        element.textContent = String(value) + '\u00A0€';
+        element.textContent = String(value) + ' EUR';
       } else {
-        element.textContent = '\u00A0€';
+        element.textContent = ' EUR';
       }
     } else if (prop === 'type_de_chiffre') {
       // Si aucun type n'est choisi et que le chiffre est négatif, on affiche un libellé par défaut.

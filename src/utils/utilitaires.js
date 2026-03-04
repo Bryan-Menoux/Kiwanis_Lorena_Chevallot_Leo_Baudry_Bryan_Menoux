@@ -1,4 +1,4 @@
-// Split du nom de l'utilisateur avec son prénom
+﻿// Split du nom de l'utilisateur avec son prénom
 export function splitUserName(fullName) {
   if (!fullName || typeof fullName !== "string") {
     return { firstName: "", lastName: "" };
@@ -170,3 +170,4 @@ export function normalizeImageUrl(value, record, pocketbaseClient) {
 
   return null;
 }
+

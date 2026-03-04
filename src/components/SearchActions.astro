@@ -1,4 +1,4 @@
----
+﻿---
 import { ActionsTypeActionOptions } from "../pocketbase-types";
 
 const props = Astro.props || {};
@@ -11,14 +11,6 @@ const {
 } = props;
 ---
 
-<!--
-  SearchActions component
-  - input for title search
-  - select for available years
-  - select for type_action
-  emits `search-actions-change` events with {search, year, type}
--->
-
 <div
   class="w-full rounded-xl border border-base-300 bg-base-100 p-3 md:p-4 search-actions"
   data-initial-search={value}
@@ -28,7 +20,7 @@ const {
   <div class="flex w-full flex-col gap-3 md:flex-row md:flex-wrap md:items-center lg:flex-nowrap">
     <input
       id="search-input"
-      class="input input-bordered flex-1 w-full"
+      class="input input-bordered flex-1 w-full min-h-10"
       type="text"
       placeholder="Rechercher le titre d'une action..."
     />

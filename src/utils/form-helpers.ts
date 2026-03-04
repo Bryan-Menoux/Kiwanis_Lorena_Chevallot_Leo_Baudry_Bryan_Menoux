@@ -1,53 +1,24 @@
-import { gsap } from "gsap";
+﻿import { showAlert } from "./alerts";
 
 interface ToastOptions {
-  type: "success" | "error" | "info";
+  type: "success" | "error" | "info" | "warning";
   message: string;
   duration?: number;
+  dismissible?: boolean;
 }
 
-export function showToast({ type, message, duration = 5000 }: ToastOptions) {
-  let container = document.getElementById(`toast-${type}`);
-
-  if (!container) {
-    container = document.createElement("div");
-    container.id = `toast-${type}`;
-    container.className = `alert alert-${type} fixed top-4 right-4 z-50 max-w-md shadow-lg hidden`;
-    container.setAttribute("role", "status");
-    container.setAttribute("aria-live", "polite");
-    container.setAttribute("aria-atomic", "true");
-    container.innerHTML = `<span id="toast-${type}-text">${message}</span>`;
-    document.body.appendChild(container);
-  }
-
-  const textElement = container.querySelector(`#toast-${type}-text`);
-  if (textElement) textElement.textContent = message;
-
-  gsap.killTweensOf(container);
-  gsap.set(container, { opacity: 0, y: -20 });
-
-  container.classList.remove("hidden");
-
-  requestAnimationFrame(() => {
-    gsap.to(container, {
-      opacity: 1,
-      y: 0,
-      duration: 0.5,
-      ease: "power2.out",
-    });
+export function showToast({
+  type,
+  message,
+  duration = 5000,
+  dismissible = true,
+}: ToastOptions) {
+  showAlert({
+    type,
+    message,
+    duration,
+    dismissible,
   });
-
-  setTimeout(() => {
-    gsap.to(container, {
-      opacity: 0,
-      y: -20,
-      duration: 0.3,
-      ease: "power2.in",
-      onComplete: () => {
-        container!.classList.add("hidden");
-      },
-    });
-  }, duration);
 }
 
 export async function submitFormAJAX(
@@ -56,7 +27,7 @@ export async function submitFormAJAX(
     onSuccess?: (response: any) => void;
     onError?: (error: any) => void;
     showToast?: boolean;
-  } = {}
+  } = {},
 ) {
   const { onSuccess, onError, showToast: showNotification = true } = options;
 

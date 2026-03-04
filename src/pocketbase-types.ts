@@ -1,4 +1,4 @@
-/**
+﻿/**
 * This file was @generated using pocketbase-typegen
 */
 
@@ -324,3 +324,4 @@ export type TypedPocketBase = {
 		idOrName: T
 	): RecordService<CollectionResponses[T]>
 } & PocketBase
+

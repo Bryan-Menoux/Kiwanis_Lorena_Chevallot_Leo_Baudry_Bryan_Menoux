@@ -1,4 +1,4 @@
----
+﻿---
 import { splitUserName } from "../utils/utilitaires.js";
 
 interface Props {
@@ -39,30 +39,6 @@ const { firstName, lastName } = splitUserName(user!.name);
           data-success={success ? "true" : "false"}
           class="hidden"
         >
-        </div>
-
-        <!-- Zone d'affichage du message de succès -->
-        <div
-          id="successMessage"
-          class="alert alert-success hidden h-fit p-4 transition-all duration-300"
-          role="status"
-          aria-live="polite"
-          aria-atomic="true"
-        >
-          <span id="successMessageText"
-            >✓ Vos modifications ont bien été enregistrées.</span
-          >
-        </div>
-
-        <!-- Zone d'affichage des messages de statut -->
-        <div
-          id="message"
-          class="alert hidden h-fit p-0 transition-all duration-300"
-          role="status"
-          aria-live="polite"
-          aria-atomic="true"
-        >
-          <span id="messageText"></span>
         </div>
 
         <!-- Section des informations personnelles -->
@@ -137,16 +113,6 @@ const { firstName, lastName } = splitUserName(user!.name);
         <!-- Section du mot de passe -->
         <div>
           <h3 class="text-lg font-bold text-base-content mb-6">Mot de passe</h3>
-          <!-- Messages spécifiques aux mots de passe -->
-          <div
-            id="passwordMessage"
-            class="alert hidden h-fit p-0 transition-all duration-300 mb-6"
-            role="status"
-            aria-live="polite"
-            aria-atomic="true"
-          >
-            <span id="passwordMessageText"></span>
-          </div>
           <p class="text-base-content/60 text-sm mb-6">
             Laissez vide pour ne pas changer votre mot de passe.
           </p>
@@ -207,7 +173,7 @@ const { firstName, lastName } = splitUserName(user!.name);
           </a>
           <button
             type="submit"
-            class="btn btn-primary btn-lg flex-1 rounded-full gap-2 min-h-full"
+            class="btn btn-accent btn-lg flex-1 rounded-full gap-2 min-h-full"
           >
             <span id="submitText">Enregistrer</span>
             <span
@@ -221,10 +187,8 @@ const { firstName, lastName } = splitUserName(user!.name);
 </div>
 
 <script>
-  import { gsap } from "gsap";
+  import { showAlert } from "../utils/alerts";
 
-  const successMessage = document.getElementById("successMessage");
-  const successMessageText = document.getElementById("successMessageText");
   const flag = document.getElementById("success-flag");
   const profileForm = document.getElementById("profileForm");
   const submitBtn = profileForm?.querySelector(
@@ -232,79 +196,21 @@ const { firstName, lastName } = splitUserName(user!.name);
   ) as HTMLButtonElement;
   const submitText = document.getElementById("submitText");
   const loadingSpinner = document.getElementById("loadingSpinner");
-  const messageDiv = document.getElementById("message");
-  const messageText = document.getElementById("messageText");
-  const passwordMessage = document.getElementById("passwordMessage");
-  const passwordMessageText = document.getElementById("passwordMessageText");
 
   function showSuccess(
-    text = "✓ Vos modifications ont bien été enregistrées.",
+    message = "OK Vos modifications ont bien été enregistrées.",
   ) {
-    if (!successMessage) return;
-
-    gsap.killTweensOf(successMessage);
-    gsap.set(successMessage, { opacity: 0, y: -20 });
-
-    if (successMessageText) successMessageText.textContent = text;
-    successMessage.classList.remove("hidden");
-    successMessage.style.pointerEvents = "auto";
-
-    requestAnimationFrame(() => {
-      gsap.to(successMessage, {
-        opacity: 1,
-        y: 0,
-        duration: 0.5,
-        ease: "power2.out",
-      });
+    showAlert({
+      message,
+      type: "success",
     });
-
-    setTimeout(() => {
-      gsap.to(successMessage, {
-        opacity: 0,
-        y: -20,
-        duration: 0.3,
-        ease: "power2.in",
-        onComplete: () => {
-          successMessage.classList.add("hidden");
-        },
-      });
-    }, 5000);
   }
 
-  function showError(text: string, isPasswordError = false) {
-    const container = isPasswordError ? passwordMessage : messageDiv;
-    const textElement = isPasswordError ? passwordMessageText : messageText;
-
-    if (!container) return;
-
-    gsap.killTweensOf(container);
-    gsap.set(container, { opacity: 0, y: -20 });
-
-    if (textElement) textElement.textContent = text;
-    container.classList.remove("hidden", "alert-success");
-    container.classList.add("alert-error");
-    container.style.pointerEvents = "auto";
-
-    requestAnimationFrame(() => {
-      gsap.to(container, {
-        opacity: 1,
-        y: 0,
-        duration: 0.5,
-        ease: "power2.out",
-      });
+  function showError(message: string) {
+    showAlert({
+      message,
+      type: "error",
     });
-
-    setTimeout(() => {
-      gsap.to(container, {
-        opacity: 0,
-        y: -20,
-        duration: 0.3,
-        ease: "power2.in",
-        onComplete: () => {
-          container.classList.add("hidden");
-        },
-      });
-    }, 5000);
   }
 
   // Afficher le succès du rechargement si présent
@@ -405,7 +311,7 @@ const { firstName, lastName } = splitUserName(user!.name);
             // Si déconnexion requise (changement d'email ou mot de passe), rediriger vers connexion
             if (result.logout) {
               showSuccess(
-                "✓ Profil mis à jour. Veuillez vous reconnecter avec vos nouvelles informations.",
+                "OK Profil mis à jour. Veuillez vous reconnecter avec vos nouvelles informations.",
               );
               setTimeout(() => {
                 window.location.href = "/connexion";
@@ -413,7 +319,7 @@ const { firstName, lastName } = splitUserName(user!.name);
             } else {
               showSuccess(
                 result.message ||
-                  "✓ Vos modifications ont bien été enregistrées.",
+                  "OK Vos modifications ont bien été enregistrées.",
               );
             }
           } else {
@@ -424,7 +330,6 @@ const { firstName, lastName } = splitUserName(user!.name);
 
             showError(
               result.error || "Erreur lors de la mise à jour",
-              newPassword ? true : false,
             );
           }
         } catch (error) {
@@ -443,3 +348,4 @@ const { firstName, lastName } = splitUserName(user!.name);
     );
   }
 </script>
+

@@ -1,4 +1,4 @@
----
+﻿---
 // src/components/Header.astro
 import Logo from "../assets/logo-kiwanis-full.svg";
 import user from "../assets/user.svg";
@@ -49,7 +49,7 @@ const currentUser = Astro.locals.pb.authStore.record;
           <span
             id="discover-arrow"
             class="text-[10px] transition-transform duration-300"
-            aria-hidden="true">❯</span
+            aria-hidden="true">></span
           >
         </div>
         <div
@@ -105,7 +105,8 @@ const currentUser = Astro.locals.pb.authStore.record;
       {
         currentUser ? (
           <>
-            <a id="account-link" href="/mon-compte">
+            <a id="account-link" href="/mon-compte" class="flex items-center gap-4">
+              <span class="text-sm font-semibold">Mon compte</span>
               <div
                 class="w-10 h-10 icon-accent"
                 style={`--icon-url: url(${user.src})`}
@@ -182,14 +183,14 @@ const currentUser = Astro.locals.pb.authStore.record;
           class="mob-link flex justify-between items-center py-2 text-base"
           role="menuitem"
         >
-          Nos membres <span class="opacity-40" aria-hidden="true">↗</span>
+          Nos membres <span class="opacity-40" aria-hidden="true">-></span>
         </a>
         <a
           href="/don"
           class="mob-link flex justify-between items-center py-2 text-base"
           role="menuitem"
         >
-          Faire un don <span class="opacity-40" aria-hidden="true">↗</span>
+          Faire un don <span class="opacity-40" aria-hidden="true">-></span>
         </a>
 
         <div
@@ -204,21 +205,21 @@ const currentUser = Astro.locals.pb.authStore.record;
           class="mob-link flex justify-between items-center py-2 text-base"
           role="menuitem"
         >
-          Nos actions <span class="opacity-40" aria-hidden="true">↗</span>
+          Nos actions <span class="opacity-40" aria-hidden="true">-></span>
         </a>
         <a
           href="/projets"
           class="mob-link flex justify-between items-center py-2 text-base"
           role="menuitem"
         >
-          Nos projets <span class="opacity-40" aria-hidden="true">↗</span>
+          Nos projets <span class="opacity-40" aria-hidden="true">-></span>
         </a>
         <a
           href="/produits"
           class="mob-link flex justify-between items-center py-2 text-base"
           role="menuitem"
         >
-          Nos produits <span class="opacity-40" aria-hidden="true">↗</span>
+          Nos produits <span class="opacity-40" aria-hidden="true">-></span>
         </a>
 
         <div
@@ -537,3 +538,4 @@ const currentUser = Astro.locals.pb.authStore.record;
     initDiscoverDropdown();
   });
 </script>
+

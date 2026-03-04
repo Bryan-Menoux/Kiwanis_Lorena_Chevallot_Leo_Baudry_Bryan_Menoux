@@ -1,4 +1,4 @@
----
+﻿---
 import diagArrow from "../assets/diag-arrow.svg";
 import imageIcon from "../assets/image-icon.svg";
 import galleryUrl from "../scripts/gallery.js?url";
@@ -243,7 +243,7 @@ const hasThanksSection = hasNonEmptyText(action?.description_remerciements);
             class="bg-accent text-base-100 w-full h-full max-w-full rounded-2xl px-6 md:px-8 py-4 md:py-6 flex flex-col justify-between min-h-30 md:min-h-48"
           >
             <h2 data-field="chiffre" class="text-5xl! md:text-7xl!">
-              {action.chiffre} €
+              {action.chiffre} EUR
             </h2>
             {/* Inclure l'élément systématiquement pour que le script de prévisualisation puisse le cibler. */}
             <p
@@ -472,19 +472,19 @@ const hasThanksSection = hasNonEmptyText(action?.description_remerciements);
             id="closeButton"
             class="absolute top-16 right-4 text-xl! bg-base-100 bg-opacity-80 rounded-full w-8 h-8 md:w-10 md:h-10 flex items-center justify-center z-110 cursor-pointer"
           >
-            ×
+            x
           </button>
           <button
             id="prevButton"
             class="absolute left-4 top-1/2 -translate-y-1/2 text-xl! bg-base-100 bg-opacity-80 rounded-full w-8 h-8 md:w-10 md:h-10 flex items-center justify-center z-110"
           >
-            ‹
+            Précédent
           </button>
           <button
             id="nextButton"
             class="absolute right-4 top-1/2 -translate-y-1/2 text-xl! bg-base-100 bg-opacity-80 rounded-full w-8 h-8 md:w-10 md:h-10 flex items-center justify-center z-110"
           >
-            ›
+            Suivant
           </button>
           <div class="relative p-2 md:p-4">
             <img
@@ -626,3 +626,4 @@ const hasThanksSection = hasNonEmptyText(action?.description_remerciements);
     </>
   )
 }
+

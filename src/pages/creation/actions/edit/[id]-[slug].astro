@@ -31,8 +31,6 @@ let error: string = "";
 // Construit une URL de redirection avec un message de succès uniforme.
 const withSuccess = (path: string, message: string) =>
   `${path}?success=${encodeURIComponent(message)}`;
-const normalizeOptionLabel = (value: string) =>
-  /Ãƒ|Ã‚/.test(value) ? Buffer.from(value, "latin1").toString("utf8") : value;
 const getPbTypeActionError = (err: any) =>
   err?.response?.data?.data?.type_action ||
   err?.response?.data?.type_action ||
@@ -49,9 +47,7 @@ const EMPTYABLE_FIELDS = new Set([
 let typeDeChiffreOptions: string[] = ["type de chiffre", ...(Array.isArray(ActionsTypeDeChiffreOptions) ? ActionsTypeDeChiffreOptions : Object.values(ActionsTypeDeChiffreOptions))];
 let typeActionOptions: string[] = (Array.isArray(ActionsTypeActionOptions)
   ? ActionsTypeActionOptions
-  : Object.values(ActionsTypeActionOptions)).map((opt) =>
-  normalizeOptionLabel(String(opt)),
-);
+  : Object.values(ActionsTypeActionOptions)).map((opt) => String(opt));
 
 // Placeholder SVG data-URL pour la prévisualisation serveur
 const placeholderImg = `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='400' height='400' viewBox='0 0 400 400'><rect width='100%' height='100%' fill='%23f3f6f7'/><image href='${imageIcon.src}' x='50' y='50' width='300' height='300' preserveAspectRatio='xMidYMid meet' style='opacity:0.95;'/></svg>`;
@@ -273,7 +269,7 @@ if (Astro.request.method === "POST") {
           const parsed = JSON.parse(value.toString());
           data[key] = Array.isArray(parsed)
             ? parsed
-              .map((item) => normalizeOptionLabel(String(item).trim()))
+              .map((item) => String(item).trim())
               .filter((item) => item && typeActionOptions.includes(item))
               .slice(0, 7)
             : [];
@@ -442,7 +438,7 @@ if (Astro.request.method === "POST") {
             ? JSON.stringify(typeActionErr)
             : String(typeActionErr);
           throw new Error(
-            `Le champ "type_action" a Ã©tÃ© refusÃ© par PocketBase: ${details}`,
+            `Le champ "type_action" a été refusé par PocketBase: ${details}`,
           );
         }
         throw updateErr;
@@ -462,11 +458,11 @@ if (Astro.request.method === "POST") {
       );
     }
   } catch (err) {
-    console.error("Erreur lors de la crÃ©ation:", err);
+    console.error("Erreur lors de la création:", err);
     try {
       const details = (err as any)?.response?.data;
       if (details) {
-        console.error("DÃ©tails PocketBase:", JSON.stringify(details, null, 2));
+        console.error("Détails PocketBase:", JSON.stringify(details, null, 2));
       }
     } catch (logErr) {}
     error =

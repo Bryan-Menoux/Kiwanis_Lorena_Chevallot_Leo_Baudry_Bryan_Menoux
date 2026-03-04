@@ -1,4 +1,4 @@
-document.addEventListener('DOMContentLoaded', () => {
+﻿document.addEventListener('DOMContentLoaded', () => {
   const search = document.getElementById('actionSearch');
   const type = document.getElementById('filterType');
   const beneficiary = document.getElementById('filterBeneficiary');

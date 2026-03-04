@@ -1,4 +1,4 @@
----
+﻿---
 import { ActionsTypeDeChiffreOptions } from '../pocketbase-types';
 ---
 
@@ -206,6 +206,7 @@ import { ActionsTypeDeChiffreOptions } from '../pocketbase-types';
 </form>
 
 <script>
+  import { showAlert } from "../utils/alerts";
   document.addEventListener('DOMContentLoaded', () => {
     //Synchronisation des éléments contenteditable avec les inputs cachés correspondants
     Array.from(document.querySelectorAll('[contenteditable="true"]')).forEach((el) => {
@@ -243,7 +244,7 @@ import { ActionsTypeDeChiffreOptions } from '../pocketbase-types';
           };
           reader.readAsDataURL(file);
         } else if (fileInput.multiple && fileInput.id === 'galleryInput') {
-          // Gestion de la galerie — minimal et rapide : createObjectURL + DocumentFragment + decode
+          // Gestion de la galerie - minimal et rapide : createObjectURL + DocumentFragment + decode
           let files = fileInput.files ? Array.from(fileInput.files) as File[] : [];
           if (!files || files.length === 0) return;
 
@@ -255,12 +256,18 @@ import { ActionsTypeDeChiffreOptions } from '../pocketbase-types';
           const MAX_IMAGES = 8;
           const remaining = MAX_IMAGES - existingCount;
           if (remaining <= 0) {
-            alert('Vous ne pouvez pas ajouter plus de 8 images.');
+            showAlert({
+              type: "warning",
+              message: "Vous ne pouvez pas ajouter plus de 8 images.",
+            });
             return;
           }
           if (files.length > remaining) {
             files = files.slice(0, remaining);
-            alert(`Seules ${remaining} image(s) seront ajoutée(s) (maximum ${MAX_IMAGES}).`);
+            showAlert({
+              type: "warning",
+              message: `Seules ${remaining} image(s) seront ajoutée(s) (maximum ${MAX_IMAGES}).`,
+            });
           }
 
           if (galleryImages) {
@@ -315,5 +322,5 @@ import { ActionsTypeDeChiffreOptions } from '../pocketbase-types';
   });
 
 
-</script></content>
-<parameter name="filePath">
+</script>
+

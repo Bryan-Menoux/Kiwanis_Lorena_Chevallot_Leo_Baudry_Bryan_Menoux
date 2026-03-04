@@ -1,4 +1,4 @@
----
+﻿---
 import Layout from "../layouts/Layout-login.astro";
 import shapesLeft from "../assets/login-page/shapes-left.svg";
 import shapesRight from "../assets/login-page/shapes-right.svg";
@@ -31,7 +31,7 @@ if (isPostForm) {
     await Astro.locals.pb.collection('users').requestPasswordReset(email);
 
     resetRequested = true;
-    serverMessage = "Si ce compte existe, un e‑mail de réinitialisation a été envoyé.";
+    serverMessage = "Si ce compte existe, un e-mail de réinitialisation a été envoyé.";
   } catch (error) {
     resetRequested = false;
     serverMessage = "Une erreur est survenue lors de la demande de réinitialisation.";
@@ -77,13 +77,6 @@ if (isPostForm) {
       </div>
 
       <form method="POST" class="flex flex-col w-full relative">
-        <div
-          id="errorText"
-          class="absolute left-0 right-0 text-sm text-start font-semibold opacity-0 pointer-events-none px-4 py-2 rounded-md max-w-[36rem] mx-auto"
-          style="bottom: calc(100% + 0.5rem);"
-        >
-        </div>
-
         <div class="relative my-2">
           <img
             src={userIcon.src}
@@ -113,53 +106,16 @@ if (isPostForm) {
 </Layout>
 
 <script>
-  import { gsap } from "gsap";
+  import { showAlert } from "../utils/alerts";
 
-
-  const errorText = document.getElementById("errorText");
   const flags = document.getElementById("auth-flags");
 
-  function showError(message: string, type = "error") {
-    if (!errorText) return;
+  type AuthAlertType = "error" | "warning" | "success" | "info";
 
-    gsap.killTweensOf(errorText);
-    gsap.set(errorText, { opacity: 0, y: 60 });
-
-    // Réinitialise les couleurs inline et les classes utilitaires précédentes
-    errorText.style.backgroundColor = "";
-    errorText.style.color = "";
-    errorText.classList.remove(
-      "text-red-500",
-      "text-secondary",
-      "text-white",
-      "text-black",
-      "bg-error",
-      "bg-success",
-      "bg-warning",
-      "text-error-content",
-      "text-success-content",
-      "text-warning-content"
-    );
-
-    // Utilise les classes du thème daisyUI (les littéraux évitent que Tailwind les purge)
-    if (type === "warning") {
-      errorText.classList.add("bg-warning", "text-warning-content");
-    } else if (type === "success") {
-      errorText.classList.add("bg-success", "text-success-content");
-    } else {
-      errorText.classList.add("bg-error", "text-error-content");
-    }
-
-    errorText.textContent = message;
-    errorText.style.pointerEvents = "auto";
-
-    requestAnimationFrame(() => {
-      gsap.to(errorText, {
-        opacity: 1,
-        y: 0,
-        duration: 0.5,
-        ease: "power2.out",
-      });
+  function showError(message: string, type: AuthAlertType = "error") {
+    showAlert({
+      message,
+      type,
     });
   }
 
@@ -169,7 +125,7 @@ if (isPostForm) {
     const message = flags.dataset.message || "";
 
     if (resetRequested) {
-      showError(message || "Si ce compte existe, un e‑mail a été envoyé.", "success");
+      showError(message || "Si ce compte existe, un e-mail a été envoyé.", "success");
     } else if (message) {
       showError(message, "error");
     }
@@ -186,3 +142,4 @@ if (isPostForm) {
     });
   }
 </script>
+

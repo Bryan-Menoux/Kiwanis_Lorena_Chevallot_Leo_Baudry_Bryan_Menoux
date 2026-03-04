@@ -1,5 +1,6 @@
----
+﻿---
 import "../styles/global.css";
+import AlertProvider from "../components/AlertProvider.astro";
 ---
 
 <!doctype html>
@@ -53,6 +54,7 @@ import "../styles/global.css";
     <title>Kiwanis Pays de Montbéliard</title>
   </head>
   <body class="overflow-hidden bg-accent">
+    <AlertProvider />
     <slot />
   </body>
 </html>
@@ -64,3 +66,4 @@ import "../styles/global.css";
     height: 100%;
   }
 </style>
+

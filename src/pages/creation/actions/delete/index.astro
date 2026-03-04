@@ -1,4 +1,4 @@
----
+﻿---
 import Layout from "../../../../layouts/Layout-back-office.astro";
 import slugify from "slugify";
 import { formatDateShort } from "../../../../utils/utilitaires.js";
@@ -14,7 +14,7 @@ try {
     .collection("actions")
     .getFullList(500, { sort: "-updated" });
 } catch (e) {
-  console.error("Impossible de rÃ©cupÃ©rer les actions:", e);
+  console.error("Impossible de récupérer les actions:", e);
   error = "Impossible de charger la liste des actions";
 }
 
@@ -39,7 +39,7 @@ if (Astro.request.method === "POST") {
       .map((v) => v.toString())
       .filter(Boolean);
     if (!ids || ids.length === 0) {
-      error = "Aucun Ã©lÃ©ment sÃ©lectionnÃ©";
+      error = "Aucun élément sélectionné";
     } else {
       const failed: string[] = [];
       for (const id of ids) {
@@ -52,10 +52,10 @@ if (Astro.request.method === "POST") {
       }
       if (failed.length === 0) {
         return Astro.redirect(
-          `/creation/actions/delete?success=${encodeURIComponent(`${ids.length} action(s) supprimÃ©e(s)`)}`,
+          `/creation/actions/delete?success=${encodeURIComponent(`${ids.length} action(s) supprimée(s)`)}`,
         );
       } else {
-        error = `Ã‰chec suppression pour ${failed.length} Ã©lÃ©ment(s)`;
+        error = `Échec suppression pour ${failed.length} élément(s)`;
       }
     }
   } catch (e) {
@@ -72,7 +72,7 @@ try {
 ---
 
 <Layout>
-  <div class="container mx-auto px-4 py-8 my-32">
+  <div class="container mx-auto px-4 py-8 my-16 md:my-32">
     <div class="mb-10 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
       <div class="mb-0">
         <h1 class="mb-3 text-3xl font-bold text-accent font-poppins md:text-4xl">Supprimer des actions</h1>
@@ -85,8 +85,12 @@ try {
       </div>
     </div>
 
-    {success && <div class="alert alert-success mb-4">{success}</div>}
-    {error && <div class="alert alert-error mb-4">{error}</div>}
+    <div
+      id="delete-flash-flags"
+      data-success={success}
+      data-error={error}
+      class="hidden"
+    ></div>
 
     <form method="POST" id="deleteForm">
       <div class="mb-4 space-y-4">
@@ -123,7 +127,6 @@ try {
             type="submit"
             id="bulkDelete"
             class="btn btn-error btn-sm rounded-full md:btn-md w-full sm:w-auto"
-            onclick="return confirm('Confirmer la suppression des elements selectionnes ?')"
             >Supprimer selection</button
           >
         </div>
@@ -136,7 +139,7 @@ try {
         {
           actions.map((a: any) => (
             <label
-              class="flex min-h-[220px] flex-col justify-between gap-4 rounded-xl border border-base-300 bg-base-100 p-4 shadow-sm md:p-5 lg:p-6"
+              class="flex min-h-55 flex-col justify-between gap-4 rounded-xl border border-base-300 bg-base-100 p-4 shadow-sm md:p-5 lg:p-6"
               for={`id_${a.id}`}
               data-action-id={a.id}
               data-action-slug={a.slug}
@@ -154,17 +157,17 @@ try {
                     id={`id_${a.id}`}
                     value={a.id}
                   />
-                  <h3 class="break-words text-xl font-bold leading-tight md:text-2xl">
+                  <h3 class="wrap-break-word text-xl font-bold leading-tight md:text-2xl">
                     {a.titre}
                   </h3>
                 </div>
                 {a.sous_titre && (
-                  <p class="text-sm leading-relaxed break-words text-base-content/75">
+                  <p class="text-sm leading-relaxed wrap-break-word text-base-content/75">
                     {a.sous_titre}
                   </p>
                 )}
                 {a.beneficiaire && (
-                  <p class="text-sm leading-relaxed break-words text-base-content/75">
+                  <p class="text-sm leading-relaxed wrap-break-word text-base-content/75">
                     {a.beneficiaire}
                   </p>
                 )}
@@ -189,8 +192,28 @@ try {
   </div>
 
   <script>
+    import { showAlert, showConfirm } from "../../../../utils/alerts";
+
     // Recherche, filtres et tri côté client + sélection globale + suppression par carte.
     document.addEventListener("DOMContentLoaded", () => {
+      const flashFlags = document.getElementById("delete-flash-flags");
+      if (flashFlags instanceof HTMLElement) {
+        const successMessage = flashFlags.dataset.success || "";
+        const errorMessage = flashFlags.dataset.error || "";
+        if (successMessage) {
+          showAlert({
+            type: "success",
+            message: successMessage,
+          });
+        }
+        if (errorMessage) {
+          showAlert({
+            type: "error",
+            message: errorMessage,
+          });
+        }
+      }
+
       const selectAll = document.getElementById("selectAll");
       const form = document.getElementById("deleteForm");
       const grid = document.getElementById("cards-grid");
@@ -199,6 +222,45 @@ try {
       if (!(form instanceof HTMLFormElement) || !(grid instanceof HTMLElement)) return;
 
       const g = grid;
+      let bypassConfirmSubmit = false;
+
+      form.addEventListener("submit", async (event) => {
+        if (bypassConfirmSubmit) {
+          bypassConfirmSubmit = false;
+          return;
+        }
+
+        event.preventDefault();
+
+        const selected = g.querySelectorAll(
+          'input[type="checkbox"][name="ids"]:checked',
+        ).length;
+
+        if (selected === 0) {
+          showAlert({
+            type: "warning",
+            message: "Sélectionnez au moins une action à supprimer.",
+          });
+          return;
+        }
+
+        const confirmed = await showConfirm({
+          title: "Supprimer des actions",
+          message: `Confirmer la suppression de ${selected} élément(s) ?`,
+          type: "warning",
+          confirmLabel: "Supprimer",
+          cancelLabel: "Annuler",
+        });
+
+        if (!confirmed) return;
+
+        bypassConfirmSubmit = true;
+        if (typeof form.requestSubmit === "function") {
+          form.requestSubmit();
+        } else {
+          form.submit();
+        }
+      });
 
       // Récupérer toutes les cartes (instantané initial).
       const allCards = Array.from(

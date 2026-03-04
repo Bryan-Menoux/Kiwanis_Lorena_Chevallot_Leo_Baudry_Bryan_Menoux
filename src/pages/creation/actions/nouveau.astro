@@ -21,16 +21,12 @@ const EMPTYABLE_FIELDS = new Set([
   "chiffre",
   "type_de_chiffre",
 ]);
-const normalizeOptionLabel = (value: string) =>
-  /Ãƒ|Ã‚/.test(value) ? Buffer.from(value, "latin1").toString("utf8") : value;
 
 // Récupérer les options de type_de_chiffre depuis le type TypeScript généré
 let typeDeChiffreOptions: string[] = ["type de chiffre", ...(Array.isArray(ActionsTypeDeChiffreOptions) ? ActionsTypeDeChiffreOptions : Object.values(ActionsTypeDeChiffreOptions))];
 let typeActionOptions: string[] = (Array.isArray(ActionsTypeActionOptions)
   ? ActionsTypeActionOptions
-  : Object.values(ActionsTypeActionOptions)).map((opt) =>
-  normalizeOptionLabel(String(opt)),
-);
+  : Object.values(ActionsTypeActionOptions)).map((opt) => String(opt));
 
 // Placeholder partagé (source unique injectée côté serveur depuis `previewDefaults.js`)
 const previewPlaceholder: any = {
@@ -76,7 +72,7 @@ if (Astro.request.method === "POST") {
           const parsed = JSON.parse(value.toString());
           data[key] = Array.isArray(parsed)
             ? parsed
-              .map((item) => normalizeOptionLabel(String(item).trim()))
+              .map((item) => String(item).trim())
               .filter((item) => item && typeActionOptions.includes(item))
               .slice(0, 7)
             : [];
@@ -142,7 +138,7 @@ if (Astro.request.method === "POST") {
       `/creation/actions/${newAction.id}-${slug}?success=${encodeURIComponent("Action créée")}`
     );
   } catch (err) {
-    console.error("Erreur lors de la crÃ©ation:", err);
+    console.error("Erreur lors de la création:", err);
     error = err instanceof Error ? err.message : "Une erreur inconnue est survenue";
   }
 }
