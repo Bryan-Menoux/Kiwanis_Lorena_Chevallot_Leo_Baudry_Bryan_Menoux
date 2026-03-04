@@ -45,7 +45,42 @@ import Alert from "./Alert.astro";
 </div>
 
 <script>
-  import { gsap } from "gsap";
+  type AlertType = "success" | "error" | "warning" | "info";
+
+  interface AlertPayload {
+    message: string;
+    type?: AlertType;
+    duration?: number;
+    dismissible?: boolean;
+  }
+
+  interface ConfirmPayload {
+    message: string;
+    title?: string;
+    confirmLabel?: string;
+    cancelLabel?: string;
+    type?: AlertType;
+  }
+
+  interface NormalizedAlertPayload {
+    message: string;
+    type: AlertType;
+    duration: number;
+    dismissible: boolean;
+  }
+
+  interface NormalizedConfirmPayload {
+    message: string;
+    title: string;
+    confirmLabel: string;
+    cancelLabel: string;
+    type: AlertType;
+  }
+
+  interface ConfirmQueueItem {
+    payload: NormalizedConfirmPayload;
+    resolve: (value: boolean) => void;
+  }
 
   const MAX_ALERTS = 4;
   const DEFAULT_DURATION = 5000;
@@ -54,7 +89,7 @@ import Alert from "./Alert.astro";
   const BASE_ICON_CLASS =
     "inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold";
 
-  const variants = {
+  const variants: Record<AlertType, { toast: string; iconWrapper: string; icon: string }> = {
     success: {
       toast: "bg-success text-success-content border-success",
       iconWrapper: "bg-base-100/20 text-success-content",
@@ -77,7 +112,7 @@ import Alert from "./Alert.astro";
     },
   };
 
-  const confirmVariantClass = {
+  const confirmVariantClass: Record<AlertType, string> = {
     success: "btn-success",
     error: "btn-error",
     warning: "btn-warning",
@@ -95,55 +130,57 @@ import Alert from "./Alert.astro";
   const confirmCancelBtn = confirmRoot?.querySelector("[data-confirm-cancel]");
   const confirmConfirmBtn = confirmRoot?.querySelector("[data-confirm-confirm]");
 
-  if (!root || !(template instanceof HTMLTemplateElement)) {
+  if (!(root instanceof HTMLElement) || !(template instanceof HTMLTemplateElement)) {
     console.warn("Provider d'alertes indisponible.");
   } else {
+    const rootEl = root;
+    const templateEl = template;
     const ALERT_MARGIN_MOBILE = 12;
     const ALERT_MARGIN_DESKTOP = 16;
-    const timers = new WeakMap();
+    const timers = new WeakMap<HTMLElement, number>();
 
-    let activeConfirm = null;
-    const confirmQueue = [];
-    let observedHeader = null;
-    let headerResizeObserver = null;
+    let activeConfirm: ConfirmQueueItem | null = null;
+    const confirmQueue: ConfirmQueueItem[] = [];
+    let observedHeader: HTMLElement | null = null;
+    let headerResizeObserver: ResizeObserver | null = null;
     const headerMutationObserver = new MutationObserver(() => {
       scheduleAlertOffsetUpdate();
     });
 
-    function getMainHeader() {
-      return (
+    function getMainHeader(): HTMLElement | null {
+      const header =
         document.getElementById("main-header") ||
         document.querySelector("header.fixed.top-0") ||
-        document.querySelector("header")
-      );
+        document.querySelector("header");
+      return header instanceof HTMLElement ? header : null;
     }
 
-    function updateAlertOffset() {
+    function updateAlertOffset(): void {
       const margin = window.matchMedia("(min-width: 1024px)").matches
         ? ALERT_MARGIN_DESKTOP
         : ALERT_MARGIN_MOBILE;
 
       const header = getMainHeader();
       if (!(header instanceof HTMLElement)) {
-        root.style.top = `${margin}px`;
+        rootEl.style.top = `${margin}px`;
         return;
       }
 
       const headerBottom = Math.max(0, header.getBoundingClientRect().bottom);
-      root.style.top = `${Math.round(headerBottom + margin)}px`;
+      rootEl.style.top = `${Math.round(headerBottom + margin)}px`;
     }
 
-    function scheduleAlertOffsetUpdate() {
+    function scheduleAlertOffsetUpdate(): void {
       requestAnimationFrame(() => {
         updateAlertOffset();
         window.setTimeout(updateAlertOffset, 120);
       });
     }
 
-    function observeHeaderChanges() {
+    function observeHeaderChanges(): void {
       const header = getMainHeader();
       if (!(header instanceof HTMLElement)) {
-        root.style.top = `${ALERT_MARGIN_MOBILE}px`;
+        rootEl.style.top = `${ALERT_MARGIN_MOBILE}px`;
         return;
       }
 
@@ -173,7 +210,7 @@ import Alert from "./Alert.astro";
       });
     }
 
-    function normalizeAlert(payload) {
+    function normalizeAlert(payload: AlertPayload | string): NormalizedAlertPayload {
       if (typeof payload === "string") {
         return {
           message: payload,
@@ -184,14 +221,14 @@ import Alert from "./Alert.astro";
       }
 
       return {
-        message: payload?.message || "Une notification est disponible.",
-        type: payload?.type || "info",
-        duration: payload?.duration ?? DEFAULT_DURATION,
-        dismissible: payload?.dismissible ?? true,
+        message: payload.message || "Une notification est disponible.",
+        type: payload.type || "info",
+        duration: payload.duration ?? DEFAULT_DURATION,
+        dismissible: payload.dismissible ?? true,
       };
     }
 
-    function normalizeConfirm(payload) {
+    function normalizeConfirm(payload: ConfirmPayload | string): NormalizedConfirmPayload {
       if (typeof payload === "string") {
         return {
           message: payload,
@@ -203,15 +240,15 @@ import Alert from "./Alert.astro";
       }
 
       return {
-        message: payload?.message || "Confirmez votre action.",
-        title: payload?.title || "Confirmation",
-        confirmLabel: payload?.confirmLabel || "Confirmer",
-        cancelLabel: payload?.cancelLabel || "Annuler",
-        type: payload?.type || "warning",
+        message: payload.message || "Confirmez votre action.",
+        title: payload.title || "Confirmation",
+        confirmLabel: payload.confirmLabel || "Confirmer",
+        cancelLabel: payload.cancelLabel || "Annuler",
+        type: payload.type || "warning",
       };
     }
 
-    function removeAlert(toast) {
+    function removeAlert(toast: HTMLElement | null): void {
       if (!toast || toast.dataset.removing === "true") return;
       toast.dataset.removing = "true";
 
@@ -233,11 +270,11 @@ import Alert from "./Alert.astro";
       });
     }
 
-    function createAlert(payload) {
-      const toast = template.content.firstElementChild?.cloneNode(true);
+    function createAlert(payload: NormalizedAlertPayload): HTMLElement | null {
+      const toast = templateEl.content.firstElementChild?.cloneNode(true);
       if (!(toast instanceof HTMLElement)) return null;
 
-      const variant = variants[payload.type] || variants.info;
+      const variant = variants[payload.type];
       const messageEl = toast.querySelector("[data-alert-message]");
       const iconEl = toast.querySelector("[data-alert-icon]");
       const closeBtn = toast.querySelector("[data-alert-close]");
@@ -266,18 +303,18 @@ import Alert from "./Alert.astro";
       return toast;
     }
 
-    function show(payload) {
+    function show(payload: AlertPayload | string): void {
       const normalized = normalizeAlert(payload);
       const toast = createAlert(normalized);
       if (!toast) return;
 
-      while (root.childElementCount >= MAX_ALERTS) {
-        const oldest = root.firstElementChild;
+      while (rootEl.childElementCount >= MAX_ALERTS) {
+        const oldest = rootEl.firstElementChild;
         if (!(oldest instanceof HTMLElement)) break;
         oldest.remove();
       }
 
-      root.appendChild(toast);
+      rootEl.appendChild(toast);
 
       gsap.fromTo(
         toast,
@@ -299,11 +336,17 @@ import Alert from "./Alert.astro";
       }
     }
 
-    function closeConfirm(answer) {
+    function closeConfirm(answer: boolean): void {
       if (!activeConfirm) return;
 
       const current = activeConfirm;
       activeConfirm = null;
+
+      if (!(confirmBackdrop instanceof HTMLElement) || !(confirmPanel instanceof HTMLElement)) {
+        current.resolve(answer);
+        processConfirmQueue();
+        return;
+      }
 
       gsap.to([confirmBackdrop, confirmPanel], {
         opacity: 0,
@@ -326,7 +369,7 @@ import Alert from "./Alert.astro";
       });
     }
 
-    function processConfirmQueue() {
+    function processConfirmQueue(): void {
       if (activeConfirm || confirmQueue.length === 0) return;
 
       if (
@@ -343,15 +386,17 @@ import Alert from "./Alert.astro";
         return;
       }
 
-      activeConfirm = confirmQueue.shift();
-      const { payload } = activeConfirm;
+      const next = confirmQueue.shift();
+      if (!next) return;
+      activeConfirm = next;
+      const { payload } = next;
 
       confirmTitle.textContent = payload.title;
       confirmMessage.textContent = payload.message;
       confirmCancelBtn.textContent = payload.cancelLabel;
       confirmConfirmBtn.textContent = payload.confirmLabel;
 
-      const confirmTypeClass = confirmVariantClass[payload.type] || "btn-accent";
+      const confirmTypeClass = confirmVariantClass[payload.type];
       confirmConfirmBtn.className = `btn ${confirmTypeClass} btn-sm sm:btn-md`;
 
       confirmRoot.classList.remove("hidden", "pointer-events-none");
@@ -365,10 +410,10 @@ import Alert from "./Alert.astro";
       );
     }
 
-    function confirm(payload) {
+    function confirm(payload: ConfirmPayload | string): Promise<boolean> {
       const normalized = normalizeConfirm(payload);
 
-      return new Promise((resolve) => {
+      return new Promise<boolean>((resolve) => {
         confirmQueue.push({ payload: normalized, resolve });
         processConfirmQueue();
       });
@@ -386,15 +431,15 @@ import Alert from "./Alert.astro";
       confirmBackdrop.addEventListener("click", () => closeConfirm(false));
     }
 
-    window.addEventListener("keydown", (event) => {
+    window.addEventListener("keydown", (event: KeyboardEvent) => {
       if (event.key === "Escape" && activeConfirm) {
         closeConfirm(false);
       }
     });
 
-    window.addEventListener("kiwanis:alert", (event) => {
+    window.addEventListener("kiwanis:alert", (event: Event) => {
       if (event instanceof CustomEvent) {
-        show(event.detail);
+        show(event.detail as AlertPayload | string);
       }
     });
 
@@ -403,10 +448,14 @@ import Alert from "./Alert.astro";
       observeHeaderChanges();
     });
     window.addEventListener("scroll", updateAlertOffset, { passive: true });
-    document.addEventListener("click", () => {
-      scheduleAlertOffsetUpdate();
-      observeHeaderChanges();
-    }, true);
+    document.addEventListener(
+      "click",
+      () => {
+        scheduleAlertOffsetUpdate();
+        observeHeaderChanges();
+      },
+      true,
+    );
     window.addEventListener("load", () => {
       observeHeaderChanges();
       updateAlertOffset();
@@ -420,13 +469,13 @@ import Alert from "./Alert.astro";
       confirm,
     };
 
-    const queuedAlerts = window.__kiwanisAlertQueue;
+    const queuedAlerts = window.__kiwanisAlertQueue as NormalizedAlertPayload[] | undefined;
     if (Array.isArray(queuedAlerts) && queuedAlerts.length > 0) {
       queuedAlerts.forEach((payload) => show(payload));
       window.__kiwanisAlertQueue = [];
     }
 
-    const queuedConfirms = window.__kiwanisConfirmQueue;
+    const queuedConfirms = window.__kiwanisConfirmQueue as ConfirmQueueItem[] | undefined;
     if (Array.isArray(queuedConfirms) && queuedConfirms.length > 0) {
       const pending = [...queuedConfirms];
       window.__kiwanisConfirmQueue = [];
