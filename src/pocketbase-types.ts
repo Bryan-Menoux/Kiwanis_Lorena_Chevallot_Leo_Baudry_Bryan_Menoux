@@ -1,5 +1,5 @@
 ﻿/**
-* This file was @generated using pocketbase-typegen
+* Ce fichier a été @generated avec pocketbase-typegen
 */
 
 import type PocketBase from 'pocketbase'
@@ -18,7 +18,7 @@ export enum Collections {
 	Users = "users",
 }
 
-// Alias types for improved usability
+// Alias de types pour une meilleure lisibilité
 export type IsoDateString = string
 export type IsoAutoDateString = string & { readonly autodate: unique symbol }
 export type RecordIdString = string
@@ -31,7 +31,7 @@ type ExpandType<T> = unknown extends T
 		: { expand: T }
 	: { expand: T }
 
-// System fields
+// Champs système
 export type BaseSystemFields<T = unknown> = {
 	id: RecordIdString
 	collectionId: string
@@ -45,7 +45,7 @@ export type AuthSystemFields<T = unknown> = {
 	verified: boolean
 } & BaseSystemFields<T>
 
-// Record types for each collection
+// Types d'enregistrements pour chaque collection
 
 export type AuthoriginsRecord = {
 	collectionRef: string
@@ -219,7 +219,7 @@ export type UsersRecord = {
 	verified?: boolean
 }
 
-// Response types include system fields and match responses from the PocketBase API
+// Les types de réponse incluent les champs système et correspondent aux réponses de l'API PocketBase
 export type AuthoriginsResponse<Texpand = unknown> = Required<AuthoriginsRecord> & BaseSystemFields<Texpand>
 export type ExternalauthsResponse<Texpand = unknown> = Required<ExternalauthsRecord> & BaseSystemFields<Texpand>
 export type MfasResponse<Texpand = unknown> = Required<MfasRecord> & BaseSystemFields<Texpand>
@@ -231,7 +231,7 @@ export type ProduitsResponse<Texpand = unknown> = Required<ProduitsRecord> & Bas
 export type ProjetsResponse<Texpand = unknown> = Required<ProjetsRecord> & BaseSystemFields<Texpand>
 export type UsersResponse<Texpand = unknown> = Required<UsersRecord> & AuthSystemFields<Texpand>
 
-// Types containing all Records and Responses, useful for creating typing helper functions
+// Types contenant tous les enregistrements et toutes les réponses, utiles pour créer des fonctions d'aide de typage
 
 export type CollectionRecords = {
 	_authOrigins: AuthoriginsRecord
@@ -259,12 +259,12 @@ export type CollectionResponses = {
 	users: UsersResponse
 }
 
-// Utility types for create/update operations
+// Types utilitaires pour les opérations de création/mise à jour
 
 type ProcessCreateAndUpdateFields<T> = Omit<{
-	// Omit AutoDate fields
+	// Exclure les champs AutoDate
 	[K in keyof T as Extract<T[K], IsoAutoDateString> extends never ? K : never]: 
-		// Convert FileNameString to File
+		// Convertir FileNameString en File
 		T[K] extends infer U ? 
 			U extends (FileNameString | FileNameString[]) ? 
 				U extends any[] ? File[] : File 
@@ -272,7 +272,7 @@ type ProcessCreateAndUpdateFields<T> = Omit<{
 		: never
 }, 'id'>
 
-// Create type for Auth collections
+// Type de création pour les collections Auth
 export type CreateAuth<T> = {
 	id?: RecordIdString
 	email: string
@@ -282,12 +282,12 @@ export type CreateAuth<T> = {
 	verified?: boolean
 } & ProcessCreateAndUpdateFields<T>
 
-// Create type for Base collections
+// Type de création pour les collections de base
 export type CreateBase<T> = {
 	id?: RecordIdString
 } & ProcessCreateAndUpdateFields<T>
 
-// Update type for Auth collections
+// Type de mise à jour pour les collections Auth
 export type UpdateAuth<T> = Partial<
 	Omit<ProcessCreateAndUpdateFields<T>, keyof AuthSystemFields>
 > & {
@@ -299,24 +299,24 @@ export type UpdateAuth<T> = Partial<
 	verified?: boolean
 }
 
-// Update type for Base collections
+// Type de mise à jour pour les collections de base
 export type UpdateBase<T> = Partial<
 	Omit<ProcessCreateAndUpdateFields<T>, keyof BaseSystemFields>
 >
 
-// Get the correct create type for any collection
+// Obtenir le type de création correct pour n'importe quelle collection
 export type Create<T extends keyof CollectionResponses> =
 	CollectionResponses[T] extends AuthSystemFields
 		? CreateAuth<CollectionRecords[T]>
 		: CreateBase<CollectionRecords[T]>
 
-// Get the correct update type for any collection
+// Obtenir le type de mise à jour correct pour n'importe quelle collection
 export type Update<T extends keyof CollectionResponses> =
 	CollectionResponses[T] extends AuthSystemFields
 		? UpdateAuth<CollectionRecords[T]>
 		: UpdateBase<CollectionRecords[T]>
 
-// Type for usage with type asserted PocketBase instance
+// Type à utiliser avec une instance PocketBase typée explicitement
 // https://github.com/pocketbase/js-sdk#specify-typescript-definitions
 
 export type TypedPocketBase = {

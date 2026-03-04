@@ -155,19 +155,45 @@ import Alert from "./Alert.astro";
       return header instanceof HTMLElement ? header : null;
     }
 
+    function getActionEditorTabList(): HTMLElement | null {
+      const tabList = document.querySelector(
+        "[data-action-editor-shell] [data-shell-tab-list]",
+      );
+      return tabList instanceof HTMLElement ? tabList : null;
+    }
+
+    function isVisibleElement(node: HTMLElement | null): boolean {
+      if (!(node instanceof HTMLElement)) return false;
+      const style = window.getComputedStyle(node);
+      if (style.display === "none" || style.visibility === "hidden") {
+        return false;
+      }
+      const rect = node.getBoundingClientRect();
+      return rect.width > 0 && rect.height > 0;
+    }
+
     function updateAlertOffset(): void {
       const margin = window.matchMedia("(min-width: 1024px)").matches
         ? ALERT_MARGIN_DESKTOP
         : ALERT_MARGIN_MOBILE;
 
       const header = getMainHeader();
-      if (!(header instanceof HTMLElement)) {
+      const editorTabList = getActionEditorTabList();
+      const headerBottom =
+        isVisibleElement(header) && header instanceof HTMLElement
+          ? Math.max(0, header.getBoundingClientRect().bottom)
+          : 0;
+      const editorTabBottom =
+        isVisibleElement(editorTabList) && editorTabList instanceof HTMLElement
+          ? Math.max(0, editorTabList.getBoundingClientRect().bottom)
+          : 0;
+      const anchorBottom = Math.max(headerBottom, editorTabBottom);
+
+      if (anchorBottom <= 0) {
         rootEl.style.top = `${margin}px`;
         return;
       }
-
-      const headerBottom = Math.max(0, header.getBoundingClientRect().bottom);
-      rootEl.style.top = `${Math.round(headerBottom + margin)}px`;
+      rootEl.style.top = `${Math.round(anchorBottom + margin)}px`;
     }
 
     function scheduleAlertOffsetUpdate(): void {

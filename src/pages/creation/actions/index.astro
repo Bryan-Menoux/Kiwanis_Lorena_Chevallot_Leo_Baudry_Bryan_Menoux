@@ -2,6 +2,7 @@
 import Layout from "../../../layouts/Layout-back-office.astro";
 import slugify from "slugify";
 import ActionsSearch from "../../../components/ActionsSearch.astro";
+import FormSubmitOverlay from "../../../components/FormSubmitOverlay.astro";
 import utilUrl from "../../../utils/utilitaires.js?url";
 import { formatDateShort } from "../../../utils/utilitaires.js";
 import { ActionsTypeActionOptions } from "../../../pocketbase-types";
@@ -228,6 +229,7 @@ const allActions = actions;
                   <form
                     method="POST"
                     action={`/creation/actions/edit/${a.id}-${a.slug}`}
+                    data-publish-action-form="true"
                     class="col-span-2 w-full md:w-auto"
                   >
                     <input type="hidden" name="publish_action" value="true" />
@@ -246,9 +248,61 @@ const allActions = actions;
       </div>
     </div>
   </div>
+  <FormSubmitOverlay
+    formSelector='form[data-publish-action-form="true"]'
+    message="Publication en cours..."
+  />
 </Layout>
 
 <script type="module" src={utilUrl}></script>
+<script type="module">
+  import { showConfirm } from "../../../utils/alerts";
+
+  const BIND_FLAG = "__kcPublishActionConfirmBound";
+  const PUBLISH_CONFIRMED_ATTR = "data-publish-confirmed";
+  const globalWindow = window as Window & Record<string, unknown>;
+
+  if (!globalWindow[BIND_FLAG]) {
+    globalWindow[BIND_FLAG] = true;
+
+    document.addEventListener("submit", (event) => {
+      const target = event.target;
+      if (!(target instanceof HTMLFormElement)) return;
+      if (target.getAttribute("data-publish-action-form") !== "true") return;
+
+      const alreadyConfirmed =
+        target.getAttribute(PUBLISH_CONFIRMED_ATTR) === "true";
+      if (alreadyConfirmed) {
+        target.removeAttribute(PUBLISH_CONFIRMED_ATTR);
+        return;
+      }
+
+      event.preventDefault();
+      const submitter = event.submitter;
+
+      void showConfirm({
+        title: "Publier l'action",
+        message:
+          "Confirmez-vous la publication de ce brouillon ? Cette action sera visible sur le site.",
+        type: "warning",
+        confirmLabel: "Publier",
+        cancelLabel: "Annuler",
+      }).then((confirmed) => {
+        if (!confirmed) return;
+
+        target.setAttribute(PUBLISH_CONFIRMED_ATTR, "true");
+        if (
+          submitter instanceof HTMLButtonElement ||
+          submitter instanceof HTMLInputElement
+        ) {
+          target.requestSubmit(submitter);
+          return;
+        }
+        target.requestSubmit();
+      });
+    });
+  }
+</script>
 <script define:vars={{ allActions, q }}>
   const actions = allActions;
   let currentBeneficiary = "";
@@ -364,7 +418,7 @@ const allActions = actions;
               <div class="grid grid-cols-2 gap-2 md:flex md:flex-row md:items-center md:justify-end">
                 <a class="btn btn-sm btn-ghost action-btn-text w-full md:w-auto" href="${getViewUrl(a.id, a.slug, a.source)}">Voir</a>
                 <a class="btn btn-sm btn-accent action-btn-text w-full rounded-full md:w-auto" href="${getEditUrl(a.id, a.slug)}">Modifier</a>
-                ${a.source === "brouillon" ? `<form method="POST" action="${getEditUrl(a.id, a.slug)}" class="col-span-2 w-full md:w-auto"><input type="hidden" name="publish_action" value="true" /><button type="submit" class="btn btn-sm btn-accent action-btn-text w-full rounded-full md:w-auto">Publier</button></form>` : ""}
+                ${a.source === "brouillon" ? `<form method="POST" action="${getEditUrl(a.id, a.slug)}" data-publish-action-form="true" class="col-span-2 w-full md:w-auto"><input type="hidden" name="publish_action" value="true" /><button type="submit" class="btn btn-sm btn-accent action-btn-text w-full rounded-full md:w-auto">Publier</button></form>` : ""}
               </div>
             </div>
         `,

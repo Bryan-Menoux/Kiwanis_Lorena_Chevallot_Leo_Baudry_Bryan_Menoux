@@ -167,7 +167,7 @@ const { animateDesktopSidebar = false } = Astro.props;
       shell.dataset.activeTab = normalizeTab(shell.dataset.activeTab);
 
       shell.addEventListener("click", (event) => {
-        // Délégation de clic: un seul listener pour les deux boutons.
+        // Délégation de clic : un seul écouteur pour les deux boutons.
         const target = event.target;
         if (!(target instanceof Element)) return;
         const trigger = target.closest("[data-shell-tab-trigger]");

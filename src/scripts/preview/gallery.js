@@ -53,7 +53,7 @@ function renderGallery(photoUrls) {
     }
 
     if (!photoGrid.__previewBound) {
-      // Délégation d'événement: évite un listener par vignette.
+      // Délégation d'événement : évite un écouteur par vignette.
       photoGrid.addEventListener('click', function (event) {
         const photoElement = event.target.closest && event.target.closest('[data-photo-index]') ? event.target.closest('[data-photo-index]') : null;
         if (photoElement) {

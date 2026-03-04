@@ -1,9 +1,15 @@
-﻿const MOBILE_QUERY = "(max-width: 1023px)";
+﻿import { showAlert } from "../../utils/alerts";
+
+const MOBILE_QUERY = "(max-width: 1023px)";
 const TOTAL_STEPS = 7;
 const INIT_FLAG_ATTR = "data-mobile-wizard-init";
 const SYNC_FN_KEY = "__kcMobileWizardSync";
 const CLEANUP_FN_KEY = "__kcMobileWizardCleanup";
+const RESET_FN_KEY = "__kcMobileWizardReset";
 const ASTRO_PAGE_LOAD_FLAG = "__kcMobileWizardPageLoadBound";
+const VALIDATION_ALERT_DEBOUNCE_MS = 1200;
+let lastWizardErrorMessage = "";
+let lastWizardErrorAt = 0;
 
 // Force une étape valide entre 1 et TOTAL_STEPS.
 function parseStep(value, fallback = 1) {
@@ -65,15 +71,70 @@ function setNavState(form, step) {
 
 function setError(form, message) {
   const errorNode = form.querySelector("[data-mobile-step-error]");
-  if (!errorNode) return;
-  if (!message) {
+  if (errorNode) {
+    // Le message inline est desactive: on utilise le composant d'alert.
     errorNode.classList.add("hidden");
     errorNode.textContent = "";
+  }
+  if (!message) {
     return;
   }
 
-  errorNode.classList.remove("hidden");
-  errorNode.textContent = message;
+  const now = Date.now();
+  const shouldSkipDuplicate =
+    message === lastWizardErrorMessage &&
+    now - lastWizardErrorAt < VALIDATION_ALERT_DEBOUNCE_MS;
+  if (shouldSkipDuplicate) return;
+
+  lastWizardErrorMessage = message;
+  lastWizardErrorAt = now;
+  showAlert({
+    type: "warning",
+    message,
+  });
+}
+
+function hasExistingImagePreview(form, fieldName) {
+  const existingPreview = form.querySelector(
+    `#preview_${fieldName} [data-delete-image="${fieldName}"]`,
+  );
+  return existingPreview instanceof HTMLElement;
+}
+
+function hasSelectedFile(form, fieldName) {
+  const input = form.querySelector(`[data-prop-file="${fieldName}"]`);
+  return (
+    input instanceof HTMLInputElement &&
+    input.files instanceof FileList &&
+    input.files.length > 0
+  );
+}
+
+function getMissingHeaderFields(form) {
+  const missingFields = [];
+
+  const titleInput = form.querySelector("#input_titre");
+  const hasTitle =
+    titleInput instanceof HTMLInputElement &&
+    titleInput.value.trim().length > 0;
+  if (!hasTitle) missingFields.push("titre");
+
+  const startDateInput = form.querySelector("#input_date_debut");
+  const hasStartDate =
+    startDateInput instanceof HTMLInputElement &&
+    startDateInput.value.trim().length > 0;
+  if (!hasStartDate) missingFields.push("date de début");
+
+  const hasHero =
+    hasSelectedFile(form, "hero") || hasExistingImagePreview(form, "hero");
+  if (!hasHero) missingFields.push("image de l'en-tête");
+
+  return missingFields;
+}
+
+function buildStepOneRequiredMessage(missingHeaderFields) {
+  if (!missingHeaderFields.length) return "";
+  return `Complétez l'étape 1 : ${missingHeaderFields.join(", ")}.`;
 }
 
 function validateStep(form, step) {
@@ -83,14 +144,19 @@ function validateStep(form, step) {
   if (!(currentStep instanceof HTMLElement)) return true;
 
   if (step === 1) {
-    // Règle métier minimale : le titre est obligatoire hors brouillon.
-    const titleInput = form.querySelector("#input_titre");
-    if (
-      titleInput instanceof HTMLInputElement &&
-      titleInput.value.trim().length === 0
-    ) {
-      titleInput.reportValidity();
-      setError(form, "Le titre de l'action est obligatoire.");
+    const missingHeaderFields = getMissingHeaderFields(form);
+    if (missingHeaderFields.length > 0) {
+      setError(form, buildStepOneRequiredMessage(missingHeaderFields));
+      if (missingHeaderFields.includes("titre")) {
+        const titleInput = form.querySelector("#input_titre");
+        titleInput?.focus?.();
+      } else if (missingHeaderFields.includes("date de début")) {
+        const startDateInput = form.querySelector("#input_date_debut");
+        startDateInput?.focus?.();
+      } else if (missingHeaderFields.includes("image de l'en-tête")) {
+        const heroInput = form.querySelector("#input_hero_file");
+        heroInput?.focus?.();
+      }
       return false;
     }
   }
@@ -116,14 +182,6 @@ function persistStep(form, step) {
   } catch (e) {}
 }
 
-function readPersistedStep(form, fallback) {
-  try {
-    return parseStep(localStorage.getItem(getStorageKey(form)), fallback);
-  } catch (e) {
-    return fallback;
-  }
-}
-
 function initMobileWizard() {
   const formFromShell = document.querySelector(
     "[data-action-editor-shell] #leftForm",
@@ -138,9 +196,13 @@ function initMobileWizard() {
   if (!(form instanceof HTMLFormElement)) return;
   if (form.dataset.uiMode !== "mobile-wizard") return;
 
-  // Idempotence : si déjà initialisé, on resynchronise sans rebinder tous les listeners.
+  // Idempotence : si déjà initialisé, on resynchronise sans réattacher tous les écouteurs.
   const storedSync = form[SYNC_FN_KEY];
   if (form.getAttribute(INIT_FLAG_ATTR) === "true" && typeof storedSync === "function") {
+    const storedReset = form[RESET_FN_KEY];
+    if (typeof storedReset === "function") {
+      storedReset();
+    }
     storedSync();
     return;
   }
@@ -153,7 +215,7 @@ function initMobileWizard() {
 
   const mediaQuery = window.matchMedia(MOBILE_QUERY);
   const initialFromMarkup = parseStep(form.dataset.initialStep || "1", 1);
-  let currentStep = readPersistedStep(form, initialFromMarkup);
+  let currentStep = initialFromMarkup;
 
   const sync = () => {
     const isMobile = mediaQuery.matches;
@@ -178,6 +240,27 @@ function initMobileWizard() {
 
     setStepVisibility(form, currentStep);
     setNavState(form, currentStep);
+  };
+
+  const forceFormTab = () => {
+    const shell = form.closest("[data-action-editor-shell]");
+    if (!(shell instanceof HTMLElement)) return;
+    shell.dataset.activeTab = "form";
+    const formTabButton = shell.querySelector('[data-shell-tab-trigger="form"]');
+    if (formTabButton instanceof HTMLElement) {
+      formTabButton.click();
+    }
+  };
+
+  const resetToFirstStep = () => {
+    currentStep = 1;
+    persistStep(form, currentStep);
+    setError(form, "");
+    if (mediaQuery.matches) {
+      forceFormTab();
+      setStepVisibility(form, currentStep);
+      setNavState(form, currentStep);
+    }
   };
 
   const goToStep = (nextStep, shouldValidateCurrent = false) => {
@@ -227,8 +310,15 @@ function initMobileWizard() {
   const submitHandler = (event) => {
     if (!mediaQuery.matches) return;
     const submitterName = event.submitter?.name || "";
+    const isDraftSave = submitterName === "save_as";
+    if (isDraftSave) {
+      setError(form, "");
+      persistStep(form, currentStep);
+      return;
+    }
+
     // Les actions "brouillon" / "publication" restent possibles hors étape 7.
-    const isDraftOrPublish = submitterName === "save_as" || submitterName === "publish_action";
+    const isDraftOrPublish = submitterName === "publish_action";
     if (currentStep !== TOTAL_STEPS && !isDraftOrPublish) {
       event.preventDefault();
       setError(form, "Passe à l'étape 7 pour enregistrer l'action.");
@@ -244,8 +334,11 @@ function initMobileWizard() {
 
   const mediaChangeHandler = () => sync();
   mediaQuery.addEventListener("change", mediaChangeHandler);
+  const pageShowHandler = () => resetToFirstStep();
+  window.addEventListener("pageshow", pageShowHandler);
 
   form[SYNC_FN_KEY] = sync;
+  form[RESET_FN_KEY] = resetToFirstStep;
   form[CLEANUP_FN_KEY] = () => {
     // Fonction de nettoyage appelée avant un éventuel rebind.
     if (prevButton instanceof HTMLButtonElement) {
@@ -261,8 +354,10 @@ function initMobileWizard() {
     });
     form.removeEventListener("submit", submitHandler);
     mediaQuery.removeEventListener("change", mediaChangeHandler);
+    window.removeEventListener("pageshow", pageShowHandler);
   };
 
+  resetToFirstStep();
   sync();
 }
 

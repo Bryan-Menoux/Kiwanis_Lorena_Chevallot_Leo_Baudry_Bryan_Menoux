@@ -21,6 +21,74 @@ const EMPTYABLE_FIELDS = new Set([
   "chiffre",
   "type_de_chiffre",
 ]);
+const PART_NUMBERS = [1, 2, 3];
+
+const isNonEmptyString = (value: FormDataEntryValue | null) =>
+  typeof value === "string" && value.trim() !== "";
+
+const hasUploadedFile = (formData: FormData, fieldName: string) => {
+  const value = formData.get(fieldName);
+  return value instanceof File && value.size > 0;
+};
+
+const hasAtLeastOnePartContent = (formData: FormData) =>
+  PART_NUMBERS.some((partNumber) => {
+    const textKey = `texte_partie_${partNumber}`;
+    const photoKey = `photo_partie_${partNumber}`;
+    return isNonEmptyString(formData.get(textKey)) || hasUploadedFile(formData, photoKey);
+  });
+
+const hasDescriptionForPartTitle = (payload: Record<string, any>, partNumber: number) => {
+  const textKey = `texte_partie_${partNumber}`;
+  const descriptionValue = payload[textKey];
+  if (typeof descriptionValue !== "string" || descriptionValue.trim() === "") {
+    return false;
+  }
+  const defaultDescription = previewDefaults[textKey];
+  if (typeof defaultDescription !== "string") {
+    return true;
+  }
+  return descriptionValue.trim() !== defaultDescription.trim();
+};
+
+const applyPartTitleRule = (payload: Record<string, any>) => {
+  for (const partNumber of PART_NUMBERS) {
+    const titleKey = `titre_partie_${partNumber}`;
+    if (!hasDescriptionForPartTitle(payload, partNumber)) {
+      delete payload[titleKey];
+      continue;
+    }
+    const currentTitleValue = payload[titleKey];
+    if (typeof currentTitleValue === "string" && currentTitleValue.trim() !== "") {
+      payload[titleKey] = currentTitleValue.trim();
+      continue;
+    }
+    const defaultTitle = previewDefaults[titleKey];
+    if (typeof defaultTitle === "string" && defaultTitle.trim() !== "") {
+      payload[titleKey] = defaultTitle.trim();
+    }
+  }
+  return payload;
+};
+
+const getMissingRequiredFields = (formData: FormData) => {
+  const missing: string[] = [];
+
+  if (!isNonEmptyString(formData.get("titre"))) {
+    missing.push("titre");
+  }
+  if (!isNonEmptyString(formData.get("date_debut"))) {
+    missing.push("date de début");
+  }
+  if (!hasUploadedFile(formData, "hero")) {
+    missing.push("image de l'en-tête");
+  }
+  if (!hasAtLeastOnePartContent(formData)) {
+    missing.push("au moins une partie (texte ou photo)");
+  }
+
+  return missing;
+};
 
 // Récupérer les options de type_de_chiffre depuis le type TypeScript généré
 let typeDeChiffreOptions: string[] = ["type de chiffre", ...(Array.isArray(ActionsTypeDeChiffreOptions) ? ActionsTypeDeChiffreOptions : Object.values(ActionsTypeDeChiffreOptions))];
@@ -46,6 +114,15 @@ if (Astro.request.method === "POST") {
     // Détecter si l'utilisateur veut enregistrer en brouillon
     const saveAs = formData.get("save_as")?.toString();
     const isBrouillon = saveAs === "brouillon";
+
+    if (!isBrouillon) {
+      const missingFields = getMissingRequiredFields(formData);
+      if (missingFields.length > 0) {
+        throw new Error(
+          `Informations obligatoires manquantes: ${missingFields.join(", ")}.`,
+        );
+      }
+    }
 
     // Titre (pour les brouillons le titre n'est pas obligatoire)
     const titre = formData.get("titre")?.toString();
@@ -123,7 +200,12 @@ if (Astro.request.method === "POST") {
     if (isBrouillon) {
       const draftSlug = slug || "brouillon";
       // On garde type="action" pour réutiliser le même flux de back-office.
-      const draftPayload = { ...data, slug: draftSlug, type: "action", ...files };
+      const draftPayload = applyPartTitleRule({
+        ...data,
+        slug: draftSlug,
+        type: "action",
+        ...files,
+      });
       const newDraft = await Astro.locals.pb
         .collection("brouillons")
         .create(draftPayload);
@@ -132,7 +214,7 @@ if (Astro.request.method === "POST") {
       );
     }
 
-    const payload = { ...data, slug, ...files };
+    const payload = applyPartTitleRule({ ...data, slug, ...files });
     const newAction = await Astro.locals.pb.collection("actions").create(payload);
     return Astro.redirect(
       `/creation/actions/${newAction.id}-${slug}?success=${encodeURIComponent("Action créée")}`

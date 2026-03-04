@@ -12,7 +12,7 @@
   const deletedImages = {};
 
   form.addEventListener("click", (e) => {
-    // Délégation d'événement : un seul listener pour toutes les images supprimables.
+    // Délégation d'événement : un seul écouteur pour toutes les images supprimables.
     const target = e.target;
     const btn = target && target.closest ? target.closest(".delete-image-btn") : null;
     if (!btn) return;

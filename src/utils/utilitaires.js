@@ -159,7 +159,7 @@ export function normalizeImageUrl(value, record, pocketbaseClient) {
       if (fileReference) return pocketbaseClient.files.getURL(record, fileReference);
     }
   } catch (error) {
-    // ignore et try fallbacks
+    // Ignorer l'erreur et essayer les solutions de repli
   }
 
   if (typeof value === "object" && value !== null) {

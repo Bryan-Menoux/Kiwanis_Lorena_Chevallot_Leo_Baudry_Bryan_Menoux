@@ -6,11 +6,11 @@ import { defineMiddleware } from "astro/middleware";
 
 export const onRequest = defineMiddleware(
   async ({ locals, request, isPrerendered }, next: () => any) => {
-    // Debug: Log origin headers on POST requests (temporary, controlled by DEBUG_ORIGIN env var)
+    // Débogage : journaliser les en-têtes d'origine sur les requêtes POST (temporaire, piloté par DEBUG_ORIGIN)
     if (request.method === "POST" && process.env.DEBUG_ORIGIN === "true") {
       const proto = request.headers.get("x-forwarded-proto") || "http";
       const host = request.headers.get("x-forwarded-host") || request.headers.get("host");
-      // Debug origin logging was removed to reduce console noise.
+      // Le journal des origines en mode debug a été retiré pour réduire le bruit console.
     }
 
     const pbUrl = import.meta.env.PROD 
@@ -20,20 +20,20 @@ export const onRequest = defineMiddleware(
     locals.pb = new PocketBase(pbUrl);
 
     if (!isPrerendered) {
-      // load the store data from the request cookie string
+      // Charger l'état d'authentification depuis la chaîne de cookies de la requête
       locals.pb.authStore.loadFromCookie(request.headers.get("cookie") || "");
 
       try {
-        // get an up-to-date auth store state by verifying and refreshing the loaded auth record (if any)
+        // Mettre à jour l'état d'auth en vérifiant et rafraîchissant le record chargé (s'il existe)
         locals.pb.authStore.isValid &&
           (await locals.pb.collection("users").authRefresh());
       } catch (_) {
-        // clear the auth store on failed refresh
+        // Vider l'état d'auth en cas d'échec du rafraîchissement
         locals.pb.authStore.clear();
       }
 
-      // Redirect non-authenticated requests for protected routes.
-      // Allow access to `/creation` for authenticated users who are either admins or verified.
+      // Rediriger les requêtes non authentifiées sur les routes protégées.
+      // Autoriser `/creation` uniquement pour les utilisateurs authentifiés admin et vérifiés.
       const url = new URL(request.url);
       const protectedPrefixes = ["/creation"];
       if (protectedPrefixes.some((p) => url.pathname.startsWith(p))) {
@@ -41,7 +41,7 @@ export const onRequest = defineMiddleware(
         const isAuthenticated = Boolean(locals.pb.authStore.isValid && userRecord);
         const isAdmin = userRecord?.administrateur === true;
         const isVerified = userRecord?.verified === true;
-        // require BOTH admin and verified to access /creation
+        // Exiger admin ET vérifié pour accéder à /creation
         if (!isAuthenticated || !(isAdmin && isVerified)) {
           const redirectUrl = new URL("/connexion", request.url).toString();
           return Response.redirect(redirectUrl, 302);
@@ -52,7 +52,7 @@ export const onRequest = defineMiddleware(
     const response = await next();
 
     if (!isPrerendered) {
-      // send back the default 'pb_auth' cookie to the client with the latest store state
+      // Renvoyer le cookie `pb_auth` au client avec l'état le plus récent
       response.headers.append(
         "set-cookie",
         locals.pb.authStore.exportToCookie(),
