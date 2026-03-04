@@ -338,14 +338,14 @@ const allActions = actions;
           ${pageItems
             .map(
               (a) => `
-                    <div class="flex min-h-[220px] flex-col justify-between gap-4 rounded-xl border border-base-300 bg-base-100 p-4 shadow-sm md:p-5 lg:p-6" data-action-id="${a.id}" data-action-slug="${a.slug}" data-source="${a.source}">
+                    <div class="flex min-h-55 flex-col justify-between gap-4 rounded-xl border border-base-300 bg-base-100 p-4 shadow-sm md:p-5 lg:p-6" data-action-id="${a.id}" data-action-slug="${a.slug}" data-source="${a.source}">
               <div class="space-y-3">
                 <div class="flex items-start justify-between gap-3">
-                  <h3 class="break-words text-xl font-bold leading-tight md:text-2xl">${a.titre}</h3>
+                  <h3 class="wrap-break-word text-xl font-bold leading-tight md:text-2xl">${a.titre}</h3>
                   ${a.source === 'brouillon' ? '<span class="badge badge-secondary text-secondary-content shrink-0">Brouillon</span>' : ""}
                 </div>
-                ${a.sous_titre ? `<p class="text-sm leading-relaxed break-words text-base-content/75">${a.sous_titre}</p>` : ""}
-                ${a.beneficiaire ? `<p class="text-sm leading-relaxed break-words text-base-content/75">${a.beneficiaire}</p>` : ""}
+                ${a.sous_titre ? `<p class="text-sm leading-relaxed wrap-break-word text-base-content/75">${a.sous_titre}</p>` : ""}
+                ${a.beneficiaire ? `<p class="text-sm leading-relaxed wrap-break-word text-base-content/75">${a.beneficiaire}</p>` : ""}
                 <p class="text-xs leading-tight text-base-content/60">${a.updated ? formatDate(a.updated) : ""}</p>
               </div>
               <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-end">
