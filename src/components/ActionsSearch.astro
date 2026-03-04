@@ -8,44 +8,81 @@ const {
   typeOptions = [],
   initialYear = "",
   initialType = "",
+  embedded = true,
 } = props;
 ---
 
 <div
-  class="w-full rounded-2xl border border-base-300 bg-base-100 p-3 md:p-4 actions-search"
+  class:list={[
+    "w-full actions-search",
+    embedded ? "bg-transparent p-0" : "rounded-2xl border border-base-300 bg-base-100 p-3 md:p-4",
+  ]}
   data-initial-search={value}
   data-initial-year={initialYear}
   data-initial-type={initialType}
 >
-  <div class="grid w-full grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
-    <input
-      id="search-input"
-      class="input input-bordered flex-1 w-full"
-      type="text"
-      placeholder="Rechercher par titre..."
-    />
-    <input
-      id="beneficiary-input"
-      class="input input-bordered w-full"
-      type="text"
-      placeholder="Filtre bénéficiaire"
-    />
-    {yearOptions.length > 0 && (
-      <select id="year-select" class="select select-bordered w-full">
-        <option value="">Toutes les années</option>
-        {yearOptions.map((y: string) => <option value={y}>{y}</option>)}
-      </select>
-    )}
-    {typeOptions.length > 0 && (
-      <select id="type-select" class="select select-bordered w-full">
-        <option value="">Tous les types</option>
-        {typeOptions.map((t: string) => <option value={t}>{t}</option>)}
-      </select>
-    )}
-    {showStatus && (
-      <select id="status-select" class="select select-bordered w-full">
-        {statusOptions.map((s: string) => <option value={s}>{s}</option>)}
-      </select>
+  <div class="flex w-full flex-col gap-3">
+    <div class="grid w-full grid-cols-1 gap-3 lg:grid-cols-2">
+      <label class="form-control w-full gap-1">
+        <span class="text-xs font-medium uppercase tracking-wide text-base-content/60">Titre</span>
+        <input
+          id="search-input"
+          class="input input-bordered w-full"
+          type="text"
+          placeholder="Rechercher par titre..."
+        />
+      </label>
+      <label class="form-control w-full gap-1">
+        <span class="text-xs font-medium uppercase tracking-wide text-base-content/60">Bénéficiaire</span>
+        <input
+          id="beneficiary-input"
+          class="input input-bordered w-full"
+          type="text"
+          placeholder="Filtre bénéficiaire"
+        />
+      </label>
+    </div>
+
+    {(yearOptions.length > 0 || typeOptions.length > 0 || showStatus || Astro.slots.has("secondary-extra")) && (
+      <div class="flex w-full flex-col gap-3 lg:flex-row lg:flex-wrap lg:gap-x-0">
+        {yearOptions.length > 0 && (
+          <div class="w-full lg:w-1/3 lg:pr-3">
+            <label class="form-control w-full gap-1">
+              <span class="text-xs font-medium uppercase tracking-wide text-base-content/60">Année</span>
+              <select id="year-select" class="select select-bordered w-full">
+                <option value="">Toutes les années</option>
+                {yearOptions.map((y: string) => <option value={y}>{y}</option>)}
+              </select>
+            </label>
+          </div>
+        )}
+        {typeOptions.length > 0 && (
+          <div class="w-full lg:w-1/3 lg:pr-3">
+            <label class="form-control w-full gap-1">
+              <span class="text-xs font-medium uppercase tracking-wide text-base-content/60">Type</span>
+              <select id="type-select" class="select select-bordered w-full">
+                <option value="">Tous les types</option>
+                {typeOptions.map((t: string) => <option value={t}>{t}</option>)}
+              </select>
+            </label>
+          </div>
+        )}
+        {showStatus && (
+          <div class="w-full lg:w-1/3 lg:pr-3">
+            <label class="form-control w-full gap-1">
+              <span class="text-xs font-medium uppercase tracking-wide text-base-content/60">Statut</span>
+              <select id="status-select" class="select select-bordered w-full">
+                {statusOptions.map((s: string) => <option value={s}>{s}</option>)}
+              </select>
+            </label>
+          </div>
+        )}
+        {Astro.slots.has("secondary-extra") && (
+          <div class="w-full lg:w-1/3 lg:pr-3">
+            <slot name="secondary-extra" />
+          </div>
+        )}
+      </div>
     )}
   </div>
 </div>
@@ -68,7 +105,7 @@ const {
       const initialSearch = root.dataset.initialSearch || "";
 
       if (typeof console !== 'undefined' && console.debug) console.debug('ActionsSearch init');
-      
+
       if (searchInput instanceof HTMLInputElement) searchInput.value = initialSearch;
       const initialYear = root.dataset.initialYear || "";
       const initialType = root.dataset.initialType || "";
@@ -89,7 +126,6 @@ const {
         document.dispatchEvent(new CustomEvent("actions-filter-change", { detail, bubbles: true }));
       }
 
-      // Attach listeners
       if (searchInput instanceof Element) {
         searchInput.addEventListener('input', (ev: Event) => {
           const tgt = ev.target as HTMLElement & { value?: string; id?: string };
@@ -116,7 +152,6 @@ const {
         statusSelect.addEventListener('change', emit);
       }
 
-      // emit initial state once
       emit();
     }
 

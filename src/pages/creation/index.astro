@@ -31,7 +31,7 @@ const projets = await Astro.locals.pb.collection('projets').getFullList(200, { s
 const produits = await Astro.locals.pb.collection('produits').getFullList(200, { sort: '-updated' });
 const brouillons = await Astro.locals.pb.collection('brouillons').getFullList(200, { sort: '-updated' });
 
-// Combiner toutes les pages des différentes collections
+// Combiner toutes les pages des diff?rentes collections
 const pages: Page[] = [
   ...actions.map(action => ({
     id: action.id,
@@ -39,7 +39,7 @@ const pages: Page[] = [
     slug: safeSlug(action.titre, "action"),
     status: 'actions' as const,
     updatedAt: action.updated,
-    authorName: 'Admin', // Valeur par défaut
+    authorName: 'Admin', // Valeur par d?faut
     beneficiary: action.beneficiaire
   })),
   ...projets.map(projet => ({
@@ -48,7 +48,7 @@ const pages: Page[] = [
     slug: safeSlug(projet.titre, "projet"),
     status: 'projets' as const,
     updatedAt: projet.updated,
-    authorName: 'Admin' // Valeur par défaut
+    authorName: 'Admin' // Valeur par d?faut
   })),
   ...produits.map(produit => ({
     id: produit.id,
@@ -56,10 +56,10 @@ const pages: Page[] = [
     slug: safeSlug(produit.titre, "produit"),
     status: 'produits' as const,
     updatedAt: produit.updated,
-    authorName: 'Admin' // Valeur par défaut
+    authorName: 'Admin' // Valeur par d?faut
   })),
   ...brouillons.map(brouillon => {
-    // Inférer le type si absent (heuristique : champs typiques d'une action)
+    // Inf?rer le type si absent (heuristique : champs typiques d'une action)
     const inferredType = brouillon.type || (
       brouillon.date_debut || brouillon.nom_lieu || brouillon.beneficiaire || brouillon.titre_partie_1 || (Array.isArray(brouillon.galerie_photos) && brouillon.galerie_photos.length)
         ? 'action'
@@ -72,18 +72,18 @@ const pages: Page[] = [
       slug: safeSlug(brouillon.titre, "brouillon"),
       status: 'brouillon' as const,
       updatedAt: brouillon.updated,
-      authorName: 'Admin', // Valeur par défaut
+      authorName: 'Admin', // Valeur par d?faut
       type: inferredType,
     });
   })
 ];
 
-// Base de données factice : uniquement « pages » (id, titre, slug, statut, updatedAt, authorName)
+// Base de donn?es factice : uniquement ? pages ? (id, titre, slug, statut, updatedAt, authorName)
 const db: { pages: Page[] } = {
   pages: pages
 };
 
-// utilisation de l'utilitaire partagé
+// utilisation de l'utilitaire partag?
 
 function getStatusBadge(status: Page['status']) {
   if (status === 'actions') return { label: 'Actions', className: 'badge badge-success' };
@@ -98,13 +98,13 @@ function getEditUrl(status: Page['status'], id: string, slug: string, type?: str
   if (status === 'projets') return `/creation/projets/edit/${id}-${slug}`;
   if (status === 'produits') return `/creation/produits/edit/${id}-${slug}`;
 
-  // Pour les brouillons, utiliser le `type` si présent ; sinon ouvrir
-  // l'éditeur `actions` par défaut (comportement demandé).
+  // Pour les brouillons, utiliser le `type` si pr?sent ; sinon ouvrir
+  // l'?diteur `actions` par d?faut (comportement demand?).
   if (status === 'brouillon') {
     if (type === 'action') return `/creation/actions/edit/${id}-${slug}`;
     if (type === 'projet') return `/creation/projets/edit/${id}-${slug}`;
     if (type === 'produit') return `/creation/produits/edit/${id}-${slug}`;
-    // fallback par défaut → ouvrir l'éditeur actions
+    // fallback par d?faut -> ouvrir l'?diteur actions
     return `/creation/actions/edit/${id}-${slug}`;
   }
 
@@ -136,7 +136,7 @@ const params = Astro.url.searchParams;
 const q = (params.get('q') || '').trim();
 const status = params.get('status') || 'all';
 
-// Filtrage côté serveur (pour l'initialisation)
+// Filtrage c?t? serveur (pour l'initialisation)
 let list = db.pages.slice();
 if (status && status !== 'all') list = list.filter(p => p.status === status);
 if (q) {
@@ -148,32 +148,32 @@ if (q) {
 }
 // tri par updatedAt desc
 list.sort((a,b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
-// limiter à 6
-const recent = list.slice(0,6);
+// limiter a 9
+const recent = list.slice(0,9);
 const stats = computeStats(db.pages);
 
-// Données pour le JavaScript côté client
+// Donn?es pour le JavaScript c?t? client
 const allPages = db.pages;
 ---
 
 <Layout>
   <div class="container mx-auto px-4 py-8 my-32">
     <!-- Header -->
-    <div class="mb-10">
-        <div class="mb-4">
-      <h1 class="mb-3 text-3xl font-bold text-accent font-poppins md:text-4xl">Mes Pages</h1>
-      <p class="text-base text-base-content/70 md:text-lg">Bienvenue dans votre tableau de bord de gestion</p>
-    </div>
-    <div class="flex flex-wrap items-center gap-3">
+    <div class="mb-10 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+      <div class="mb-0">
+        <h1 class="mb-3 text-3xl font-bold text-accent font-poppins md:text-4xl">Mes Pages</h1>
+        <p class="text-base text-base-content/70 md:text-lg">Bienvenue dans votre tableau de bord de gestion</p>
+      </div>
+      <div class="flex flex-wrap items-center gap-3 lg:justify-end">
         <!-- voir la page des actions -->
         <a href="/actions" class="btn btn-border btn-sm rounded-full md:btn-md">Voir les actions</a>
         <a href="/creation/actions/nouveau" class="btn btn-accent btn-sm rounded-full md:btn-md">Creer une action</a>
-    </div>
+      </div>
     </div>
 
     <!-- Statistiques -->
     <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-12">
-      <div class="card bg-base-100 shadow-md">
+      <div class="card bg-base-100 col-span-2 md:col-span-1 shadow-md">
         <div class="card-body text-center p-4">
           <div class="text-4xl! font-bold text-base-content">{stats.total}</div>
           <div class="text-sm text-base-content">Total</div>
@@ -222,29 +222,27 @@ const allPages = db.pages;
           <button id="clear-filters" class="btn btn-ghost btn-sm absolute right-0 top-1/2 -translate-y-1/2">Effacer</button>
         </div>
 
-        <div class="flex flex-col gap-4 lg:flex-row lg:items-end">
+        <div class="flex flex-col gap-4">
           <div class="w-full">
-            <ActionsSearch showStatus={true} value={q} statusOptions={["all","actions","projets","produits","brouillon"]} />
-          </div>
-          <div class="w-full lg:w-auto">
-            <label for="sort-select" class="mb-1 block text-sm font-medium text-base-content/70">
-              Trier par date
-            </label>
-            <select id="sort-select" class="select select-bordered w-full lg:w-56">
-              <option value="updated_desc">Recent -> Ancien</option>
-              <option value="updated_asc">Ancien -> Recent</option>
-            </select>
+            <p class="mb-2 text-sm font-medium text-base-content/70">Filtres</p>
+            <ActionsSearch showStatus={true} value={q} statusOptions={["all","actions","projets","produits","brouillon"]} embedded={true}>
+              <label slot="secondary-extra" class="form-control w-full gap-1" for="sort-select">
+                <span class="text-xs font-medium uppercase tracking-wide text-base-content/60">Trier par date</span>
+                <select id="sort-select" class="select select-bordered w-full">
+                  <option value="updated_desc">Recent -> Ancien</option>
+                  <option value="updated_asc">Ancien -> Recent</option>
+                </select>
+              </label>
+            </ActionsSearch>
           </div>
         </div>
       </div>
     </div>
 
     <!-- Pages récentes -->
-    <div class="card bg-base-100 shadow-sm">
-      <div class="card-body">
+    <section class="mb-8">
         <div class="flex justify-between items-center mb-6">
           <h2 class="card-title">Pages récentes</h2>
-          <a href="/creation/pages" class="btn btn-ghost">Voir tout</a>
         </div>
 
         <div id="pages-container">
@@ -278,20 +276,22 @@ const allPages = db.pages;
             </div>
           )}
         </div>
-      </div>
-    </div>
+    </section>
   </div>
 </Layout>
 
 <script type="module" src={utilUrl}></script>
 <script define:vars={{ allPages, q, status }}>
-  // Données et fonctions utilitaires
+  // Donn?es et fonctions utilitaires
   const pages = allPages;
   let currentSearch = q;
   let currentStatus = status;
   let currentBenef = '';
-  // garder en mémoire l'ordre de tri choisi (par défaut décroissant)
+  // garder en m?moire l'ordre de tri choisi (par d?faut d?croissant)
   let currentSort = 'updated_desc';
+  const PAGE_SIZE = 9;
+  let currentPage = 1;
+  let filteredPagesCache = pages.slice();
 
   function formatDate(d) {
     if (!d) return "";
@@ -310,7 +310,7 @@ const allPages = db.pages;
       if (type === 'action') return `/creation/actions/edit/${id}-${slug}`;
       if (type === 'projet') return `/creation/projets/edit/${id}-${slug}`;
       if (type === 'produit') return `/creation/produits/edit/${id}-${slug}`;
-      // cas de repli : ouvrir l'éditeur actions
+      // cas de repli : ouvrir l'?diteur actions
       return `/creation/actions/edit/${id}-${slug}`;
     }
 
@@ -352,7 +352,7 @@ const allPages = db.pages;
       );
     }
 
-    // Filtre par bénéficiaire (seulement pour les actions)
+    // Filtre par b?n?ficiaire (seulement pour les actions)
     if (benef) {
       const benefToken = benef.toLowerCase();
       filtered = filtered.filter(p =>
@@ -360,15 +360,32 @@ const allPages = db.pages;
       );
     }
 
-    // Tri par date selon l'ordre sélectionné
+    // Tri par date selon l'ordre s?lectionn?
     filtered.sort((a, b) => {
       const da = new Date(a.updatedAt).getTime();
       const db = new Date(b.updatedAt).getTime();
       return sort === 'updated_asc' ? da - db : db - da;
     });
 
-    // Limiter à 6 résultats
-    return filtered.slice(0, 6);
+    // Renvoyer tous les resultats (pagination client ensuite)
+    return filtered;
+  }
+
+  function renderPagination(totalPages, page) {
+    if (totalPages <= 1) return '';
+    const pageButtons = Array.from({ length: totalPages }, (_, index) => {
+      const pageNumber = index + 1;
+      const activeClass = pageNumber === page ? 'btn-accent' : 'btn-ghost';
+      return `<button type="button" class="btn btn-sm ${activeClass}" data-page-action="go" data-page="${pageNumber}">${pageNumber}</button>`;
+    }).join('');
+
+    return `
+      <div class="mt-6 flex flex-wrap items-center justify-center gap-2">
+        <button type="button" class="btn btn-sm btn-ghost" data-page-action="prev" ${page === 1 ? 'disabled' : ''}>Precedent</button>
+        ${pageButtons}
+        <button type="button" class="btn btn-sm btn-ghost" data-page-action="next" ${page === totalPages ? 'disabled' : ''}>Suivant</button>
+      </div>
+    `;
   }
 
   function updateActiveFilters(search, statusFilter) {
@@ -405,6 +422,7 @@ const allPages = db.pages;
 
   function renderPages(filteredPages) {
     const container = document.getElementById('pages-container');
+    if (!(container instanceof HTMLElement)) return;
 
     if (filteredPages.length === 0) {
       container.innerHTML = `
@@ -413,8 +431,9 @@ const allPages = db.pages;
           <button id="clear-filters-empty" class="btn btn-primary">Effacer les filtres</button>
         </div>
       `;
+      currentPage = 1;
 
-      // Réattacher l'événement pour effacer les filtres
+      // R?attacher l'?v?nement pour effacer les filtres
       document.getElementById('clear-filters-empty').addEventListener('click', () => {
         const root = document.querySelector('.actions-search');
         if (root instanceof HTMLElement) {
@@ -427,13 +446,20 @@ const allPages = db.pages;
           currentSearch = '';
           currentStatus = 'all';
           updateActiveFilters(currentSearch, currentStatus);
-          renderPages(filterPages(currentSearch, currentStatus, currentBenef, currentSort));
+          filteredPagesCache = filterPages(currentSearch, currentStatus, currentBenef, currentSort);
+          renderPages(filteredPagesCache);
         }
       });
     } else {
+      const totalPages = Math.max(1, Math.ceil(filteredPages.length / PAGE_SIZE));
+      if (currentPage > totalPages) currentPage = totalPages;
+      if (currentPage < 1) currentPage = 1;
+      const startIndex = (currentPage - 1) * PAGE_SIZE;
+      const pageItems = filteredPages.slice(startIndex, startIndex + PAGE_SIZE);
+
       const pagesHtml = `
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          ${filteredPages.map(page => {
+          ${pageItems.map(page => {
             const badge = getStatusBadge(page.status);
             return `
               <div class="card bg-base-100 border" data-page-id="${page.id}">
@@ -454,6 +480,7 @@ const allPages = db.pages;
             `;
           }).join('')}
         </div>
+        ${renderPagination(totalPages, currentPage)}
       `;
       container.innerHTML = pagesHtml;
     }
@@ -462,40 +489,74 @@ const allPages = db.pages;
   // Initialisation
   document.addEventListener('DOMContentLoaded', () => {
     const clearFiltersBtn = document.getElementById('clear-filters');
+    const pagesContainer = document.getElementById('pages-container');
 
-    // écouter les événements partagés d'ActionsSearch
+    pagesContainer?.addEventListener('click', (event) => {
+      const target = event.target instanceof HTMLElement
+        ? event.target.closest('[data-page-action]')
+        : null;
+      if (!(target instanceof HTMLElement)) return;
+
+      const action = target.getAttribute('data-page-action');
+      const totalPages = Math.max(
+        1,
+        Math.ceil(filteredPagesCache.length / PAGE_SIZE),
+      );
+
+      if (action === 'prev') {
+        currentPage = Math.max(1, currentPage - 1);
+      } else if (action === 'next') {
+        currentPage = Math.min(totalPages, currentPage + 1);
+      } else if (action === 'go') {
+        const nextPage = Number(target.getAttribute('data-page') || '1');
+        if (!Number.isNaN(nextPage)) {
+          currentPage = Math.min(totalPages, Math.max(1, nextPage));
+        }
+      } else {
+        return;
+      }
+
+      renderPages(filteredPagesCache);
+    });
+
+    // ?couter les ?v?nements partag?s d'ActionsSearch
     document.addEventListener('actions-filter-change', (ev) => {
       const d = ev.detail || {};
       currentSearch = d.search || '';
       currentBenef = d.beneficiary || '';
       // prefer status if provided, else keep existing
       if (typeof d.status !== 'undefined') currentStatus = d.status || 'all';
+      currentPage = 1;
       updateActiveFilters(currentSearch, currentStatus);
-      renderPages(filterPages(currentSearch, currentStatus, currentBenef, currentSort));
+      filteredPagesCache = filterPages(currentSearch, currentStatus, currentBenef, currentSort);
+      renderPages(filteredPagesCache);
     });
 
     // rendu initial et affichage des filtres actifs
-    // lire la valeur initiale du tri si présente
+    // lire la valeur initiale du tri si pr?sente
     const sortSelect = document.getElementById('sort-select');
     if (sortSelect instanceof HTMLSelectElement) {
       currentSort = sortSelect.value;
       sortSelect.addEventListener('change', () => {
         currentSort = sortSelect.value;
-        renderPages(filterPages(currentSearch, currentStatus, currentBenef, currentSort));
+        currentPage = 1;
+        filteredPagesCache = filterPages(currentSearch, currentStatus, currentBenef, currentSort);
+        renderPages(filteredPagesCache);
       });
     }
     updateActiveFilters(currentSearch, currentStatus);
-    renderPages(filterPages(currentSearch, currentStatus, currentBenef, currentSort));
+    filteredPagesCache = filterPages(currentSearch, currentStatus, currentBenef, currentSort);
+    renderPages(filteredPagesCache);
 
     clearFiltersBtn.addEventListener('click', () => {
-      // réinitialiser les entrées du composant si présent
+      // r?initialiser les entr?es du composant si pr?sent
       const root = document.querySelector('.actions-search');
       if (root instanceof HTMLElement) {
         const si = root.querySelector('#search-input');
         const st = root.querySelector('#status-select');
         if (si instanceof HTMLInputElement) si.value = '';
         if (st instanceof HTMLSelectElement) st.value = 'all';
-        // émettre l'état réinitialisé
+        // ?mettre l'?tat r?initialis?
         document.dispatchEvent(new CustomEvent('actions-filter-change', { detail: { search: '', status: 'all' } }));
       } else {
         // cas de repli
@@ -503,8 +564,11 @@ const allPages = db.pages;
         currentBenef = '';
         currentStatus = 'all';
         updateActiveFilters(currentSearch, currentStatus);
-        renderPages(filterPages(currentSearch, currentStatus, currentBenef, currentSort));
+        filteredPagesCache = filterPages(currentSearch, currentStatus, currentBenef, currentSort);
+        renderPages(filteredPagesCache);
       }
     });
   });
 </script>
+
+

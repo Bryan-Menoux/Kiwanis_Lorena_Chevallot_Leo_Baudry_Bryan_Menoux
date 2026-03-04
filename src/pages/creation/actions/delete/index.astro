@@ -7,18 +7,18 @@ import ActionsSearch from "../../../../components/ActionsSearch.astro";
 let error = "";
 let success = "";
 
-// Récupérer la liste des actions
+// RÃ©cupÃ©rer la liste des actions
 let actionsRaw = [];
 try {
   actionsRaw = await (Astro.locals as any).pb
     .collection("actions")
     .getFullList(500, { sort: "-updated" });
 } catch (e) {
-  console.error("Impossible de récupérer les actions:", e);
+  console.error("Impossible de rÃ©cupÃ©rer les actions:", e);
   error = "Impossible de charger la liste des actions";
 }
 
-// Mapper les données essentielles
+// Mapper les donnÃ©es essentielles
 const actions = actionsRaw.map((a: any) => ({
   id: a.id,
   titre: a.titre,
@@ -33,13 +33,13 @@ const actions = actionsRaw.map((a: any) => ({
 if (Astro.request.method === "POST") {
   try {
     const formData = await Astro.request.formData();
-    // Récupère toutes les valeurs des checkboxes nommées "ids"
+    // RÃ©cupÃ¨re toutes les valeurs des checkboxes nommÃ©es "ids"
     const ids = formData
       .getAll("ids")
       .map((v) => v.toString())
       .filter(Boolean);
     if (!ids || ids.length === 0) {
-      error = "Aucun élément sélectionné";
+      error = "Aucun Ã©lÃ©ment sÃ©lectionnÃ©";
     } else {
       const failed: string[] = [];
       for (const id of ids) {
@@ -52,10 +52,10 @@ if (Astro.request.method === "POST") {
       }
       if (failed.length === 0) {
         return Astro.redirect(
-          `/creation/actions/delete?success=${encodeURIComponent(`${ids.length} action(s) supprimée(s)`)}`,
+          `/creation/actions/delete?success=${encodeURIComponent(`${ids.length} action(s) supprimÃ©e(s)`)}`,
         );
       } else {
-        error = `Échec suppression pour ${failed.length} élément(s)`;
+        error = `Ã‰chec suppression pour ${failed.length} Ã©lÃ©ment(s)`;
       }
     }
   } catch (e) {
@@ -64,7 +64,7 @@ if (Astro.request.method === "POST") {
   }
 }
 
-// Afficher message success si présent dans query
+// Afficher message success si prÃ©sent dans query
 try {
   const s = Astro.url.searchParams.get("success");
   if (s) success = s;
@@ -72,16 +72,16 @@ try {
 ---
 
 <Layout>
-  <div class="container mx-auto mt-20 px-4 py-6 md:px-6 md:py-8 lg:mt-24 lg:px-8 lg:py-10">
-    <div class="mb-6 flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-      <div>
-        <h1 class="text-3xl font-bold md:text-4xl">Supprimer des actions</h1>
-        <p class="text-sm text-base-content/70 mt-2">
-          Sélectionnez plusieurs actions puis cliquez sur "Supprimer sélection".
+  <div class="container mx-auto px-4 py-8 my-32">
+    <div class="mb-10 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+      <div class="mb-0">
+        <h1 class="mb-3 text-3xl font-bold text-accent font-poppins md:text-4xl">Supprimer des actions</h1>
+        <p class="text-base text-base-content/70 md:text-lg">
+          Selectionnez plusieurs actions puis cliquez sur "Supprimer selection".
         </p>
       </div>
-      <div>
-        <a href="/creation/actions" class="btn w-full md:w-auto">Retour</a>
+      <div class="flex flex-wrap items-center gap-3 lg:justify-end">
+        <a href="/creation/actions" class="btn btn-border btn-sm rounded-full md:btn-md">Retour</a>
       </div>
     </div>
 
@@ -90,24 +90,41 @@ try {
 
     <form method="POST" id="deleteForm">
       <div class="mb-4 space-y-4">
-        <div class="mb-4 flex w-full flex-col gap-3 md:flex-row md:items-center">
-          <ActionsSearch />
-          <select id="sort-select" class="select select-bordered w-full md:w-52">
-            <option value="updated_desc">Récent → Ancien</option>
-            <option value="updated_asc">Ancien → Récent</option>
-          </select>
+        <div class="card rounded-2xl border border-base-300 bg-base-100 shadow-sm">
+          <div class="card-body p-4 md:p-6">
+            <div class="mb-4">
+              <h2 class="card-title text-2xl">Rechercher</h2>
+              <p class="mt-1 text-sm text-base-content/60">
+                Filtrez rapidement vos actions puis triez l'affichage.
+              </p>
+            </div>
+            <div class="flex flex-col gap-4">
+              <div class="w-full">
+                <p class="mb-2 text-sm font-medium text-base-content/70">Filtres</p>
+                <ActionsSearch embedded={true}>
+                  <label slot="secondary-extra" class="form-control w-full gap-1" for="sort-select">
+                    <span class="text-xs font-medium uppercase tracking-wide text-base-content/60">Trier par date</span>
+                    <select id="sort-select" class="select select-bordered w-full">
+                      <option value="updated_desc">Recent -> Ancien</option>
+                      <option value="updated_asc">Ancien -> Recent</option>
+                    </select>
+                  </label>
+                </ActionsSearch>
+              </div>
+            </div>
+          </div>
         </div>
         <div class="flex flex-col gap-2 select-none sm:flex-row sm:items-center sm:justify-between">
           <label class="flex items-center gap-2">
             <input type="checkbox" id="selectAll" />
-            <span class="text-sm">Tout sélectionner</span>
+            <span class="text-sm">Tout selectionner</span>
           </label>
           <button
             type="submit"
             id="bulkDelete"
-            class="btn btn-error w-full sm:w-auto"
-            onclick="return confirm('Confirmer la suppression des éléments sélectionnés ?')"
-            >Supprimer sélection</button
+            class="btn btn-error btn-sm rounded-full md:btn-md w-full sm:w-auto"
+            onclick="return confirm('Confirmer la suppression des elements selectionnes ?')"
+            >Supprimer selection</button
           >
         </div>
       </div>
@@ -167,11 +184,12 @@ try {
           ))
         }
       </div>
+      <div id="cards-pagination" class="mt-6 flex justify-center"></div>
     </form>
   </div>
 
   <script>
-    // Recherche, filtres et tri côté client + select all + suppression par carte
+    // Recherche, filtres et tri cÃ´tÃ© client + select all + suppression par carte
     document.addEventListener("DOMContentLoaded", () => {
       const selectAll = document.getElementById("selectAll");
       const form = document.getElementById("deleteForm");
@@ -188,6 +206,30 @@ try {
       ) as HTMLElement[];
       let currentSearch = "";
       let currentBenef = "";
+      const PAGE_SIZE = 9;
+      let currentPage = 1;
+      const pagination = document.getElementById("cards-pagination");
+
+      function renderPagination(totalPages: number) {
+        if (!(pagination instanceof HTMLElement)) return;
+        if (totalPages <= 1) {
+          pagination.innerHTML = "";
+          return;
+        }
+        const pageButtons = Array.from({ length: totalPages }, (_, index) => {
+          const pageNumber = index + 1;
+          const activeClass = pageNumber === currentPage ? "btn-accent" : "btn-ghost";
+          return `<button type="button" class="btn btn-sm ${activeClass}" data-page-action="go" data-page="${pageNumber}">${pageNumber}</button>`;
+        }).join("");
+
+        pagination.innerHTML = `
+          <div class="flex flex-wrap items-center justify-center gap-2">
+            <button type="button" class="btn btn-sm btn-ghost" data-page-action="prev" ${currentPage === 1 ? "disabled" : ""}>Precedent</button>
+            ${pageButtons}
+            <button type="button" class="btn btn-sm btn-ghost" data-page-action="next" ${currentPage === totalPages ? "disabled" : ""}>Suivant</button>
+          </div>
+        `;
+      }
 
       function updateView() {
         const q = (currentSearch || "").toLowerCase().trim();
@@ -212,9 +254,16 @@ try {
           return sort === "updated_asc" ? da - db : db - da;
         });
 
+        const totalPages = Math.max(1, Math.ceil(visible.length / PAGE_SIZE));
+        if (currentPage > totalPages) currentPage = totalPages;
+        if (currentPage < 1) currentPage = 1;
+        const startIndex = (currentPage - 1) * PAGE_SIZE;
+        const pageItems = visible.slice(startIndex, startIndex + PAGE_SIZE);
+
         // Clear and re-append visible cards in order
         g.innerHTML = "";
-        visible.forEach((c) => g.appendChild(c));
+        pageItems.forEach((c) => g.appendChild(c));
+        renderPagination(totalPages);
       }
 
       // Listen for filter updates from the ActionsSearch component
@@ -222,13 +271,53 @@ try {
         const d = ev.detail || {};
         currentSearch = d.search || "";
         currentBenef = d.beneficiary || "";
+        currentPage = 1;
+        updateView();
+      });
+
+      pagination?.addEventListener("click", (event) => {
+        const target = event.target instanceof HTMLElement
+          ? event.target.closest("[data-page-action]")
+          : null;
+        if (!(target instanceof HTMLElement)) return;
+
+        const action = target.getAttribute("data-page-action");
+        const q = (currentSearch || "").toLowerCase().trim();
+        const benef = (currentBenef || "").toLowerCase().trim();
+        const totalItems = allCards.filter((card) => {
+          const title = (card.dataset.title || "").toLowerCase();
+          const b = (card.dataset.beneficiary || "").toLowerCase();
+          if (benef && benef !== "" && !b.includes(benef)) return false;
+          if (q && q !== "" && !title.includes(q)) return false;
+          return true;
+        }).length;
+        const totalPages = Math.max(1, Math.ceil(totalItems / PAGE_SIZE));
+
+        if (action === "prev") {
+          currentPage = Math.max(1, currentPage - 1);
+        } else if (action === "next") {
+          currentPage = Math.min(totalPages, currentPage + 1);
+        } else if (action === "go") {
+          const nextPage = Number(target.getAttribute("data-page") || "1");
+          if (!Number.isNaN(nextPage)) {
+            currentPage = Math.min(totalPages, Math.max(1, nextPage));
+          }
+        } else {
+          return;
+        }
+
         updateView();
       });
 
       // Initial render
       updateView();
 
-      if (sortSelect instanceof HTMLSelectElement) sortSelect.addEventListener("change", () => updateView());
+      if (sortSelect instanceof HTMLSelectElement) {
+        sortSelect.addEventListener("change", () => {
+          currentPage = 1;
+          updateView();
+        });
+      }
 
       // Select only visible checkboxes
       if (selectAll instanceof HTMLInputElement) {

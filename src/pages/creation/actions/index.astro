@@ -1,7 +1,7 @@
 ---
 import Layout from "../../../layouts/Layout-back-office.astro";
 import slugify from "slugify";
-import SearchActions from "../../../components/SearchActions.astro";
+import ActionsSearch from "../../../components/ActionsSearch.astro";
 import utilUrl from "../../../utils/utilitaires.js?url";
 import { formatDateShort } from "../../../utils/utilitaires.js";
 import { ActionsTypeActionOptions } from "../../../pocketbase-types";
@@ -86,48 +86,63 @@ const allActions = actions;
 ---
 
 <Layout>
-  <div class="container mx-auto mt-20 px-4 py-6 md:px-6 md:py-8 lg:mt-24 lg:px-8 lg:py-10">
-    <div
-      class="mb-6 flex flex-col gap-4 md:mb-8 md:flex-row md:items-start md:justify-between md:gap-6"
-    >
-      <div class="flex-1">
-        <h1 class="text-3xl font-extrabold leading-tight md:text-5xl lg:text-6xl">
+  <div class="container mx-auto px-4 py-8 my-32">
+    <div class="mb-10 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+      <div class="mb-0">
+        <h1 class="mb-3 text-3xl font-bold text-accent font-poppins md:text-4xl">
           Actions
         </h1>
-        <p class="text-base text-base-content/70 mt-2">
-          Gérez vos actions — rechercher, filtrer et modifier rapidement.
+        <p class="text-base text-base-content/70 md:text-lg">
+          Gérez vos actions, recherchez, filtrez et modifiez rapidement.
         </p>
       </div>
-      <div class="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center sm:gap-3">
-        <a href="/actions" class="btn btn-ghost w-full sm:w-auto">Voir le site</a>
+      <div class="flex flex-wrap items-center gap-3 lg:justify-end">
+        <a href="/actions" class="btn btn-border btn-sm rounded-full md:btn-md">Voir le site</a>
         <a
           href="/creation/actions/nouveau"
-          class="btn btn-accent w-full rounded-full shadow-lg sm:w-auto"
-          >Créer une action</a
+          class="btn btn-accent btn-sm rounded-full md:btn-md"
+          >Creer une action</a
         >
       </div>
     </div>
 
-    <div class="mb-6 grid grid-cols-1 items-start gap-4 md:mb-8 lg:grid-cols-4 lg:gap-6">
-      <div
-        class="flex h-full max-h-full items-center gap-3 rounded-xl border border-base-300 bg-base-100 p-4"
-      >
-        <p class="text-sm text-base-content/70">
-          Nombre d'actions total - <span class="text-accent font-bold text-2xl!"
-            >{stats.total}</span
-          >
-        </p>
+    <div class="grid grid-cols-1 gap-4 mb-12">
+      <div class="card bg-base-100 shadow-md">
+        <div class="card-body text-center p-4">
+          <div class="text-4xl! font-bold text-base-content">{stats.total}</div>
+          <div class="text-sm text-base-content">Actions</div>
+        </div>
       </div>
-      <div class="flex flex-col gap-3 md:flex-row md:items-center lg:col-span-3">
-        <SearchActions
-          value={q}
-          yearOptions={yearOptions}
-          typeOptions={typeOptions}
-        />
-        <select id="sort-select" class="select select-bordered w-full md:w-52">
-          <option value="updated_desc">Récent → Ancien</option>
-          <option value="updated_asc">Ancien → Récent</option>
-        </select>
+    </div>
+
+    <div class="card mb-8 rounded-2xl border border-base-300 bg-base-100 shadow-sm">
+      <div class="card-body p-4 md:p-6">
+        <div class="mb-4">
+          <h2 class="card-title text-2xl">Rechercher</h2>
+          <p class="mt-1 text-sm text-base-content/60">
+            Filtrez rapidement vos actions puis triez l'affichage.
+          </p>
+        </div>
+
+        <div class="flex flex-col gap-4">
+          <div class="w-full">
+            <p class="mb-2 text-sm font-medium text-base-content/70">Filtres</p>
+            <ActionsSearch
+              value={q}
+              yearOptions={yearOptions}
+              typeOptions={typeOptions}
+              embedded={true}
+            >
+              <label slot="secondary-extra" class="form-control w-full gap-1" for="sort-select">
+                <span class="text-xs font-medium uppercase tracking-wide text-base-content/60">Trier par date</span>
+                <select id="sort-select" class="select select-bordered w-full">
+                  <option value="updated_desc">Recent -> Ancien</option>
+                  <option value="updated_asc">Ancien -> Recent</option>
+                </select>
+              </label>
+            </ActionsSearch>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -137,7 +152,7 @@ const allActions = actions;
         {
           actions.map((a) => (
             <div
-              class="flex min-h-[220px] flex-col justify-between gap-4 rounded-xl border border-base-300 bg-base-100 p-4 shadow-sm md:p-5 lg:p-6"
+                class="flex min-h-55 flex-col justify-between gap-4 rounded-xl border border-base-300 bg-base-100 p-4 shadow-sm md:p-5 lg:p-6"
               data-action-id={a.id}
               data-action-slug={a.slug}
               data-source={a.source}
@@ -146,7 +161,7 @@ const allActions = actions;
             >
               <div class="space-y-3">
                 <div class="flex items-start justify-between gap-3">
-                  <h3 class="break-words text-xl font-bold leading-tight md:text-2xl">
+                    <h3 class="wrap-break-word text-xl font-bold leading-tight md:text-2xl">
                     {a.titre}
                   </h3>
                   {
@@ -156,12 +171,12 @@ const allActions = actions;
                   }
                 </div>
                 {a.sous_titre && (
-                  <p class="text-sm leading-relaxed break-words text-base-content/75">
+                    <p class="text-sm leading-relaxed wrap-break-word text-base-content/75">
                     {a.sous_titre}
                   </p>
                 )}
                 {a.beneficiaire && (
-                  <p class="text-sm leading-relaxed break-words text-base-content/75">
+                    <p class="text-sm leading-relaxed wrap-break-word text-base-content/75">
                     {a.beneficiaire}
                   </p>
                 )}
@@ -224,6 +239,9 @@ const allActions = actions;
   const actions = allActions;
   let currentSearch = q || "";
   let currentBeneficiary = "";
+  const PAGE_SIZE = 9;
+  let currentPage = 1;
+  let filteredActions = actions.slice();
 
   function formatDate(d) {
     if (!d) return "";
@@ -249,6 +267,23 @@ const allActions = actions;
   }
   function getEditUrl(id, slug) {
     return `/creation/actions/edit/${id}-${slug}`;
+  }
+
+  function renderPagination(totalPages, page) {
+    if (totalPages <= 1) return "";
+    const pageButtons = Array.from({ length: totalPages }, (_, index) => {
+      const pageNumber = index + 1;
+      const activeClass = pageNumber === page ? "btn-accent" : "btn-ghost";
+      return `<button type="button" class="btn btn-sm ${activeClass}" data-page-action="go" data-page="${pageNumber}">${pageNumber}</button>`;
+    }).join("");
+
+    return `
+      <div class="mt-6 flex flex-wrap items-center justify-center gap-2">
+        <button type="button" class="btn btn-sm btn-ghost" data-page-action="prev" ${page === 1 ? "disabled" : ""}>Precedent</button>
+        ${pageButtons}
+        <button type="button" class="btn btn-sm btn-ghost" data-page-action="next" ${page === totalPages ? "disabled" : ""}>Suivant</button>
+      </div>
+    `;
   }
 
   function filterActions(search, beneficiary, year, type) {
@@ -289,11 +324,18 @@ const allActions = actions;
     if (!container) return;
     if (list.length === 0) {
       container.innerHTML = `<div class="text-center py-12"><p class="text-base-content/60 mb-4">Aucune action trouvée</p></div>`;
+      currentPage = 1;
       return;
     }
+    const totalPages = Math.max(1, Math.ceil(list.length / PAGE_SIZE));
+    if (currentPage > totalPages) currentPage = totalPages;
+    if (currentPage < 1) currentPage = 1;
+    const startIndex = (currentPage - 1) * PAGE_SIZE;
+    const pageItems = list.slice(startIndex, startIndex + PAGE_SIZE);
+
     const html = `
         <div class="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-5 lg:grid-cols-3 lg:gap-6">
-          ${list
+          ${pageItems
             .map(
               (a) => `
                     <div class="flex min-h-[220px] flex-col justify-between gap-4 rounded-xl border border-base-300 bg-base-100 p-4 shadow-sm md:p-5 lg:p-6" data-action-id="${a.id}" data-action-slug="${a.slug}" data-source="${a.source}">
@@ -316,6 +358,7 @@ const allActions = actions;
             )
             .join("")}
       </div>
+      ${renderPagination(totalPages, currentPage)}
     `;
     container.innerHTML = html;
   }
@@ -340,7 +383,8 @@ const allActions = actions;
         const db = new Date(b.updated || 0).getTime();
         return sort === "updated_asc" ? da - db : db - da;
       });
-      renderActions(filtered);
+      filteredActions = filtered;
+      renderActions(filteredActions);
     }
 
     function handleFilters(d) {
@@ -348,8 +392,37 @@ const allActions = actions;
       currentBeneficiary = d.beneficiary || "";
       currentYear = d.year || "";
       currentType = d.type || "";
+      currentPage = 1;
       applyAndRender();
     }
+
+    pagesContainer?.addEventListener("click", (event) => {
+      const target = event.target instanceof HTMLElement
+        ? event.target.closest("[data-page-action]")
+        : null;
+      if (!(target instanceof HTMLElement)) return;
+
+      const action = target.getAttribute("data-page-action");
+      const totalPages = Math.max(
+        1,
+        Math.ceil(filteredActions.length / PAGE_SIZE),
+      );
+
+      if (action === "prev") {
+        currentPage = Math.max(1, currentPage - 1);
+      } else if (action === "next") {
+        currentPage = Math.min(totalPages, currentPage + 1);
+      } else if (action === "go") {
+        const nextPage = Number(target.getAttribute("data-page") || "1");
+        if (!Number.isNaN(nextPage)) {
+          currentPage = Math.min(totalPages, Math.max(1, nextPage));
+        }
+      } else {
+        return;
+      }
+
+      renderActions(filteredActions);
+    });
 
     document.addEventListener("actions-filter-change", (ev) => {
       handleFilters(ev.detail || {});
@@ -359,8 +432,12 @@ const allActions = actions;
     });
 
     // initial render based on server-side params
-    if (sortSelect instanceof HTMLSelectElement)
-      sortSelect.addEventListener("change", applyAndRender);
+    if (sortSelect instanceof HTMLSelectElement) {
+      sortSelect.addEventListener("change", () => {
+        currentPage = 1;
+        applyAndRender();
+      });
+    }
     applyAndRender();
 
     // No individual delete buttons on this page; bulk delete handled by the form
