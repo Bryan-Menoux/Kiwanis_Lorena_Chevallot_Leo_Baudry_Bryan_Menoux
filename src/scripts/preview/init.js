@@ -40,7 +40,7 @@ function safeParseJson(rawValue, fallbackValue = {}) {
   }
 }
 
-// Source de vérité initiale du preview :
+// Source de vérité initiale de la prévisualisation :
 // 1) window.__previewData injecté côté serveur
 // 2) script #previewData (repli historique)
 // 3) objet vide si rien n'est disponible
@@ -97,7 +97,7 @@ function handleInputElement(inputElement) {
 
   previewState[prop] = previewValue;
 
-  // Compat : les clés historiques sans "s" sont remappées vers les clés preview actuelles.
+  // Compat : les clés historiques sans "s" sont remappées vers les clés de prévisualisation actuelles.
   if (prop === 'titre_remerciement') previewState.titre_remerciements = previewValue;
   if (prop === 'description_remerciement') previewState.description_remerciements = previewValue;
 

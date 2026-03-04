@@ -1,9 +1,9 @@
 /*
  * gallery.js
- * Single, stable implementation of setGridStyles() for photo grids.
- * - Removes duplicate/legacy layout logic
- * - Uses naturalWidth/naturalHeight after load (no decode())
- * - Implements exact templates for 1..8 items on desktop
+ * Implémentation unique et stable de setGridStyles() pour les grilles photo.
+ * - Supprime la logique de mise en page dupliquée ou héritée
+ * - Utilise naturalWidth/naturalHeight après chargement (sans decode())
+ * - Applique des gabarits exacts pour 1..8 éléments sur desktop
  */
 (function () {
   function letter(i) {
@@ -15,11 +15,11 @@
     if (!grid) return;
 
     const count = Math.max(0, parseInt(grid.dataset.photoCount || '0', 10) || 0);
-    // Only consider direct children that represent gallery items (have data-photo-url)
+    // Ne considérer que les enfants directs représentant des éléments de galerie (avec data-photo-url).
     const items = Array.from(grid.children).filter((c) => c instanceof HTMLElement && c.hasAttribute && c.hasAttribute('data-photo-url'));
     const imgs = Array.from(grid.querySelectorAll('img'));
 
-    // Clean inline styles before recalculating
+    // Nettoyer les styles inline avant le recalcul.
     grid.style.gridTemplateColumns = '';
     grid.style.gridTemplateRows = '';
     grid.style.gridTemplateAreas = '';
@@ -31,7 +31,7 @@
       if (img) { img.style.height = ''; img.style.width = ''; }
     });
 
-    // Mobile: single column stack
+    // Mobile : empilement en une seule colonne.
     if (window.innerWidth < 768) {
       grid.style.gridTemplateColumns = '1fr';
       grid.style.gridTemplateRows = '';
@@ -43,7 +43,7 @@
       return;
     }
 
-    // Desktop: two columns
+    // Desktop : deux colonnes.
     grid.style.gridTemplateColumns = '1fr 1fr';
     const effectiveCount = Math.min(8, Math.max(count, items.length, imgs.length));
     const n = Math.min(effectiveCount, 8);
@@ -53,7 +53,7 @@
       return;
     }
 
-    // If any relevant images are not yet loaded, wait for them (use natural dimensions)
+    // Si des images utiles ne sont pas encore chargées, attendre leur chargement (dimensions natives).
     const relevantImgs = imgs.slice(0, n);
     const needLoad = relevantImgs.some((im) => !im.complete || !im.naturalWidth);
     if (relevantImgs.length > 0 && needLoad) {
@@ -71,7 +71,7 @@
       return;
     }
 
-    // Build template and mapping
+    // Construire le gabarit et la correspondance.
     let template = '';
     const mapping = new Array(n).fill(null);
 
@@ -83,7 +83,7 @@
       mapping[0] = 'a';
       mapping[1] = 'b';
     } else if (n === 3) {
-      // prefer first portrait among the first 3, otherwise use the last
+      // Préférer le premier portrait parmi les 3 premières, sinon utiliser la dernière.
       let portraitIndex = -1;
       for (let i = 0; i < Math.min(3, relevantImgs.length); i++) {
         const im = relevantImgs[i];
@@ -94,13 +94,13 @@
       }
       if (portraitIndex === -1) portraitIndex = Math.min(2, relevantImgs.length - 1);
       const others = [0, 1, 2].filter((i) => i !== portraitIndex);
-      // a, b = left column (stacked), c = right column (portrait spanning 2 rows)
+      // a, b = colonne gauche (empilée), c = colonne droite (portrait sur 2 lignes).
       mapping[others[0]] = 'a';
       mapping[others[1]] = 'b';
       mapping[portraitIndex] = 'c';
       template = '"a c" "b c"';
       grid.style.gridTemplateRows = '50dvh 50dvh';
-      // items must fill their grid cell (portrait spans 2 rows = 100dvh)
+      // Les éléments doivent remplir leur cellule (portrait sur 2 lignes = 100dvh).
       items.slice(0, 3).forEach((it) => {
         const img = it.querySelector('img');
         if (img) { img.style.height = '100%'; img.style.width = '100%'; }
@@ -125,22 +125,22 @@
 
     grid.style.gridTemplateAreas = template;
 
-    // assign gridArea for each item (only for items that exist)
+    // Assigner gridArea pour chaque élément (uniquement pour ceux qui existent).
     items.forEach((it, i) => {
       if (i < mapping.length && mapping[i]) it.style.gridArea = mapping[i];
       else it.style.gridArea = letter(i);
     });
   }
 
-  // expose single function
+  // Exposer une fonction unique.
   window.setGridStyles = setGridStyles;
 
-  // Only respond to resize here (no DOMContentLoaded layout call)
+  // Réagir uniquement au redimensionnement ici (pas d'appel de layout au DOMContentLoaded).
   window.addEventListener('resize', function () {
     try { setGridStyles(); } catch (e) {}
   });
 
-  // Minimal click delegation for modal opening (kept separate from layout logic)
+  // Délégation de clic minimale pour l'ouverture de la modale (séparée de la logique de layout).
   document.addEventListener('click', function (e) {
     try {
       const target = e.target && e.target.closest && e.target.closest('[data-photo-url]');

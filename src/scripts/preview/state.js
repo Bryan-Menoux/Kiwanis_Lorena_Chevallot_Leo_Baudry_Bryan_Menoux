@@ -1,5 +1,5 @@
 // État source de la prévisualisation en direct.
-// Tous les scripts de preview lisent/écrivent dans ces variables.
+// Tous les scripts de prévisualisation lisent/écrivent dans ces variables.
 let previewState = {};
 
 // Fichiers galerie ajoutés côté client (non encore persistés serveur).

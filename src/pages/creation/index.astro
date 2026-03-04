@@ -31,7 +31,7 @@ const projets = await Astro.locals.pb.collection('projets').getFullList(200, { s
 const produits = await Astro.locals.pb.collection('produits').getFullList(200, { sort: '-updated' });
 const brouillons = await Astro.locals.pb.collection('brouillons').getFullList(200, { sort: '-updated' });
 
-// Combiner toutes les pages des diff?rentes collections
+// Combiner toutes les pages des différentes collections
 const pages: Page[] = [
   ...actions.map(action => ({
     id: action.id,
@@ -39,7 +39,7 @@ const pages: Page[] = [
     slug: safeSlug(action.titre, "action"),
     status: 'actions' as const,
     updatedAt: action.updated,
-    authorName: 'Admin', // Valeur par d?faut
+    authorName: 'Admin', // Valeur par défaut
     beneficiary: action.beneficiaire
   })),
   ...projets.map(projet => ({
@@ -48,7 +48,7 @@ const pages: Page[] = [
     slug: safeSlug(projet.titre, "projet"),
     status: 'projets' as const,
     updatedAt: projet.updated,
-    authorName: 'Admin' // Valeur par d?faut
+    authorName: 'Admin' // Valeur par défaut
   })),
   ...produits.map(produit => ({
     id: produit.id,
@@ -56,10 +56,10 @@ const pages: Page[] = [
     slug: safeSlug(produit.titre, "produit"),
     status: 'produits' as const,
     updatedAt: produit.updated,
-    authorName: 'Admin' // Valeur par d?faut
+    authorName: 'Admin' // Valeur par défaut
   })),
   ...brouillons.map(brouillon => {
-    // Inf?rer le type si absent (heuristique : champs typiques d'une action)
+    // Inférer le type si absent (heuristique : champs typiques d'une action)
     const inferredType = brouillon.type || (
       brouillon.date_debut || brouillon.nom_lieu || brouillon.beneficiaire || brouillon.titre_partie_1 || (Array.isArray(brouillon.galerie_photos) && brouillon.galerie_photos.length)
         ? 'action'
@@ -72,18 +72,18 @@ const pages: Page[] = [
       slug: safeSlug(brouillon.titre, "brouillon"),
       status: 'brouillon' as const,
       updatedAt: brouillon.updated,
-      authorName: 'Admin', // Valeur par d?faut
+      authorName: 'Admin', // Valeur par défaut
       type: inferredType,
     });
   })
 ];
 
-// Base de donn?es factice : uniquement ? pages ? (id, titre, slug, statut, updatedAt, authorName)
+// Base de données factice : uniquement "pages" (id, titre, slug, statut, updatedAt, authorName)
 const db: { pages: Page[] } = {
   pages: pages
 };
 
-// utilisation de l'utilitaire partag?
+// Utilisation de l'utilitaire partagé
 
 function getStatusBadge(status: Page['status']) {
   if (status === 'actions') return { label: 'Actions', className: 'badge badge-success' };
@@ -98,13 +98,13 @@ function getEditUrl(status: Page['status'], id: string, slug: string, type?: str
   if (status === 'projets') return `/creation/projets/edit/${id}-${slug}`;
   if (status === 'produits') return `/creation/produits/edit/${id}-${slug}`;
 
-  // Pour les brouillons, utiliser le `type` si pr?sent ; sinon ouvrir
-  // l'?diteur `actions` par d?faut (comportement demand?).
+  // Pour les brouillons, utiliser le `type` si présent ; sinon ouvrir
+  // l'éditeur `actions` par défaut (comportement demandé).
   if (status === 'brouillon') {
     if (type === 'action') return `/creation/actions/edit/${id}-${slug}`;
     if (type === 'projet') return `/creation/projets/edit/${id}-${slug}`;
     if (type === 'produit') return `/creation/produits/edit/${id}-${slug}`;
-    // fallback par d?faut -> ouvrir l'?diteur actions
+    // Cas de repli par défaut : ouvrir l'éditeur actions
     return `/creation/actions/edit/${id}-${slug}`;
   }
 
@@ -136,7 +136,7 @@ const params = Astro.url.searchParams;
 const q = (params.get('q') || '').trim();
 const status = params.get('status') || 'all';
 
-// Filtrage c?t? serveur (pour l'initialisation)
+// Filtrage côté serveur (pour l'initialisation)
 let list = db.pages.slice();
 if (status && status !== 'all') list = list.filter(p => p.status === status);
 if (q) {
@@ -148,11 +148,11 @@ if (q) {
 }
 // tri par updatedAt desc
 list.sort((a,b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
-// limiter a 9
+// Limiter à 9
 const recent = list.slice(0,9);
 const stats = computeStats(db.pages);
 
-// Donn?es pour le JavaScript c?t? client
+// Données pour le JavaScript côté client
 const allPages = db.pages;
 ---
 
@@ -282,12 +282,12 @@ const allPages = db.pages;
 
 <script type="module" src={utilUrl}></script>
 <script define:vars={{ allPages, q, status }}>
-  // Donn?es et fonctions utilitaires
+  // Données et fonctions utilitaires
   const pages = allPages;
   let currentSearch = q;
   let currentStatus = status;
   let currentBenef = '';
-  // garder en m?moire l'ordre de tri choisi (par d?faut d?croissant)
+  // Garder en mémoire l'ordre de tri choisi (par défaut décroissant)
   let currentSort = 'updated_desc';
   const PAGE_SIZE = 9;
   let currentPage = 1;
@@ -310,7 +310,7 @@ const allPages = db.pages;
       if (type === 'action') return `/creation/actions/edit/${id}-${slug}`;
       if (type === 'projet') return `/creation/projets/edit/${id}-${slug}`;
       if (type === 'produit') return `/creation/produits/edit/${id}-${slug}`;
-      // cas de repli : ouvrir l'?diteur actions
+      // Cas de repli : ouvrir l'éditeur actions
       return `/creation/actions/edit/${id}-${slug}`;
     }
 
@@ -352,7 +352,7 @@ const allPages = db.pages;
       );
     }
 
-    // Filtre par b?n?ficiaire (seulement pour les actions)
+    // Filtre par bénéficiaire (seulement pour les actions)
     if (benef) {
       const benefToken = benef.toLowerCase();
       filtered = filtered.filter(p =>
@@ -360,7 +360,7 @@ const allPages = db.pages;
       );
     }
 
-    // Tri par date selon l'ordre s?lectionn?
+    // Tri par date selon l'ordre sélectionné
     filtered.sort((a, b) => {
       const da = new Date(a.updatedAt).getTime();
       const db = new Date(b.updatedAt).getTime();
@@ -433,7 +433,7 @@ const allPages = db.pages;
       `;
       currentPage = 1;
 
-      // R?attacher l'?v?nement pour effacer les filtres
+      // Réattacher l'événement pour effacer les filtres
       document.getElementById('clear-filters-empty').addEventListener('click', () => {
         const root = document.querySelector('.actions-search');
         if (root instanceof HTMLElement) {
@@ -519,12 +519,12 @@ const allPages = db.pages;
       renderPages(filteredPagesCache);
     });
 
-    // ?couter les ?v?nements partag?s d'ActionsSearch
+    // Écouter les événements partagés d'ActionsSearch
     document.addEventListener('actions-filter-change', (ev) => {
       const d = ev.detail || {};
       currentSearch = d.search || '';
       currentBenef = d.beneficiary || '';
-      // prefer status if provided, else keep existing
+      // Préférer le statut fourni s'il existe, sinon conserver l'existant.
       if (typeof d.status !== 'undefined') currentStatus = d.status || 'all';
       currentPage = 1;
       updateActiveFilters(currentSearch, currentStatus);
@@ -533,7 +533,7 @@ const allPages = db.pages;
     });
 
     // rendu initial et affichage des filtres actifs
-    // lire la valeur initiale du tri si pr?sente
+    // Lire la valeur initiale du tri si présente
     const sortSelect = document.getElementById('sort-select');
     if (sortSelect instanceof HTMLSelectElement) {
       currentSort = sortSelect.value;
@@ -549,14 +549,14 @@ const allPages = db.pages;
     renderPages(filteredPagesCache);
 
     clearFiltersBtn.addEventListener('click', () => {
-      // r?initialiser les entr?es du composant si pr?sent
+      // Réinitialiser les entrées du composant si présent
       const root = document.querySelector('.actions-search');
       if (root instanceof HTMLElement) {
         const si = root.querySelector('#search-input');
         const st = root.querySelector('#status-select');
         if (si instanceof HTMLInputElement) si.value = '';
         if (st instanceof HTMLSelectElement) st.value = 'all';
-        // ?mettre l'?tat r?initialis?
+        // Émettre l'état réinitialisé
         document.dispatchEvent(new CustomEvent('actions-filter-change', { detail: { search: '', status: 'all' } }));
       } else {
         // cas de repli

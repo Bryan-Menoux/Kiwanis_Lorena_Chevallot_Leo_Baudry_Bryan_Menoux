@@ -24,7 +24,7 @@ const EMPTYABLE_FIELDS = new Set([
 const normalizeOptionLabel = (value: string) =>
   /Ãƒ|Ã‚/.test(value) ? Buffer.from(value, "latin1").toString("utf8") : value;
 
-// RÃ©cupÃ©rer les options de type_de_chiffre depuis le type TypeScript gÃ©nÃ©rÃ©
+// Récupérer les options de type_de_chiffre depuis le type TypeScript généré
 let typeDeChiffreOptions: string[] = ["type de chiffre", ...(Array.isArray(ActionsTypeDeChiffreOptions) ? ActionsTypeDeChiffreOptions : Object.values(ActionsTypeDeChiffreOptions))];
 let typeActionOptions: string[] = (Array.isArray(ActionsTypeActionOptions)
   ? ActionsTypeActionOptions
@@ -32,7 +32,7 @@ let typeActionOptions: string[] = (Array.isArray(ActionsTypeActionOptions)
   normalizeOptionLabel(String(opt)),
 );
 
-// Placeholder partagÃ© (source unique injectÃ© cÃ´tÃ© serveur depuis `previewDefaults.js`)
+// Placeholder partagé (source unique injectée côté serveur depuis `previewDefaults.js`)
 const previewPlaceholder: any = {
   ...previewDefaults,
   nom_lieu: "",
@@ -42,12 +42,12 @@ const previewPlaceholder: any = {
   type_de_chiffre: "",
   beneficiaire: "",
 };
-// Gestion de la soumission du formulaire cÃ´tÃ© serveur (crÃ©ation)
+// Gestion de la soumission du formulaire côté serveur (création)
 if (Astro.request.method === "POST") {
   try {
     const formData = await Astro.request.formData();
 
-    // DÃ©tecter si l'utilisateur veut enregistrer en brouillon
+    // Détecter si l'utilisateur veut enregistrer en brouillon
     const saveAs = formData.get("save_as")?.toString();
     const isBrouillon = saveAs === "brouillon";
 
@@ -57,10 +57,10 @@ if (Astro.request.method === "POST") {
       throw new Error("Le titre est obligatoire");
     }
 
-    // GÃ©nÃ©rer le slug
+    // Générer le slug
     const slug = titre ? slugify(titre, { lower: true, strict: true }) : "";
 
-    // PrÃ©parer les donnÃ©es pour PocketBase
+    // Préparer les données pour PocketBase
     const data: any = {};
     // Première passe: champs texte/JSON (sans fichiers).
     for (const [key, value] of formData.entries()) {
@@ -107,7 +107,7 @@ if (Astro.request.method === "POST") {
       if (s) data[key] = s;
     }
 
-    // GÃ©rer les fichiers
+    // Gérer les fichiers
     const files: any = {};
     // Deuxième passe: fichiers uploadés.
     for (const [key, value] of formData.entries()) {

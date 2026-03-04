@@ -8,7 +8,7 @@ export interface Props {
 const { name, id, value } = Astro.props;
 
 // Champ technique "source de soumission":
-// le champ visible peut etre adapte pour le preview, mais le POST final
-// conserve ce nom de cle stable via ce hidden input.
+// le champ visible peut être adapté pour la prévisualisation, mais le POST final
+// conserve ce nom de clé stable via ce hidden input.
 ---
 <input type="hidden" name={name} id={id} value={value} />

@@ -46,7 +46,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const syncFromManual = () => {
     const v = manualInput.value || "";
     mapInput.value = v;
-    // Les events gardent le preview et les hidden inputs synchronisés.
+    // Les événements gardent la prévisualisation et les champs cachés synchronisés.
     mapInput.dispatchEvent(new Event("input", { bubbles: true }));
     mapInput.dispatchEvent(new Event("change", { bubbles: true }));
   };

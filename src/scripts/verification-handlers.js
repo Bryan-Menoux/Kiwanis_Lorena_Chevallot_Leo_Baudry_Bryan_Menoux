@@ -174,7 +174,7 @@ function attachFormHandlers() {
   container.querySelectorAll("form").forEach((form) => {
     const formSource = form.querySelector('input[name="formSource"]');
     if (formSource && formSource.value === "verification") {
-      // Éviter l'ajout multiple d'event listeners
+      // Éviter l'ajout multiple d'écouteurs d'événements.
       if (!form.hasAttribute('data-form-handler-attached')) {
         form.setAttribute('data-form-handler-attached', 'true');
         form.addEventListener("submit", handleFormSubmit);

@@ -243,7 +243,7 @@ const { animateDesktopSidebar = false } = Astro.props;
   };
 
   if (!windowState.__kcActionEditorShellListenersBound) {
-    // Garde globale: évite de doubler les listeners à chaque astro:page-load.
+    // Garde globale : évite de doubler les écouteurs à chaque astro:page-load.
     mediaQuery.addEventListener("change", syncAllShells);
     desktopMediaQuery.addEventListener("change", syncDesktopSidebarAnimation);
     document.addEventListener("astro:page-load", bootActionEditorShell);

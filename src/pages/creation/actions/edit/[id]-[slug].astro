@@ -1,11 +1,11 @@
 ﻿---
-// Page serveur pour crÃ©er/Ã©diter une action â€” logique serveur et rendu.
+// Page serveur pour créer/éditer une action : logique serveur et rendu.
 import Layout from "../../../../layouts/Layout-back-office.astro";
 import ActionContent from "../../../../components/ActionContent.astro";
 import ActionForm from "../../../../components/ActionForm.astro";
 import ActionEditorShell from "../../../../components/actionForm/ActionEditorShell.astro";
 import slugify from "slugify";
-// ParamÃ¨tre `id` optionnel provenant de l'URL (utilisÃ© pour l'Ã©dition)
+// Paramètre `id` optionnel provenant de l'URL (utilisé pour l'édition)
 const rawIdParam = Astro.params?.id;
 const idParam =
   typeof rawIdParam === "string"
@@ -26,7 +26,7 @@ import {
 } from "../../../../pocketbase-types";
 import previewDefaults from "../../../../scripts/previewDefaults.js";
 
-// Message d'erreur affichÃ© dans le formulaire en cas d'Ã©chec serveur
+// Message d'erreur affiché dans le formulaire en cas d'échec serveur
 let error: string = "";
 // Construit une URL de redirection avec un message de succès uniforme.
 const withSuccess = (path: string, message: string) =>
@@ -45,7 +45,7 @@ const EMPTYABLE_FIELDS = new Set([
   "type_de_chiffre",
 ]);
 
-// RÃ©cupÃ©rer les options de type_de_chiffre depuis le type TypeScript gÃ©nÃ©rÃ©
+// Récupérer les options de type_de_chiffre depuis le type TypeScript généré
 let typeDeChiffreOptions: string[] = ["type de chiffre", ...(Array.isArray(ActionsTypeDeChiffreOptions) ? ActionsTypeDeChiffreOptions : Object.values(ActionsTypeDeChiffreOptions))];
 let typeActionOptions: string[] = (Array.isArray(ActionsTypeActionOptions)
   ? ActionsTypeActionOptions
@@ -53,24 +53,24 @@ let typeActionOptions: string[] = (Array.isArray(ActionsTypeActionOptions)
   normalizeOptionLabel(String(opt)),
 );
 
-// Placeholder SVG data-URL pour la prÃ©visualisation serveur
+// Placeholder SVG data-URL pour la prévisualisation serveur
 const placeholderImg = `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='400' height='400' viewBox='0 0 400 400'><rect width='100%' height='100%' fill='%23f3f6f7'/><image href='${imageIcon.src}' x='50' y='50' width='300' height='300' preserveAspectRatio='xMidYMid meet' style='opacity:0.95;'/></svg>`;
 
-// Charger l'enregistrement existant lorsque `idParam` est fourni (mode Ã©dition)
+// Charger l'enregistrement existant lorsque `idParam` est fourni (mode édition)
 let actionRecord: any = null;
 let actionRecordFromBrouillon = false;
 if (idParam) {
   try {
-    // tenter d'abord dans `actions`; si record non trouvÃ© (404), rechercher dans `brouillons`
+    // Tenter d'abord dans `actions` ; si record non trouvé (404), rechercher dans `brouillons`.
     try {
       actionRecord = await Astro.locals.pb.collection("actions").getOne(idParam);
     } catch (err) {
-      // si la requÃªte vers `actions` Ã©choue (404 ou autre), tenter `brouillons`
+      // Si la requête vers `actions` échoue (404 ou autre), tenter `brouillons`.
       try {
         actionRecord = await Astro.locals.pb.collection("brouillons").getOne(idParam);
         actionRecordFromBrouillon = true;
       } catch (err2) {
-        // ni actions ni brouillons trouvÃ©s â€” remonter l'erreur originale
+        // Ni actions ni brouillons trouvés : remonter l'erreur originale.
         throw err;
       }
     }
@@ -137,7 +137,7 @@ const previewData: any = {
         )
       : [placeholderImg, placeholderImg, placeholderImg],
 };
- // Placeholder partagÃ© (source unique injectÃ© cÃ´tÃ© serveur depuis `previewDefaults.js`)
+ // Placeholder partagé (source unique injecté côté serveur depuis `previewDefaults.js`)
 const previewPlaceholder: any = {
   ...previewDefaults,
   ...previewData,
@@ -146,8 +146,8 @@ const previewPlaceholder: any = {
   photo_partie_2: previewData.photo_partie_2 ?? placeholderImg,
   photo_partie_3: previewData.photo_partie_3 ?? placeholderImg,
 };
-// Gestion de la soumission du formulaire cÃ´tÃ© serveur
-// Si `idParam` prÃ©sent -> mise Ã  jour, sinon crÃ©ation.
+// Gestion de la soumission du formulaire côté serveur
+// Si `idParam` est présent : mise à jour, sinon création.
 if (Astro.request.method === "POST") {
   try {
     const formData = await Astro.request.formData();
@@ -168,7 +168,7 @@ if (Astro.request.method === "POST") {
       // Ce diagnostic ne doit jamais bloquer le flux métier.
     }
 
-    // Support suppression envoyÃ©e par POST depuis la liste
+    // Prise en charge de la suppression envoyée par POST depuis la liste.
     const action = formData.get("_action")?.toString();
     if (action === "delete" && idParam) {
       try {
@@ -243,21 +243,21 @@ if (Astro.request.method === "POST") {
       );
     }
 
-    // VÃ©rifier que le titre est fourni
+    // Vérifier que le titre est fourni
     const titre = formData.get("titre")?.toString();
     if (!titre || titre.trim() === "") {
       throw new Error("Le titre est obligatoire");
     }
 
-    // GÃ©nÃ©rer le slug
+    // Générer le slug
     const slug = slugify(titre, { lower: true, strict: true });
 
-    // PrÃ©parer les donnÃ©es pour PocketBase
+    // Préparer les données pour PocketBase
     const data: any = { slug };
 
     // Copier les champs texte (ignorer fichiers et flags 'remove_')
     for (const [key, value] of formData.entries()) {
-      if (value instanceof File) continue; // GÃ©rer les fichiers sÃ©parÃ©ment
+      if (value instanceof File) continue; // Gérer les fichiers séparément
       if (
         key === "galerie_photos" ||
         key === "remove_galerie_photos" ||
@@ -305,9 +305,9 @@ if (Astro.request.method === "POST") {
       }
     }
 
-    // Si l'UI a envoyÃ© des flags `remove_{field}`, s'assurer d'envoyer
+    // Si l'UI a envoyé des flags `remove_{field}`, s'assurer d'envoyer
     // explicitement une valeur vide pour le champ afin que PocketBase
-    // supprime le fichier cÃ´tÃ© serveur.
+    // supprime le fichier côté serveur.
     const emptyImageFields: string[] = [];
     for (const [key, value] of formData.entries()) {
       if (typeof key === 'string' && key.startsWith('remove_')) {
@@ -315,15 +315,15 @@ if (Astro.request.method === "POST") {
         if (vStr) {
           const field = key.replace(/^remove_/, '');
           emptyImageFields.push(field);
-          // forcer la clÃ© Ã  une chaÃ®ne vide â€” PocketBase prendra en compte
+          // Forcer la clé à une chaîne vide : PocketBase prendra en compte
           // la valeur vide pour effacer le champ fichier
           data[field] = '';
         }
       }
     }
 
-    // GÃ©rer les fichiers â€” ignorer les champs marquÃ©s pour suppression
-    // EXCEPTION : si un nouveau fichier est fourni pour un champ marquÃ© remove_, le fichier prend la prioritÃ©
+    // Gérer les fichiers : ignorer les champs marqués pour suppression.
+    // EXCEPTION : si un nouveau fichier est fourni pour un champ marqué remove_, le fichier prend la priorité.
     const files: any = {};
     for (const [key, value] of formData.entries()) {
       if (value instanceof File && value.size > 0) {
@@ -351,8 +351,8 @@ if (Astro.request.method === "POST") {
     }
 
     if (idParam) {
-      // Mise Ã  jour : ne remplacer les images uniques que si nouvel upload
-      // Galerie : n'inclure la galerie que si elle a Ã©tÃ© modifiÃ©e
+      // Mise à jour : ne remplacer les images uniques que si nouvel upload.
+      // Galerie : n'inclure la galerie que si elle a été modifiée.
       let removedList: string[] = [];
       try {
         const rawRemoved =
@@ -373,7 +373,7 @@ if (Astro.request.method === "POST") {
         (removedList && removedList.length > 0) ||
         (newFiles && newFiles.length > 0);
 
-      // Retirer `galerie_photos` de `files` pour Ã©viter propagation involontaire
+      // Retirer `galerie_photos` de `files` pour éviter la propagation involontaire.
       if (files.galerie_photos) delete files.galerie_photos;
 
       const payload: any = { ...data, ...files };
@@ -385,11 +385,11 @@ if (Astro.request.method === "POST") {
         });
 
         const combinedGallery = (keepFiles || []).concat(newFiles);
-        // "" si galerie complÃ¨tement vidÃ©e, sinon tableau des fichiers restants
+        // "" si galerie complètement vidée, sinon tableau des fichiers restants.
         payload.galerie_photos = combinedGallery.length ? combinedGallery : "";
       }
 
-      // Si le record provient d'un brouillon, on met Ã  jour la collection `brouillons`
+      // Si le record provient d'un brouillon, mettre à jour la collection `brouillons`.
       if (actionRecordFromBrouillon) {
         if (publishRequested) {
           const publishPayload: any = { ...payload };
@@ -411,13 +411,13 @@ if (Astro.request.method === "POST") {
 
         // assurer que le type reste 'action' pour que les liens redirigent correctement
         payload.type = 'action';
-        // SÃ©curitÃ©: ne jamais pousser `type_action` vers `brouillons`.
+        // Sécurité : ne jamais pousser `type_action` vers `brouillons`.
         if (Object.prototype.hasOwnProperty.call(payload, "type_action")) {
           delete payload.type_action;
         }
 
-        // copier les rÃ©fÃ©rences de fichiers existantes depuis le brouillon si aucun upload n'a Ã©tÃ© fait
-        // IMPORTANT : utiliser === undefined pour ne pas Ã©craser '' (suppression intentionnelle)
+        // Copier les références de fichiers existantes depuis le brouillon si aucun upload n'a été fait.
+        // IMPORTANT : utiliser === undefined pour ne pas écraser '' (suppression intentionnelle).
         if (payload.hero === undefined && actionRecord?.hero) payload.hero = actionRecord.hero;
         if (payload.photo_partie_1 === undefined && actionRecord?.photo_partie_1) payload.photo_partie_1 = actionRecord.photo_partie_1;
         if (payload.photo_partie_2 === undefined && actionRecord?.photo_partie_2) payload.photo_partie_2 = actionRecord.photo_partie_2;
@@ -431,7 +431,7 @@ if (Astro.request.method === "POST") {
         );
       }
 
-      // Mise Ã  jour classique d'une action
+      // Mise à jour classique d'une action
       try {
         await Astro.locals.pb.collection("actions").update(idParam, payload);
       } catch (updateErr: any) {
@@ -452,7 +452,7 @@ if (Astro.request.method === "POST") {
         withSuccess(`/creation/actions/${idParam}-${slug}`, "Action mise à jour"),
       );
     } else {
-      // crÃ©ation
+      // Création
       const newAction = await Astro.locals.pb.collection("actions").create({
         ...data,
         ...files,

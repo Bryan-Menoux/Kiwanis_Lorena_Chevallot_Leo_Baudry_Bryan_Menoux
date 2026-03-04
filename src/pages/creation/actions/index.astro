@@ -66,7 +66,7 @@ const actions: ActionItem[] = [
 
 const stats = { total: actions.length };
 
-// build filter options
+// Construire les options de filtres
 const yearSet = new Set<string>();
 actions.forEach((a) => {
   const d = a.date_debut || a.date_fin;
@@ -309,7 +309,7 @@ const allActions = actions;
     }
     if (type && type !== "") {
       filtered = filtered.filter((a) => {
-        // type may come from a.type_action or type_de_chiffre, adjust as necessary
+        // Le type peut venir de `a.type_action` ou de `type_de_chiffre` ; ajuster si nécessaire.
         const arr = a.type_action || [];
         return arr.includes(type);
       });
@@ -369,7 +369,7 @@ const allActions = actions;
     let currentYear = "";
     let currentType = "";
 
-    // Listen for the reusable search component events
+    // Écouter les événements du composant de recherche réutilisable.
     const sortSelect = document.getElementById("sort-select");
 
     function applyAndRender() {
@@ -431,7 +431,7 @@ const allActions = actions;
       handleFilters(ev.detail || {});
     });
 
-    // initial render based on server-side params
+    // Rendu initial basé sur les paramètres côté serveur.
     if (sortSelect instanceof HTMLSelectElement) {
       sortSelect.addEventListener("change", () => {
         currentPage = 1;
@@ -440,6 +440,6 @@ const allActions = actions;
     }
     applyAndRender();
 
-    // No individual delete buttons on this page; bulk delete handled by the form
+    // Pas de bouton de suppression unitaire sur cette page ; la suppression groupée est gérée par le formulaire.
   });
 </script>

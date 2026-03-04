@@ -20,7 +20,7 @@ const {
   tabletPreviewAsMobile = false,
 } = Astro.props;
 
-// Helper d'exécution importé (on conserve le garde TypeScript localement).
+// Fonction utilitaire d'exécution importée (on conserve le garde TypeScript localement).
 const isDataUrl = isDataUrlRuntime as (v: unknown) => v is string;
 // Préparation des URLs d'images : si c'est une URL de données, on l'utilise directement, sinon on génère l'URL via `Astro.locals.pb.files.getURL`
 const heroImg =
@@ -245,7 +245,7 @@ const hasThanksSection = hasNonEmptyText(action?.description_remerciements);
             <h2 data-field="chiffre" class="text-5xl! md:text-7xl!">
               {action.chiffre} €
             </h2>
-            {/* inclure l'élément systématiquement pour que le script de preview puisse le cibler */}
+            {/* Inclure l'élément systématiquement pour que le script de prévisualisation puisse le cibler. */}
             <p
               data-field="type_de_chiffre"
               class="text-base md:text-xl! uppercase self-end"
@@ -575,7 +575,7 @@ const hasThanksSection = hasNonEmptyText(action?.description_remerciements);
         };
 
         const syncRoots = () => {
-          // Le comportement "preview tablette comme mobile" est limité strictement à 768-1023.
+          // Le comportement "prévisualisation tablette comme mobile" est limité strictement à 768-1023.
           const isTablet = tabletQuery.matches;
           document.querySelectorAll(rootSelector).forEach((root) => {
             if (!(root instanceof HTMLElement)) return;

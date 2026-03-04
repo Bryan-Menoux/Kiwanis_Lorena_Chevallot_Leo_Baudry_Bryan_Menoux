@@ -35,7 +35,7 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     };
     const syncPreview = () => {
-      // Le preview écoute l'event input : on le réémet après annulation.
+      // La prévisualisation écoute l'événement `input` : on le réémet après annulation.
       input.dispatchEvent(new Event("input", { bubbles: true }));
     };
 

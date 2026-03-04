@@ -15,7 +15,7 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     if (!tryApply()) {
-      // setGridStyles not yet available; wait briefly
+      // setGridStyles n'est pas encore disponible ; attendre brièvement.
       const to = setInterval(() => {
         if (tryApply()) clearInterval(to);
       }, 50);

@@ -1,5 +1,5 @@
-// Minimal gallery display script: wait for images, then call window.setGridStyles()
-// and reveal the grid. No layout logic here; resize & click are handled in gallery.js.
+// Script minimal d'affichage de galerie : attendre les images, puis appeler window.setGridStyles()
+// et révéler la grille. Aucune logique de mise en page ici ; resize et clic sont gérés dans gallery.js.
 
 document.addEventListener("DOMContentLoaded", function () {
   var grid = document.getElementById("photoGrid");
@@ -30,7 +30,7 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 });
 
-// Modal logic
+// Logique de la modale
 (function () {
   var modal = document.getElementById('imageModal');
   var modalImage = document.getElementById('modalImage');
@@ -62,7 +62,7 @@ document.addEventListener("DOMContentLoaded", function () {
     if (currentIndex === -1) currentIndex = 0;
     if (!modal || !modalImage) return;
     modalImage.src = url;
-    // lock scroll only once, then restore exactly on close
+    // Verrouiller le scroll une seule fois, puis restaurer exactement à la fermeture.
     if (!isScrollLocked) {
       lockedScrollY = window.scrollY || window.pageYOffset || 0;
       previousBodyOverflow = document.body.style.overflow;
@@ -86,7 +86,7 @@ document.addEventListener("DOMContentLoaded", function () {
     modal.classList.add('hidden');
     modal.classList.remove('flex');
     if (modalImage) modalImage.src = '';
-    // restore scroll state
+    // Restaurer l'état du scroll.
     if (isScrollLocked) {
       document.body.style.overflow = previousBodyOverflow;
       document.body.style.position = previousBodyPosition;

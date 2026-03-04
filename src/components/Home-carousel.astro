@@ -46,7 +46,7 @@ const duplicatedImages = [...images, ...images];
 </style>
 
 <script>
-  // For smoother infinite scroll without jerking
+  // Rendre le défilement infini plus fluide, sans à-coups.
   const carousel = document.querySelector('.home-carousel-inner') as HTMLElement;
   const container = document.querySelector('.home-carousel-container') as HTMLElement;
 
@@ -68,7 +68,7 @@ const duplicatedImages = [...images, ...images];
   if (carousel) {
     let startTime: number | null = null;
     let position = 0;
-    const speed = 50; // pixels par secondes
+    const speed = 50; // pixels par seconde
 
     function animate(currentTime: number) {
       if (startTime === null) {

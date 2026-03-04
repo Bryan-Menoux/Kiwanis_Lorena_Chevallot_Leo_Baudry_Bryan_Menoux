@@ -7,7 +7,7 @@ import ActionsSearch from "../../../../components/ActionsSearch.astro";
 let error = "";
 let success = "";
 
-// RÃ©cupÃ©rer la liste des actions
+// Récupérer la liste des actions
 let actionsRaw = [];
 try {
   actionsRaw = await (Astro.locals as any).pb
@@ -18,7 +18,7 @@ try {
   error = "Impossible de charger la liste des actions";
 }
 
-// Mapper les donnÃ©es essentielles
+// Mapper les données essentielles
 const actions = actionsRaw.map((a: any) => ({
   id: a.id,
   titre: a.titre,
@@ -33,7 +33,7 @@ const actions = actionsRaw.map((a: any) => ({
 if (Astro.request.method === "POST") {
   try {
     const formData = await Astro.request.formData();
-    // RÃ©cupÃ¨re toutes les valeurs des checkboxes nommÃ©es "ids"
+    // Récupérer toutes les valeurs des cases à cocher nommées "ids"
     const ids = formData
       .getAll("ids")
       .map((v) => v.toString())
@@ -64,7 +64,7 @@ if (Astro.request.method === "POST") {
   }
 }
 
-// Afficher message success si prÃ©sent dans query
+// Afficher le message de succès s'il est présent dans la query.
 try {
   const s = Astro.url.searchParams.get("success");
   if (s) success = s;
@@ -189,7 +189,7 @@ try {
   </div>
 
   <script>
-    // Recherche, filtres et tri cÃ´tÃ© client + select all + suppression par carte
+    // Recherche, filtres et tri côté client + sélection globale + suppression par carte.
     document.addEventListener("DOMContentLoaded", () => {
       const selectAll = document.getElementById("selectAll");
       const form = document.getElementById("deleteForm");
@@ -200,7 +200,7 @@ try {
 
       const g = grid;
 
-      // Collect all cards (initial snapshot)
+      // Récupérer toutes les cartes (instantané initial).
       const allCards = Array.from(
         g.querySelectorAll("label[data-action-id]"),
       ) as HTMLElement[];
@@ -244,7 +244,7 @@ try {
           
           if (benef && benef !== "" && !b.includes(benef)) return false;
           if (q && q !== "" && !title.includes(q)) return false;
-          // Date filtering not implemented yet
+          // Filtrage par date non implémenté pour l'instant.
           return true;
         });
 
@@ -260,13 +260,13 @@ try {
         const startIndex = (currentPage - 1) * PAGE_SIZE;
         const pageItems = visible.slice(startIndex, startIndex + PAGE_SIZE);
 
-        // Clear and re-append visible cards in order
+        // Vider puis réinsérer les cartes visibles dans l'ordre.
         g.innerHTML = "";
         pageItems.forEach((c) => g.appendChild(c));
         renderPagination(totalPages);
       }
 
-      // Listen for filter updates from the ActionsSearch component
+      // Écouter les mises à jour de filtres du composant ActionsSearch.
       document.addEventListener('actions-filter-change', (ev: any) => {
         const d = ev.detail || {};
         currentSearch = d.search || "";
@@ -309,7 +309,7 @@ try {
         updateView();
       });
 
-      // Initial render
+      // Rendu initial.
       updateView();
 
       if (sortSelect instanceof HTMLSelectElement) {
@@ -319,7 +319,7 @@ try {
         });
       }
 
-      // Select only visible checkboxes
+      // Sélectionner uniquement les cases visibles.
       if (selectAll instanceof HTMLInputElement) {
         selectAll.addEventListener("change", () => {
           const checked = selectAll.checked;
@@ -332,7 +332,7 @@ try {
         });
       }
 
-      // No individual delete buttons on this page; bulk delete handled by the form
+      // Aucun bouton de suppression unitaire sur cette page ; la suppression groupée est gérée par le formulaire.
     });
   </script>
 </Layout>

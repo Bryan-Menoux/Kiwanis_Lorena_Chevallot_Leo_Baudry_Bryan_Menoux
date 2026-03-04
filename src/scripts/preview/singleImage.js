@@ -16,14 +16,14 @@ function handleFileElement(inputElement) {
     if (inputElement) {
       const fileInput = inputElement;
       const dataTransfer = new DataTransfer();
-      // DataTransfer permet de garder un FileList cohérent après remplacements/suppressions.
+      // DataTransfer permet de garder une liste de fichiers cohérente après remplacements/suppressions.
       dataTransfer.items.add(file);
       fileInput.__dt = dataTransfer;
       fileInput.files = dataTransfer.files;
       try {
         const formElement = document.getElementById('leftForm');
         if (formElement) {
-          // Si l'utilisateur remet une image, on retire un éventuel flag de suppression.
+          // Si l'utilisateur remet une image, on retire un éventuel indicateur de suppression.
           const removeElement = document.getElementById(`remove_${prop}`);
           if (removeElement && removeElement.parentElement) removeElement.parentElement.removeChild(removeElement);
         }
@@ -77,7 +77,7 @@ function renderFormImagePreview(prop, dataUrl) {
   container.appendChild(previewWrap);
 
   removeButton.addEventListener('click', function () {
-    // Clic suppression local: on nettoie l'input file, l'état preview et le hidden field.
+    // Clic de suppression local : on nettoie le champ fichier, l'état de prévisualisation et le champ caché.
     const fileInput = document.querySelector(`[data-prop-file="${prop}"]`);
     if (fileInput) {
       try {
@@ -108,7 +108,7 @@ function bindExistingSingleRemoveButtons() {
     if (formElement) {
       let hiddenRemoveInput = document.getElementById(`remove_${prop}`);
       if (!hiddenRemoveInput) {
-        // Ce hidden input est lu côté serveur pour supprimer le fichier existant.
+        // Ce champ caché est lu côté serveur pour supprimer le fichier existant.
         hiddenRemoveInput = document.createElement('input');
         hiddenRemoveInput.type = 'hidden';
         hiddenRemoveInput.id = `remove_${prop}`;

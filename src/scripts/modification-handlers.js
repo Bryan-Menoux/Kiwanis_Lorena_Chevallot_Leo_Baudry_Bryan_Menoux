@@ -1,5 +1,5 @@
 // Handlers pour la section Modifications
-// Ce fichier permet de ré-initialiser les event listeners après un rechargement dynamique
+// Ce fichier permet de ré-initialiser les écouteurs d'événements après un rechargement dynamique
 
 // Variables globales pour la pagination
 let currentPage = 0;
@@ -38,7 +38,7 @@ function goToPage(page) {
 }
 
 // Fonction principale d'initialisation
-// Cette fonction configure tous les event listeners pour la section modifications
+// Cette fonction configure tous les écouteurs d'événements pour la section modifications
 // Elle est appelée au chargement initial et après chaque rechargement dynamique
 export function initModifications() {
   // Réinitialisation des variables

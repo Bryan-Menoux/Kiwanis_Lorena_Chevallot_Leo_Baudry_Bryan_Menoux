@@ -34,12 +34,12 @@ const duplicatedImages = [...images, ...images];
 </style>
 
 <script>
-  // For smoother infinite scroll without jerking
+  // Rendre le défilement infini plus fluide, sans à-coups.
   const carousel = document.querySelector('.partner-carousel-inner') as HTMLElement;
   if (carousel) {
     let startTime: number | null = null;
     let position = 0;
-    const speed = 50; // pixels per second
+    const speed = 50; // pixels par seconde
 
     function animate(currentTime: number) {
       if (startTime === null) {

@@ -31,6 +31,6 @@ document.addEventListener('DOMContentLoaded', () => {
     el.addEventListener('input', applyFilter);
   });
 
-  // small UX: focus search on load
+  // Petite amélioration UX : focus sur la recherche au chargement
   if (search) search.focus();
 });
