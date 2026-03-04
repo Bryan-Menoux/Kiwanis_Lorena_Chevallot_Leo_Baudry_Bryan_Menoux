@@ -78,7 +78,7 @@ if (isPostForm) {
       <form method="post" class="flex flex-col w-full relative">
 
         <div id="errorText"
-          class="absolute left-0 right-0 text-sm text-start font-semibold opacity-0 pointer-events-none"
+          class="absolute left-0 right-0 text-sm text-start font-semibold opacity-0 pointer-events-none px-4 py-2 rounded-md max-w-xl mx-auto"
           style="bottom: calc(100% + 0.5rem);">
         </div>
 
@@ -112,7 +112,7 @@ if (isPostForm) {
             class="input input-bordered w-full pl-10 bg-transparent border-gray-200 text-gray-200" required />
         </div>
 
-        <button class="btn btn-primary bg-white text-primary w-full mt-4">
+        <button class="btn btn-primary rounded-lg! bg-white text-primary w-full mt-4">
           S'inscrire
         </button>
       </form>
@@ -136,8 +136,26 @@ if (isPostForm) {
     gsap.killTweensOf(errorText);
     gsap.set(errorText, { opacity: 0, y: 60 });
 
-    errorText.classList.remove("text-red-500", "text-secondary");
-    errorText.classList.add(type === "warning" ? "text-secondary" : "text-red-500");
+    // Retirer anciennes classes de couleur et d'arrière-plan
+    errorText.classList.remove(
+      "text-red-500",
+      "text-secondary",
+      "bg-error",
+      "bg-success",
+      "bg-warning",
+      "text-error-content",
+      "text-success-content",
+      "text-warning-content"
+    );
+
+    // Appliquer les classes daisyUI correspondantes
+    if (type === "warning") {
+      errorText.classList.add("bg-warning", "text-warning-content");
+    } else if (type === "success") {
+      errorText.classList.add("bg-success", "text-success-content");
+    } else {
+      errorText.classList.add("bg-error", "text-error-content");
+    }
 
     errorText.textContent = message;
     errorText.style.pointerEvents = "auto";
@@ -157,7 +175,7 @@ if (isPostForm) {
     const message = flags.dataset.message;
 
     if (message) {
-      showError(message, success ? "warning" : "error");
+      showError(message, success ? "success" : "error");
     }
 
     if (success) {

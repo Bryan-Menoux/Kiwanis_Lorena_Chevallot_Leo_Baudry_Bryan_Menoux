@@ -14,7 +14,7 @@ if (Astro.locals.pb.authStore.isValid) {
 }
 
 
-let userVerificated = true;
+let resetRequested = false;
 let serverMessage = "";
 
 const isPostForm =
@@ -26,35 +26,15 @@ if (isPostForm) {
   try {
     const data = await Astro.request.formData();
     const email = data.get("email")?.toString() ?? "";
-    const password = data.get("password")?.toString() ?? "";
 
-    await Astro.locals.pb.collection("users").authWithPassword(email, password);
-    
-    const user = Astro.locals.pb.authStore.model;
+    // Demande d'envoi du mail de réinitialisation via PocketBase
+    await Astro.locals.pb.collection('users').requestPasswordReset(email);
 
-    if (!user?.verified) {
-      Astro.locals.pb.authStore.clear();
-      userVerificated = false;
-      serverMessage =
-        "Vous devez attendre la vérification de votre compte par un administrateur.";
-      throw new Error("not_verified");
-    }
-
-    const cookie = Astro.locals.pb.authStore.exportToCookie();
-    
-    Astro.response.headers.append(
-      "set-cookie",
-      cookie,
-    );
-    
-    Astro.response.status = 302;
-    Astro.response.headers.set("Location", "/");
+    resetRequested = true;
+    serverMessage = "Si ce compte existe, un e‑mail de réinitialisation a été envoyé.";
   } catch (error) {
-    
-    if (userVerificated === true) {
-      userVerificated = false;
-      serverMessage = "Échec de la connexion. Vérifiez vos identifiants.";
-    }
+    resetRequested = false;
+    serverMessage = "Une erreur est survenue lors de la demande de réinitialisation.";
   }
 }
 ---
@@ -90,7 +70,7 @@ if (isPostForm) {
     <div class="lg:max-w-[20dvw]">
       <div
         id="auth-flags"
-        data-user-verificated={String(userVerificated)}
+        data-reset-requested={String(resetRequested)}
         data-message={serverMessage}
         class="hidden"
       >
@@ -117,23 +97,9 @@ if (isPostForm) {
             class="input input-bordered w-full pl-10 bg-transparent border-gray-200 text-gray-200"
           />
         </div>
-        <div class="relative my-2">
-          <img
-            src={lockIcon.src}
-            alt=""
-            class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 opacity-70"
-          />
-          <input
-            type="password"
-            name="password"
-            placeholder="Mot de passe"
-            class="input input-bordered w-full pl-10 bg-transparent border-gray-200 text-gray-200"
-          />
-        </div>
-
         <button
           class="btn btn-primary rounded-lg! bg-white text-primary w-full mt-4"
-          >Se connecter</button
+          >Envoyer le lien de réinitialisation</button
         >
       </form>
       <div
@@ -197,17 +163,15 @@ if (isPostForm) {
     });
   }
 
-  // Affiche les erreurs injectées par le serveur au chargement de la page
+  // Affiche le résultat de la demande de réinitialisation au chargement de la page
   if (flags) {
-    const userVerificated = flags.dataset.userVerificated === "true";
+    const resetRequested = flags.dataset.resetRequested === "true";
     const message = flags.dataset.message || "";
 
-    if (!userVerificated) {
-      showError(
-        message ||
-          "Veuillez vérifier votre adresse e-mail avant de vous connecter.",
-        "warning",
-      );
+    if (resetRequested) {
+      showError(message || "Si ce compte existe, un e‑mail a été envoyé.", "success");
+    } else if (message) {
+      showError(message, "error");
     }
   } else {
     showError("Une erreur est survenue. Veuillez réessayer plus tard.");
@@ -219,7 +183,6 @@ if (isPostForm) {
     form.addEventListener('submit', (e) => {
       const formData = new FormData(form);
       const email = formData.get('email');
-      const password = formData.get('password');
     });
   }
 </script>
