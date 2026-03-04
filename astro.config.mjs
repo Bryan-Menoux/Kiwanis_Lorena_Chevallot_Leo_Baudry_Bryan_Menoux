@@ -10,6 +10,12 @@ export default defineConfig({
 
   security: {
     checkOrigin: true,
+    allowedDomains: [
+      {
+        protocol: "https",
+        hostname: "kiwanis-pays-de-montbeliard.bryan-menoux.fr",
+      },
+    ],
   },
   devToolbar: {
     enabled: false
