@@ -8,13 +8,16 @@ export interface Props {
 const {
   formSelector,
   message = "Traitement en cours...",
-  id = `submit-overlay-${Math.random().toString(36).slice(2, 10)}`,
+  id = `submit-overlay-${formSelector
+    .replace(/[^a-zA-Z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .toLowerCase() || "form"}`,
 } = Astro.props;
 ---
 
 <div
   id={id}
-  class="fixed inset-0 z-[9999] hidden items-center justify-center bg-base-100/70 backdrop-blur-sm"
+  class="fixed inset-0 z-9999 hidden items-center justify-center bg-base-100/70 backdrop-blur-sm"
   aria-hidden="true"
   role="status"
   aria-live="polite"
@@ -32,24 +35,47 @@ const {
   const IN_FLIGHT_ATTR = "data-submit-overlay-in-flight";
   const DISABLED_BY_OVERLAY_ATTR = "data-disabled-by-submit-overlay";
 
-  const overlay = document.getElementById(overlayId);
-  if (!(overlay instanceof HTMLElement)) {
+  const overlayNode = document.getElementById(overlayId);
+  if (!(overlayNode instanceof HTMLElement)) {
     console.warn(`Overlay introuvable: ${overlayId}`);
   } else {
+  // L'overlay doit vivre sous <body> pour eviter les conteneurs transform/sticky.
+  if (overlayNode.parentElement !== document.body) {
+    document.body.appendChild(overlayNode);
+  }
+
+  const windowState = window;
+  const overlayBindings =
+    windowState.__kcSubmitOverlayBindings ??
+    (windowState.__kcSubmitOverlayBindings = new Set());
+  const overlayBySelector =
+    windowState.__kcSubmitOverlayBySelector ??
+    (windowState.__kcSubmitOverlayBySelector = new Map());
+  overlayBySelector.set(formSelector, overlayId);
+
+  const getActiveOverlay = () => {
+    const mappedId = overlayBySelector.get(formSelector) || overlayId;
+    const node = document.getElementById(mappedId);
+    return node instanceof HTMLElement ? node : null;
+  };
 
   const showOverlay = () => {
+    const overlay = getActiveOverlay();
+    if (!(overlay instanceof HTMLElement)) return;
     overlay.classList.remove("hidden");
     overlay.classList.add("flex");
     overlay.setAttribute("aria-hidden", "false");
   };
 
   const hideOverlay = () => {
+    const overlay = getActiveOverlay();
+    if (!(overlay instanceof HTMLElement)) return;
     overlay.classList.add("hidden");
     overlay.classList.remove("flex");
     overlay.setAttribute("aria-hidden", "true");
   };
 
-  const disableSubmitControls = (form: HTMLFormElement) => {
+  const disableSubmitControls = (form) => {
     const controls = form.querySelectorAll('button[type="submit"], input[type="submit"]');
     controls.forEach((control) => {
       if (
@@ -62,7 +88,7 @@ const {
     });
   };
 
-  const restoreSubmitControls = (form: HTMLFormElement) => {
+  const restoreSubmitControls = (form) => {
     const controls = form.querySelectorAll('button[type="submit"], input[type="submit"]');
     controls.forEach((control) => {
       if (
@@ -87,18 +113,11 @@ const {
     hideOverlay();
   };
 
-  const windowState = window as Window & {
-    __kcSubmitOverlayBindings?: Set<string>;
-  };
-  if (!windowState.__kcSubmitOverlayBindings) {
-    windowState.__kcSubmitOverlayBindings = new Set();
-  }
-
-  const bindingKey = `${overlayId}:${formSelector}`;
-  if (windowState.__kcSubmitOverlayBindings.has(bindingKey)) {
+  const bindingKey = formSelector;
+  if (overlayBindings.has(bindingKey)) {
     resetMatchedForms();
   } else {
-    windowState.__kcSubmitOverlayBindings.add(bindingKey);
+    overlayBindings.add(bindingKey);
     document.addEventListener("submit", (event) => {
       const target = event.target;
       if (!(target instanceof HTMLFormElement)) return;
@@ -113,7 +132,7 @@ const {
 
       target.setAttribute(PENDING_ATTR, "true");
 
-      // La validation et les autres écouteurs peuvent annuler la soumission.
+      // La validation et les autres ecouteurs peuvent annuler la soumission.
       queueMicrotask(() => {
         target.removeAttribute(PENDING_ATTR);
         if (event.defaultPrevented) return;

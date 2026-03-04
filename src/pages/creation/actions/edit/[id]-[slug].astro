@@ -139,7 +139,7 @@ const hasDescriptionForPartTitle = (payload: Record<string, any>, partNumber: nu
   if (typeof descriptionValue !== "string" || descriptionValue.trim() === "") {
     return false;
   }
-  const defaultDescription = previewDefaults[textKey];
+  const defaultDescription = Reflect.get(previewDefaults, textKey);
   if (typeof defaultDescription !== "string") {
     return true;
   }
@@ -157,7 +157,7 @@ const applyPartTitleRule = (payload: Record<string, any>) => {
       payload[titleKey] = currentTitleValue.trim();
       continue;
     }
-    const defaultTitle = previewDefaults[titleKey];
+    const defaultTitle = Reflect.get(previewDefaults, titleKey);
     if (typeof defaultTitle === "string" && defaultTitle.trim() !== "") {
       payload[titleKey] = defaultTitle.trim();
     }
