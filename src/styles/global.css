@@ -80,7 +80,9 @@ h1 {
 }
 
 .font-poppins {
-  font-family: "Poppins" !important, serif;
+  font-family:
+    "Poppins" !important,
+    serif;
 }
 
 h1 {
@@ -134,24 +136,23 @@ h3 {
 }
 
 h4 {
-  font-size: 0.9rem;
+  font-size: 1.1rem;
   font-weight: bold;
 }
 
 @media (min-width: 768px) {
   h4 {
-    font-size: 1.05rem;
+    font-size: 1.2rem;
   }
 }
 
 @media (min-width: 1024px) {
   h4 {
-    font-size: 1.15rem;
+    font-size: 1.3rem;
   }
 }
 
 body,
-p,
 a,
 li,
 span {
@@ -161,7 +162,6 @@ span {
 
 @media (min-width: 768px) {
   body,
-  p,
   a,
   li,
   span {
@@ -171,11 +171,24 @@ span {
 
 @media (min-width: 1024px) {
   body,
-  p,
   a,
   li,
   span {
     font-size: 1rem;
+  }
+}
+
+p,
+span {
+  font-size: 1rem;
+  line-height: 1.7;
+}
+
+
+@media (min-width: 1024px) {
+  p,
+  span {
+    font-size: 1.125rem !important;
   }
 }
 
@@ -214,4 +227,20 @@ span {
   -webkit-mask-size: contain;
   -webkit-mask-repeat: no-repeat;
   -webkit-mask-position: center;
+}
+
+header span {
+  font-size: 0.875rem;
+}
+
+@media (min-width: 768px) {
+  header span {
+    font-size: 0.9375rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  header span {
+    font-size: 1rem !important;
+  }
 }
