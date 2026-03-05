@@ -65,7 +65,7 @@ if (isPostForm) {
     <img src={logo.src} alt="Logo Kiwanis Pays de Montbéliard"
       class="md:w-[30dvw] lg:w-[15dvw]" />
 
-    <div class="lg:max-w-[20dvw]">
+    <div class="w-fit min-w-[70dvw] md:min-w-[60dvw] lg:min-w-[20dvw] lg:max-w-[60dvw]">
 
       <!-- FLAGS SERVEUR -->
       <div
@@ -107,12 +107,12 @@ if (isPostForm) {
             class="input input-bordered w-full pl-10 bg-transparent border-gray-200 text-gray-200" required />
         </div>
 
-        <button class="btn btn-primary rounded-lg! bg-white text-primary w-full mt-4">
+        <button class="btn btn-primary rounded-lg! bg-white text-primary w-full mt-4 lg:mt-8">
           S'inscrire
         </button>
       </form>
 
-      <div class="flex justify-center w-full mt-4 text-sm text-white">
+      <div class="flex w-full mt-4 text-sm text-white">
         <a href="/connexion">Déjà un compte ? Se connecter</a>
       </div>
     </div>
