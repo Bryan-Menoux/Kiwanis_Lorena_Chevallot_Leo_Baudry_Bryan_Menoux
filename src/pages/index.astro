@@ -1,6 +1,8 @@
 ﻿---
 import Layout from "../layouts/Layout.astro";
 import heroLandingfinal from "../assets/landing-page/hero-landing-final.webp";
+import heroLandingfinalMobile from "../assets/landing-page/hero-landing-final-mobile.webp";
+import heroLandingfinalTablette from "../assets/landing-page/hero-landing-final-tablette.webp";
 import Hero from "../components/Hero.astro";
 import landing1 from "../assets/landing-page/landing-1.webp";
 import HomeCarousel from "../components/Home-carousel.astro";
@@ -16,11 +18,21 @@ import HomePartner from "../components/Home-partner.astro";
 ---
 
 <Layout>
-  <Hero
+  <div class="hidden lg:block" ><Hero
     image={heroLandingfinal.src}
     title="Kiwanis Pays de Montbéliard"
     subtitle="Servir les enfants du monde, au cœur de notre territoire"
-  />
+  /></div>
+  <div class="md:hidden" ><Hero
+    image={heroLandingfinalMobile.src}
+    title="Kiwanis Pays de Montbéliard"
+    subtitle="Servir les enfants du monde, au cœur de notre territoire"
+  /></div>
+  <div class="hidden md:block lg:hidden" ><Hero
+    image={heroLandingfinalTablette.src}
+    title="Kiwanis Pays de Montbéliard"
+    subtitle="Servir les enfants du monde, au cœur de notre territoire"
+  /></div>
 
   <!-- Section qui sommes nous -->
   <div
