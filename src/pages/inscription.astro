@@ -37,9 +37,12 @@ if (isPostForm) {
       verified: false,
     });
 
+    // Envoie l'e-mail de vérification PocketBase à l'adresse saisie.
+    await Astro.locals.pb.collection("users").requestVerification(email);
+
     success = true;
     serverMessage =
-      "Inscription réussie. Votre compte doit être validé avant connexion.";
+      "Inscription réussie. Un e-mail de vérification vous a été envoyé.";
   } catch (error) {
     serverMessage =
       error instanceof Error
