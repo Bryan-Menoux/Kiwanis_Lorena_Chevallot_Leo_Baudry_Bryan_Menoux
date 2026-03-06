@@ -123,7 +123,7 @@ const hasThanksSection = hasNonEmptyText(action?.description_remerciements);
           alt={action.description_hero}
           loading="lazy"
           decoding="async"
-          class="w-full min-h-[50dvh] object-cover object-center rounded-lg"
+          class="w-full min-h-[50dvh] max-h-[80dvh] object-cover object-center rounded-lg"
         />
         {action.description_hero && (
           <p data-field="description_hero" class="text-sm md:text-base mt-4">
