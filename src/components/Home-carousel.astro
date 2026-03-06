@@ -15,7 +15,7 @@ const images = Object.entries(imageModules).map(([path, module], index) => ({
   <div class="home-carousel-track h-full">
     <div class="home-carousel-group flex gap-4 md:gap-8 h-full">
       {images.map((image) => (
-        <div class="home-carousel-item shrink-0 w-72 md:w-80 lg:w-[26rem]">
+        <div class="home-carousel-item shrink-0 w-72 md:w-80 lg:w-104">
           <Image
             src={image.src}
             alt={image.alt}
@@ -24,14 +24,14 @@ const images = Object.entries(imageModules).map(([path, module], index) => ({
             sizes="(min-width: 1024px) 26rem, (min-width: 768px) 20rem, 18rem"
             quality={80}
             loading="lazy"
-            class="block h-56 w-full object-cover rounded-box md:h-64 lg:h-[19rem]"
+            class="block h-56 w-full object-cover rounded-box md:h-64 lg:h-76"
           />
         </div>
       ))}
     </div>
     <div class="home-carousel-group flex gap-4 md:gap-8 h-full" aria-hidden="true">
       {images.map((image) => (
-        <div class="home-carousel-item shrink-0 w-72 md:w-80 lg:w-[26rem]">
+        <div class="home-carousel-item shrink-0 w-72 md:w-80 lg:w-104">
           <Image
             src={image.src}
             alt=""
@@ -41,7 +41,7 @@ const images = Object.entries(imageModules).map(([path, module], index) => ({
             sizes="(min-width: 1024px) 26rem, (min-width: 768px) 20rem, 18rem"
             quality={80}
             loading="lazy"
-            class="block h-56 w-full object-cover rounded-box md:h-64 lg:h-[19rem]"
+            class="block h-56 w-full object-cover rounded-box md:h-64 lg:h-76"
           />
         </div>
       ))}

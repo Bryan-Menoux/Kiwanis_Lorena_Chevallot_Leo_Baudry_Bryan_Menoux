@@ -42,7 +42,7 @@
 
 @font-face {
   font-family: "Poppins";
-  src: url("/fonts/poppins/Poppins-Regular.ttf") format("truetype");
+  src: url("/fonts/poppins/Poppins-Regular.woff2") format("woff2");
   font-weight: 400;
   font-style: normal;
   font-display: swap;
@@ -50,7 +50,7 @@
 
 @font-face {
   font-family: "Merriweather";
-  src: url("/fonts/merriweather/Merriweather_24pt-Regular.ttf");
+  src: url("/fonts/merriweather/Merriweather_24pt-Regular-latin.woff2") format("woff2");
   font-weight: 400;
   font-style: normal;
   font-display: swap;

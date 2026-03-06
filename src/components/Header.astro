@@ -146,28 +146,9 @@ import diagArrow from "../assets/diag-arrow.svg";
         aria-label="Ouvrir le menu"
       >
         <span class="text-base font-medium">Menu</span>
-        <div class="relative w-6 h-6">
-          <svg
-            id="ham-icon"
-            class="w-6 h-6 absolute"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            aria-hidden="true"
-          >
-            <path
-              id="ham-top"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="1.5"
-              d="M4 8h16"></path>
-            <path
-              id="ham-bottom"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="1.5"
-              d="M4 16h16"></path>
-          </svg>
+        <div class="relative w-6 h-6 flex flex-col justify-center items-center gap-1.25 pointer-events-none">
+          <span id="ham-top" class="block w-full h-0.5 bg-white rounded-full" style="transition: transform 0.2s ease;"></span>
+          <span id="ham-bottom" class="block w-full h-0.5 bg-white rounded-full" style="transition: transform 0.2s ease;"></span>
         </div>
       </button>
     </div>
@@ -305,11 +286,22 @@ import diagArrow from "../assets/diag-arrow.svg";
     transform: translateY(-110%);
   }
 
+  #discover-dropdown {
+    transition:
+      opacity 0.15s ease,
+      transform 0.15s ease,
+      visibility 0.15s ease;
+  }
+
   #discover-dropdown.is-open {
     opacity: 1;
     visibility: visible;
     transform: translateY(0);
     pointer-events: auto;
+  }
+
+  #discover-arrow {
+    transition: transform 0.15s ease;
   }
 
   #discover-arrow.is-open {
@@ -318,94 +310,10 @@ import diagArrow from "../assets/diag-arrow.svg";
 </style>
 
 <script>
-  import { loadGsap } from "../utils/loadGsap";
+  import { initMobileMenu } from "../utils/mobileMenu";
 
   let discoverIsOpen = false;
   let globalClickHandler: ((e: Event) => void) | null = null;
-  let gsapInstance: NonNullable<Window["gsap"]> | null = null;
-  let gsapPromise: Promise<NonNullable<Window["gsap"]> | null> | null = null;
-
-  function ensureGsap() {
-    if (gsapInstance) return Promise.resolve(gsapInstance);
-    if (!gsapPromise) {
-      gsapPromise = loadGsap().then((instance) => {
-        gsapInstance = instance;
-        return instance;
-      });
-    }
-    return gsapPromise;
-  }
-
-  function setHamburgerState(isOpen: boolean) {
-    const hamTop = document.getElementById("ham-top");
-    const hamBottom = document.getElementById("ham-bottom");
-    if (!(hamTop instanceof SVGElement) || !(hamBottom instanceof SVGElement)) return;
-
-    if (gsapInstance) {
-      gsapInstance.to(hamTop, {
-        y: isOpen ? 4 : 0,
-        rotate: isOpen ? 45 : 0,
-        duration: isOpen ? 0.18 : 0.12,
-        ease: isOpen ? "power2.out" : "power2.in",
-      });
-      gsapInstance.to(hamBottom, {
-        y: isOpen ? -4 : 0,
-        rotate: isOpen ? -45 : 0,
-        duration: isOpen ? 0.18 : 0.12,
-        ease: isOpen ? "power2.out" : "power2.in",
-      });
-      return;
-    }
-
-    hamTop.style.transformOrigin = "50% 50%";
-    hamBottom.style.transformOrigin = "50% 50%";
-    hamTop.style.transformBox = "fill-box";
-    hamBottom.style.transformBox = "fill-box";
-    hamTop.style.transform = isOpen
-      ? "translateY(4px) rotate(45deg)"
-      : "translateY(0) rotate(0deg)";
-    hamBottom.style.transform = isOpen
-      ? "translateY(-4px) rotate(-45deg)"
-      : "translateY(0) rotate(0deg)";
-  }
-
-  function openMobileDropdown(dropdown: HTMLElement, links: HTMLElement[]) {
-    if (!gsapInstance) {
-      dropdown.style.display = "block";
-      dropdown.style.opacity = "1";
-      dropdown.style.transform = "translateY(0)";
-      return;
-    }
-
-    gsapInstance.killTweensOf([dropdown, ...links]);
-    dropdown.style.display = "block";
-    gsapInstance
-      .timeline()
-      .to(dropdown, { opacity: 1, y: 0, duration: 0.2, ease: "power2.out" })
-      .fromTo(
-        links,
-        { opacity: 0, y: 5 },
-        { opacity: 1, y: 0, stagger: 0.02, duration: 0.15, overwrite: "auto" },
-        "-=0.1",
-      );
-  }
-
-  function closeMobileDropdown(dropdown: HTMLElement) {
-    if (!gsapInstance) {
-      dropdown.style.opacity = "0";
-      dropdown.style.transform = "translateY(-10px)";
-      window.setTimeout(() => {
-        dropdown.style.display = "none";
-      }, 150);
-      return;
-    }
-
-    gsapInstance.killTweensOf(dropdown);
-    gsapInstance
-      .timeline()
-      .to(dropdown, { opacity: 0, y: -10, duration: 0.15, ease: "power2.in" })
-      .set(dropdown, { display: "none" });
-  }
 
   function setDiscoverState(isOpen: boolean) {
     const discoverDropdown = document.getElementById(
@@ -423,114 +331,8 @@ import diagArrow from "../assets/diag-arrow.svg";
     discoverIsOpen = isOpen;
     discoverToggle.setAttribute("aria-expanded", isOpen.toString());
     discoverDropdown.setAttribute("aria-hidden", (!isOpen).toString());
-
-    if (!gsapInstance) {
-      discoverDropdown.classList.toggle("is-open", isOpen);
-      discoverArrow.classList.toggle("is-open", isOpen);
-      return;
-    }
-
-    gsapInstance.killTweensOf([discoverDropdown, discoverArrow]);
-    if (isOpen) {
-      discoverDropdown.classList.add("is-open");
-      discoverArrow.classList.add("is-open");
-      gsapInstance.to(discoverDropdown, {
-        opacity: 1,
-        visibility: "visible",
-        y: 0,
-        pointerEvents: "auto",
-        duration: 0.08,
-      });
-      gsapInstance.to(discoverArrow, { rotate: 90, duration: 0.08 });
-      return;
-    }
-
-    gsapInstance.to(discoverDropdown, {
-      opacity: 0,
-      visibility: "hidden",
-      y: -10,
-      pointerEvents: "none",
-      duration: 0.15,
-      onComplete: () => {
-        discoverDropdown.classList.remove("is-open");
-      },
-    });
-    gsapInstance.to(discoverArrow, {
-      rotate: 0,
-      duration: 0.15,
-      onComplete: () => {
-        discoverArrow.classList.remove("is-open");
-      },
-    });
-  }
-
-  async function initMenu() {
-    const toggle = document.getElementById("menu-toggle") as HTMLButtonElement;
-    const dropdown = document.getElementById("mobile-dropdown") as HTMLElement;
-    const links = Array.from(
-      document.querySelectorAll<HTMLElement>(".mob-link"),
-    );
-
-    if (!toggle || !dropdown) return;
-
-    let isOpen = false;
-    await ensureGsap();
-
-    if (gsapInstance) {
-      gsapInstance.set(dropdown, { display: "none", opacity: 0, y: -10 });
-      const hamTop = document.getElementById("ham-top");
-      const hamBottom = document.getElementById("ham-bottom");
-      if (hamTop && hamBottom) {
-        gsapInstance.set([hamTop, hamBottom], {
-          transformOrigin: "50% 50%",
-          y: 0,
-          rotate: 0,
-        });
-      }
-    } else {
-      dropdown.style.display = "none";
-      dropdown.style.opacity = "0";
-      dropdown.style.transform = "translateY(-10px)";
-    }
-
-    setHamburgerState(false);
-
-    const toggleMenu = (e?: Event) => {
-      e?.stopPropagation();
-      isOpen = !isOpen;
-
-      toggle.setAttribute("aria-expanded", isOpen.toString());
-      dropdown.setAttribute("aria-hidden", (!isOpen).toString());
-
-      if (isOpen) {
-        openMobileDropdown(dropdown, links);
-      } else {
-        closeMobileDropdown(dropdown);
-      }
-
-      setHamburgerState(isOpen);
-    };
-
-    toggle.addEventListener("click", toggleMenu);
-
-    toggle.addEventListener("keydown", (e) => {
-      if (e.key === "Enter" || e.key === " ") {
-        e.preventDefault();
-        toggleMenu();
-      }
-    });
-
-    window.addEventListener("resize", () => {
-      if (window.innerWidth >= 1024 && isOpen) {
-        isOpen = false;
-        dropdown.style.display = "none";
-        dropdown.style.opacity = "0";
-        dropdown.style.transform = "translateY(-10px)";
-        toggle.setAttribute("aria-expanded", "false");
-        dropdown.setAttribute("aria-hidden", "true");
-        setHamburgerState(false);
-      }
-    });
+    discoverDropdown.classList.toggle("is-open", isOpen);
+    discoverArrow.classList.toggle("is-open", isOpen);
   }
 
   function closeDiscoverDropdown() {
@@ -544,11 +346,10 @@ import diagArrow from "../assets/diag-arrow.svg";
     const discoverDropdown = document.getElementById(
       "discover-dropdown",
     ) as HTMLElement;
-    const discoverArrow = document.getElementById(
-      "discover-arrow",
-    ) as HTMLElement;
 
     if (!discoverToggle || !discoverDropdown) return;
+    if (discoverToggle.dataset.discoverBound === "true") return;
+    discoverToggle.dataset.discoverBound = "true";
 
     if (globalClickHandler) {
       document.removeEventListener("click", globalClickHandler);
@@ -556,7 +357,6 @@ import diagArrow from "../assets/diag-arrow.svg";
 
     const toggleDropdown = (e?: Event) => {
       e?.stopPropagation();
-      void ensureGsap();
       setDiscoverState(!discoverIsOpen);
     };
 
@@ -568,8 +368,6 @@ import diagArrow from "../assets/diag-arrow.svg";
         toggleDropdown();
       } else if (e.key === "Escape" && discoverIsOpen) {
         closeDiscoverDropdown();
-        discoverToggle.setAttribute("aria-expanded", "false");
-        discoverDropdown.setAttribute("aria-hidden", "true");
       }
     });
 
@@ -581,8 +379,6 @@ import diagArrow from "../assets/diag-arrow.svg";
         !discoverDropdown.contains(e.target as Node)
       ) {
         closeDiscoverDropdown();
-        discoverToggle.setAttribute("aria-expanded", "false");
-        discoverDropdown.setAttribute("aria-hidden", "true");
       }
     };
     document.addEventListener("click", globalClickHandler);
@@ -605,7 +401,11 @@ import diagArrow from "../assets/diag-arrow.svg";
       });
     }
 
-    void initMenu();
+    void initMobileMenu({
+      toggleId: "menu-toggle",
+      dropdownId: "mobile-dropdown",
+      itemSelector: ".mob-link",
+    });
     initDiscoverDropdown();
   });
 </script>

@@ -195,28 +195,9 @@ import diagArrow from "../assets/diag-arrow.svg";
         aria-label="Ouvrir le menu"
       >
         <span class="text-base font-medium">Menu</span>
-        <div class="relative w-6 h-6">
-          <svg
-            id="ham-icon"
-            class="w-6 h-6 absolute"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            aria-hidden="true"
-          >
-            <path
-              id="ham-top"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="1.5"
-              d="M4 8h16"></path>
-            <path
-              id="ham-bottom"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="1.5"
-              d="M4 16h16"></path>
-          </svg>
+        <div class="relative w-6 h-6 flex flex-col justify-center items-center gap-1.25 pointer-events-none">
+          <span id="ham-top" class="block w-full h-0.5 bg-white rounded-full" style="transition: transform 0.2s ease;"></span>
+          <span id="ham-bottom" class="block w-full h-0.5 bg-white rounded-full" style="transition: transform 0.2s ease;"></span>
         </div>
       </button>
     </div>
@@ -402,118 +383,21 @@ import diagArrow from "../assets/diag-arrow.svg";
 </style>
 
 <script>
-  function initMenu() {
-    const toggle = document.getElementById("menu-toggle") as HTMLButtonElement;
-    const dropdown = document.getElementById("mobile-dropdown") as HTMLElement;
-    const links = document.querySelectorAll(".mob-link");
-    const subMenus = dropdown?.querySelectorAll("details");
+  import { initMobileMenu } from "../utils/mobileMenu";
 
-    if (!toggle || !dropdown) return;
-
-    let isOpen = false;
-    gsap.set(dropdown, { display: "none", opacity: 0, y: -10 });
-
-    const hamTop = document.getElementById("ham-top");
-    const hamBottom = document.getElementById("ham-bottom");
-    if (hamTop && hamBottom) {
-      gsap.set([hamTop, hamBottom], {
-        transformOrigin: "50% 50%",
-        y: 0,
-        rotate: 0,
-      });
-    }
-
-    const toggleMenu = (e?: Event) => {
-      e?.stopPropagation();
-      isOpen = !isOpen;
-
-      toggle.setAttribute("aria-expanded", isOpen.toString());
-      dropdown.setAttribute("aria-hidden", (!isOpen).toString());
-
-      if (isOpen) {
-        dropdown.style.display = "block";
-        gsap
-          .timeline()
-          .to(dropdown, { opacity: 1, y: 0, duration: 0.2, ease: "power2.out" })
-          .fromTo(
-            links,
-            { opacity: 0, y: 5 },
-            { opacity: 1, y: 0, stagger: 0.02, duration: 0.15 },
-            "-=0.1",
-          );
-        if (hamTop && hamBottom) {
-          gsap.to(hamTop, {
-            y: 4,
-            rotate: 45,
-            duration: 0.18,
-            ease: "power2.out",
-          });
-          gsap.to(hamBottom, {
-            y: -4,
-            rotate: -45,
-            duration: 0.18,
-            ease: "power2.out",
-          });
-        }
-      } else {
-        gsap
-          .timeline()
-          .to(dropdown, { opacity: 0, y: -10, duration: 0.15 })
-          .set(dropdown, { display: "none" });
-        subMenus?.forEach((menu) => menu.removeAttribute("open"));
-        if (hamTop && hamBottom) {
-          gsap.to(hamTop, {
-            y: 0,
-            rotate: 0,
-            duration: 0.12,
-            ease: "power2.in",
-          });
-          gsap.to(hamBottom, {
-            y: 0,
-            rotate: 0,
-            duration: 0.12,
-            ease: "power2.in",
-          });
-        }
-      }
-    };
-
-    toggle.addEventListener("click", toggleMenu);
-
-    toggle.addEventListener("keydown", (e) => {
-      if (e.key === "Enter" || e.key === " ") {
-        e.preventDefault();
-        toggleMenu();
-      }
-    });
-
-    window.addEventListener("resize", () => {
-      if (window.innerWidth >= 1024 && isOpen) {
-        isOpen = false;
-        dropdown.style.display = "none";
-        subMenus?.forEach((menu) => menu.removeAttribute("open"));
-        toggle.setAttribute("aria-expanded", "false");
-        dropdown.setAttribute("aria-hidden", "true");
-        if (hamTop && hamBottom) {
-          gsap.to(hamTop, {
-            y: 0,
-            rotate: 0,
-            duration: 0.12,
-            ease: "power2.in",
-          });
-          gsap.to(hamBottom, {
-            y: 0,
-            rotate: 0,
-            duration: 0.12,
-            ease: "power2.in",
-          });
-        }
-      }
+  function resetSubMenus() {
+    document.querySelectorAll<HTMLDetailsElement>("#mobile-dropdown details").forEach((menu) => {
+      menu.removeAttribute("open");
     });
   }
 
   document.addEventListener("DOMContentLoaded", () => {
-    initMenu();
+    void initMobileMenu({
+      toggleId: "menu-toggle",
+      dropdownId: "mobile-dropdown",
+      itemSelector: ".mob-link",
+      onClose: resetSubMenus,
+    });
   });
 </script>
 

@@ -22,7 +22,9 @@
     "tailwindcss": "^4.1.18"
   },
   "devDependencies": {
-    "@types/nodemailer": "^7.0.5"
+    "@types/nodemailer": "^7.0.5",
+    "subset-font": "^2.4.0",
+    "ttf2woff2": "^8.0.1"
   },
   "description": "```sh\r npm create astro@latest -- --template basics\r ```",
   "main": "index.js",

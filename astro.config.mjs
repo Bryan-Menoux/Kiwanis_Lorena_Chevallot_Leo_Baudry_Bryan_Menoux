@@ -8,6 +8,10 @@ export default defineConfig({
     responsiveStyles: true,
   },
 
+  build: {
+    inlineStylesheets: "always",
+  },
+
   vite: {
     plugins: [tailwindcss()],
   },
