@@ -1,4 +1,4 @@
-﻿---
+---
 import Layout from "../../../layouts/Layout-back-office.astro";
 import ActionContent from "../../../components/ActionContent.astro";
 import ActionForm from "../../../components/ActionForm.astro";
@@ -249,7 +249,7 @@ if (Astro.request.method === "POST") {
     </Fragment>
   </ActionEditorShell>
 
-  <script set:html={`window.__previewData = ${JSON.stringify(previewPlaceholder).replace(/</g, "\\u003c")};`} />
+  <script set:html={`window.__previewData = ${JSON.stringify(previewPlaceholder).replace(/</g, "\\" + "u003c")};`} />
   <script type="module" src={galleryUrl}></script>
   <script type="module" src={galleryDisplayUrl}></script>
 </Layout>

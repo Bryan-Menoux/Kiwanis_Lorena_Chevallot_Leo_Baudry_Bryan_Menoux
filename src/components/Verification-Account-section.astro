@@ -1,4 +1,4 @@
-﻿---
+---
 import { Image } from "astro:assets";
 import paper from "../assets/paper.svg";
 import crossCircle from "../assets/cross-circle.svg";
@@ -51,7 +51,7 @@ const verifiedUsers = users.filter((u: User) => u.verified === true);
       <!-- Section des demandes en attente -->
       <div class="px-8 py-8">
         <h2 class="text-2xl font-bold mb-6 flex items-center gap-3">
-          <Image src={wait} alt="" loading="lazy" quality={100} class="h-8 opacity-70" />
+          <Image src={wait} alt="" loading="lazy" quality={80} class="h-8 opacity-70" />
           Demandes en attente
           <span class="badge badge-warning" id="pending-badge" style={pendingUsers.length > 0 ? '' : 'display: none'}>{pendingUsers.length}</span>
         </h2>
@@ -71,7 +71,7 @@ const verifiedUsers = users.filter((u: User) => u.verified === true);
               pendingUsers.map((user: User) => <PendingUserCard user={user} />)
             ) : (
               <div class="text-center py-12 text-base-content/60">
-                <Image src={paper} alt="" loading="lazy" quality={100} class="h-16 mx-auto mb-4 opacity-50" />
+                <Image src={paper} alt="" loading="lazy" quality={80} class="h-16 mx-auto mb-4 opacity-50" />
                 <p>Aucune demande en attente</p>
               </div>
             )
@@ -83,7 +83,7 @@ const verifiedUsers = users.filter((u: User) => u.verified === true);
       <div class="px-8 pb-8">
         <details class="collapse collapse-arrow border border-base-300">
           <summary class="collapse-title flex items-center gap-2">
-            <Image src={crossCircle} alt="" loading="lazy" quality={100} class="h-8" />
+            <Image src={crossCircle} alt="" loading="lazy" quality={80} class="h-8" />
             Utilisateurs rejetés
             <span class="badge badge-error ml-auto" id="rejected-badge" style={rejectedUsers.length > 0 ? '' : 'display: none'}>{rejectedUsers.length}</span>
           </summary>
@@ -150,7 +150,7 @@ const verifiedUsers = users.filter((u: User) => u.verified === true);
       <div class="px-8 pb-8">
         <details class="collapse collapse-arrow border border-base-300">
           <summary class="collapse-title flex items-center gap-2">
-            <Image src={circleCheck} alt="" loading="lazy" quality={100} class="h-8" />
+            <Image src={circleCheck} alt="" loading="lazy" quality={80} class="h-8" />
             Utilisateurs vérifiés
             <span class="badge badge-success ml-auto" id="verified-badge" style={verifiedUsers.length > 0 ? '' : 'display: none'}>{verifiedUsers.length}</span>
           </summary>

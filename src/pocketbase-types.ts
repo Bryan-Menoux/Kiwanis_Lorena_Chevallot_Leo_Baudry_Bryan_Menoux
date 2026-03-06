@@ -1,4 +1,4 @@
-﻿/**
+/**
 * Ce fichier a été @generated avec pocketbase-typegen
 */
 

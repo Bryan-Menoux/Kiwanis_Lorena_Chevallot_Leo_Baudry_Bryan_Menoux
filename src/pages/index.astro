@@ -1,9 +1,7 @@
-﻿---
+---
 import Layout from "../layouts/Layout.astro";
 import { Image } from "astro:assets";
 import heroLandingfinal from "../assets/landing-page/hero-landing-final.webp";
-import heroLandingfinalMobile from "../assets/landing-page/hero-landing-final-mobile.webp";
-import heroLandingfinalTablette from "../assets/landing-page/hero-landing-final-tablette.webp";
 import Hero from "../components/Hero.astro";
 import landing1 from "../assets/landing-page/landing-1.webp";
 import HomeCarousel from "../components/Home-carousel.astro";
@@ -18,21 +16,11 @@ import HomePartner from "../components/Home-partner.astro";
 ---
 
 <Layout>
-  <div class="hidden lg:block" ><Hero
+  <Hero
     image={heroLandingfinal}
     title="Kiwanis Pays de Montbéliard"
     subtitle="Servir les enfants du monde, au cœur de notre territoire"
-  /></div>
-  <div class="md:hidden" ><Hero
-    image={heroLandingfinalMobile}
-    title="Kiwanis Pays de Montbéliard"
-    subtitle="Servir les enfants du monde, au cœur de notre territoire"
-  /></div>
-  <div class="hidden md:block lg:hidden" ><Hero
-    image={heroLandingfinalTablette}
-    title="Kiwanis Pays de Montbéliard"
-    subtitle="Servir les enfants du monde, au cœur de notre territoire"
-  /></div>
+  />
 
   <!-- Section qui sommes nous -->
   <div
@@ -67,7 +55,7 @@ import HomePartner from "../components/Home-partner.astro";
         layout="constrained"
         fit="cover"
         sizes="(min-width: 1024px) 34vw, 80vw"
-        quality={100}
+        quality={80}
         class="w-full max-h-full flex-1 object-cover rounded-box"
       />
       <p class="text-sm mt-2">Le Kiwanis Féminin aux 12 coups de Midi</p>
@@ -101,7 +89,7 @@ import HomePartner from "../components/Home-partner.astro";
         voudrais qu’il te fasse. »
       </p>
       <a href="/membres" class="btn btn-accent w-fit px-8 py-6 mt-auto self-end"
-        >Voir tous les membres <Image src={diagArrow} alt="" aria-hidden="true" layout="fixed" quality={100} /></a
+        >Voir tous les membres <Image src={diagArrow} alt="" aria-hidden="true" layout="fixed" quality={80} /></a
       >
     </div>
     <div
@@ -113,7 +101,7 @@ import HomePartner from "../components/Home-partner.astro";
         layout="constrained"
         fit="cover"
         sizes="(min-width: 1024px) 34vw, 80vw"
-        quality={100}
+        quality={80}
         class="w-full max-h-full flex-1 object-cover rounded-box"
       />
       <p class="text-sm mt-2">
@@ -146,7 +134,7 @@ import HomePartner from "../components/Home-partner.astro";
         pas à nous contacter via la page Contact du site.
       </p>
       <a href="/contact" class="btn btn-accent w-fit px-8 py-6 mt-auto self-end"
-        >Nous contacter<Image src={diagArrow} alt="" aria-hidden="true" layout="fixed" quality={100} /></a
+        >Nous contacter<Image src={diagArrow} alt="" aria-hidden="true" layout="fixed" quality={80} /></a
       >
     </div>
 
@@ -162,7 +150,7 @@ import HomePartner from "../components/Home-partner.astro";
         href="https://www.google.com/maps?ll=47.509851,6.783818&z=16&t=m&hl=fr&gl=FR&mapclient=embed&q=76+Fbg+de+Besan%C3%A7on+25200+Montb%C3%A9liard"
         target="_blank"
         class="btn btn-accent w-fit px-4 py-2 lg:px-8 lg:py-6 mt-auto self-end absolute right-2 bottom-3 md:right-3 lg:right-2"
-        >Voir sur maps<Image src={diagArrow} alt="" aria-hidden="true" layout="fixed" quality={100} /></a
+        >Voir sur maps<Image src={diagArrow} alt="" aria-hidden="true" layout="fixed" quality={80} /></a
       >
     </div>
   </div>
@@ -183,7 +171,7 @@ import HomePartner from "../components/Home-partner.astro";
           href={rollUp.src}
           download="roll-up.png"
           class="btn btn-accent w-fit px-8 py-6"
-          >Télécharger notre roll-up<Image src={diagArrow} alt="" aria-hidden="true" layout="fixed" quality={100} /></a
+          >Télécharger notre roll-up<Image src={diagArrow} alt="" aria-hidden="true" layout="fixed" quality={80} /></a
         >
       </div>
       <div class="flex gap-8 w-full mx-auto justify-center items-center">
@@ -193,7 +181,7 @@ import HomePartner from "../components/Home-partner.astro";
           layout="constrained"
           fit="contain"
           sizes="(min-width: 1024px) 20vw, 40vw"
-          quality={100}
+          quality={80}
           class="flex-1 h-auto object-contain w-fit max-w-[40dvw] lg:w-1/2 max-h-[50dvh] lg:max-h-[65dvh]"
         />
         <Image
@@ -202,7 +190,7 @@ import HomePartner from "../components/Home-partner.astro";
           layout="constrained"
           fit="contain"
           sizes="(min-width: 1024px) 20vw, 40vw"
-          quality={100}
+          quality={80}
           class="flex-1 h-auto object-contain w-fit max-w-[40dvw] lg:w-1/2 max-h-[50dvh] lg:max-h-[65dvh] mix-blend-multiply"
         />
       </div>
@@ -240,7 +228,7 @@ import HomePartner from "../components/Home-partner.astro";
           layout="constrained"
           fit="cover"
           sizes="(min-width: 1024px) 40vw, 80vw"
-          quality={100}
+          quality={80}
           class="w-full flex-1 object-cover rounded-box min-h-[30dvh] md:min-h-[40dvh]"
         />
       </div>
@@ -255,7 +243,7 @@ import HomePartner from "../components/Home-partner.astro";
           layout="constrained"
           fit="cover"
           sizes="(min-width: 1024px) 40vw, 80vw"
-          quality={100}
+          quality={80}
           class="w-full flex-1 object-cover rounded-box min-h-[30dvh] md:min-h-[40dvh]"
         />
       </div>
@@ -275,7 +263,7 @@ import HomePartner from "../components/Home-partner.astro";
           layout="constrained"
           fit="cover"
           sizes="(min-width: 1024px) 40vw, 80vw"
-          quality={100}
+          quality={80}
           class="w-full flex-1 object-cover rounded-box min-h-[30dvh] md:min-h-[40dvh]"
         />
       </div>
@@ -299,7 +287,7 @@ import HomePartner from "../components/Home-partner.astro";
           layout="constrained"
           fit="cover"
           sizes="(min-width: 1024px) 40vw, 80vw"
-          quality={100}
+          quality={80}
           class="w-full flex-1 object-cover rounded-box min-h-[30dvh] md:min-h-[40dvh]"
         />
       </div>

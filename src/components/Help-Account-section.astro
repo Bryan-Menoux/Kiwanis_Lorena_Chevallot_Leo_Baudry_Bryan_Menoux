@@ -1,4 +1,4 @@
-﻿---
+---
 // Import des ressources nécessaires
 import { Image } from "astro:assets";
 import helpIcon from "../assets/help.svg";
@@ -32,7 +32,7 @@ import crossIcon from "../assets/cross-circle.svg";
         <!-- Introduction -->
         <div class="mb-12">
           <h2 class="text-3xl font-bold text-base-content mb-6 flex items-center gap-3">
-            <Image src={helpIcon} alt="Aide" loading="lazy" quality={100} class="h-8 w-8" />
+            <Image src={helpIcon} alt="Aide" loading="lazy" quality={80} class="h-8 w-8" />
             Bienvenue dans votre espace personnel
           </h2>
           <p class="text-lg text-base-content/80 leading-relaxed mb-4">
@@ -53,7 +53,7 @@ import crossIcon from "../assets/cross-circle.svg";
           <div class="collapse collapse-arrow  join-item border border-base-300">
             <input type="checkbox" class="help-checkbox" />
             <div class="collapse-title text-xl font-semibold text-base-content flex items-center gap-3">
-              <Image src={helpIcon} alt="Arrow" loading="lazy" quality={100} class="h-5 w-5" />
+              <Image src={helpIcon} alt="Arrow" loading="lazy" quality={80} class="h-5 w-5" />
               Comment naviguer dans votre compte
             </div>
             <div class="collapse-content">
@@ -61,7 +61,7 @@ import crossIcon from "../assets/cross-circle.svg";
                 <!-- Mon compte -->
                 <div class="bg-base-100 p-6 rounded-lg border border-base-300">
                   <div class="flex items-center gap-3 mb-4">
-                    <Image src={userIcon} alt="Mon compte" loading="lazy" quality={100} class="h-6 w-6" />
+                    <Image src={userIcon} alt="Mon compte" loading="lazy" quality={80} class="h-6 w-6" />
                     <h4 class="text-xl font-semibold text-base-content">Mon compte</h4>
                   </div>
                   <p class="text-base-content/70 mb-3">
@@ -78,7 +78,7 @@ import crossIcon from "../assets/cross-circle.svg";
                 <!-- Vérifications (Admin seulement) -->
                 <div class="bg-base-100 p-6 rounded-lg border border-base-300">
                   <div class="flex items-center gap-3 mb-4">
-                    <Image src={circleCheckIcon} alt="Vérifications" loading="lazy" quality={100} class="h-6 w-6" />
+                    <Image src={circleCheckIcon} alt="Vérifications" loading="lazy" quality={80} class="h-6 w-6" />
                     <h4 class="text-xl font-semibold text-base-content">Vérifications</h4>
                   </div>
                   <p class="text-base-content/70 mb-3">
@@ -95,7 +95,7 @@ import crossIcon from "../assets/cross-circle.svg";
                 <!-- Modifications (Admin seulement) -->
                 <div class="bg-base-100 p-6 rounded-lg border border-base-300">
                   <div class="flex items-center gap-3 mb-4">
-                    <Image src={editIcon} alt="Modifications" loading="lazy" quality={100} class="h-6 w-6" />
+                    <Image src={editIcon} alt="Modifications" loading="lazy" quality={80} class="h-6 w-6" />
                     <h4 class="text-xl font-semibold text-base-content">Modifications</h4>
                   </div>
                   <p class="text-base-content/70 mb-3">
@@ -112,7 +112,7 @@ import crossIcon from "../assets/cross-circle.svg";
                 <!-- Aide -->
                 <div class="bg-green-50 p-6 rounded-lg border border-green-300">
                   <div class="flex items-center gap-3 mb-4">
-                    <Image src={helpIcon} alt="Aide" loading="lazy" quality={100} class="h-6 w-6" />
+                    <Image src={helpIcon} alt="Aide" loading="lazy" quality={80} class="h-6 w-6" />
                     <h4 class="text-xl font-semibold text-green-800">Aide (vous êtes ici)</h4>
                   </div>
                   <p class="text-green-700 mb-3">
@@ -142,7 +142,7 @@ import crossIcon from "../assets/cross-circle.svg";
           <div class="collapse collapse-arrow  join-item border border-base-300">
             <input type="checkbox" class="help-checkbox" />
             <div class="collapse-title text-xl font-semibold text-base-content flex items-center gap-3">
-              <Image src={userIcon} alt="Mon compte" loading="lazy" quality={100} class="h-5 w-5" />
+              <Image src={userIcon} alt="Mon compte" loading="lazy" quality={80} class="h-5 w-5" />
               Guide détaillé : Mon compte
             </div>
             <div class="collapse-content">
@@ -199,7 +199,7 @@ import crossIcon from "../assets/cross-circle.svg";
           <div class="collapse collapse-arrow  join-item border border-base-300">
             <input type="checkbox" class="help-checkbox" />
             <div class="collapse-title text-xl font-semibold text-base-content flex items-center gap-3">
-              <Image src={circleCheckIcon} alt="Vérifications" loading="lazy" quality={100} class="h-5 w-5" />
+              <Image src={circleCheckIcon} alt="Vérifications" loading="lazy" quality={80} class="h-5 w-5" />
               Guide : Vérifications (Administrateurs)
             </div>
             <div class="collapse-content">
@@ -251,7 +251,7 @@ import crossIcon from "../assets/cross-circle.svg";
           <div class="collapse collapse-arrow  join-item border border-base-300">
             <input type="checkbox" class="help-checkbox" />
             <div class="collapse-title text-xl font-semibold text-base-content flex items-center gap-3">
-              <Image src={editIcon} alt="Modifications" loading="lazy" quality={100} class="h-5 w-5" />
+              <Image src={editIcon} alt="Modifications" loading="lazy" quality={80} class="h-5 w-5" />
               Guide : Modifications (Administrateurs)
             </div>
             <div class="collapse-content">
@@ -312,7 +312,7 @@ import crossIcon from "../assets/cross-circle.svg";
           <div class="collapse collapse-arrow  join-item border border-base-300">
             <input type="checkbox" class="help-checkbox" />
             <div class="collapse-title text-xl font-semibold text-base-content flex items-center gap-3">
-              <Image src={crossIcon} alt="" aria-hidden="true" loading="lazy" quality={100} class="h-5 w-5" />
+              <Image src={crossIcon} alt="" aria-hidden="true" loading="lazy" quality={80} class="h-5 w-5" />
               Dépannage - Problèmes courants
             </div>
             <div class="collapse-content">

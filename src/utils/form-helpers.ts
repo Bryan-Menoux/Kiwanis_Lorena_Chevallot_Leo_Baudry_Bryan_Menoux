@@ -1,4 +1,4 @@
-﻿import { showAlert } from "./alerts";
+import { showAlert } from "./alerts";
 
 interface ToastOptions {
   type: "success" | "error" | "info" | "warning";

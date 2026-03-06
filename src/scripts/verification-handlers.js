@@ -1,4 +1,4 @@
-﻿import { showAlert } from "../utils/alerts";
+import { showAlert } from "../utils/alerts";
 import { scrollToTarget } from "../utils/scroll.js";
 
 // Initialisation des compteurs de vérification

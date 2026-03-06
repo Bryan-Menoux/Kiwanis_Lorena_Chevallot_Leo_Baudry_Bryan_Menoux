@@ -1,4 +1,4 @@
-﻿// Script minimal d'affichage de galerie : attendre les images, puis appeler window.setGridStyles()
+// Script minimal d'affichage de galerie : attendre les images, puis appeler window.setGridStyles()
 // et révéler la grille. Aucune logique de mise en page ici ; resize et clic sont gérés dans gallery.js.
 
 document.addEventListener("DOMContentLoaded", function () {

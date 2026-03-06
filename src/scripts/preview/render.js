@@ -1,4 +1,4 @@
-﻿import { formatDateRange, escapeHtml, isDataUrl } from '../../utils/utilitaires.js';
+import { formatDateRange, escapeHtml, isDataUrl } from '../../utils/utilitaires.js';
 import { previewState } from './state.js';
 import { renderGallery } from './gallery.js';
 

@@ -1,4 +1,4 @@
-﻿import { isDataUrl } from '../../utils/utilitaires.js';
+import { isDataUrl } from '../../utils/utilitaires.js';
 import {
   previewState,
   galleryFiles,

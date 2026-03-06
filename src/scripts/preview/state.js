@@ -1,4 +1,4 @@
-﻿// État source de la prévisualisation en direct.
+// État source de la prévisualisation en direct.
 // Tous les scripts de prévisualisation lisent/écrivent dans ces variables.
 let previewState = {};
 

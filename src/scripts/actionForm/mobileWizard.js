@@ -1,4 +1,4 @@
-﻿import { showAlert } from "../../utils/alerts";
+import { showAlert } from "../../utils/alerts";
 import { scrollToTarget } from "../../utils/scroll.js";
 const MOBILE_QUERY = "(max-width: 1023px)";
 const TOTAL_STEPS = 7;

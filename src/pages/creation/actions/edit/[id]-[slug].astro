@@ -1,4 +1,4 @@
-﻿---
+---
 // Page serveur pour créer/éditer une action : logique serveur et rendu.
 import Layout from "../../../../layouts/Layout-back-office.astro";
 import ActionContent from "../../../../components/ActionContent.astro";
@@ -673,7 +673,7 @@ if (Astro.request.method === "POST") {
     photo_partie_1: previewData.photo_partie_1,
     photo_partie_2: previewData.photo_partie_2,
     photo_partie_3: previewData.photo_partie_3,
-  }).replace(/</g, "\\u003c")};`} />
+  }).replace(/</g, "\\" + "u003c")};`} />
 
   <script type="module" src={utilUrl}></script>
   <script type="module" src={galleryUrl}></script>

@@ -1,4 +1,4 @@
-﻿---
+---
 import { Image } from "astro:assets";
 import HiddenField from "../partials/HiddenField.astro";
 
@@ -35,7 +35,7 @@ const { mode = "create", previewData, imageIcon } = Astro.props;
         <Image
           src={imageIcon}
           alt="Icone image"
-          quality={100}
+          quality={80}
           class="h-16 w-16"
           style="filter:grayscale(100%) brightness(0.5); opacity:0.3;"
         />
