@@ -292,6 +292,7 @@ const formTitle =
   import "../../scripts/actionForm/editableTitle.js";
   import "../../scripts/actionForm/mobileWizard.js";
   import "../../scripts/preview/index.js";
+  import { initWebpConversion } from "../../scripts/actionForm/convertToWebp.js";
   import { showAlert, showConfirm } from "../../utils/alerts";
 
   const PUBLISH_CONFIRMED_ATTR = "data-publish-confirmed";
@@ -579,11 +580,16 @@ const formTitle =
     document.addEventListener("DOMContentLoaded", initActionFormRequiredValidation, {
       once: true,
     });
+    document.addEventListener("DOMContentLoaded", initWebpConversion, {
+      once: true,
+    });
   } else {
     initCardAnimation();
     initActionFormRequiredValidation();
+    initWebpConversion();
   }
 
   document.addEventListener("astro:page-load", initCardAnimation);
   document.addEventListener("astro:page-load", initActionFormRequiredValidation);
+  document.addEventListener("astro:page-load", initWebpConversion);
 </script>
