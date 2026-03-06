@@ -42,7 +42,7 @@ const user = Astro.props.user as any as User;
       data-list-type="pending"
       type="button"
     >
-      <img src={circleCheck.src} class="w-5 h-5 invert" />
+      <img loading="lazy" src={circleCheck.src} class="w-5 h-5 invert" />
       Approuver
     </button>
 
@@ -53,7 +53,7 @@ const user = Astro.props.user as any as User;
       data-list-type="pending"
       type="button"
     >
-      <img src={crossCircle.src} class="w-5 h-5 invert" />
+      <img loading="lazy" src={crossCircle.src} class="w-5 h-5 invert" />
       Rejeter
     </button>
   </div>

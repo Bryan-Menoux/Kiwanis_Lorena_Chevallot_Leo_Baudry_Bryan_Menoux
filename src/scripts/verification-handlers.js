@@ -1,4 +1,6 @@
 ﻿import { showAlert } from "../utils/alerts";
+import { scrollToTarget } from "../utils/scroll.js";
+
 // Initialisation des compteurs de vérification
 // Les compteurs sont maintenant calculés à la volée depuis le DOM
 
@@ -329,7 +331,7 @@ function setupPagination(listId) {
   // Nettoyer complètement avant de recréer
   cleanupPagination(listId);
 
-  // Extraire le type de liste (pending, rejected, verified) depuis l'ID
+  // Extraire le type de liste (en attente, rejetée, vérifiée) depuis l'ID
   const listType = listId.replace("-list", "");
   
   // Déterminer quelles cartes utiliser
@@ -401,6 +403,8 @@ function setupPagination(listId) {
         prevBtn.disabled = currentPage === 1;
         nextBtn.disabled = currentPage === totalPages;
         pageIndicator.innerHTML = `<span class="hidden md:inline">Page </span>${currentPage}/${totalPages}`;
+        // Après changement de page, replace le haut de la liste active dans le viewport.
+        scrollToTarget(`#${listId}`);
       }
     });
 
@@ -420,6 +424,8 @@ function setupPagination(listId) {
         prevBtn.disabled = currentPage === 1;
         nextBtn.disabled = currentPage === totalPages;
         pageIndicator.innerHTML = `<span class="hidden md:inline">Page </span>${currentPage}/${totalPages}`;
+        // Même comportement pour la pagination suivante.
+        scrollToTarget(`#${listId}`);
       }
     });
 
@@ -499,7 +505,7 @@ function applySearchFilter(listId) {
   const listType = listId.replace("-list", "");
   const allCards = getOriginalCards(listId, listType);
   
-  // Filtrer selon la query stockée
+  // Filtrer selon la requête stockée
   const filteredCards = allCards.filter(card => {
     const text = card.textContent?.toLowerCase() || "";
     return text.includes(state.query.toLowerCase());
@@ -544,7 +550,7 @@ function setupSearch(searchInputId, listId) {
     // Mettre à jour l'état de recherche pour cette liste
     searchState[listId].query = query;
 
-    // Extraire le type de liste (pending, rejected, verified) depuis l'ID
+    // Extraire le type de liste (en attente, rejetée, vérifiée) depuis l'ID
     const listType = listId.replace("-list", "");
 
     // Nettoyer complètement la pagination avant de recalculer
@@ -587,7 +593,7 @@ function setupSearch(searchInputId, listId) {
 }
 
 // Recréer la pagination avec des cartes filtrées
-// Note: Cette fonction est maintenant obsolète car setupPagination() gère tout
+// Remarque : cette fonction est maintenant obsolète car setupPagination() gère tout
 function recreatePagination(listId, cards) {
   // Cette fonction est conservée pour compatibilité mais n'est plus utilisée
   // setupPagination() gère maintenant toute la logique de pagination

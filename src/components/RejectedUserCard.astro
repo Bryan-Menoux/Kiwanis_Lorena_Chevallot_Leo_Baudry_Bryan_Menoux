@@ -45,7 +45,7 @@ const user = Astro.props.user as any as User;
     data-list-type="rejected"
     type="button"
   >
-    <img src={wait.src} class="w-5 h-5 invert" />
+    <img loading="lazy" src={wait.src} class="w-5 h-5 invert" />
     Remettre en attente
   </button>
 </div>

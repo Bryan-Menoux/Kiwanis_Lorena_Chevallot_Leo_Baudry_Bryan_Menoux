@@ -4,6 +4,7 @@ import slugify from "slugify";
 import ActionsSearch from "../../../components/ActionsSearch.astro";
 import FormSubmitOverlay from "../../../components/FormSubmitOverlay.astro";
 import utilUrl from "../../../utils/utilitaires.js?url";
+import scrollUtilUrl from "../../../utils/scroll.js?url";
 import { formatDateShort } from "../../../utils/utilitaires.js";
 import { ActionsTypeActionOptions } from "../../../pocketbase-types";
 
@@ -80,7 +81,7 @@ actions.forEach((a) => {
 const yearOptions = Array.from(yearSet).sort((a, b) => b.localeCompare(a));
 const typeOptions = Object.values(ActionsTypeActionOptions);
 
-// Lecture des query params pour initialiser les filtres
+// Lecture des paramètres de requête pour initialiser les filtres
 const params = Astro.url.searchParams;
 const q = (params.get("q") || "").trim();
 
@@ -255,6 +256,8 @@ const allActions = actions;
 </Layout>
 
 <script type="module" src={utilUrl}></script>
+<!-- Charge l'utilitaire de scroll pour l'exposer globalement aux scripts inline. -->
+<script type="module" src={scrollUtilUrl}></script>
 <script type="module">
   import { showConfirm } from "../../../utils/alerts";
 
@@ -309,6 +312,20 @@ const allActions = actions;
   const PAGE_SIZE = 9;
   let currentPage = 1;
   let filteredActions = actions.slice();
+  // Au changement de page, recentre la vue sur le haut de la liste paginée.
+  const scrollTopOnPageChange = () => {
+    const globalScrollUtils = (window as any).scrollUtils;
+    if (globalScrollUtils && typeof globalScrollUtils.scrollToTarget === "function") {
+      globalScrollUtils.scrollToTarget("#pages-container");
+      return;
+    }
+    const listRoot = document.getElementById("pages-container");
+    if (listRoot instanceof HTMLElement) {
+      listRoot.scrollIntoView({ behavior: "smooth", block: "start" });
+      return;
+    }
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
 
   function formatDate(d) {
     if (!d) return "";
@@ -480,6 +497,7 @@ const allActions = actions;
         1,
         Math.ceil(filteredActions.length / PAGE_SIZE),
       );
+      const previousPage = currentPage;
 
       if (action === "prev") {
         currentPage = Math.max(1, currentPage - 1);
@@ -494,6 +512,10 @@ const allActions = actions;
         return;
       }
 
+      if (currentPage !== previousPage) {
+        // Évite un défilement inutile si l'utilisateur clique sur la page déjà active.
+        scrollTopOnPageChange();
+      }
       renderActions(filteredActions);
     });
 

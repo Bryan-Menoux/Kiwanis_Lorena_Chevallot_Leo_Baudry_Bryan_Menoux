@@ -92,7 +92,7 @@ const yearOptions = Array.from(
 
 <Layout>
   <Hero
-    image={heroImg.src}
+    image={heroImg}
     title="Actions"
     subtitle="Découvrez les actions menées par notre communauté."
   />
@@ -184,7 +184,7 @@ const yearOptions = Array.from(
                 >
                   <div class="flex flex-col md:flex-row h-full">
                     {action.heroUrl ? (
-                      <img
+                      <img loading="lazy"
                         src={action.heroUrl}
                         alt={
                           action.description_hero ||
@@ -223,7 +223,7 @@ const yearOptions = Array.from(
                           </span>
                         ))}
                         {action.typeActionSafe.length === 0 && (
-                          <span class="badge badge-outline">
+                          <span class="badge badge-secondary badge-outline">
                             Action solidaire
                           </span>
                         )}
@@ -261,6 +261,8 @@ const yearOptions = Array.from(
 </Layout>
 
 <script>
+  import { scrollToTarget } from "../../utils/scroll.js";
+
   (() => {
     const PAGE_SIZE = 9;
 
@@ -370,6 +372,7 @@ const yearOptions = Array.from(
             Math.ceil(filteredCards.length / PAGE_SIZE),
           );
           const action = target.getAttribute("data-page-action");
+          const previousPage = currentPage;
 
           if (action === "prev") {
             currentPage = Math.max(1, currentPage - 1);
@@ -384,6 +387,12 @@ const yearOptions = Array.from(
             return;
           }
 
+          if (currentPage !== previousPage) {
+            // Remonte légèrement au-dessus de la liste pour conserver un contexte visuel (10% de viewport).
+            scrollToTarget("#actions-grid", {
+              offset: -window.innerHeight * 0.1,
+            });
+          }
           applyFilters();
         });
       }

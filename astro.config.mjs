@@ -4,6 +4,10 @@ import tailwindcss from "@tailwindcss/vite";
 import node from "@astrojs/node";
 
 export default defineConfig({
+  image: {
+    responsiveStyles: true,
+  },
+
   vite: {
     plugins: [tailwindcss()],
   },

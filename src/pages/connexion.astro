@@ -1,5 +1,6 @@
 ﻿---
 import Layout from "../layouts/Layout-login.astro";
+import { Image } from "astro:assets";
 import shapesLeft from "../assets/login-page/shapes-left.svg";
 import shapesRight from "../assets/login-page/shapes-right.svg";
 import logo from "../assets/logo-kiwanis-full.svg";
@@ -63,17 +64,21 @@ if (isPostForm) {
   <div
     class="absolute top-8 left-8 flex items-center text-white hover:underline z-10"
   >
-    <img src={backArrow.src} aria-hidden="true" />
+    <Image src={backArrow} alt="" loading="eager" aria-hidden="true" />
     <a href="/" class="text-white ml-2">Retour à l'accueil</a>
   </div>
-  <img
-    src={shapesLeft.src}
+  <Image
+    src={shapesLeft}
+    alt=""
+    loading="eager"
     aria-hidden="true"
     class="absolute left-0 bottom-0 w-[50dvw] lg:w-[25dvw] select-none"
     draggable="false"
   />
-  <img
-    src={shapesRight.src}
+  <Image
+    src={shapesRight}
+    alt=""
+    loading="eager"
     aria-hidden="true"
     class="absolute right-0 top-0 w-[70dvw] md:w-[50dvw] lg:w-[40dvw] select-none"
     draggable="false"
@@ -82,9 +87,10 @@ if (isPostForm) {
   <div
     class="absolute -translate-x-1/2 -translate-y-1/2 left-1/2 top-1/2 flex flex-col lg:flex-row gap-4 md:gap-16 justify-center items-center z-10"
   >
-    <img
-      src={logo.src}
+    <Image
+      src={logo}
       alt="Logo Kiwanis Pays de Montbéliard"
+      loading="eager"
       class="md:w-[30dvw] lg:w-[15dvw]"
     />
     <div class="w-fit min-w-[70dvw] md:min-w-[60dvw] lg:min-w-[20dvw] lg:max-w-[60dvw]">
@@ -98,9 +104,10 @@ if (isPostForm) {
 
       <form method="POST" class="flex flex-col w-full relative">
         <div class="relative my-2">
-          <img
-            src={userIcon.src}
+          <Image
+            src={userIcon}
             alt=""
+            loading="eager"
             class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 opacity-70"
           />
           <input
@@ -111,9 +118,10 @@ if (isPostForm) {
           />
         </div>
         <div class="relative my-2">
-          <img
-            src={lockIcon.src}
+          <Image
+            src={lockIcon}
             alt=""
+            loading="eager"
             class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 opacity-70"
           />
           <input
