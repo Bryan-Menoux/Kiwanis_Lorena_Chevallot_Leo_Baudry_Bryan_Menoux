@@ -1,12 +1,13 @@
 ﻿---
 import Layout from "../layouts/Layout.astro";
-import heroLanding from "../assets/landing-page/hero-landing.webp";
+import heroLandingfinal from "../assets/landing-page/hero-landing-final.webp";
+import heroLandingfinalMobile from "../assets/landing-page/hero-landing-final-mobile.webp";
+import heroLandingfinalTablette from "../assets/landing-page/hero-landing-final-tablette.webp";
 import Hero from "../components/Hero.astro";
 import landing1 from "../assets/landing-page/landing-1.webp";
 import HomeCarousel from "../components/Home-carousel.astro";
 import diagArrow from "../assets/diag-arrow.svg";
-import evelynePerriot from "../assets/landing-page/evelyne_perriot.webp";
-import landing2 from "../assets/landing-page/landing-2.webp";
+import kiwanismembres1 from "../assets/landing-page/kiwanismembres1.webp";
 import rollUp from "../assets/landing-page/rollup.webp";
 import fanion from "../assets/landing-page/fanion.webp";
 import why1 from "../assets/landing-page/why-1.webp";
@@ -16,119 +17,264 @@ import HomePartner from "../components/Home-partner.astro";
 ---
 
 <Layout>
-  <Hero image={heroLanding.src} title="Kiwanis Pays de Montbéliard" subtitle="Servir les enfants du monde, au cœur de notre territoire" />
+  <div class="hidden lg:block" ><Hero
+    image={heroLandingfinal.src}
+    title="Kiwanis Pays de Montbéliard"
+    subtitle="Servir les enfants du monde, au cœur de notre territoire"
+  /></div>
+  <div class="md:hidden" ><Hero
+    image={heroLandingfinalMobile.src}
+    title="Kiwanis Pays de Montbéliard"
+    subtitle="Servir les enfants du monde, au cœur de notre territoire"
+  /></div>
+  <div class="hidden md:block lg:hidden" ><Hero
+    image={heroLandingfinalTablette.src}
+    title="Kiwanis Pays de Montbéliard"
+    subtitle="Servir les enfants du monde, au cœur de notre territoire"
+  /></div>
 
   <!-- Section qui sommes nous -->
-  <div class="flex flex-col max-w-7xl mx-auto my-32 gap-4 px-8">
+  <div
+    class="grid grid-cols-1 lg:grid-cols-[3fr_2fr] gap-8 lg:gap-32 min-h-[40dvh] max-w-[85dvw]! md:max-w-[80dvw]! mx-auto my-32"
+  >
+    <div class="flex flex-col gap-6 md:gap-8 lg:mt-8">
+      <div class="flex flex-col gap-2 md:gap-4">
         <h2>Qui sommes nous ?</h2>
-      <div class="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-8 lg:gap-16 min-h-[40dvh]">
-          <div class="flex flex-col gap-8">
-            <h3 class="mb-2" >Un club-service de bénévoles au service des enfants</h3>
-            <p>Le Kiwanis Pays de Montbéliard est un club de bénévoles engagé pour les enfants et les jeunes du territoire. Membre du réseau Kiwanis International, qui compte plus de 250 clubs, il partage des valeurs communes tout en menant des actions locales.</p>
-            <p>Créé en 2019, notre club mène des actions solidaires et des événements caritatifs pour soutenir des projets éducatifs, culturels et sociaux en faveur de la jeunesse.</p>
-            <p>Guidés par notre devise <span class="font-bold" >" Le monde de demain sera fait par les enfants d'aujourd'hui "</span>, nous accompagnons les jeunes et leur offrons de nouvelles perspectives.</p>
-          </div>
-          <div class="flex flex-col w-full mx-auto max-w-75 md:max-w-1/2 lg:max-w-full">
-            <img src={landing1.src} alt="Photographie de membres du Kiwanis aux 12 coups de Midi" class="w-full flex-1 object-cover rounded-box" />
-            <p class="text-sm mt-2" >Le Kiwanis Féminin aux 12 coups de Midi </p>
-          </div>
+        <h3 class="mb-2">
+          Un club-service de bénévoles au service des enfants
+        </h3>
       </div>
+      <p>
+        Le Kiwanis Pays de Montbéliard est un club service de 15 bénévoles
+        engagées pour les enfants et les jeunes du territoire. Nous faisons
+        partie du Kiwanis International, fondé en 1915, un réseau mondial
+        présent dans plus de 85 pays avec près de 7 500 clubs.
+      </p>
+      <p>
+        Guidés par notre devise <span class="font-bold"
+          >« Le monde de demain sera fait par les enfants d’aujourd’hui »</span
+        >, nous accompagnons les jeunes et leur offrons de nouvelles
+        perspectives.
+      </p>
+    </div>
+    <div
+      class="flex flex-col w-full mx-auto max-h-[40dvh] lg:max-h-[60dvh] max-w-full"
+    >
+      <img
+        src={landing1.src}
+        alt="Photographie de membres du Kiwanis aux 12 coups de Midi"
+        class="w-full max-h-full flex-1 object-cover rounded-box"
+      />
+      <p class="text-sm mt-2">Le Kiwanis Féminin aux 12 coups de Midi</p>
+    </div>
   </div>
 
   <HomeCarousel />
 
   <!-- Section Membres -->
-  <div class="flex flex-col max-w-7xl mx-auto my-32 gap-4 px-8">
-      <h2>Nos membres</h2>
-      <div class="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-8 lg:gap-16 min-h-[40dvh]">
-          <div class="flex flex-col gap-8">
-            <p>Créé en 2019 par Marie-France ZUSATZ, le club rassemble 16 femmes aux parcours variés, unies par l'envie d'agir pour les autres, et notamment pour les enfants. Chacune apporte son histoire et ses compétences, ce qui fait la richesse et l'identité du club.</p>
-            <p>Notre fonctionnement repose sur la bienveillance et le respect. Chacune peut s'exprimer et trouver sa place au sein d'un cadre commun qui nous permet d'avancer ensemble, en restant fidèles aux valeurs que nous défendons.</p>
-            <p><span class="highlight" >Notre règle d'or</span>  :  " Fais à autrui ce que tu voudrais qu'il te fasse. "</p>
-            <a href="/membres" class="btn btn-accent w-fit px-8 py-6 mt-auto self-end" >Voir tous les membres <img src={diagArrow.src} aria-hidden="true" ></a>
-          </div>
-          <div class="flex flex-col w-full mx-auto max-w-75 md:max-w-1/2 lg:max-w-full">
-            <img src={evelynePerriot.src} alt="Photographie de Evelyne PERRIOT" class="w-full flex-1 object-cover rounded-box" />
-            <p class="text-sm mt-2" >Evelyne PERRIOT, présidente du groupe Kiwanis Pays de Montbéliard.</p>
-          </div>
+  <div
+    class="grid grid-cols-1 lg:grid-cols-[3fr_2fr] gap-8 lg:gap-32 min-h-[40dvh] max-w-[85dvw]! md:max-w-[80dvw]! mx-auto my-32"
+  >
+    <div class="flex flex-col gap-6 md:gap-8 lg:mt-8">
+      <div class="flex flex-col gap-2 md:gap-4">
+        <h2>Nos membres</h2>
       </div>
+      <p>
+        Créé par Marie France ZUSATZ et charté le 22 septembre 2019, notre club
+        réunit 14 femmes aux parcours variés, unies par l’envie d’agir pour les
+        autres, et notamment pour les enfants.
+      </p>
+      <p>
+        Nous appartenons à la division 933, qui regroupe 5 clubs en Franche
+        Comté, rattachée au district France Monaco. Notre fonctionnement repose
+        sur la bienveillance et le respect, chacune peut s’exprimer et trouver
+        sa place au sein d’un cadre commun qui nous permet d’avancer ensemble,
+        en restant fidèles aux valeurs que nous défendons.
+      </p>
+      <p>
+        <span class="highlight">Notre règle d’or</span> : « Fais à autrui ce que tu
+        voudrais qu’il te fasse. »
+      </p>
+      <a href="/membres" class="btn btn-accent w-fit px-8 py-6 mt-auto self-end"
+        >Voir tous les membres <img src={diagArrow.src} aria-hidden="true" /></a
+      >
+    </div>
+    <div
+      class="flex flex-col w-full mx-auto max-h-[40dvh] lg:max-h-[60dvh] max-w-full"
+    >
+      <img
+        src={kiwanismembres1.src}
+        alt="Photographie de Evelyne PERRIOT"
+        class="w-full max-h-full flex-1 object-cover rounded-box"
+      />
+      <p class="text-sm mt-2">
+        Les membres du groupe Kiwanis Pays de Montbéliard.
+      </p>
+    </div>
   </div>
 
   <!-- Section nous retrouver -->
-  <div class="flex flex-col max-w-7xl mx-auto my-32 gap-4 px-8">
+
+  <div
+    class="grid grid-cols-1 lg:grid-cols-[1fr_1fr] gap-8 lg:gap-32 max-w-[85dvw]! md:max-w-[80dvw]! mx-auto my-32"
+  >
+    <div class="flex flex-col gap-8">
       <h2>Nous retrouver</h2>
-      <div class="grid grid-cols-1 lg:grid-cols-[1fr_1fr] gap-8 lg:gap-16 min-h-[40dvh] mb-4">
-          <div class="flex flex-col gap-8">
-            <p>Le Kiwanis Pays de Montbéliard est implanté au centre-ville, avec un siège social situé au <span class="font-bold">76 bis faubourg de Besançon.</span></p>
-            <p>Nous nous réunissons régulièrement, notamment le premier mardi de chaque mois, pour préparer nos projets, suivre les actions en cours et accueillir les personnes souhaitant découvrir le club.</p>
-            <p>Vous souhaitez participer à une réunion, rejoindre le Kiwanis ou proposer un partenariat ou un projet en faveur des enfants ? N'hésitez pas à nous contacter via la page Contact du site.</p>
-            <a href="/contact" class="btn btn-accent w-fit px-8 py-6 mt-auto self-end" >Nous contacter<img src={diagArrow.src} aria-hidden="true" ></a>
-          </div>
-          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-1 gap-4">
-            <div class="flex flex-col w-full mx-auto max-w-75 md:max-w-full">
-              <img src={landing2.src} alt="Photographie du 76 bis faubourg de Besançon" class="w-full flex-1 object-cover rounded-box" />
-            </div>
-            <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2694.976201081879!2d6.781242576695513!3d47.5098546946529!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x479216ec97288eb1%3A0x14b7da3408d3161f!2s76%20Fbg%20de%20Besan%C3%A7on%2C%2025200%20Montb%C3%A9liard!5e0!3m2!1sfr!2sfr!4v1768495883263!5m2!1sfr!2sfr" class="w-full min-h-64 md:h-full lg:hidden rounded-box" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
-          </div>
-      </div>
-      <div class="relative">
-        <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2694.976201081879!2d6.781242576695513!3d47.5098546946529!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x479216ec97288eb1%3A0x14b7da3408d3161f!2s76%20Fbg%20de%20Besan%C3%A7on%2C%2025200%20Montb%C3%A9liard!5e0!3m2!1sfr!2sfr!4v1768495883263!5m2!1sfr!2sfr" class="w-full min-h-96 hidden lg:flex rounded-box" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
-        <a href="https://www.google.com/maps?ll=47.509851,6.783818&z=16&t=m&hl=fr&gl=FR&mapclient=embed&q=76+Fbg+de+Besan%C3%A7on+25200+Montb%C3%A9liard" target="_blank" class="btn btn-accent w-fit px-4 py-2 lg:px-8 lg:py-6 mt-auto self-end absolute right-2 bottom-12 md:bottom-12 md:right-3 lg:right-2 lg:bottom-5" >Voir sur maps<img src={diagArrow.src} aria-hidden="true" ></a>
-      </div>
+      <p>
+        Le Kiwanis Pays de Montbéliard est implanté au centre-ville, avec un
+        siège social situé au <span class="font-bold"
+          >76 bis faubourg de Besançon.</span
+        >
+      </p>
+      <p>
+        Nous nous réunissons régulièrement, notamment le premier mardi de chaque
+        mois, pour préparer nos projets, suivre les actions en cours et
+        accueillir les personnes souhaitant découvrir le club.
+      </p>
+      <p>
+        Vous souhaitez participer à une réunion, rejoindre le Kiwanis ou
+        proposer un partenariat ou un projet en faveur des enfants ? N'hésitez
+        pas à nous contacter via la page Contact du site.
+      </p>
+      <a href="/contact" class="btn btn-accent w-fit px-8 py-6 mt-auto self-end"
+        >Nous contacter<img src={diagArrow.src} aria-hidden="true" /></a
+      >
+    </div>
+
+    <div class="relative h-full min-h-fit">
+      <iframe
+        src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2694.976201081879!2d6.781242576695513!3d47.5098546946529!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x479216ec97288eb1%3A0x14b7da3408d3161f!2s76%20Fbg%20de%20Besan%C3%A7on%2C%2025200%20Montb%C3%A9liard!5e0!3m2!1sfr!2sfr!4v1768495883263!5m2!1sfr!2sfr"
+        class="w-full h-full min-h-56 rounded-box"
+        style="border:0;"
+        allowfullscreen=""
+        loading="lazy"
+        referrerpolicy="no-referrer-when-downgrade"></iframe>
+      <a
+        href="https://www.google.com/maps?ll=47.509851,6.783818&z=16&t=m&hl=fr&gl=FR&mapclient=embed&q=76+Fbg+de+Besan%C3%A7on+25200+Montb%C3%A9liard"
+        target="_blank"
+        class="btn btn-accent w-fit px-4 py-2 lg:px-8 lg:py-6 mt-auto self-end absolute right-2 bottom-3 md:right-3 lg:right-2"
+        >Voir sur maps<img src={diagArrow.src} aria-hidden="true" /></a
+      >
+    </div>
   </div>
 
   <!-- Section banderole -->
-   <div class="flex flex-col max-w-7xl mx-auto my-16 gap-4 px-8">
-     <div class="grid grid-cols-1 lg:grid-cols-[1fr_1fr] gap-8 lg:gap-16 min-h-[40dvh]">
-       <div class="flex flex-col gap-8 justify-center items-center">
-            <h3>Le fanion et le roll-up qui nous accompagnent lors de chaque action et événement.</h3>
-            <a href="/membres" class="btn btn-accent w-fit px-8 py-6" >Télécharger notre roll-up<img src={diagArrow.src} aria-hidden="true" ></a>
-          </div>
-          <div class="flex gap-8 w-full mx-auto justify-center items-center">
-            <img src={rollUp.src} alt="Photographie du rollup du kiwanis pays de montbéliard" class="flex-1 h-auto object-contain w-fit max-w-[40dvw] lg:w-1/2 max-h-[50dvh] lg:max-h-[65dvh]" />
-            <img src={fanion.src} alt="Photographie du fanion du kiwanis pays de montbéliard" class="flex-1 h-auto object-contain w-fit max-w-[40dvw] lg:w-1/2 max-h-[50dvh] lg:max-h-[65dvh] mix-blend-multiply" />
-          </div>
+  <div
+    class="flex flex-col max-w-[85dvw]! md:max-w-[80dvw]! mx-auto my-16 gap-4"
+  >
+    <div
+      class="grid grid-cols-1 lg:grid-cols-[1fr_1fr] gap-8 lg:gap-16 min-h-[40dvh]"
+    >
+      <div class="flex flex-col gap-8 justify-center items-center">
+        <h3 class="font-bold">
+          Le fanion et le roll-up qui nous accompagnent lors de chaque action et
+          événement.
+        </h3>
+        <a
+          href={rollUp.src}
+          download="roll-up.png"
+          class="btn btn-accent w-fit px-8 py-6"
+          >Télécharger notre roll-up<img
+            src={diagArrow.src}
+            aria-hidden="true"
+          /></a
+        >
       </div>
+      <div class="flex gap-8 w-full mx-auto justify-center items-center">
+        <img
+          src={rollUp.src}
+          alt="Photographie du rollup du kiwanis pays de montbéliard"
+          class="flex-1 h-auto object-contain w-fit max-w-[40dvw] lg:w-1/2 max-h-[50dvh] lg:max-h-[65dvh]"
+        />
+        <img
+          src={fanion.src}
+          alt="Photographie du fanion du kiwanis pays de montbéliard"
+          class="flex-1 h-auto object-contain w-fit max-w-[40dvw] lg:w-1/2 max-h-[50dvh] lg:max-h-[65dvh] mix-blend-multiply"
+        />
+      </div>
+    </div>
   </div>
 
   <!-- Section pourquoi soutenir -->
-   <div class="flex flex-col gap-8">
-    <div class="flex flex-col max-w-7xl mx-auto my-32 gap-8 px-8">
+  <div
+    class="flex flex-col max-w-[85dvw]! md:max-w-[80dvw]! mx-auto my-32 gap-8 lg:gap-24"
+  >
+    <div class="flex flex-col gap-2 md:gap-4">
       <h2>Pourquoi soutenir le Kiwanis féminin Pays de Montbéliard ?</h2>
-      <p>Soutenir le Kiwanis féminin Pays de Montbéliard, c'est donner un coup de pouce à un club de 16 bénévoles qui agit depuis 2019 pour les enfants du Pays de Montbéliard.</p>
-      <div class="grid grid-cols-1 md:grid-cols-[1fr_1fr] gap-8 lg:gap-16 min-h-[40dvh]">
-          <div class="flex flex-col gap-4 mt-6">
-            <h4>Des effets concrets pour les enfants d'ici</h4>
-            <p>Votre soutien permet de financer des projets concrets pour les enfants du Pays de Montbéliard, comme des actions menées avec des écoles, des associations locales ou des familles, et contribue directement à améliorer leur quotidien.</p>
-          </div>
-          <div class="flex flex-col w-full mx-auto md:max-w-full">
-            <img src={why1.src} alt="Photographie de collégiens avec les kiwaniens" class="w-full flex-1 object-cover rounded-box max-h-64" />
-          </div>
+      <p>
+        Soutenir le Kiwanis féminin Pays de Montbéliard, c'est donner un coup de
+        pouce à un club de 16 bénévoles qui agit depuis 2019 pour les enfants du
+        Pays de Montbéliard.
+      </p>
+    </div>
+    <div
+      class="grid grid-cols-1 lg:grid-cols-[1fr_1fr] gap-8 lg:gap-16 min-h-[40dvh]"
+    >
+      <div class="flex flex-col gap-4 mt-6">
+        <h4>Des effets concrets pour les enfants d'ici</h4>
+        <p>
+          Votre soutien permet de financer des projets concrets pour les enfants
+          du Pays de Montbéliard, comme des actions menées avec des écoles, des
+          associations locales ou des familles, et contribue directement à
+          améliorer leur quotidien.
+        </p>
       </div>
-      <div class="grid grid-cols-1 md:grid-cols-[1fr_1fr] gap-8 lg:gap-16 min-h-[40dvh]">
-        <div class="flex-col w-full mx-auto md:max-w-full hidden md:flex">
-          <img src={why2.src} alt="Photographie des Kiwaniens avec Loïc Ballet" class="w-full flex-1 object-cover rounded-box max-h-64" />
-        </div>
-        <div class="flex flex-col gap-4 mt-6">
-          <h4>Plusieurs façons de vous engager à nos côtés</h4>
-          <p>Entreprises, commerces, collectivités ou particuliers, chacun peut s'engager à sa manière, par un don, un partenariat, des lots ou la mise à disposition de produits ou de services. Quel que soit le format, votre soutien renforce nos actions en faveur des enfants.</p>
-        </div>
-        <div class="flex flex-col w-full mx-auto md:max-w-full md:hidden">
-          <img src={why2.src} alt="Photographie des Kiwaniens avec Loïc Ballet" class="w-full flex-1 object-cover rounded-box max-h-64" />
-        </div>
+      <div class="flex flex-col w-full mx-auto md:max-w-full h-fit">
+        <img
+          src={why1.src}
+          alt="Photographie de collégiens avec les kiwaniens"
+          class="w-full flex-1 object-cover rounded-box min-h-[30dvh] md:min-h-[40dvh]"
+        />
       </div>
-      <div class="grid grid-cols-1 md:grid-cols-[1fr_1fr] gap-8 lg:gap-16 min-h-[40dvh]">
-        <div class="flex flex-col gap-4 mt-6">
-          <h4>Un cadre clair pour votre contribution</h4>
-          <p>Les cotisations de nos membres assurent le fonctionnement du club. Les recettes des événements et les dons sont entièrement dédiés aux projets pour les enfants. Votre soutien finance des actions concrètes, directement sur le terrain.</p>
-        </div>
-        <div class="flex flex-col w-full mx-auto md:max-w-full">
-          <img src={why3.src} alt="Photographie des Kiwaniens" class="w-full flex-1 object-cover rounded-box max-h-64" />
-        </div>
+    </div>
+    <div
+      class="grid grid-cols-1 lg:grid-cols-[1fr_1fr] gap-8 lg:gap-16 min-h-[40dvh]"
+    >
+      <div class="flex-col w-full mx-auto lg:max-w-full hidden lg:flex">
+        <img
+          src={why2.src}
+          alt="Photographie des Kiwaniens avec Loïc Ballet"
+          class="w-full flex-1 object-cover rounded-box min-h-[30dvh] md:min-h-[40dvh]"
+        />
       </div>
+      <div class="flex flex-col gap-4 mt-6">
+        <h4>Plusieurs façons de vous engager à nos côtés</h4>
+        <p>
+          Entreprises, commerces, collectivités ou particuliers, chacun peut
+          s'engager à sa manière, par un don, un partenariat, des lots ou la
+          mise à disposition de produits ou de services. Quel que soit le
+          format, votre soutien renforce nos actions en faveur des enfants.
+        </p>
+      </div>
+      <div class="flex flex-col w-full mx-auto lg:max-w-full lg:hidden">
+        <img
+          src={why2.src}
+          alt="Photographie des Kiwaniens avec Loïc Ballet"
+          class="w-full flex-1 object-cover rounded-box min-h-[30dvh] md:min-h-[40dvh]"
+        />
+      </div>
+    </div>
+    <div
+      class="grid grid-cols-1 lg:grid-cols-[1fr_1fr] gap-8 lg:gap-16 min-h-[40dvh]"
+    >
+      <div class="flex flex-col gap-4 mt-6">
+        <h4>Un cadre clair pour votre contribution</h4>
+        <p>
+          Les cotisations de nos membres assurent le fonctionnement du club. Les
+          recettes des événements et les dons sont entièrement dédiés aux
+          projets pour les enfants. Votre soutien finance des actions concrètes,
+          directement sur le terrain.
+        </p>
+      </div>
+      <div class="flex flex-col w-full mx-auto md:max-w-full">
+        <img
+          src={why3.src}
+          alt="Photographie des Kiwaniens"
+          class="w-full flex-1 object-cover rounded-box min-h-[30dvh] md:min-h-[40dvh]"
+        />
+      </div>
+    </div>
   </div>
-   </div>
 
   <HomePartner />
 </Layout>
-

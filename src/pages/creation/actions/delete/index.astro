@@ -76,7 +76,7 @@ try {
     <div class="mb-10 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
       <div class="mb-0">
         <h1 class="mb-3 text-3xl font-bold text-accent font-poppins md:text-4xl">Supprimer des actions</h1>
-        <p class="text-base text-base-content/70 md:text-lg">
+        <p class="text-base text-base-content md:text-lg">
           Selectionnez plusieurs actions puis cliquez sur "Supprimer selection".
         </p>
       </div>
@@ -98,16 +98,16 @@ try {
           <div class="card-body p-4 md:p-6">
             <div class="mb-4">
               <h2 class="card-title text-2xl">Rechercher</h2>
-              <p class="mt-1 text-sm text-base-content/60">
+              <p class="mt-1 text-sm text-base-content">
                 Filtrez rapidement vos actions puis triez l'affichage.
               </p>
             </div>
             <div class="flex flex-col gap-4">
               <div class="w-full">
-                <p class="mb-2 text-sm font-medium text-base-content/70">Filtres</p>
+                <p class="mb-2 text-sm font-medium text-base-content">Filtres</p>
                 <ActionsSearch embedded={true}>
                   <label slot="secondary-extra" class="form-control w-full gap-1" for="sort-select">
-                    <span class="text-xs font-medium uppercase tracking-wide text-base-content/60">Trier par date</span>
+                    <span class="text-xs font-medium uppercase tracking-wide text-base-content">Trier par date</span>
                     <select id="sort-select" class="select select-bordered w-full">
                       <option value="updated_desc">Recent -> Ancien</option>
                       <option value="updated_asc">Ancien -> Recent</option>
@@ -171,7 +171,7 @@ try {
                     {a.beneficiaire}
                   </p>
                 )}
-                <p class="text-xs leading-tight text-base-content/60">
+                <p class="text-xs leading-tight text-base-content">
                   {a.updated ? formatDateShort(a.updated) : ""}
                 </p>
               </div>

@@ -11,7 +11,7 @@ const images = Object.entries(imageModules).map(([path, module], index) => ({
 const duplicatedImages = [...images, ...images];
 ---
 
-<div class="home-carousel-container overflow-x-auto relative w-full h-fit">
+<div class="home-carousel-container relative w-full h-fit">
   <div class="home-carousel-inner flex gap-4 md:gap-8 h-full">
     {duplicatedImages.map((image, index) => (
       <img
@@ -25,10 +25,11 @@ const duplicatedImages = [...images, ...images];
 
 <style>
   .home-carousel-container {
-    /* Permettre le scroll horizontal mais cacher la scrollbar */
-    overflow-x: auto;
+    /* Le défilement est géré par transform, pas par scroll natif */
+    overflow-x: hidden;
     overflow-y: hidden;
     -webkit-overflow-scrolling: touch;
+    touch-action: pan-y;
     scrollbar-width: none; /* Firefox */
     -ms-overflow-style: none; /* IE et Edge */
   }
@@ -48,22 +49,6 @@ const duplicatedImages = [...images, ...images];
 <script>
   // Rendre le défilement infini plus fluide, sans à-coups.
   const carousel = document.querySelector('.home-carousel-inner') as HTMLElement;
-  const container = document.querySelector('.home-carousel-container') as HTMLElement;
-
-  // Empêche le scroll horizontal via la molette ou le touch, mais permet au script de faire défiler
-  if (container) {
-    container.addEventListener('wheel', (e) => {
-      // Empêche le scroll horizontal mais permet au script de faire défiler
-      if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) {
-        e.preventDefault();
-      }
-    }, { passive: false });
-
-    container.addEventListener('touchmove', (e) => {
-      // Empêche le scroll tactile mais permet au script de faire défiler
-      e.preventDefault();
-    }, { passive: false });
-  }
 
   if (carousel) {
     let startTime: number | null = null;
