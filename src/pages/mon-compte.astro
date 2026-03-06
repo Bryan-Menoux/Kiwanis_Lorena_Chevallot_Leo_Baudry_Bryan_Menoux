@@ -150,6 +150,7 @@ const navItems = [
 <script>
   import { initVerifications } from "../scripts/verification-handlers.js";
   import { initModifications } from "../scripts/modification-handlers.js";
+  import { scrollToTarget } from "../utils/scroll.js";
 
   gsap.defaults({ duration: 0.35, ease: "power2.inOut" });
 
@@ -214,8 +215,10 @@ const navItems = [
       const section = document.getElementById(sectionId!);
 
       if (section && container) {
-        window.scrollTo({ top: 0, behavior: "smooth" });
-        container.scrollTo({ left: section.offsetLeft, behavior: "smooth" });
+        // Remonte d'abord en haut de la page pour garder un point de départ cohérent.
+        scrollToTarget(0);
+        // Puis défile horizontalement vers la section ciblée du conteneur.
+        scrollToTarget(`#${sectionId}`, { container, axis: "x" });
         setActive(i % navLinks.length);
 
         refreshSection(sectionId!);
@@ -256,7 +259,7 @@ const navItems = [
           if (oldSection) {
             oldSection.replaceWith(newSection);
 
-            // Réinitialiser les handlers spécifiques si nécessaire
+            // Réinitialiser les gestionnaires spécifiques si nécessaire
             if (sectionId === "verifications") initVerifications();
             if (sectionId === "modifications") initModifications();
           }
@@ -267,8 +270,8 @@ const navItems = [
     }
   }
 
-  // Surveille le scroll horizontal pour mettre à jour la section active.
-  // On utilise un délai court (100ms) pour limiter les calculs pendant le scroll.
+  // Surveille le défilement horizontal pour mettre à jour la section active.
+  // On utilise un délai court (100ms) pour limiter les calculs pendant le défilement.
   if (container) {
     let timeout: number;
     container.addEventListener("scroll", () => {
@@ -358,7 +361,7 @@ const navItems = [
   setCollapsedLayout(navCollapsed);
   // Assurer que l'icône et le libellé du toggle reflètent l'état initial
   if (navToggleIconWrapper) {
-    // Définit la rotation initiale via GSAP (évite les conflits entre transforms inline et classes)
+    // Définit la rotation initiale via GSAP (évite les conflits entre transformations en ligne et classes)
     gsap.set(navToggleIconWrapper, { rotation: navCollapsed ? 180 : 0 });
   }
   if (navToggleLabel) {

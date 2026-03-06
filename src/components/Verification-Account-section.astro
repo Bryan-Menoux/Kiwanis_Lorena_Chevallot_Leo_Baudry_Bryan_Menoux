@@ -30,10 +30,6 @@ const pendingUsers = users.filter(
 const rejectedUsers = users.filter((u: User) => u.rejected === true);
 const verifiedUsers = users.filter((u: User) => u.verified === true);
 
-// Initialisation des compteurs pour chaque catégorie d'utilisateurs
-const pendingCount = pendingUsers.length;
-const rejectedCount = rejectedUsers.length;
-const verifiedCount = verifiedUsers.length;
 ---
 
 <div

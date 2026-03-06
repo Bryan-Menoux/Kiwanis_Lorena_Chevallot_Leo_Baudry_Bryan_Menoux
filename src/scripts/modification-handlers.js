@@ -1,6 +1,7 @@
 ﻿import { showAlert, showConfirm } from "../utils/alerts";
+import { scrollToTarget } from "../utils/scroll.js";
 
-// Handlers pour la section Modifications
+// Gestionnaires pour la section Modifications
 // Ce fichier permet de réinitialiser les écouteurs d'événements après un rechargement dynamique.
 
 let currentPage = 0;
@@ -21,6 +22,7 @@ function goToPage(page) {
   const container = document.querySelector(".carousel-container");
   const inner = document.getElementById("carousel-inner");
   const totalPages = parseInt(container?.dataset.totalPages || "1", 10);
+  const previousPage = currentPage;
 
   currentPage = Math.max(0, Math.min(page, totalPages - 1));
 
@@ -34,6 +36,11 @@ function goToPage(page) {
   }
 
   updateButtons();
+
+  if (currentPage !== previousPage && container instanceof HTMLElement) {
+    // En pagination carousel, remonte vers le haut de la liste des cartes.
+    scrollToTarget(container);
+  }
 }
 
 export function initModifications() {

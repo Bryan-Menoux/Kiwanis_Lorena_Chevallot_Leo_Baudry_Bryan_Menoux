@@ -64,7 +64,7 @@ if (Astro.request.method === "POST") {
   }
 }
 
-// Afficher le message de succès s'il est présent dans la query.
+// Afficher le message de succès s'il est présent dans les paramètres de requête.
 try {
   const s = Astro.url.searchParams.get("success");
   if (s) success = s;
@@ -193,6 +193,7 @@ try {
 
   <script>
     import { showAlert, showConfirm } from "../../../../utils/alerts";
+    import { scrollToTarget } from "../../../../utils/scroll.js";
 
     // Recherche, filtres et tri côté client + sélection globale + suppression par carte.
     document.addEventListener("DOMContentLoaded", () => {
@@ -354,6 +355,7 @@ try {
           return true;
         }).length;
         const totalPages = Math.max(1, Math.ceil(totalItems / PAGE_SIZE));
+        const previousPage = currentPage;
 
         if (action === "prev") {
           currentPage = Math.max(1, currentPage - 1);
@@ -368,6 +370,10 @@ try {
           return;
         }
 
+        if (currentPage !== previousPage) {
+          // Ramène le haut de la grille dans le viewport après pagination.
+          scrollToTarget("#cards-grid");
+        }
         updateView();
       });
 

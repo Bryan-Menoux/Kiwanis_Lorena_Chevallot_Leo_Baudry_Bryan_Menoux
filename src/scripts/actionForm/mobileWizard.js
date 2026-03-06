@@ -1,5 +1,5 @@
 ﻿import { showAlert } from "../../utils/alerts";
-
+import { scrollToTarget } from "../../utils/scroll.js";
 const MOBILE_QUERY = "(max-width: 1023px)";
 const TOTAL_STEPS = 7;
 const INIT_FLAG_ATTR = "data-mobile-wizard-init";
@@ -72,7 +72,7 @@ function setNavState(form, step) {
 function setError(form, message) {
   const errorNode = form.querySelector("[data-mobile-step-error]");
   if (errorNode) {
-    // Le message inline est desactive: on utilise le composant d'alert.
+    // Le message intégré est désactivé : on utilise le composant d'alerte.
     errorNode.classList.add("hidden");
     errorNode.textContent = "";
   }
@@ -276,7 +276,8 @@ function initMobileWizard() {
     if (mediaQuery.matches) {
       setStepVisibility(form, currentStep);
       setNavState(form, currentStep);
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      // Sur mobile, on replace le haut du formulaire en vue à chaque changement d'étape.
+      scrollToTarget(0);
     }
   };
 

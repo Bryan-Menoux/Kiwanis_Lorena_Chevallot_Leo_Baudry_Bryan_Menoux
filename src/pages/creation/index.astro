@@ -2,6 +2,7 @@
 import Layout from "../../layouts/Layout-back-office.astro";
 import ActionsSearch from "../../components/ActionsSearch.astro";
 import utilUrl from "../../utils/utilitaires.js?url";
+import scrollUtilUrl from "../../utils/scroll.js?url";
 import { formatDateWithTime } from "../../utils/utilitaires.js";
 import slugify from 'slugify';
 
@@ -131,7 +132,7 @@ function computeStats(pages: Page[]): { actions: number; projets: number; produi
   };
 }
 
-// Lecture des query params (recherche via GET)
+// Lecture des paramètres de requête (recherche via GET)
 const params = Astro.url.searchParams;
 const q = (params.get('q') || '').trim();
 const status = params.get('status') || 'all';
@@ -281,6 +282,8 @@ const allPages = db.pages;
 </Layout>
 
 <script type="module" src={utilUrl}></script>
+<!-- Charge l'utilitaire de scroll pour l'exposer globalement aux scripts inline. -->
+<script type="module" src={scrollUtilUrl}></script>
 <script define:vars={{ allPages, q, status }}>
   // Données et fonctions utilitaires
   const pages = allPages;
@@ -292,6 +295,20 @@ const allPages = db.pages;
   const PAGE_SIZE = 9;
   let currentPage = 1;
   let filteredPagesCache = pages.slice();
+  // Au changement de page, on remonte en douceur vers le haut de la liste (et non en haut du document).
+  const scrollTopOnPageChange = () => {
+    const globalScrollUtils = (window as any).scrollUtils;
+    if (globalScrollUtils && typeof globalScrollUtils.scrollToTarget === "function") {
+      globalScrollUtils.scrollToTarget("#pages-container");
+      return;
+    }
+    const listRoot = document.getElementById("pages-container");
+    if (listRoot instanceof HTMLElement) {
+      listRoot.scrollIntoView({ behavior: "smooth", block: "start" });
+      return;
+    }
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
 
   function formatDate(d) {
     if (!d) return "";
@@ -502,6 +519,7 @@ const allPages = db.pages;
         1,
         Math.ceil(filteredPagesCache.length / PAGE_SIZE),
       );
+      const previousPage = currentPage;
 
       if (action === 'prev') {
         currentPage = Math.max(1, currentPage - 1);
@@ -516,6 +534,10 @@ const allPages = db.pages;
         return;
       }
 
+      if (currentPage !== previousPage) {
+        // Défile uniquement si la page visible a réellement changé.
+        scrollTopOnPageChange();
+      }
       renderPages(filteredPagesCache);
     });
 
