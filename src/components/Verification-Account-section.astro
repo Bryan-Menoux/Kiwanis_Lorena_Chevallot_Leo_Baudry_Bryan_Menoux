@@ -53,7 +53,7 @@ const verifiedUsers = users.filter((u: User) => u.verified === true);
         <h2 class="text-2xl font-bold mb-6 flex items-center gap-3">
           <Image src={wait} alt="" loading="lazy" quality={80} class="h-8 opacity-70" />
           Demandes en attente
-          <span class="badge badge-warning" id="pending-badge" style={pendingUsers.length > 0 ? '' : 'display: none'}>{pendingUsers.length}</span>
+          <span class="badge badge-warning text-center text-sm! md:text-md! font-bold" id="pending-badge" style={pendingUsers.length > 0 ? '' : 'display: none'}>{pendingUsers.length}</span>
         </h2>
 
         <search>
@@ -82,10 +82,12 @@ const verifiedUsers = users.filter((u: User) => u.verified === true);
       <!-- Section des utilisateurs rejetés -->
       <div class="px-8 pb-8">
         <details class="collapse collapse-arrow border border-base-300">
-          <summary class="collapse-title flex items-center gap-2">
-            <Image src={crossCircle} alt="" loading="lazy" quality={80} class="h-8" />
-            Utilisateurs rejetés
-            <span class="badge badge-error ml-auto" id="rejected-badge" style={rejectedUsers.length > 0 ? '' : 'display: none'}>{rejectedUsers.length}</span>
+          <summary class="collapse-title">
+            <div class="flex items-center gap-2">
+              <Image src={crossCircle} alt="" loading="lazy" quality={80} class="w-6 h-6 shrink-0" />
+              <span class="flex-1">Utilisateurs rejetés</span>
+              <span class="badge badge-error text-center text-sm! md:text-md! font-bold" id="rejected-badge" style={rejectedUsers.length > 0 ? '' : 'display: none'}>{rejectedUsers.length}</span>
+            </div>
           </summary>
 
           <div class="collapse-content space-y-2" id="rejected-list">
@@ -149,10 +151,12 @@ const verifiedUsers = users.filter((u: User) => u.verified === true);
       <!-- Section des utilisateurs vérifiés -->
       <div class="px-8 pb-8">
         <details class="collapse collapse-arrow border border-base-300">
-          <summary class="collapse-title flex items-center gap-2">
-            <Image src={circleCheck} alt="" loading="lazy" quality={80} class="h-8" />
-            Utilisateurs vérifiés
-            <span class="badge badge-success ml-auto" id="verified-badge" style={verifiedUsers.length > 0 ? '' : 'display: none'}>{verifiedUsers.length}</span>
+          <summary class="collapse-title">
+            <div class="flex items-center gap-2">
+              <Image src={circleCheck} alt="" loading="lazy" quality={80} class="w-6 h-6 shrink-0" />
+              <span class="flex-1">Utilisateurs vérifiés</span>
+              <span class="badge badge-success text-center text-sm! md:text-md! font-bold" id="verified-badge" style={verifiedUsers.length > 0 ? '' : 'display: none'}>{verifiedUsers.length}</span>
+            </div>
           </summary>
           <div class="collapse-content space-y-2" id="verified-list">
             <search>

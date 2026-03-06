@@ -53,7 +53,7 @@ const navItems = [
   <!-- Navigation desktop (visible sur grands écrans) -->
   <nav
     id="desktop-nav"
-    class="hidden lg:flex flex-col bg-white rounded-box fixed top-1/2 left-4 -translate-y-1/2 z-50 shadow-lg w-56 p-4"
+    class="hidden lg:flex flex-col bg-white rounded-box fixed top-1/2 left-4 -translate-y-1/2 z-50 shadow-lg p-4"
   >
     <button
       id="nav-toggle"
@@ -173,7 +173,6 @@ const navItems = [
     );
     const mobileIndicator = document.getElementById("mobile-indicator");
     const COLLAPSED_WIDTH = 88;
-    const EXPANDED_WIDTH = 224;
 
     function updateMobileIndicator(index: number) {
       if (!(mobileIndicator instanceof HTMLElement) || navLinksMobile.length === 0) return;
@@ -297,6 +296,10 @@ const navItems = [
     }
 
     const desktopNav = document.getElementById("desktop-nav");
+    // Largeur naturelle du nav mesurée avant toute manipulation JS (adapte au contenu réel).
+    const EXPANDED_WIDTH = (desktopNav instanceof HTMLElement)
+      ? (desktopNav.offsetWidth || 224)
+      : 224;
     const navToggle = document.getElementById("nav-toggle");
     const navToggleIconWrapper = document.getElementById("nav-toggle-icon-wrapper");
     const navToggleIcon = document.getElementById("nav-toggle-icon");
