@@ -42,7 +42,7 @@ const currentImage = mode === "edit" && previewData ? previewData[fieldName] : n
     class="hidden"
   />
   <div class="flex flex-col items-center text-center pointer-events-none">
-    <img
+    <img loading="lazy"
       src={imageIcon?.src}
       alt="Icône image"
       class="h-16 w-16"
@@ -68,7 +68,7 @@ const currentImage = mode === "edit" && previewData ? previewData[fieldName] : n
             Photo actuelle
           </p>
         </div>
-        <img
+        <img loading="lazy"
           src={currentImage}
           alt="Aperçu"
           class="absolute inset-0 w-full h-full object-cover"

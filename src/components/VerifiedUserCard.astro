@@ -33,7 +33,7 @@ const { user, currentUserId = '', showUnverifyButton = true } = Astro.props as P
       data-list-type="verified"
       type="button"
     >
-      <img src={crossCircle.src} class="w-5 h-5 invert" />
+      <img loading="lazy" src={crossCircle.src} class="w-5 h-5 invert" />
       Retirer l'utilisateur de la liste
     </button>
   )}

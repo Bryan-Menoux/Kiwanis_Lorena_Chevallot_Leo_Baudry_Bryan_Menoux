@@ -63,16 +63,16 @@ if (isPostForm) {
   <div
     class="absolute top-8 left-8 flex items-center text-white hover:underline z-10"
   >
-    <img src={backArrow.src} aria-hidden="true" />
+    <img loading="lazy" src={backArrow.src} aria-hidden="true" />
     <a href="/" class="text-white ml-2">Retour à l'accueil</a>
   </div>
-  <img
+  <img loading="lazy"
     src={shapesLeft.src}
     aria-hidden="true"
     class="absolute left-0 bottom-0 w-[50dvw] lg:w-[25dvw] select-none"
     draggable="false"
   />
-  <img
+  <img loading="lazy"
     src={shapesRight.src}
     aria-hidden="true"
     class="absolute right-0 top-0 w-[70dvw] md:w-[50dvw] lg:w-[40dvw] select-none"
@@ -82,7 +82,7 @@ if (isPostForm) {
   <div
     class="absolute -translate-x-1/2 -translate-y-1/2 left-1/2 top-1/2 flex flex-col lg:flex-row gap-4 md:gap-16 justify-center items-center z-10"
   >
-    <img
+    <img loading="lazy"
       src={logo.src}
       alt="Logo Kiwanis Pays de Montbéliard"
       class="md:w-[30dvw] lg:w-[15dvw]"
@@ -98,7 +98,7 @@ if (isPostForm) {
 
       <form method="POST" class="flex flex-col w-full relative">
         <div class="relative my-2">
-          <img
+          <img loading="lazy"
             src={userIcon.src}
             alt=""
             class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 opacity-70"
@@ -111,7 +111,7 @@ if (isPostForm) {
           />
         </div>
         <div class="relative my-2">
-          <img
+          <img loading="lazy"
             src={lockIcon.src}
             alt=""
             class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 opacity-70"

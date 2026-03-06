@@ -60,7 +60,7 @@ import HomePartner from "../components/Home-partner.astro";
     <div
       class="flex flex-col w-full mx-auto max-h-[40dvh] lg:max-h-[60dvh] max-w-full"
     >
-      <img
+      <img loading="lazy"
         src={landing1.src}
         alt="Photographie de membres du Kiwanis aux 12 coups de Midi"
         class="w-full max-h-full flex-1 object-cover rounded-box"
@@ -96,13 +96,13 @@ import HomePartner from "../components/Home-partner.astro";
         voudrais qu’il te fasse. »
       </p>
       <a href="/membres" class="btn btn-accent w-fit px-8 py-6 mt-auto self-end"
-        >Voir tous les membres <img src={diagArrow.src} aria-hidden="true" /></a
+        >Voir tous les membres <img loading="lazy" src={diagArrow.src} aria-hidden="true" /></a
       >
     </div>
     <div
       class="flex flex-col w-full mx-auto max-h-[40dvh] lg:max-h-[60dvh] max-w-full"
     >
-      <img
+      <img loading="lazy"
         src={kiwanismembres1.src}
         alt="Photographie de Evelyne PERRIOT"
         class="w-full max-h-full flex-1 object-cover rounded-box"
@@ -137,7 +137,7 @@ import HomePartner from "../components/Home-partner.astro";
         pas à nous contacter via la page Contact du site.
       </p>
       <a href="/contact" class="btn btn-accent w-fit px-8 py-6 mt-auto self-end"
-        >Nous contacter<img src={diagArrow.src} aria-hidden="true" /></a
+        >Nous contacter<img loading="lazy" src={diagArrow.src} aria-hidden="true" /></a
       >
     </div>
 
@@ -153,7 +153,7 @@ import HomePartner from "../components/Home-partner.astro";
         href="https://www.google.com/maps?ll=47.509851,6.783818&z=16&t=m&hl=fr&gl=FR&mapclient=embed&q=76+Fbg+de+Besan%C3%A7on+25200+Montb%C3%A9liard"
         target="_blank"
         class="btn btn-accent w-fit px-4 py-2 lg:px-8 lg:py-6 mt-auto self-end absolute right-2 bottom-3 md:right-3 lg:right-2"
-        >Voir sur maps<img src={diagArrow.src} aria-hidden="true" /></a
+        >Voir sur maps<img loading="lazy" src={diagArrow.src} aria-hidden="true" /></a
       >
     </div>
   </div>
@@ -174,19 +174,19 @@ import HomePartner from "../components/Home-partner.astro";
           href={rollUp.src}
           download="roll-up.png"
           class="btn btn-accent w-fit px-8 py-6"
-          >Télécharger notre roll-up<img
+          >Télécharger notre roll-up<img loading="lazy"
             src={diagArrow.src}
             aria-hidden="true"
           /></a
         >
       </div>
       <div class="flex gap-8 w-full mx-auto justify-center items-center">
-        <img
+        <img loading="lazy"
           src={rollUp.src}
           alt="Photographie du rollup du kiwanis pays de montbéliard"
           class="flex-1 h-auto object-contain w-fit max-w-[40dvw] lg:w-1/2 max-h-[50dvh] lg:max-h-[65dvh]"
         />
-        <img
+        <img loading="lazy"
           src={fanion.src}
           alt="Photographie du fanion du kiwanis pays de montbéliard"
           class="flex-1 h-auto object-contain w-fit max-w-[40dvw] lg:w-1/2 max-h-[50dvh] lg:max-h-[65dvh] mix-blend-multiply"
@@ -220,7 +220,7 @@ import HomePartner from "../components/Home-partner.astro";
         </p>
       </div>
       <div class="flex flex-col w-full mx-auto md:max-w-full h-fit">
-        <img
+        <img loading="lazy"
           src={why1.src}
           alt="Photographie de collégiens avec les kiwaniens"
           class="w-full flex-1 object-cover rounded-box min-h-[30dvh] md:min-h-[40dvh]"
@@ -231,7 +231,7 @@ import HomePartner from "../components/Home-partner.astro";
       class="grid grid-cols-1 lg:grid-cols-[1fr_1fr] gap-8 lg:gap-16 min-h-[40dvh]"
     >
       <div class="flex-col w-full mx-auto lg:max-w-full hidden lg:flex">
-        <img
+        <img loading="lazy"
           src={why2.src}
           alt="Photographie des Kiwaniens avec Loïc Ballet"
           class="w-full flex-1 object-cover rounded-box min-h-[30dvh] md:min-h-[40dvh]"
@@ -247,7 +247,7 @@ import HomePartner from "../components/Home-partner.astro";
         </p>
       </div>
       <div class="flex flex-col w-full mx-auto lg:max-w-full lg:hidden">
-        <img
+        <img loading="lazy"
           src={why2.src}
           alt="Photographie des Kiwaniens avec Loïc Ballet"
           class="w-full flex-1 object-cover rounded-box min-h-[30dvh] md:min-h-[40dvh]"
@@ -267,7 +267,7 @@ import HomePartner from "../components/Home-partner.astro";
         </p>
       </div>
       <div class="flex flex-col w-full mx-auto md:max-w-full">
-        <img
+        <img loading="lazy"
           src={why3.src}
           alt="Photographie des Kiwaniens"
           class="w-full flex-1 object-cover rounded-box min-h-[30dvh] md:min-h-[40dvh]"

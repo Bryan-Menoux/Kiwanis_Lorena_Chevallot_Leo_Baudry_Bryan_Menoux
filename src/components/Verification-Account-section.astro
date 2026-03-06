@@ -54,7 +54,7 @@ const verifiedCount = verifiedUsers.length;
       <!-- Section des demandes en attente -->
       <div class="px-8 py-8">
         <h2 class="text-2xl font-bold mb-6 flex items-center gap-3">
-          <img src={wait.src} class="h-8 opacity-70" />
+          <img loading="lazy" src={wait.src} class="h-8 opacity-70" />
           Demandes en attente
           <span class="badge badge-warning" id="pending-badge" style={pendingUsers.length > 0 ? '' : 'display: none'}>{pendingUsers.length}</span>
         </h2>
@@ -74,7 +74,7 @@ const verifiedCount = verifiedUsers.length;
               pendingUsers.map((user: User) => <PendingUserCard user={user} />)
             ) : (
               <div class="text-center py-12 text-base-content/60">
-                <img src={paper.src} class="h-16 mx-auto mb-4 opacity-50" />
+                <img loading="lazy" src={paper.src} class="h-16 mx-auto mb-4 opacity-50" />
                 <p>Aucune demande en attente</p>
               </div>
             )
@@ -86,7 +86,7 @@ const verifiedCount = verifiedUsers.length;
       <div class="px-8 pb-8">
         <details class="collapse collapse-arrow border border-base-300">
           <summary class="collapse-title flex items-center gap-2">
-            <img src={crossCircle.src} class="h-8" />
+            <img loading="lazy" src={crossCircle.src} class="h-8" />
             Utilisateurs rejetés
             <span class="badge badge-error ml-auto" id="rejected-badge" style={rejectedUsers.length > 0 ? '' : 'display: none'}>{rejectedUsers.length}</span>
           </summary>
@@ -153,7 +153,7 @@ const verifiedCount = verifiedUsers.length;
       <div class="px-8 pb-8">
         <details class="collapse collapse-arrow border border-base-300">
           <summary class="collapse-title flex items-center gap-2">
-            <img src={circleCheck.src} class="h-8" />
+            <img loading="lazy" src={circleCheck.src} class="h-8" />
             Utilisateurs vérifiés
             <span class="badge badge-success ml-auto" id="verified-badge" style={verifiedUsers.length > 0 ? '' : 'display: none'}>{verifiedUsers.length}</span>
           </summary>

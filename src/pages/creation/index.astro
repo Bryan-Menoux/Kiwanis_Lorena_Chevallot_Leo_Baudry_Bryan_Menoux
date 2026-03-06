@@ -224,10 +224,10 @@ const allPages = db.pages;
 
         <div class="flex flex-col gap-4">
           <div class="w-full">
-            <p class="mb-2 text-sm font-medium text-base-content/70">Filtres</p>
+            <h3 class="mb-2">Filtres</h3>
             <ActionsSearch showStatus={true} value={q} statusOptions={["all","actions","projets","produits","brouillon"]} embedded={true}>
               <label slot="secondary-extra" class="form-control w-full gap-1" for="sort-select">
-                <span class="text-xs font-medium uppercase tracking-wide text-base-content/60">Trier par date</span>
+                <span class="text-xs font-medium tracking-wide text-base-content/60">Trier par date</span>
                 <select id="sort-select" class="select select-bordered w-full">
                   <option value="updated_desc">Recent -> Ancien</option>
                   <option value="updated_asc">Ancien -> Recent</option>
