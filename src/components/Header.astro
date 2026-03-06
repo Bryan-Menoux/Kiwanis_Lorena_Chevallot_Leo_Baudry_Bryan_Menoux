@@ -15,7 +15,7 @@ import diagArrow from "../assets/diag-arrow.svg";
 >
   <div class="hidden lg:flex py-4 px-12 items-center justify-between">
     <a href="/" class="flex items-center gap-4">
-      <Image src={Logo} alt="Logo" loading="eager" class="h-14 w-auto" draggable="false" />
+      <Image src={Logo} alt="Logo" loading="eager" quality={100} class="h-14 w-auto" draggable="false" />
       <div class="flex flex-col text-gray-900 leading-tight">
         <span class="text-xl font-bold tracking-tighter font-merriweather"
           >KIWANIS</span
@@ -135,7 +135,7 @@ import diagArrow from "../assets/diag-arrow.svg";
   <div class="lg:hidden flex flex-col items-center p-4 gap-3 w-full">
     <div class="w-full flex items-center justify-between gap-4 max-w-[90dvw]">
       <a href="/" class="shrink-0">
-        <Image src={Logo} alt="Logo" loading="eager" class="h-12 w-auto" />
+        <Image src={Logo} alt="Logo" loading="eager" quality={100} class="h-12 w-auto" />
       </a>
 
       <button
@@ -189,14 +189,14 @@ import diagArrow from "../assets/diag-arrow.svg";
           class="mob-link flex justify-between items-center py-2 text-base"
           role="menuitem"
         >
-          Nos membres <span class="opacity-40" aria-hidden="true"><Image src={diagArrow} alt="" layout="fixed" class="h-3 w-auto" aria-hidden="true" /> </span>
+          Nos membres <span class="opacity-40" aria-hidden="true"><Image src={diagArrow} alt="" layout="fixed" quality={100} class="h-3 w-auto" aria-hidden="true" /> </span>
         </a>
         <a
           href="/don"
           class="mob-link flex justify-between items-center py-2 text-base"
           role="menuitem"
         >
-          Faire un don <span class="opacity-40" aria-hidden="true"><Image src={diagArrow} alt="" layout="fixed" class="h-3 w-auto" aria-hidden="true" /> </span>
+          Faire un don <span class="opacity-40" aria-hidden="true"><Image src={diagArrow} alt="" layout="fixed" quality={100} class="h-3 w-auto" aria-hidden="true" /> </span>
         </a>
 
         <div
@@ -211,21 +211,21 @@ import diagArrow from "../assets/diag-arrow.svg";
           class="mob-link flex justify-between items-center py-2 text-base"
           role="menuitem"
         >
-          Nos actions <span class="opacity-40" aria-hidden="true"><Image src={diagArrow} alt="" layout="fixed" class="h-3 w-auto" aria-hidden="true" /> </span>
+          Nos actions <span class="opacity-40" aria-hidden="true"><Image src={diagArrow} alt="" layout="fixed" quality={100} class="h-3 w-auto" aria-hidden="true" /> </span>
         </a>
         <a
           href="/projets"
           class="mob-link flex justify-between items-center py-2 text-base"
           role="menuitem"
         >
-          Nos projets <span class="opacity-40" aria-hidden="true"><Image src={diagArrow} alt="" layout="fixed" class="h-3 w-auto" aria-hidden="true" /> </span>
+          Nos projets <span class="opacity-40" aria-hidden="true"><Image src={diagArrow} alt="" layout="fixed" quality={100} class="h-3 w-auto" aria-hidden="true" /> </span>
         </a>
         <a
           href="/produits"
           class="mob-link flex justify-between items-center py-2 text-base"
           role="menuitem"
         >
-          Nos produits <span class="opacity-40" aria-hidden="true"><Image src={diagArrow} alt="" layout="fixed" class="h-3 w-auto" aria-hidden="true" /> </span>
+          Nos produits <span class="opacity-40" aria-hidden="true"><Image src={diagArrow} alt="" layout="fixed" quality={100} class="h-3 w-auto" aria-hidden="true" /> </span>
         </a>
 
         <div
@@ -267,7 +267,7 @@ import diagArrow from "../assets/diag-arrow.svg";
                   >
                     <div class="avatar">
                       <div class="w-10 rounded-full ring ring-offset-base-100 ring-white/30 overflow-hidden">
-                        <Image src={userWhite} alt="" aria-hidden="true" loading="eager" />
+                        <Image src={userWhite} alt="" aria-hidden="true" loading="eager" quality={100} />
                       </div>
                     </div>
                     <span class="text-sm font-semibold">Mon compte</span>

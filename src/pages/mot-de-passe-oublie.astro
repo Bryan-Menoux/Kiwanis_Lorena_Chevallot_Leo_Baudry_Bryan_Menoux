@@ -1,5 +1,6 @@
 ﻿---
 import Layout from "../layouts/Layout-login.astro";
+import { Image } from "astro:assets";
 import shapesLeft from "../assets/login-page/shapes-left.svg";
 import shapesRight from "../assets/login-page/shapes-right.svg";
 import logo from "../assets/logo-kiwanis-full.svg";
@@ -43,18 +44,24 @@ if (isPostForm) {
   <div
     class="absolute top-8 left-8 flex items-center text-white hover:underline z-10"
   >
-    <img loading="lazy" src={backArrow.src} aria-hidden="true" />
+    <Image src={backArrow} alt="" loading="lazy" aria-hidden="true" quality={100} />
     <a href="/" class="text-white ml-2">Retour à l'accueil</a>
   </div>
-  <img loading="lazy"
-    src={shapesLeft.src}
+  <Image
+    src={shapesLeft}
+    alt=""
+    loading="lazy"
     aria-hidden="true"
+    quality={100}
     class="absolute left-0 bottom-0 w-[50dvw] lg:w-[25dvw] select-none"
     draggable="false"
   />
-  <img loading="lazy"
-    src={shapesRight.src}
+  <Image
+    src={shapesRight}
+    alt=""
+    loading="lazy"
     aria-hidden="true"
+    quality={100}
     class="absolute right-0 top-0 w-[70dvw] md:w-[50dvw] lg:w-[40dvw] select-none"
     draggable="false"
   />
@@ -62,9 +69,11 @@ if (isPostForm) {
   <div
     class="absolute -translate-x-1/2 -translate-y-1/2 left-1/2 top-1/2 flex flex-col lg:flex-row gap-4 md:gap-16 justify-center items-center z-10"
   >
-    <img loading="lazy"
-      src={logo.src}
+    <Image
+      src={logo}
       alt="Logo Kiwanis Pays de Montbéliard"
+      loading="lazy"
+      quality={100}
       class="md:w-[30dvw] lg:w-[15dvw]"
     />
     <div class="lg:max-w-[20dvw]">
@@ -78,9 +87,11 @@ if (isPostForm) {
 
       <form method="POST" class="flex flex-col w-full relative">
         <div class="relative my-2">
-          <img loading="lazy"
-            src={userIcon.src}
+          <Image
+            src={userIcon}
             alt=""
+            loading="lazy"
+            quality={100}
             class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 opacity-70"
           />
           <input

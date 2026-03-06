@@ -1,4 +1,6 @@
 ﻿---
+import { Image } from "astro:assets";
+
 export interface Props {
   fieldName: string;
   previewData?: any;
@@ -42,12 +44,16 @@ const currentImage = mode === "edit" && previewData ? previewData[fieldName] : n
     class="hidden"
   />
   <div class="flex flex-col items-center text-center pointer-events-none">
-    <img loading="lazy"
-      src={imageIcon?.src}
-      alt="Icône image"
-      class="h-16 w-16"
-      style="filter:grayscale(100%) brightness(0.5); opacity:0.3;"
-    />
+    {imageIcon && (
+      <Image
+        src={imageIcon}
+        alt="Icône image"
+        loading="lazy"
+        quality={100}
+        class="h-16 w-16"
+        style="filter:grayscale(100%) brightness(0.5); opacity:0.3;"
+      />
+    )}
     <span class="text-sm">{ctaText}</span>
     {helperText ? <span class="text-xs text-gray-400">{helperText}</span> : null}
   </div>

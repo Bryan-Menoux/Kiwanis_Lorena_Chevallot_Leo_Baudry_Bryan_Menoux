@@ -13,6 +13,7 @@ import { Image } from "astro:assets";
         src={logo} 
         alt="logo kiwanis" 
         loading="eager"
+        quality={100}
         class="w-32 h-32 md:w-40 md:h-40 lg:w-auto lg:h-auto shrink lg:min-w-0 object-contain" 
       />
       <div class="text-left flex flex-col flex-1 lg:flex-initial justify-between lg:h-full gap-0 w-fit font-merriweather">
@@ -40,30 +41,30 @@ import { Image } from "astro:assets";
           <nav class="flex flex-col gap-4 md:min-w-40 lg:gap-2">
             <a href="/nos-membres" class="text-white hover:opacity-70 transition-opacity flex items-center justify-between">
               Nos membres
-              <Image src={diagArrow} alt="" aria-hidden="true" layout="fixed" class="w-3 h-3" />
+              <Image src={diagArrow} alt="" aria-hidden="true" layout="fixed" quality={100} class="w-3 h-3" />
             </a>
             <a href="/contact" class="text-white hover:opacity-70 transition-opacity flex items-center justify-between">
               Page contact
-              <Image src={diagArrow} alt="" aria-hidden="true" layout="fixed" class="w-3 h-3" />
+              <Image src={diagArrow} alt="" aria-hidden="true" layout="fixed" quality={100} class="w-3 h-3" />
             </a>
             <a href="/faire-un-don" class="text-white hover:opacity-70 transition-opacity flex items-center justify-between">
               Faire un don
-              <Image src={diagArrow} alt="" aria-hidden="true" layout="fixed" class="w-3 h-3" />
+              <Image src={diagArrow} alt="" aria-hidden="true" layout="fixed" quality={100} class="w-3 h-3" />
             </a>
           </nav>
 
           <nav class="flex flex-col gap-4 md:min-w-40 lg:gap-2">
             <a href="/nos-actions" class="text-white hover:opacity-70 transition-opacity flex items-center justify-between">
               Nos actions
-              <Image src={diagArrow} alt="" aria-hidden="true" layout="fixed" class="w-3 h-3" />
+              <Image src={diagArrow} alt="" aria-hidden="true" layout="fixed" quality={100} class="w-3 h-3" />
             </a>
             <a href="/nos-projets" class="text-white hover:opacity-70 transition-opacity flex items-center justify-between">
               Nos projets
-              <Image src={diagArrow} alt="" aria-hidden="true" layout="fixed" class="w-3 h-3" />
+              <Image src={diagArrow} alt="" aria-hidden="true" layout="fixed" quality={100} class="w-3 h-3" />
             </a>
             <a href="/nos-produits" class="text-white hover:opacity-70 transition-opacity flex items-center justify-between">
               Nos produits
-              <Image src={diagArrow} alt="" aria-hidden="true" layout="fixed" class="w-3 h-3" />
+              <Image src={diagArrow} alt="" aria-hidden="true" layout="fixed" quality={100} class="w-3 h-3" />
             </a>
           </nav>
         </div>
