@@ -5,6 +5,7 @@ import { Image } from "astro:assets";
 import heroMember from "../assets/members-page/hero-member.webp";
 import MembersGrid from "../components/Members-grid.astro";
 import diagArrow from "../assets/diag-arrow.svg";
+import kiwanisMembres from "../assets/members-page/kiwanis-membres-arbre.webp";
 import members1 from "../assets/members-page/members-1.webp";
 import members2 from "../assets/members-page/members-2.webp";
 ---
@@ -17,10 +18,9 @@ import members2 from "../assets/members-page/members-2.webp";
   />
   <div class="flex flex-col max-w-7xl mx-auto my-32 gap-4 px-8">
     <p>
-      Créé en 2019 par Marie-France ZUSATZ, le club rassemble 16 femmes aux
-      parcours variés, unies par l'envie d'agir pour les autres, et notamment
-      pour les enfants. Chacune apporte son histoire et ses compétences, ce qui
-      fait la richesse et l'identité du club.
+      Sur cette page, vous retrouverez les membres qui font vivre le Kiwanis féminin 
+      Pays de Montbéliard au quotidien. Ce sont elles que vous croisez lors des événements, 
+      derrière les stands, à l’organisation des actions et des projets pour les enfants.
     </p>
   </div>
   <MembersGrid />
@@ -30,17 +30,26 @@ import members2 from "../assets/members-page/members-2.webp";
         >talents</b
       >.
     </h3>
-    <button class="btn btn-accent w-fit px-8 py-6 mx-auto mt-16 md:24 lg:32"
-      >Télécharger la liste des membres <Image src={diagArrow} alt="" aria-hidden="true" layout="fixed" /></button
-    >
+    <a href={kiwanisMembres.src} 
+        download 
+        class="btn btn-accent w-fit px-8 py-6 mx-auto mt-16 md:24 lg:32">
+        Télécharger la liste des membres 
+        <Image 
+          src={diagArrow} 
+          alt="" 
+          aria-hidden="true" 
+          layout="fixed" 
+        />
+      </a>
   </div>
 
   <!-- Bas de page -->
    <div class="flex flex-col max-w-7xl mx-auto my-32 gap-8 px-8">
       <div class="grid grid-cols-1 md:grid-cols-[1fr_1fr] gap-8 lg:gap-16 min-h-[40dvh]">
           <div class="flex flex-col gap-4 mt-6">
-            <h4>Des effets concrets pour les enfants d'ici</h4>
-            <p>Votre soutien permet de financer des projets concrets pour les enfants du Pays de Montbéliard, comme des actions menées avec des écoles, des associations locales ou des familles, et contribue directement à améliorer leur quotidien.</p>
+            <h4>Une histoire qui continue</h4>
+            <p>Le club évolue au fil des années : de nouvelles bénévoles nous rejoignent, de nouveaux projets naissent et notre façon d’agir s’enrichit des rencontres faites sur le territoire.</p>
+            <p>Bien que le club soit féminin, nos actions s’adressent à tous. Toute personne souhaitant participer, soutenir un projet ou nous rencontrer est la bienvenue lors de nos événements.</p>
           </div>
           <div class="flex flex-col w-full mx-auto md:max-w-full">
             <Image
@@ -67,8 +76,9 @@ import members2 from "../assets/members-page/members-2.webp";
           />
         </div>
         <div class="flex flex-col gap-4 mt-6">
-          <h4>Plusieurs façons de vous engager à nos côtés</h4>
-          <p>Entreprises, commerces, collectivités ou particuliers, chacun peut s'engager à sa manière, par un don, un partenariat, des lots ou la mise à disposition de produits ou de services. Quel que soit le format, votre soutien renforce nos actions en faveur des enfants.</p>
+          <h4>Nous rejoindre</h4>
+          <p>Si vous partagez notre envie d’agir pour les enfants du Pays de Montbéliard et que vous avez un peu de temps à consacrer au bénévolat, vous pouvez nous rejoindre.</p>
+          <p>La première étape est simple : assister à une réunion ou échanger avec nous sur votre envie de vous engager. Il suffit de nous contacter via la page Contact du site, et nous reviendrons vers vous pour la suite.</p>
         </div>
         <div class="flex flex-col w-full mx-auto md:max-w-full md:hidden">
           <Image
