@@ -1,6 +1,7 @@
 ﻿---
 import Hero from "../components/Hero.astro";
 import Layout from "../layouts/Layout.astro";
+import { Image } from "astro:assets";
 import heroMember from "../assets/members-page/hero-member.webp";
 import MembersGrid from "../components/Members-grid.astro";
 import diagArrow from "../assets/diag-arrow.svg";
@@ -10,7 +11,7 @@ import members2 from "../assets/members-page/members-2.webp";
 
 <Layout>
   <Hero
-    image={heroMember.src}
+    image={heroMember}
     title="Membres"
     subtitle="Découvrez les membres de notre communauté."
   />
@@ -30,10 +31,7 @@ import members2 from "../assets/members-page/members-2.webp";
       >.
     </h3>
     <button class="btn btn-accent w-fit px-8 py-6 mx-auto mt-16 md:24 lg:32"
-      >Télécharger la liste des membres <img loading="lazy"
-        src={diagArrow.src}
-        aria-hidden="true"
-      /></button
+      >Télécharger la liste des membres <Image src={diagArrow} alt="" aria-hidden="true" layout="fixed" /></button
     >
   </div>
 
@@ -45,19 +43,43 @@ import members2 from "../assets/members-page/members-2.webp";
             <p>Votre soutien permet de financer des projets concrets pour les enfants du Pays de Montbéliard, comme des actions menées avec des écoles, des associations locales ou des familles, et contribue directement à améliorer leur quotidien.</p>
           </div>
           <div class="flex flex-col w-full mx-auto md:max-w-full">
-            <img loading="lazy" src={members1.src} alt="Photographie de collégiens avec les kiwaniens" class="w-full flex-1 object-cover rounded-box max-h-80 object-top" />
+            <Image
+              src={members1}
+              alt="Photographie de collégiens avec les kiwaniens"
+              layout="constrained"
+              fit="cover"
+              sizes="(min-width: 768px) 45vw, 90vw"
+              quality={80}
+              class="w-full flex-1 object-cover rounded-box max-h-80 object-top"
+            />
           </div>
       </div>
       <div class="grid grid-cols-1 md:grid-cols-[1fr_1fr] gap-8 lg:gap-16 min-h-[40dvh]">
         <div class="flex-col w-full mx-auto md:max-w-full hidden md:flex">
-          <img loading="lazy" src={members2.src} alt="Photographie des Kiwaniens avec Loïc Ballet" class="w-full flex-1 object-cover rounded-box max-h-80 object-bottom" />
+          <Image
+            src={members2}
+            alt="Photographie des Kiwaniens avec Loïc Ballet"
+            layout="constrained"
+            fit="cover"
+            sizes="(min-width: 768px) 45vw, 90vw"
+            quality={80}
+            class="w-full flex-1 object-cover rounded-box max-h-80 object-bottom"
+          />
         </div>
         <div class="flex flex-col gap-4 mt-6">
           <h4>Plusieurs façons de vous engager à nos côtés</h4>
           <p>Entreprises, commerces, collectivités ou particuliers, chacun peut s'engager à sa manière, par un don, un partenariat, des lots ou la mise à disposition de produits ou de services. Quel que soit le format, votre soutien renforce nos actions en faveur des enfants.</p>
         </div>
         <div class="flex flex-col w-full mx-auto md:max-w-full md:hidden">
-          <img loading="lazy" src={members2.src} alt="Photographie des Kiwaniens avec Loïc Ballet" class="w-full flex-1 object-cover rounded-box max-h-80 object-bottom" />
+          <Image
+            src={members2}
+            alt="Photographie des Kiwaniens avec Loïc Ballet"
+            layout="constrained"
+            fit="cover"
+            sizes="(min-width: 768px) 45vw, 90vw"
+            quality={80}
+            class="w-full flex-1 object-cover rounded-box max-h-80 object-bottom"
+          />
         </div>
       </div>
   </div>
