@@ -64,7 +64,7 @@ if (isPostForm) {
   <div
     class="absolute top-8 left-8 flex items-center text-white hover:underline z-10"
   >
-    <Image src={backArrow} alt="" loading="eager" aria-hidden="true" />
+    <Image src={backArrow} alt="" loading="eager" aria-hidden="true" quality={100} />
     <a href="/" class="text-white ml-2">Retour à l'accueil</a>
   </div>
   <Image
@@ -72,6 +72,7 @@ if (isPostForm) {
     alt=""
     loading="eager"
     aria-hidden="true"
+    quality={100}
     class="absolute left-0 bottom-0 w-[50dvw] lg:w-[25dvw] select-none"
     draggable="false"
   />
@@ -80,6 +81,7 @@ if (isPostForm) {
     alt=""
     loading="eager"
     aria-hidden="true"
+    quality={100}
     class="absolute right-0 top-0 w-[70dvw] md:w-[50dvw] lg:w-[40dvw] select-none"
     draggable="false"
   />
@@ -91,6 +93,7 @@ if (isPostForm) {
       src={logo}
       alt="Logo Kiwanis Pays de Montbéliard"
       loading="eager"
+      quality={100}
       class="md:w-[30dvw] lg:w-[15dvw]"
     />
     <div class="lg:max-w-[20dvw]">
@@ -108,6 +111,7 @@ if (isPostForm) {
             src={userIcon}
             alt=""
             loading="eager"
+            quality={100}
             class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 opacity-70"
           />
           <input
@@ -122,6 +126,7 @@ if (isPostForm) {
             src={lockIcon}
             alt=""
             loading="eager"
+            quality={100}
             class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 opacity-70"
           />
           <input

@@ -1,5 +1,6 @@
 ﻿---
 import Layout from "../layouts/Layout.astro";
+import { Image } from "astro:assets";
 import AccountSection from "../components/Account-section.astro";
 import VerificationSection from "../components/Verification-Account-section.astro";
 import HelpAccountSection from "../components/Help-Account-section.astro";
@@ -61,7 +62,7 @@ const navItems = [
       type="button"
     >
       <span id="nav-toggle-icon-wrapper" class="flex items-center justify-center w-6 h-6 flex-none transition duration-200 min-w-6 min-h-6 max-w-6 max-h-6">
-        <img loading="lazy" id="nav-toggle-icon" src={arrow.src} alt="Ouvrir/fermer le menu" class="w-6 h-6 flex-none object-contain min-w-6 min-h-6 max-w-6 max-h-6" />
+        <Image src={arrow} alt="Ouvrir/fermer le menu" loading="lazy" quality={100} id="nav-toggle-icon" class="w-6 h-6 flex-none object-contain min-w-6 min-h-6 max-w-6 max-h-6" />
       </span>
       <span id="nav-toggle-label" class="nav-label whitespace-nowrap flex-1 text-left self-center pl-1">Fermer le menu</span>
     </button>
@@ -76,8 +77,11 @@ const navItems = [
             }`} 
             data-section={item.id}
           >
-            <img loading="lazy"
-              src={item.icon.src}
+            <Image
+              src={item.icon}
+              alt=""
+              loading="lazy"
+              quality={100}
               class={`nav-icon w-6 h-6 transition duration-260 ease-[cubic-bezier(0.2,0.8,0.2,1)] ${i === 0 ? "filter brightness-0 invert" : ""}`}
             />
             <span class="nav-label whitespace-nowrap flex-1 text-left self-center pl-1">{item.label}</span>
@@ -91,7 +95,7 @@ const navItems = [
           type="button"
           class="nav-item-desktop w-full flex items-center justify-start gap-4 px-4 h-12 rounded-lg bg-accent text-white hover:bg-accent-focus transition duration-200 ease-[cubic-bezier(0.2,0.8,0.2,1)] text-sm"
         >
-          <img loading="lazy" src={logout.src} class="nav-icon w-6 h-6 transition duration-260 ease-[cubic-bezier(0.2,0.8,0.2,1)] filter brightness-0 invert" />
+          <Image src={logout} alt="" loading="lazy" quality={100} class="nav-icon w-6 h-6 transition duration-260 ease-[cubic-bezier(0.2,0.8,0.2,1)] filter brightness-0 invert" />
           <span class="nav-label whitespace-nowrap flex-1 text-left self-center pl-1">Déconnexion</span>
         </button>
       </li>
@@ -116,8 +120,11 @@ const navItems = [
             }`}
             data-section={item.id}
           >
-            <img loading="lazy"
-              src={item.icon.src}
+            <Image
+              src={item.icon}
+              alt=""
+              loading="lazy"
+              quality={100}
               class={`w-6 h-6 ${i === 0 ? "opacity-100" : "opacity-60"}`}
             />
           </a>

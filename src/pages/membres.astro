@@ -30,17 +30,9 @@ import members2 from "../assets/members-page/members-2.webp";
         >talents</b
       >.
     </h3>
-    <a href={kiwanisMembres.src} 
-        download 
-        class="btn btn-accent w-fit px-8 py-6 mx-auto mt-16 md:24 lg:32">
-        Télécharger la liste des membres 
-        <Image 
-          src={diagArrow} 
-          alt="" 
-          aria-hidden="true" 
-          layout="fixed" 
-        />
-      </a>
+    <button class="btn btn-accent w-fit px-8 py-6 mx-auto mt-16 md:24 lg:32"
+      >Télécharger la liste des membres <Image src={diagArrow} alt="" aria-hidden="true" layout="fixed" quality={100} /></button
+    >
   </div>
 
   <!-- Bas de page -->
@@ -58,7 +50,7 @@ import members2 from "../assets/members-page/members-2.webp";
               layout="constrained"
               fit="cover"
               sizes="(min-width: 768px) 45vw, 90vw"
-              quality={80}
+              quality={100}
               class="w-full flex-1 object-cover rounded-box max-h-80 object-top"
             />
           </div>
@@ -71,7 +63,7 @@ import members2 from "../assets/members-page/members-2.webp";
             layout="constrained"
             fit="cover"
             sizes="(min-width: 768px) 45vw, 90vw"
-            quality={80}
+            quality={100}
             class="w-full flex-1 object-cover rounded-box max-h-80 object-bottom"
           />
         </div>
@@ -87,7 +79,7 @@ import members2 from "../assets/members-page/members-2.webp";
             layout="constrained"
             fit="cover"
             sizes="(min-width: 768px) 45vw, 90vw"
-            quality={80}
+            quality={100}
             class="w-full flex-1 object-cover rounded-box max-h-80 object-bottom"
           />
         </div>
