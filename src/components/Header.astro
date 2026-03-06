@@ -174,7 +174,8 @@ import diagArrow from "../assets/diag-arrow.svg";
 
     <div
       id="mobile-dropdown"
-      class="hidden w-full max-w-[90dvw] rounded-2xl p-7 text-white shadow-2xl bg-accent opacity-0 -translate-y-2 pointer-events-none transition-[opacity,transform] duration-200"
+      class="w-full max-w-[90dvw] rounded-2xl p-7 text-white shadow-2xl bg-accent"
+      style="display: none;"
       role="menu"
       aria-hidden="true"
     >
@@ -304,19 +305,6 @@ import diagArrow from "../assets/diag-arrow.svg";
     transform: translateY(-110%);
   }
 
-  #ham-top,
-  #ham-bottom {
-    transform-box: fill-box;
-    transform-origin: center;
-    transition: transform 0.18s ease;
-  }
-
-  #mobile-dropdown.is-open {
-    opacity: 1;
-    transform: translateY(0);
-    pointer-events: auto;
-  }
-
   #discover-dropdown.is-open {
     opacity: 1;
     visibility: visible;
@@ -354,11 +342,6 @@ import diagArrow from "../assets/diag-arrow.svg";
     if (!(hamTop instanceof SVGElement) || !(hamBottom instanceof SVGElement)) return;
 
     if (gsapInstance) {
-      gsapInstance.set([hamTop, hamBottom], {
-        transformOrigin: "50% 50%",
-        y: 0,
-        rotate: 0,
-      });
       gsapInstance.to(hamTop, {
         y: isOpen ? 4 : 0,
         rotate: isOpen ? 45 : 0,
@@ -387,54 +370,41 @@ import diagArrow from "../assets/diag-arrow.svg";
   }
 
   function openMobileDropdown(dropdown: HTMLElement, links: HTMLElement[]) {
-    dropdown.classList.remove("hidden");
-
     if (!gsapInstance) {
-      requestAnimationFrame(() => {
-        dropdown.classList.add("is-open");
-      });
+      dropdown.style.display = "block";
+      dropdown.style.opacity = "1";
+      dropdown.style.transform = "translateY(0)";
       return;
     }
 
-    dropdown.classList.add("is-open");
     gsapInstance.killTweensOf([dropdown, ...links]);
-    gsapInstance.set(dropdown, { display: "block" });
-    gsapInstance.fromTo(
-      dropdown,
-      { opacity: 0, y: -10 },
-      { opacity: 1, y: 0, duration: 0.2, ease: "power2.out" },
-    );
-    gsapInstance.fromTo(
-      links,
-      { opacity: 0, y: 5 },
-      { opacity: 1, y: 0, stagger: 0.02, duration: 0.15, overwrite: "auto" },
-    );
+    dropdown.style.display = "block";
+    gsapInstance
+      .timeline()
+      .to(dropdown, { opacity: 1, y: 0, duration: 0.2, ease: "power2.out" })
+      .fromTo(
+        links,
+        { opacity: 0, y: 5 },
+        { opacity: 1, y: 0, stagger: 0.02, duration: 0.15, overwrite: "auto" },
+        "-=0.1",
+      );
   }
 
   function closeMobileDropdown(dropdown: HTMLElement) {
     if (!gsapInstance) {
-      dropdown.classList.remove("is-open");
+      dropdown.style.opacity = "0";
+      dropdown.style.transform = "translateY(-10px)";
       window.setTimeout(() => {
-        if (!dropdown.classList.contains("is-open")) {
-          dropdown.classList.add("hidden");
-        }
-      }, 200);
+        dropdown.style.display = "none";
+      }, 150);
       return;
     }
 
     gsapInstance.killTweensOf(dropdown);
-    gsapInstance.to(dropdown, {
-      opacity: 0,
-      y: -10,
-      duration: 0.15,
-      ease: "power2.in",
-      onComplete: () => {
-        dropdown.classList.remove("is-open");
-        if (!dropdown.classList.contains("is-open")) {
-          dropdown.classList.add("hidden");
-        }
-      },
-    });
+    gsapInstance
+      .timeline()
+      .to(dropdown, { opacity: 0, y: -10, duration: 0.15, ease: "power2.in" })
+      .set(dropdown, { display: "none" });
   }
 
   function setDiscoverState(isOpen: boolean) {
@@ -494,7 +464,7 @@ import diagArrow from "../assets/diag-arrow.svg";
     });
   }
 
-  function initMenu() {
+  async function initMenu() {
     const toggle = document.getElementById("menu-toggle") as HTMLButtonElement;
     const dropdown = document.getElementById("mobile-dropdown") as HTMLElement;
     const links = Array.from(
@@ -504,11 +474,29 @@ import diagArrow from "../assets/diag-arrow.svg";
     if (!toggle || !dropdown) return;
 
     let isOpen = false;
+    await ensureGsap();
+
+    if (gsapInstance) {
+      gsapInstance.set(dropdown, { display: "none", opacity: 0, y: -10 });
+      const hamTop = document.getElementById("ham-top");
+      const hamBottom = document.getElementById("ham-bottom");
+      if (hamTop && hamBottom) {
+        gsapInstance.set([hamTop, hamBottom], {
+          transformOrigin: "50% 50%",
+          y: 0,
+          rotate: 0,
+        });
+      }
+    } else {
+      dropdown.style.display = "none";
+      dropdown.style.opacity = "0";
+      dropdown.style.transform = "translateY(-10px)";
+    }
+
     setHamburgerState(false);
 
     const toggleMenu = (e?: Event) => {
       e?.stopPropagation();
-      void ensureGsap();
       isOpen = !isOpen;
 
       toggle.setAttribute("aria-expanded", isOpen.toString());
@@ -535,8 +523,9 @@ import diagArrow from "../assets/diag-arrow.svg";
     window.addEventListener("resize", () => {
       if (window.innerWidth >= 1024 && isOpen) {
         isOpen = false;
-        dropdown.classList.remove("is-open");
-        dropdown.classList.add("hidden");
+        dropdown.style.display = "none";
+        dropdown.style.opacity = "0";
+        dropdown.style.transform = "translateY(-10px)";
         toggle.setAttribute("aria-expanded", "false");
         dropdown.setAttribute("aria-hidden", "true");
         setHamburgerState(false);
@@ -616,7 +605,7 @@ import diagArrow from "../assets/diag-arrow.svg";
       });
     }
 
-    initMenu();
+    void initMenu();
     initDiscoverDropdown();
   });
 </script>

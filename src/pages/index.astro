@@ -53,15 +53,16 @@ const mapAddress = "76 bis faubourg de Besançon, 25200 Montbéliard";
     <div
       class="flex flex-col w-full mx-auto max-h-[40dvh] lg:max-h-[60dvh] max-w-full"
     >
-      <Image
-        src={landing1}
-        alt="Photographie de membres du Kiwanis aux 12 coups de Midi"
-        layout="constrained"
-        fit="cover"
-        sizes="(min-width: 1024px) 34vw, 80vw"
-        quality={80}
-        class="w-full max-h-full flex-1 object-cover rounded-box"
-      />
+      <div class="w-full aspect-565/569 overflow-hidden rounded-box">
+        <img
+          src={landing1.src}
+          alt="Photographie de membres du Kiwanis aux 12 coups de Midi"
+          width={landing1.width}
+          height={landing1.height}
+          loading="lazy"
+          class="block w-full h-full object-cover"
+        />
+      </div>
       <p class="text-sm mt-2">Le Kiwanis Féminin aux 12 coups de Midi</p>
     </div>
   </div>
@@ -323,7 +324,10 @@ const mapAddress = "76 bis faubourg de Besançon, 25200 Montbéliard";
         target.src = mapSrc;
       };
 
-      if ("IntersectionObserver" in window) {
+      const supportsIntersectionObserver =
+        typeof IntersectionObserver !== "undefined";
+
+      if (supportsIntersectionObserver) {
         const observer = new IntersectionObserver(
           (entries) => {
             entries.forEach((entry) => {
@@ -343,10 +347,14 @@ const mapAddress = "76 bis faubourg de Besançon, 25200 Montbéliard";
         return;
       }
 
-      const handleApproach = () => {
+      const removeApproachListeners = () => {
+        window.removeEventListener("scroll", handleApproach);
+        window.removeEventListener("resize", handleApproach);
+      };
+
+      function handleApproach(_event?: Event) {
         if (root.dataset.mapLoaded === "true") {
-          window.removeEventListener("scroll", handleApproach);
-          window.removeEventListener("resize", handleApproach);
+          removeApproachListeners();
           return;
         }
 
@@ -354,14 +362,14 @@ const mapAddress = "76 bis faubourg de Besançon, 25200 Montbéliard";
         const viewportHeight = window.innerHeight || document.documentElement.clientHeight;
 
         if (rect.top <= viewportHeight + 640) {
-          window.removeEventListener("scroll", handleApproach);
-          window.removeEventListener("resize", handleApproach);
+          removeApproachListeners();
           loadMap();
         }
-      };
+      }
 
-      window.addEventListener("scroll", handleApproach, { passive: true });
-      window.addEventListener("resize", handleApproach, { passive: true });
+      const passiveListenerOptions: AddEventListenerOptions = { passive: true };
+      window.addEventListener("scroll", handleApproach, passiveListenerOptions);
+      window.addEventListener("resize", handleApproach, passiveListenerOptions);
       handleApproach();
     });
   </script>
