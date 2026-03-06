@@ -5,6 +5,10 @@ import heroImg from "../../assets/action-page/hero-action-page.webp";
 import SearchActions from "../../components/SearchActions.astro";
 import slugify from "slugify";
 import { formatDateShort } from "../../utils/utilitaires.js";
+import HeroActions from "../../assets/action-page/hero-action-page.webp";
+import HeroActionsMobile from "../../assets/action-page/hero-action-page-mobile.webp";
+import HeroActionsTablet from "../../assets/action-page/hero-action-page-tablette.webp";
+import { getImage } from "astro:assets";
 
 let actionsRaw: any[] = [];
 try {
@@ -97,13 +101,23 @@ const yearOptions = Array.from(
       .filter((v): v is string => Boolean(v)),
   ),
 ).sort((a, b) => b.localeCompare(a));
+
+
+const lcpMobile = await getImage({ src: HeroActionsMobile, format: "webp", width: 440, quality: 80 });
+const lcpTablet = await getImage({ src: HeroActionsTablet, format: "webp", width: 1280, quality: 80 });
+const lcpDesktop = await getImage({ src: HeroActions, format: "webp", width: 1600, quality: 80 });
 ---
 
 <Layout>
+  <Fragment slot="head">
+    <link rel="preload" as="image" href={lcpMobile.src} type="image/webp" media="(max-width: 767px)" fetchpriority="high" />
+    <link rel="preload" as="image" href={lcpTablet.src} type="image/webp" media="(min-width: 768px) and (max-width: 1023px)" fetchpriority="high" />
+    <link rel="preload" as="image" href={lcpDesktop.src} type="image/webp" media="(min-width: 1024px)" fetchpriority="high" />
+  </Fragment>
   <Hero
-    image={heroImg}
-    title="Actions"
-    subtitle="Découvrez les actions menées par notre communauté."
+    image={HeroActions}
+    title="Kiwanis Pays de Montbéliard"
+    subtitle="Servir les enfants du monde, au cœur de notre territoire"
   />
 
   <section

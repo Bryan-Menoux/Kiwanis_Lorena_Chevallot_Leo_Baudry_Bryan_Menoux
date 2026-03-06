@@ -6,7 +6,7 @@ import { Image } from "astro:assets";
 
 const currentUser = Astro.locals.pb.authStore.record;
 
-import diagArrow from "../assets/diag-arrow.svg";
+import DiagArrow from "./DiagArrow.astro";
 ---
 
 <header class="fixed top-0 left-0 right-0 z-50">
@@ -225,21 +225,21 @@ import diagArrow from "../assets/diag-arrow.svg";
               class="py-2 flex justify-between items-center text-base"
               role="menuitem"
             >
-              Actions <span class="opacity-40" aria-hidden="true"><Image src={diagArrow} alt="" layout="fixed" quality={80} class="h-3 w-auto" aria-hidden="true" /> </span>
+              Actions <span class="opacity-40" aria-hidden="true"><DiagArrow class="h-3 w-auto" /> </span>
             </a>
             <a
               href="/creation/projets/nouveau"
               class="py-2 flex justify-between items-center text-base"
               role="menuitem"
             >
-              Projets <span class="opacity-40" aria-hidden="true"><Image src={diagArrow} alt="" layout="fixed" quality={80} class="h-3 w-auto" aria-hidden="true" /> </span>
+              Projets <span class="opacity-40" aria-hidden="true"><DiagArrow class="h-3 w-auto" /> </span>
             </a>
             <a
               href="/creation/produits/nouveau"
               class="py-2 flex justify-between items-center text-base"
               role="menuitem"
             >
-              Produits <span class="opacity-40" aria-hidden="true"><Image src={diagArrow} alt="" layout="fixed" quality={80} class="h-3 w-auto" aria-hidden="true" /> </span>
+              Produits <span class="opacity-40" aria-hidden="true"><DiagArrow class="h-3 w-auto" /> </span>
             </a>
           </div>
         </details>
@@ -255,21 +255,21 @@ import diagArrow from "../assets/diag-arrow.svg";
               class="py-2 flex justify-between items-center text-base"
               role="menuitem"
             >
-              Actions <span class="opacity-40" aria-hidden="true"><Image src={diagArrow} alt="" layout="fixed" quality={80} class="h-3 w-auto" aria-hidden="true" /> </span>
+              Actions <span class="opacity-40" aria-hidden="true"><DiagArrow class="h-3 w-auto" /> </span>
             </a>
             <a
               href="/creation/projets/delete"
               class="py-2 flex justify-between items-center text-base"
               role="menuitem"
             >
-              Projets <span class="opacity-40" aria-hidden="true"><Image src={diagArrow} alt="" layout="fixed" quality={80} class="h-3 w-auto" aria-hidden="true" /> </span>
+              Projets <span class="opacity-40" aria-hidden="true"><DiagArrow class="h-3 w-auto" /> </span>
             </a>
             <a
               href="/creation/produits/delete"
               class="py-2 flex justify-between items-center text-base"
               role="menuitem"
             >
-              Produits <span class="opacity-40" aria-hidden="true"><Image src={diagArrow} alt="" layout="fixed" quality={80} class="h-3 w-auto" aria-hidden="true" /> </span>
+              Produits <span class="opacity-40" aria-hidden="true"><DiagArrow class="h-3 w-auto" /> </span>
             </a>
           </div>
         </details>
@@ -285,21 +285,21 @@ import diagArrow from "../assets/diag-arrow.svg";
               class="py-2 flex justify-between items-center text-base"
               role="menuitem"
             >
-              Actions <span class="opacity-40" aria-hidden="true"><Image src={diagArrow} alt="" layout="fixed" quality={80} class="h-3 w-auto" aria-hidden="true" /> </span>
+              Actions <span class="opacity-40" aria-hidden="true"><DiagArrow class="h-3 w-auto" /> </span>
             </a>
             <a
               href="/creation/projets"
               class="py-2 flex justify-between items-center text-base"
               role="menuitem"
             >
-              Projets <span class="opacity-40" aria-hidden="true"><Image src={diagArrow} alt="" layout="fixed" quality={80} class="h-3 w-auto" aria-hidden="true" /> </span>
+              Projets <span class="opacity-40" aria-hidden="true"><DiagArrow class="h-3 w-auto" /> </span>
             </a>
             <a
               href="/creation/produits"
               class="py-2 flex justify-between items-center text-base"
               role="menuitem"
             >
-              Produits <span class="opacity-40" aria-hidden="true"><Image src={diagArrow} alt="" layout="fixed" quality={80} class="h-3 w-auto" aria-hidden="true" /> </span>
+              Produits <span class="opacity-40" aria-hidden="true"><DiagArrow class="h-3 w-auto" /> </span>
             </a>
           </div>
         </details>

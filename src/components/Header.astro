@@ -6,7 +6,7 @@ import userWhite from "../assets/user-white.svg";
 import { Image } from "astro:assets";
 
 const currentUser = Astro.locals.pb.authStore.record;
-import diagArrow from "../assets/diag-arrow.svg";
+import DiagArrow from "./DiagArrow.astro";
 ---
 
 <header
@@ -170,14 +170,14 @@ import diagArrow from "../assets/diag-arrow.svg";
           class="mob-link flex justify-between items-center py-2 text-base"
           role="menuitem"
         >
-          Nos membres <span class="opacity-40" aria-hidden="true"><Image src={diagArrow} alt="" layout="fixed" quality={80} class="h-3 w-auto" aria-hidden="true" /> </span>
+          Nos membres <span class="opacity-40" aria-hidden="true"><DiagArrow class="h-3 w-auto" /> </span>
         </a>
         <a
           href="/don"
           class="mob-link flex justify-between items-center py-2 text-base"
           role="menuitem"
         >
-          Faire un don <span class="opacity-40" aria-hidden="true"><Image src={diagArrow} alt="" layout="fixed" quality={80} class="h-3 w-auto" aria-hidden="true" /> </span>
+          Faire un don <span class="opacity-40" aria-hidden="true"><DiagArrow class="h-3 w-auto" /> </span>
         </a>
 
         <div
@@ -192,21 +192,21 @@ import diagArrow from "../assets/diag-arrow.svg";
           class="mob-link flex justify-between items-center py-2 text-base"
           role="menuitem"
         >
-          Nos actions <span class="opacity-40" aria-hidden="true"><Image src={diagArrow} alt="" layout="fixed" quality={80} class="h-3 w-auto" aria-hidden="true" /> </span>
+          Nos actions <span class="opacity-40" aria-hidden="true"><DiagArrow class="h-3 w-auto" /> </span>
         </a>
         <a
           href="/projets"
           class="mob-link flex justify-between items-center py-2 text-base"
           role="menuitem"
         >
-          Nos projets <span class="opacity-40" aria-hidden="true"><Image src={diagArrow} alt="" layout="fixed" quality={80} class="h-3 w-auto" aria-hidden="true" /> </span>
+          Nos projets <span class="opacity-40" aria-hidden="true"><DiagArrow class="h-3 w-auto" /> </span>
         </a>
         <a
           href="/produits"
           class="mob-link flex justify-between items-center py-2 text-base"
           role="menuitem"
         >
-          Nos produits <span class="opacity-40" aria-hidden="true"><Image src={diagArrow} alt="" layout="fixed" quality={80} class="h-3 w-auto" aria-hidden="true" /> </span>
+          Nos produits <span class="opacity-40" aria-hidden="true"><DiagArrow class="h-3 w-auto" /> </span>
         </a>
 
         <div

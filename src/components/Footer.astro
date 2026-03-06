@@ -1,7 +1,7 @@
 ---
 import logo from "../assets/logo.svg";
-import diagArrow from "../assets/diag-arrow.svg";
 import { Image } from "astro:assets";
+import DiagArrow from "./DiagArrow.astro";
 ---
 
 <footer class="bg-[#2B2549] px-6 py-10 md:px-6 md:py-10 lg:px-6 lg:py-10 w-full lg:min-h-75 mt-16 lg:mt-32">
@@ -41,30 +41,30 @@ import { Image } from "astro:assets";
           <nav class="flex flex-col gap-4 md:min-w-40 lg:gap-2">
             <a href="/nos-membres" class="text-white hover:opacity-70 transition-opacity flex items-center justify-between">
               Nos membres
-              <Image src={diagArrow} alt="" aria-hidden="true" layout="fixed" quality={80} class="w-3 h-3" />
+              <DiagArrow class="w-3 h-3" />
             </a>
             <a href="/contact" class="text-white hover:opacity-70 transition-opacity flex items-center justify-between">
               Page contact
-              <Image src={diagArrow} alt="" aria-hidden="true" layout="fixed" quality={80} class="w-3 h-3" />
+              <DiagArrow class="w-3 h-3" />
             </a>
             <a href="/faire-un-don" class="text-white hover:opacity-70 transition-opacity flex items-center justify-between">
               Faire un don
-              <Image src={diagArrow} alt="" aria-hidden="true" layout="fixed" quality={80} class="w-3 h-3" />
+              <DiagArrow class="w-3 h-3" />
             </a>
           </nav>
 
           <nav class="flex flex-col gap-4 md:min-w-40 lg:gap-2">
             <a href="/nos-actions" class="text-white hover:opacity-70 transition-opacity flex items-center justify-between">
               Nos actions
-              <Image src={diagArrow} alt="" aria-hidden="true" layout="fixed" quality={80} class="w-3 h-3" />
+              <DiagArrow class="w-3 h-3" />
             </a>
             <a href="/nos-projets" class="text-white hover:opacity-70 transition-opacity flex items-center justify-between">
               Nos projets
-              <Image src={diagArrow} alt="" aria-hidden="true" layout="fixed" quality={80} class="w-3 h-3" />
+              <DiagArrow class="w-3 h-3" />
             </a>
             <a href="/nos-produits" class="text-white hover:opacity-70 transition-opacity flex items-center justify-between">
               Nos produits
-              <Image src={diagArrow} alt="" aria-hidden="true" layout="fixed" quality={80} class="w-3 h-3" />
+              <DiagArrow class="w-3 h-3" />
             </a>
           </nav>
         </div>
