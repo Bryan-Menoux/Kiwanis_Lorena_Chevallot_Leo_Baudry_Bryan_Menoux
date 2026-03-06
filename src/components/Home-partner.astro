@@ -12,52 +12,86 @@ const images = Object.entries(imageModules).map(([path, module]) => {
   };
 });
 
-const duplicatedImages = [...images, ...images];
 ---
 
 <div class="partner-carousel-container overflow-hidden relative w-full h-fit">
-  <div class="partner-carousel-inner flex gap-16 lg:gap-32 h-full">
-    {duplicatedImages.map((image, index) => (
-      <Image
-        src={image.src}
-        alt={image.alt}
-        layout="constrained"
-        fit="contain"
-        sizes="(min-width: 1024px) 16vw, (min-width: 768px) 20vw, 33vw"
-        quality={80}
-        class="shrink-0 w-1/3 md:w-1/5 lg:w-1/6 h-full max-h-24 object-contain rounded-box"
-      />
-    ))}
+  <div class="partner-carousel-track h-full">
+    <div class="partner-carousel-group flex items-center gap-10 md:gap-14 lg:gap-20 h-full">
+      {images.map((image) => (
+        <div class="partner-carousel-item shrink-0 flex w-32 items-center justify-center md:w-40 lg:w-48">
+          <Image
+            src={image.src}
+            alt={image.alt}
+            layout="constrained"
+            fit="contain"
+            sizes="(min-width: 1024px) 12rem, (min-width: 768px) 10rem, 8rem"
+            quality={80}
+            class="block h-14 w-full object-contain md:h-16 lg:h-20"
+          />
+        </div>
+      ))}
+    </div>
+    <div class="partner-carousel-group flex items-center gap-10 md:gap-14 lg:gap-20 h-full" aria-hidden="true">
+      {images.map((image) => (
+        <div class="partner-carousel-item shrink-0 flex w-32 items-center justify-center md:w-40 lg:w-48">
+          <Image
+            src={image.src}
+            alt=""
+            aria-hidden="true"
+            layout="constrained"
+            fit="contain"
+            sizes="(min-width: 1024px) 12rem, (min-width: 768px) 10rem, 8rem"
+            quality={80}
+            class="block h-14 w-full object-contain md:h-16 lg:h-20"
+          />
+        </div>
+      ))}
+    </div>
   </div>
 </div>
 
 <style>
-  .partner-carousel-inner {
+  .partner-carousel-track {
+    display: flex;
+    width: max-content;
+    animation: partner-carousel-marquee 34s linear infinite;
+  }
+
+  .partner-carousel-group {
+    flex-shrink: 0;
+    padding-right: 1.5rem;
+  }
+
+  .partner-carousel-track {
     will-change: transform;
   }
-</style>
 
-<script>
-  // Rendre le défilement infini plus fluide, sans à-coups.
-  const carousel = document.querySelector('.partner-carousel-inner') as HTMLElement;
-  if (carousel) {
-    let startTime: number | null = null;
-    let position = 0;
-    const speed = 50; // pixels par seconde
-
-    function animate(currentTime: number) {
-      if (startTime === null) {
-        startTime = currentTime;
-      }
-      const delta = (currentTime - startTime) * speed / 1000;
-      position -= delta;
-      startTime = currentTime;
-      if (position <= -(carousel.scrollWidth / 2)) {
-        position += carousel.scrollWidth / 2;
-      }
-      carousel.style.transform = `translateX(${position}px)`;
-      requestAnimationFrame(animate);
+  @keyframes partner-carousel-marquee {
+    from {
+      transform: translateX(0);
     }
-    requestAnimationFrame(animate);
+
+    to {
+      transform: translateX(-50%);
+    }
   }
-</script>
+
+  @media (prefers-reduced-motion: reduce) {
+    .partner-carousel-track {
+      animation: none;
+      transform: translateX(0);
+    }
+  }
+
+  @media (min-width: 768px) {
+    .partner-carousel-group {
+      padding-right: 2rem;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .partner-carousel-group {
+      padding-right: 3rem;
+    }
+  }
+</style>

@@ -13,6 +13,10 @@ import why1 from "../assets/landing-page/why-1.webp";
 import why2 from "../assets/landing-page/why-2.webp";
 import why3 from "../assets/landing-page/why-3.webp";
 import HomePartner from "../components/Home-partner.astro";
+
+const mapEmbedUrl =
+  "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2694.976201081879!2d6.781242576695513!3d47.5098546946529!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x479216ec97288eb1%3A0x14b7da3408d3161f!2s76%20Fbg%20de%20Besan%C3%A7on%2C%2025200%20Montb%C3%A9liard!5e0!3m2!1sfr!2sfr!4v1768495883263!5m2!1sfr!2sfr";
+const mapAddress = "76 bis faubourg de Besançon, 25200 Montbéliard";
 ---
 
 <Layout>
@@ -138,20 +142,26 @@ import HomePartner from "../components/Home-partner.astro";
       >
     </div>
 
-    <div class="relative h-full min-h-fit">
+    <div class="relative h-full min-h-96 md:min-h-fit rounded-box! overflow-hidden" data-map-loader data-map-src={mapEmbedUrl}>
       <iframe
-        src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2694.976201081879!2d6.781242576695513!3d47.5098546946529!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x479216ec97288eb1%3A0x14b7da3408d3161f!2s76%20Fbg%20de%20Besan%C3%A7on%2C%2025200%20Montb%C3%A9liard!5e0!3m2!1sfr!2sfr!4v1768495883263!5m2!1sfr!2sfr"
-        class="w-full h-full min-h-56 rounded-box"
+        data-map-target
+        title={`Carte interactive de ${mapAddress}`}
+        class="block w-full h-full min-h-56"
         style="border:0;"
         allowfullscreen=""
         loading="lazy"
-        referrerpolicy="no-referrer-when-downgrade"></iframe>
-      <a
-        href="https://www.google.com/maps?ll=47.509851,6.783818&z=16&t=m&hl=fr&gl=FR&mapclient=embed&q=76+Fbg+de+Besan%C3%A7on+25200+Montb%C3%A9liard"
-        target="_blank"
-        class="btn btn-accent w-fit px-4 py-2 lg:px-8 lg:py-6 mt-auto self-end absolute right-2 bottom-3 md:right-3 lg:right-2"
-        >Voir sur maps<Image src={diagArrow} alt="" aria-hidden="true" layout="fixed" quality={80} /></a
-      >
+        referrerpolicy="no-referrer-when-downgrade"
+      ></iframe>
+      <noscript>
+        <iframe
+          src={mapEmbedUrl}
+          class="block w-full min-h-56"
+          style="border:0;"
+          allowfullscreen=""
+          loading="lazy"
+          referrerpolicy="no-referrer-when-downgrade"
+        ></iframe>
+      </noscript>
     </div>
   </div>
 
@@ -295,4 +305,64 @@ import HomePartner from "../components/Home-partner.astro";
   </div>
 
   <HomePartner />
+
+  <script>
+    document.querySelectorAll<HTMLElement>("[data-map-loader]").forEach((root) => {
+      if (root.dataset.mapBound === "true") return;
+      root.dataset.mapBound = "true";
+
+      const target = root.querySelector<HTMLIFrameElement>("[data-map-target]");
+      const mapSrc = root.dataset.mapSrc;
+
+      if (!target || !mapSrc) return;
+
+      const loadMap = () => {
+        if (root.dataset.mapLoaded === "true") return;
+
+        root.dataset.mapLoaded = "true";
+        target.src = mapSrc;
+      };
+
+      if ("IntersectionObserver" in window) {
+        const observer = new IntersectionObserver(
+          (entries) => {
+            entries.forEach((entry) => {
+              if (!entry.isIntersecting) return;
+
+              observer.unobserve(root);
+              loadMap();
+            });
+          },
+          {
+            rootMargin: "640px 0px",
+            threshold: 0.01,
+          }
+        );
+
+        observer.observe(root);
+        return;
+      }
+
+      const handleApproach = () => {
+        if (root.dataset.mapLoaded === "true") {
+          window.removeEventListener("scroll", handleApproach);
+          window.removeEventListener("resize", handleApproach);
+          return;
+        }
+
+        const rect = root.getBoundingClientRect();
+        const viewportHeight = window.innerHeight || document.documentElement.clientHeight;
+
+        if (rect.top <= viewportHeight + 640) {
+          window.removeEventListener("scroll", handleApproach);
+          window.removeEventListener("resize", handleApproach);
+          loadMap();
+        }
+      };
+
+      window.addEventListener("scroll", handleApproach, { passive: true });
+      window.addEventListener("resize", handleApproach, { passive: true });
+      handleApproach();
+    });
+  </script>
 </Layout>

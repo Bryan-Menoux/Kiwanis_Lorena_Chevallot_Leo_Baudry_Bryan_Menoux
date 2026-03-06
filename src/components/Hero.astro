@@ -44,7 +44,10 @@ const tabletSrcSet = tabletImage?.srcSet.attribute || tabletImage?.src;
 const mobileSrcSet = mobileImage?.srcSet.attribute || mobileImage?.src;
 ---
 
-<div class="relative w-[95dvw] h-[85dvh] mx-auto rounded-box mt-[10dvh] lg:mt-28 flex flex-col justify-end px-8 md:px-12 lg:px-16 py-12 md:py-20 lg:py-44 overflow-hidden">
+<div
+  data-hero-root
+  class="relative w-[95dvw] h-[85dvh] mx-auto rounded-box mt-[10dvh] lg:mt-28 flex flex-col justify-end px-8 md:px-12 lg:px-16 py-12 md:py-20 lg:py-44 overflow-hidden"
+>
   <picture class="absolute inset-0">
     {
       mobileSrcSet && (
@@ -83,22 +86,78 @@ const mobileSrcSet = mobileImage?.srcSet.attribute || mobileImage?.src;
 
   <div class="absolute inset-0 bg-linear-to-t from-black via-black/0 to-transparent" aria-hidden="true"></div>
 
-  <h1 class="relative z-10 text-white text-4xl! md:text-5xl! lg:text-7xl! font-bold title">{title}</h1>
-  <p class="relative z-10 text-white text-lg! md:text-xl! lg:text-2xl! font-medium text">{subtitle}</p>
+  <h1
+    data-hero-title
+    class="relative z-10 text-white text-4xl! md:text-5xl! lg:text-7xl! font-bold"
+  >
+    {title}
+  </h1>
+  <p
+    data-hero-text
+    class="relative z-10 text-white text-lg! md:text-xl! lg:text-2xl! font-medium"
+  >
+    {subtitle}
+  </p>
 </div>
 
 <script>
-  gsap.from(".title", {
-    opacity: 0,
-    y: 500,
-    x: -400,
-    duration: 1
-  });
+  import { loadGsap } from "../utils/loadGsap";
 
-  gsap.from(".text", {
-    opacity: 0,
-    y: 500,
-    x: 100,
-    duration: 1
+  type IdleCallback = (callback: () => void) => void;
+
+  const scheduleOnIdle: IdleCallback = (callback) => {
+    if ("requestIdleCallback" in window) {
+      (window.requestIdleCallback as (cb: () => void, options?: { timeout: number }) => number)(
+        callback,
+        { timeout: 700 },
+      );
+      return;
+    }
+
+    window.setTimeout(callback, 120);
+  };
+
+  document.querySelectorAll<HTMLElement>("[data-hero-root]").forEach((root) => {
+    if (root.dataset.heroBound === "true") return;
+    root.dataset.heroBound = "true";
+
+    const prefersReducedMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
+    if (prefersReducedMotion) return;
+
+    const title = root.querySelector<HTMLElement>("[data-hero-title]");
+    const text = root.querySelector<HTMLElement>("[data-hero-text]");
+    if (!title || !text) return;
+
+    const scriptStart = performance.now();
+
+    scheduleOnIdle(async () => {
+      if (!root.isConnected) return;
+      if (window.scrollY > 40) return;
+
+      const gsap = await loadGsap();
+      if (!gsap) return;
+      if (performance.now() - scriptStart > 1200) return;
+
+      gsap.from(title, {
+        opacity: 0,
+        y: 48,
+        x: -24,
+        duration: 0.8,
+        ease: "power2.out",
+        overwrite: "auto",
+      });
+
+      gsap.from(text, {
+        opacity: 0,
+        y: 32,
+        x: 16,
+        duration: 0.7,
+        delay: 0.08,
+        ease: "power2.out",
+        overwrite: "auto",
+      });
+    });
   });
 </script>

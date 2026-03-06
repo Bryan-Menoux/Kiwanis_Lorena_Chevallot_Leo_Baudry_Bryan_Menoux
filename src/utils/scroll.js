@@ -1,4 +1,7 @@
-import { gsap } from "gsap";
+import { loadGsap } from "./loadGsap";
+
+let gsapInstance = typeof window !== "undefined" ? window.gsap || null : null;
+let gsapLoader = null;
 
 // Clé globale utilisée pour éviter plusieurs animations concurrentes sur le défilement de fenêtre.
 const WINDOW_SCROLL_TWEEN_KEY = "__kcWindowScrollTween";
@@ -86,6 +89,16 @@ function getElementPositionInContainer(element, container, axis) {
 
 // Anime le défilement avec GSAP pour un déplacement fluide.
 function tweenScroll(container, axis, targetValue, duration, ease) {
+  if (!gsapInstance) {
+    if (!gsapLoader) {
+      gsapLoader = loadGsap().then((instance) => {
+        gsapInstance = instance;
+        return instance;
+      });
+    }
+    return setScrollPosition(container, axis, targetValue, "smooth");
+  }
+
   if (container === window) {
     const startValue = axis === "x" ? window.scrollX : window.scrollY;
     const state = { value: startValue };
@@ -95,7 +108,7 @@ function tweenScroll(container, axis, targetValue, duration, ease) {
       previousTween.kill();
     }
 
-    const tween = gsap.to(state, {
+    const tween = gsapInstance.to(state, {
       value: targetValue,
       duration,
       ease,
@@ -111,14 +124,14 @@ function tweenScroll(container, axis, targetValue, duration, ease) {
 
   if (container instanceof HTMLElement) {
     if (axis === "x") {
-      gsap.to(container, {
+      gsapInstance.to(container, {
         scrollLeft: targetValue,
         duration,
         ease,
         overwrite: "auto",
       });
     } else {
-      gsap.to(container, {
+      gsapInstance.to(container, {
         scrollTop: targetValue,
         duration,
         ease,

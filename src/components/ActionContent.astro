@@ -622,8 +622,8 @@ const hasThanksSection = hasNonEmptyText(action?.description_remerciements);
 {
   action.galerie_photos && action.galerie_photos.length > 0 && (
     <>
-      <script src={galleryUrl} />
-      <script src={galleryDisplayUrl} />
+      <script src={galleryUrl} defer></script>
+      <script src={galleryDisplayUrl} defer></script>
     </>
   )
 }

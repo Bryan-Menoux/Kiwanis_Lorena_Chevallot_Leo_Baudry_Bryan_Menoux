@@ -158,312 +158,350 @@ const navItems = [
   import { initVerifications } from "../scripts/verification-handlers.js";
   import { initModifications } from "../scripts/modification-handlers.js";
   import { scrollToTarget } from "../utils/scroll.js";
+  import { loadGsap } from "../utils/loadGsap";
 
-  gsap.defaults({ duration: 0.35, ease: "power2.inOut" });
+  async function initAccountPage() {
+    const gsap = await loadGsap();
+    if (gsap) {
+      gsap.defaults({ duration: 0.35, ease: "power2.inOut" });
+    }
 
-  const container = document.getElementById("content-container");
-  const navLinks = document.querySelectorAll(".nav-link");
-  const navLinksMobile = document.querySelectorAll(".nav-link-mobile");
-  const mobileIndicator = document.getElementById("mobile-indicator");
-  let currentSection = 0;
-  const COLLAPSED_WIDTH = 88;
-  const EXPANDED_WIDTH = 224;
+    const container = document.getElementById("content-container");
+    const navLinks = Array.from(document.querySelectorAll<HTMLElement>(".nav-link"));
+    const navLinksMobile = Array.from(
+      document.querySelectorAll<HTMLElement>(".nav-link-mobile"),
+    );
+    const mobileIndicator = document.getElementById("mobile-indicator");
+    const COLLAPSED_WIDTH = 88;
+    const EXPANDED_WIDTH = 224;
 
-  function updateMobileIndicator(index: number) {
-    // Ne rien faire si l'indicateur n'existe pas ou s'il n'y a pas d'items
-    if (!mobileIndicator || navLinksMobile.length === 0) return;
-    // L'indicateur occupe une fraction de 100% égale à 1 / nombre d'items
-    const itemWidth = 100 / navLinksMobile.length;
-    mobileIndicator.style.width = `${itemWidth}%`;
-    // On positionne l'indicateur selon l'index
-    mobileIndicator.style.left = `${itemWidth * index}%`;
-  }
+    function updateMobileIndicator(index: number) {
+      if (!(mobileIndicator instanceof HTMLElement) || navLinksMobile.length === 0) return;
+      const itemWidth = 100 / navLinksMobile.length;
+      mobileIndicator.style.width = `${itemWidth}%`;
+      mobileIndicator.style.left = `${itemWidth * index}%`;
+    }
 
-  // Définit la section active, styles desktop + mobile et indicateur mobile
-  function setActive(index: number) {
-    currentSection = index;
-    updateMobileIndicator(index);
+    function setActive(index: number) {
+      updateMobileIndicator(index);
 
-    // En desktop met en évidence l'item actif et adapte l'icône visuellement
-    navLinks.forEach((link, i) => {
-      const isActive = i === index;
-      link.classList.toggle("bg-accent", isActive);
-      link.classList.toggle("text-white", isActive);
-      link.classList.toggle("hover:bg-base-200", !isActive);
+      navLinks.forEach((link, i) => {
+        const isActive = i === index;
+        link.classList.toggle("bg-accent", isActive);
+        link.classList.toggle("text-white", isActive);
+        link.classList.toggle("hover:bg-base-200", !isActive);
 
-      const img = link.querySelector("img");
-      if (img) {
+        const img = link.querySelector("img");
+        if (!img) return;
         img.classList.toggle("filter", isActive);
         img.classList.toggle("brightness-0", isActive);
         img.classList.toggle("invert", isActive);
-      }
-    });
+      });
 
-    // En mobile met en évidence l'item actif et adapte l'icône visuellement
-    navLinksMobile.forEach((link, i) => {
-      const isActive = i === index;
-      link.classList.toggle("text-accent", isActive);
-      link.classList.toggle("text-base-content", !isActive);
+      navLinksMobile.forEach((link, i) => {
+        const isActive = i === index;
+        link.classList.toggle("text-accent", isActive);
+        link.classList.toggle("text-base-content", !isActive);
 
-      const img = link.querySelector("img");
-      if (img) {
+        const img = link.querySelector("img");
+        if (!img) return;
         img.classList.toggle("opacity-100", isActive);
         img.classList.toggle("opacity-60", !isActive);
-      }
-    });
-  }
+      });
+    }
 
-  // Clic sur un item -> scroller vers la section et rafraîchir son contenu si nécessaire
-  [...navLinks, ...navLinksMobile].forEach((link, i) => {
-    link.addEventListener("click", async (e) => {
-      e.preventDefault();
+    async function refreshSection(sectionId: string) {
+      if (sectionId === "help") return;
 
-      const sectionId = (link as HTMLElement).dataset.section;
-      const section = document.getElementById(sectionId!);
+      try {
+        const cachedHash = sessionStorage.getItem(`hash-${sectionId}`);
+        const checkResponse = await fetch(
+          `/api/check-section?section=${sectionId}&hash=${cachedHash || ""}`,
+        );
 
-      if (section && container) {
-        // Remonte d'abord en haut de la page pour garder un point de départ cohérent.
-        scrollToTarget(0);
-        // Puis défile horizontalement vers la section ciblée du conteneur.
-        scrollToTarget(`#${sectionId}`, { container, axis: "x" });
-        setActive(i % navLinks.length);
+        if (!checkResponse.ok) return;
 
-        refreshSection(sectionId!);
-      }
-    });
-  });
+        const { hash, changed } = await checkResponse.json();
+        sessionStorage.setItem(`hash-${sectionId}`, hash);
 
-  // Vérifie côté serveur si la section a changé (optimisation via hash) et remplace le HTML local uniquement quand nécessaire, pour limiter les rechargements.
-  async function refreshSection(sectionId: string) {
-    if (sectionId === "help") return;
+        if (!changed) return;
 
-    try {
-      // Vérifier le hash côté client (cache) pour éviter les fetch inutiles
-      const cachedHash = sessionStorage.getItem(`hash-${sectionId}`);
+        const response = await fetch(window.location.pathname);
+        if (!response.ok) return;
 
-      const checkResponse = await fetch(
-        `/api/check-section?section=${sectionId}&hash=${cachedHash || ""}`,
-      );
-
-      if (!checkResponse.ok) return;
-
-      const { hash, changed } = await checkResponse.json();
-      // Mettre à jour le hash en cache
-      sessionStorage.setItem(`hash-${sectionId}`, hash);
-
-      if (!changed) return; // rien à faire si pas de changement
-
-      // Récupérer la page complète et extraire la section mise à jour
-      const response = await fetch(window.location.pathname);
-      if (response.ok) {
         const html = await response.text();
         const parser = new DOMParser();
         const doc = parser.parseFromString(html, "text/html");
         const newSection = doc.querySelector(`#${sectionId}`);
+        const oldSection = document.querySelector(`#${sectionId}`);
 
-        if (newSection) {
-          const oldSection = document.querySelector(`#${sectionId}`);
-          if (oldSection) {
-            oldSection.replaceWith(newSection);
+        if (!newSection || !oldSection) return;
 
-            // Réinitialiser les gestionnaires spécifiques si nécessaire
-            if (sectionId === "verifications") initVerifications();
-            if (sectionId === "modifications") initModifications();
-          }
-        }
-      }
-    } catch (error) {
-      console.error(`Erreur lors du rechargement de la section ${sectionId}:`, error);
-    }
-  }
+        oldSection.replaceWith(newSection);
 
-  // Surveille le défilement horizontal pour mettre à jour la section active.
-  // On utilise un délai court (100ms) pour limiter les calculs pendant le défilement.
-  if (container) {
-    let timeout: number;
-    container.addEventListener("scroll", () => {
-      clearTimeout(timeout);
-      timeout = window.setTimeout(() => {
-        const scrollLeft = container.scrollLeft;
-        const width = container.offsetWidth;
-        const index = Math.round(scrollLeft / width);
-        setActive(index);
-      }, 100);
-    });
-  }
-
-  updateMobileIndicator(0);
-
-  initVerifications();
-
-  // Déconnexion : appel POST pour supprimer la session côté serveur
-  // et redirection vers la page de connexion en cas de succès
-  const logoutBtn = document.getElementById("logout-btn");
-  if (logoutBtn) {
-    logoutBtn.addEventListener("click", async () => {
-      try {
-        const response = await fetch("/api/logout", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        });
-
-        if (response.ok) {
-          window.location.href = "/connexion";
-        }
+        if (sectionId === "verifications") initVerifications();
+        if (sectionId === "modifications") initModifications();
       } catch (error) {
-        console.error("Erreur lors de la déconnexion:", error);
+        console.error(`Erreur lors du rechargement de la section ${sectionId}:`, error);
       }
+    }
+
+    [...navLinks, ...navLinksMobile].forEach((link, i) => {
+      link.addEventListener("click", async (event) => {
+        event.preventDefault();
+
+        const sectionId = link.dataset.section;
+        const section = sectionId ? document.getElementById(sectionId) : null;
+        if (!sectionId || !section || !(container instanceof HTMLElement)) return;
+
+        scrollToTarget(0);
+        scrollToTarget(`#${sectionId}`, { container, axis: "x" });
+        setActive(i % navLinks.length);
+        await refreshSection(sectionId);
+      });
     });
-  }
 
-  // Références DOM pour la navigation desktop et ses éléments
-  const desktopNav = document.getElementById("desktop-nav");
-  const navToggle = document.getElementById("nav-toggle");
-  const navToggleIconWrapper = document.getElementById("nav-toggle-icon-wrapper");
-  const navToggleIcon = document.getElementById("nav-toggle-icon");
-  const navToggleLabel = document.getElementById("nav-toggle-label");
-  const navLabels = document.querySelectorAll(".nav-label");
-  const navItemsDesktop = document.querySelectorAll(".nav-item-desktop");
+    if (container instanceof HTMLElement) {
+      let timeout = 0;
+      container.addEventListener("scroll", () => {
+        window.clearTimeout(timeout);
+        timeout = window.setTimeout(() => {
+          const width = container.offsetWidth || 1;
+          const index = Math.round(container.scrollLeft / width);
+          setActive(index);
+        }, 100);
+      });
+    }
 
-  let navCollapsed = false;
-  let navAnimating = false;
+    updateMobileIndicator(0);
+    initVerifications();
 
-  const navIcons = document.querySelectorAll("#desktop-nav .nav-icon");
+    const logoutBtn = document.getElementById("logout-btn");
+    if (logoutBtn instanceof HTMLButtonElement) {
+      logoutBtn.addEventListener("click", async () => {
+        try {
+          const response = await fetch("/api/logout", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+          });
 
-  // Centre visuellement chaque icône dans la nav réduite.
-  // Utilise une fonction x(i, target) pour calculer la translation de chaque icône
-  // en évitant de créer un double par élément manuellement
-  // killTweensOf empêche les animations concurrentes de s'accumuler.
-  function animateIconsToCollapsed(duration = gsap.defaults().duration) {
-    if (!desktopNav || !navIcons || navIcons.length === 0) return;
-    gsap.killTweensOf(navIcons);
+          if (response.ok) {
+            window.location.href = "/connexion";
+          }
+        } catch (error) {
+          console.error("Erreur lors de la déconnexion:", error);
+        }
+      });
+    }
 
-    gsap.to(navIcons, {
-      // calcule la translation horizontale pour centrer l'icône
-      x(i, target) {
-        const navRect = desktopNav.getBoundingClientRect();
-        const targetCenter = navRect.left + COLLAPSED_WIDTH / 2;
-        const iconRect = target.getBoundingClientRect();
+    const desktopNav = document.getElementById("desktop-nav");
+    const navToggle = document.getElementById("nav-toggle");
+    const navToggleIconWrapper = document.getElementById("nav-toggle-icon-wrapper");
+    const navToggleIcon = document.getElementById("nav-toggle-icon");
+    const navToggleLabel = document.getElementById("nav-toggle-label");
+    const navLabels = Array.from(document.querySelectorAll<HTMLElement>(".nav-label"));
+    const navItemsDesktop = Array.from(
+      document.querySelectorAll<HTMLElement>(".nav-item-desktop"),
+    );
+    const navIcons = Array.from(
+      document.querySelectorAll<HTMLElement>("#desktop-nav .nav-icon"),
+    );
+
+    let navCollapsed = false;
+    let navAnimating = false;
+
+    const getNavDuration = () => {
+      const defaults = gsap?.defaults();
+      return typeof defaults?.duration === "number" ? defaults.duration : 0.35;
+    };
+
+    function clearLabelStyles(labels: HTMLElement[]) {
+      labels.forEach((label) => {
+        label.style.opacity = "";
+        label.style.transform = "";
+      });
+    }
+
+    function getCollapsedOffsets() {
+      if (!(desktopNav instanceof HTMLElement)) return [];
+      const navRect = desktopNav.getBoundingClientRect();
+      const targetCenter = navRect.left + COLLAPSED_WIDTH / 2;
+      return navIcons.map((icon) => {
+        const iconRect = icon.getBoundingClientRect();
         const currentCenter = iconRect.left + iconRect.width / 2;
         return targetCenter - currentCenter;
-      },
-      duration,
-    });
-  }
+      });
+    }
 
-  // Applique l'alignement vertical des items et marque l'état 'collapsed'
-  function setCollapsedLayout(collapsed: boolean) {
-    navItemsDesktop.forEach((el) => {
-      el.classList.add("items-center");
-      el.classList.remove("items-start");
-    });
+    function setToggleRotation(collapsed: boolean, animated: boolean) {
+      if (!(navToggleIconWrapper instanceof HTMLElement)) return;
+      const rotation = collapsed ? 180 : 0;
 
-    if (desktopNav) {
-      desktopNav.classList.toggle("collapsed", collapsed);
+      if (animated && gsap) {
+        gsap.to(navToggleIconWrapper, {
+          rotation,
+          duration: getNavDuration(),
+          overwrite: "auto",
+        });
+        return;
+      }
+
+      navToggleIconWrapper.style.transform = `rotate(${rotation}deg)`;
+    }
+
+    function centerIcons(animated: boolean) {
+      const offsets = getCollapsedOffsets();
+
+      navIcons.forEach((icon, index) => {
+        const nextX = offsets[index] ?? 0;
+        if (animated && gsap) {
+          gsap.to(icon, {
+            x: nextX,
+            duration: getNavDuration(),
+            overwrite: "auto",
+          });
+          return;
+        }
+
+        icon.style.transform = nextX ? `translateX(${nextX}px)` : "";
+      });
+
+      if (navToggleIcon instanceof HTMLElement) {
+        navToggleIcon.style.transform = "";
+      }
+    }
+
+    function resetIcons(animated: boolean) {
+      navIcons.forEach((icon) => {
+        if (animated && gsap) {
+          gsap.to(icon, {
+            x: 0,
+            duration: getNavDuration(),
+            overwrite: "auto",
+          });
+          return;
+        }
+
+        icon.style.transform = "";
+      });
+
+      if (navToggleIcon instanceof HTMLElement) {
+        navToggleIcon.style.transform = "";
+      }
+    }
+
+    function setLabelsVisible(visible: boolean) {
+      navLabels.forEach((label) => label.classList.toggle("hidden", !visible));
+      if (navToggleLabel instanceof HTMLElement) {
+        navToggleLabel.classList.toggle("hidden", !visible);
+      }
+    }
+
+    function setCollapsedLayout(collapsed: boolean) {
+      navItemsDesktop.forEach((item) => {
+        item.classList.add("items-center");
+        item.classList.remove("items-start");
+      });
+
+      if (desktopNav instanceof HTMLElement) {
+        desktopNav.classList.toggle("collapsed", collapsed);
+        desktopNav.style.width = `${collapsed ? COLLAPSED_WIDTH : EXPANDED_WIDTH}px`;
+      }
+    }
+
+    function applyNavState(collapsed: boolean) {
+      navCollapsed = collapsed;
+      setCollapsedLayout(collapsed);
+      setLabelsVisible(!collapsed);
+      if (collapsed) centerIcons(false);
+      else resetIcons(false);
+      setToggleRotation(collapsed, false);
+      if (navToggle instanceof HTMLButtonElement) {
+        navToggle.setAttribute("aria-expanded", String(!collapsed));
+      }
+    }
+
+    applyNavState(false);
+
+    if (desktopNav instanceof HTMLElement && navToggle instanceof HTMLButtonElement) {
+      navToggle.addEventListener("click", () => {
+        if (navAnimating) return;
+
+        const nextCollapsed = !navCollapsed;
+        navCollapsed = nextCollapsed;
+        navAnimating = true;
+
+        if (!gsap) {
+          applyNavState(nextCollapsed);
+          navAnimating = false;
+          return;
+        }
+
+        const labels = navToggleLabel instanceof HTMLElement
+          ? [...navLabels, navToggleLabel]
+          : [...navLabels];
+
+        if (nextCollapsed) {
+          gsap.to(labels, {
+            opacity: 0,
+            x: -8,
+            duration: 0.18,
+            overwrite: "auto",
+          });
+          setToggleRotation(true, true);
+          gsap.to(desktopNav, {
+            width: COLLAPSED_WIDTH,
+            duration: getNavDuration(),
+            overwrite: "auto",
+            onComplete: () => {
+              setCollapsedLayout(true);
+              setLabelsVisible(false);
+              clearLabelStyles(labels);
+              centerIcons(true);
+              navToggle.setAttribute("aria-expanded", "false");
+              navAnimating = false;
+            },
+          });
+          return;
+        }
+
+        setCollapsedLayout(false);
+        resetIcons(true);
+        setToggleRotation(false, true);
+        gsap.to(desktopNav, {
+          width: EXPANDED_WIDTH,
+          duration: getNavDuration(),
+          overwrite: "auto",
+          onComplete: () => {
+            setLabelsVisible(true);
+            gsap.fromTo(
+              labels,
+              { opacity: 0, x: -8 },
+              {
+                opacity: 1,
+                x: 0,
+                duration: 0.22,
+                overwrite: "auto",
+                onComplete: () => {
+                  clearLabelStyles(labels);
+                  navToggle.setAttribute("aria-expanded", "true");
+                  navAnimating = false;
+                },
+              },
+            );
+          },
+        });
+      });
     }
   }
 
-  setCollapsedLayout(navCollapsed);
-  // Assurer que l'icône et le libellé du toggle reflètent l'état initial
-  if (navToggleIconWrapper) {
-    // Définit la rotation initiale via GSAP (évite les conflits entre transformations en ligne et classes)
-    gsap.set(navToggleIconWrapper, { rotation: navCollapsed ? 180 : 0 });
-  }
-  if (navToggleLabel) {
-    if (navCollapsed) navToggleLabel.classList.add("hidden");
-    else navToggleLabel.classList.remove("hidden");
-  }
-  if (navToggle) {
-    navToggle.setAttribute("aria-expanded", String(!navCollapsed));
-  }
-
-  if (desktopNav && navToggle) {
-    navToggle.addEventListener("click", () => {
-      if (navAnimating) return;
-      navCollapsed = !navCollapsed;
-
-      if (navCollapsed) {
-        const collapseTl = gsap.timeline({
-          onStart: () => {
-            // Verrouille l'animation et lance l'animation de rotation du toggle via GSAP
-            navAnimating = true;
-            if (navToggleIconWrapper) gsap.to(navToggleIconWrapper, { rotation: 180, duration: 0.35 });
-          },
-          onComplete: () => {
-            setCollapsedLayout(true);
-            desktopNav.classList.add("collapsed");
-            navAnimating = false;
-          },
-        });
-
-        // cible : tous les labels + le label du toggle (si présent)
-        const allLabels = navToggleLabel ? [...navLabels, navToggleLabel] : navLabels;
-
-        collapseTl
-          // 1. animer la disparition visuelle des labels (incl. toggle)
-          .to(allLabels, { opacity: 0, x: -8, duration: 0.18 })
-          // 2. cacher définitivement les labels et mettre aria-expanded=false
-          .add(() => {
-            navLabels.forEach((el) => el.classList.add("hidden"));
-            if (navToggleLabel) navToggleLabel.classList.add("hidden");
-            if (navToggle) navToggle.setAttribute("aria-expanded", "false");
-          })
-          // 3. réduire la largeur du conteneur (ensuite on calculera les translations exactes)
-          .to(desktopNav, { width: COLLAPSED_WIDTH })
-          // 4. une fois la largeur atteinte, calculer et animer les translations des icônes
-          .add(() => {
-            // calculer la position cible (centre du conteneur réduit)
-            const navRect = desktopNav.getBoundingClientRect();
-            const targetCenter = navRect.left + COLLAPSED_WIDTH / 2;
-
-            // animer les icônes pour les centrer (GSAP gère la liste)
-            gsap.to(navIcons, {
-              x(i, target) {
-                const iconRect = target.getBoundingClientRect();
-                const currentCenter = iconRect.left + iconRect.width / 2;
-                return targetCenter - currentCenter;
-              },
-              duration: 0.35,
-            });
-
-            // s'assurer que l'icône du toggle reste à sa position d'origine
-            if (navToggleIcon) {
-              gsap.set(navToggleIcon, { x: 0 });
-            }
-          });
-      } else {
-        navLabels.forEach((el) => el.classList.add("hidden"));
-
-        const expandTl = gsap.timeline({
-          onStart: () => {
-            // Retirer la rotation du toggle au début de l'ouverture (GSAP assure la transition)
-            navAnimating = true;
-            if (navToggleIconWrapper) gsap.to(navToggleIconWrapper, { rotation: 0, duration: 0.35 });
-            // ramener le toggle à sa position d'origine (image interne)
-            if (navToggleIcon) gsap.to(navToggleIcon, { x: 0, duration: 0.35 });
-          },
-          onComplete: () => {
-            desktopNav.classList.remove("collapsed");
-            setCollapsedLayout(false);
-
-            gsap.set(navIcons, { clearProps: "transform" });
-
-            // Réafficher tous les labels (incl. toggle) en même temps
-            if (navToggleLabel) navToggleLabel.classList.remove("hidden");
-            navLabels.forEach((el) => el.classList.remove("hidden"));
-            const showLabels = navToggleLabel ? [...navLabels, navToggleLabel] : navLabels;
-            gsap.fromTo(showLabels, { opacity: 0, x: -8 }, { opacity: 1, x: 0, duration: 0.22 });
-
-            if (navToggle) navToggle.setAttribute("aria-expanded", "true");
-
-            navAnimating = false;
-          },
-        });
-
-        expandTl.to(navIcons, { x: 0 }, 0).to(desktopNav, { width: EXPANDED_WIDTH }, 0);
-      }
-    });
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", () => {
+      void initAccountPage();
+    }, { once: true });
+  } else {
+    void initAccountPage();
   }
 </script>

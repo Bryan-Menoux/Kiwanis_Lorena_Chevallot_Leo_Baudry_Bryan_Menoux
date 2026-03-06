@@ -11,7 +11,7 @@ declare global {
     __previewData?: any;
     setGridStyles?: (count: number) => void;
     openModal?: (url: string) => void;
-    gsap: GSAP;
+    gsap?: GSAP;
   }
 
   const gsap: GSAP;

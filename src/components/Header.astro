@@ -174,8 +174,7 @@ import diagArrow from "../assets/diag-arrow.svg";
 
     <div
       id="mobile-dropdown"
-      class="w-full max-w-[90dvw] rounded-2xl p-7 text-white shadow-2xl bg-accent"
-      style="display: none;"
+      class="hidden w-full max-w-[90dvw] rounded-2xl p-7 text-white shadow-2xl bg-accent opacity-0 -translate-y-2 pointer-events-none transition-[opacity,transform] duration-200"
       role="menu"
       aria-hidden="true"
     >
@@ -304,90 +303,228 @@ import diagArrow from "../assets/diag-arrow.svg";
   #main-header.header-hidden {
     transform: translateY(-110%);
   }
+
+  #ham-top,
+  #ham-bottom {
+    transform-box: fill-box;
+    transform-origin: center;
+    transition: transform 0.18s ease;
+  }
+
+  #mobile-dropdown.is-open {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+  }
+
+  #discover-dropdown.is-open {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+    pointer-events: auto;
+  }
+
+  #discover-arrow.is-open {
+    transform: rotate(90deg);
+  }
 </style>
 
 <script>
+  import { loadGsap } from "../utils/loadGsap";
+
   let discoverIsOpen = false;
   let globalClickHandler: ((e: Event) => void) | null = null;
-  
-  function initMenu() {
-    const toggle = document.getElementById("menu-toggle") as HTMLButtonElement;
-    const dropdown = document.getElementById("mobile-dropdown") as HTMLElement;
-    const links = document.querySelectorAll(".mob-link");
+  let gsapInstance: NonNullable<Window["gsap"]> | null = null;
+  let gsapPromise: Promise<NonNullable<Window["gsap"]> | null> | null = null;
 
-    if (!toggle || !dropdown) return;
+  function ensureGsap() {
+    if (gsapInstance) return Promise.resolve(gsapInstance);
+    if (!gsapPromise) {
+      gsapPromise = loadGsap().then((instance) => {
+        gsapInstance = instance;
+        return instance;
+      });
+    }
+    return gsapPromise;
+  }
 
-    let isOpen = false;
-    gsap.set(dropdown, { display: "none", opacity: 0, y: -10 });
-
+  function setHamburgerState(isOpen: boolean) {
     const hamTop = document.getElementById("ham-top");
     const hamBottom = document.getElementById("ham-bottom");
-    if (hamTop && hamBottom) {
-      gsap.set([hamTop, hamBottom], {
+    if (!(hamTop instanceof SVGElement) || !(hamBottom instanceof SVGElement)) return;
+
+    if (gsapInstance) {
+      gsapInstance.set([hamTop, hamBottom], {
         transformOrigin: "50% 50%",
         y: 0,
         rotate: 0,
       });
+      gsapInstance.to(hamTop, {
+        y: isOpen ? 4 : 0,
+        rotate: isOpen ? 45 : 0,
+        duration: isOpen ? 0.18 : 0.12,
+        ease: isOpen ? "power2.out" : "power2.in",
+      });
+      gsapInstance.to(hamBottom, {
+        y: isOpen ? -4 : 0,
+        rotate: isOpen ? -45 : 0,
+        duration: isOpen ? 0.18 : 0.12,
+        ease: isOpen ? "power2.out" : "power2.in",
+      });
+      return;
     }
+
+    hamTop.style.transformOrigin = "50% 50%";
+    hamBottom.style.transformOrigin = "50% 50%";
+    hamTop.style.transformBox = "fill-box";
+    hamBottom.style.transformBox = "fill-box";
+    hamTop.style.transform = isOpen
+      ? "translateY(4px) rotate(45deg)"
+      : "translateY(0) rotate(0deg)";
+    hamBottom.style.transform = isOpen
+      ? "translateY(-4px) rotate(-45deg)"
+      : "translateY(0) rotate(0deg)";
+  }
+
+  function openMobileDropdown(dropdown: HTMLElement, links: HTMLElement[]) {
+    dropdown.classList.remove("hidden");
+
+    if (!gsapInstance) {
+      requestAnimationFrame(() => {
+        dropdown.classList.add("is-open");
+      });
+      return;
+    }
+
+    dropdown.classList.add("is-open");
+    gsapInstance.killTweensOf([dropdown, ...links]);
+    gsapInstance.set(dropdown, { display: "block" });
+    gsapInstance.fromTo(
+      dropdown,
+      { opacity: 0, y: -10 },
+      { opacity: 1, y: 0, duration: 0.2, ease: "power2.out" },
+    );
+    gsapInstance.fromTo(
+      links,
+      { opacity: 0, y: 5 },
+      { opacity: 1, y: 0, stagger: 0.02, duration: 0.15, overwrite: "auto" },
+    );
+  }
+
+  function closeMobileDropdown(dropdown: HTMLElement) {
+    if (!gsapInstance) {
+      dropdown.classList.remove("is-open");
+      window.setTimeout(() => {
+        if (!dropdown.classList.contains("is-open")) {
+          dropdown.classList.add("hidden");
+        }
+      }, 200);
+      return;
+    }
+
+    gsapInstance.killTweensOf(dropdown);
+    gsapInstance.to(dropdown, {
+      opacity: 0,
+      y: -10,
+      duration: 0.15,
+      ease: "power2.in",
+      onComplete: () => {
+        dropdown.classList.remove("is-open");
+        if (!dropdown.classList.contains("is-open")) {
+          dropdown.classList.add("hidden");
+        }
+      },
+    });
+  }
+
+  function setDiscoverState(isOpen: boolean) {
+    const discoverDropdown = document.getElementById(
+      "discover-dropdown",
+    ) as HTMLElement | null;
+    const discoverArrow = document.getElementById(
+      "discover-arrow",
+    ) as HTMLElement | null;
+    const discoverToggle = document.getElementById(
+      "discover-toggle",
+    ) as HTMLElement | null;
+
+    if (!discoverDropdown || !discoverArrow || !discoverToggle) return;
+
+    discoverIsOpen = isOpen;
+    discoverToggle.setAttribute("aria-expanded", isOpen.toString());
+    discoverDropdown.setAttribute("aria-hidden", (!isOpen).toString());
+
+    if (!gsapInstance) {
+      discoverDropdown.classList.toggle("is-open", isOpen);
+      discoverArrow.classList.toggle("is-open", isOpen);
+      return;
+    }
+
+    gsapInstance.killTweensOf([discoverDropdown, discoverArrow]);
+    if (isOpen) {
+      discoverDropdown.classList.add("is-open");
+      discoverArrow.classList.add("is-open");
+      gsapInstance.to(discoverDropdown, {
+        opacity: 1,
+        visibility: "visible",
+        y: 0,
+        pointerEvents: "auto",
+        duration: 0.08,
+      });
+      gsapInstance.to(discoverArrow, { rotate: 90, duration: 0.08 });
+      return;
+    }
+
+    gsapInstance.to(discoverDropdown, {
+      opacity: 0,
+      visibility: "hidden",
+      y: -10,
+      pointerEvents: "none",
+      duration: 0.15,
+      onComplete: () => {
+        discoverDropdown.classList.remove("is-open");
+      },
+    });
+    gsapInstance.to(discoverArrow, {
+      rotate: 0,
+      duration: 0.15,
+      onComplete: () => {
+        discoverArrow.classList.remove("is-open");
+      },
+    });
+  }
+
+  function initMenu() {
+    const toggle = document.getElementById("menu-toggle") as HTMLButtonElement;
+    const dropdown = document.getElementById("mobile-dropdown") as HTMLElement;
+    const links = Array.from(
+      document.querySelectorAll<HTMLElement>(".mob-link"),
+    );
+
+    if (!toggle || !dropdown) return;
+
+    let isOpen = false;
+    setHamburgerState(false);
 
     const toggleMenu = (e?: Event) => {
       e?.stopPropagation();
+      void ensureGsap();
       isOpen = !isOpen;
 
-      // Update ARIA attributes
       toggle.setAttribute("aria-expanded", isOpen.toString());
       dropdown.setAttribute("aria-hidden", (!isOpen).toString());
 
       if (isOpen) {
-        dropdown.style.display = "block";
-        gsap
-          .timeline()
-          .to(dropdown, { opacity: 1, y: 0, duration: 0.2, ease: "power2.out" })
-          .fromTo(
-            links,
-            { opacity: 0, y: 5 },
-            { opacity: 1, y: 0, stagger: 0.02, duration: 0.15 },
-            "-=0.1",
-          );
-        if (hamTop && hamBottom) {
-          gsap.to(hamTop, {
-            y: 4,
-            rotate: 45,
-            duration: 0.18,
-            ease: "power2.out",
-          });
-          gsap.to(hamBottom, {
-            y: -4,
-            rotate: -45,
-            duration: 0.18,
-            ease: "power2.out",
-          });
-        }
+        openMobileDropdown(dropdown, links);
       } else {
-        gsap
-          .timeline()
-          .to(dropdown, { opacity: 0, y: -10, duration: 0.15 })
-          .set(dropdown, { display: "none" });
-        if (hamTop && hamBottom) {
-          gsap.to(hamTop, {
-            y: 0,
-            rotate: 0,
-            duration: 0.12,
-            ease: "power2.in",
-          });
-          gsap.to(hamBottom, {
-            y: 0,
-            rotate: 0,
-            duration: 0.12,
-            ease: "power2.in",
-          });
-        }
+        closeMobileDropdown(dropdown);
       }
+
+      setHamburgerState(isOpen);
     };
 
     toggle.addEventListener("click", toggleMenu);
 
-    // Keyboard navigation
     toggle.addEventListener("keydown", (e) => {
       if (e.key === "Enter" || e.key === " ") {
         e.preventDefault();
@@ -398,55 +535,17 @@ import diagArrow from "../assets/diag-arrow.svg";
     window.addEventListener("resize", () => {
       if (window.innerWidth >= 1024 && isOpen) {
         isOpen = false;
-        dropdown.style.display = "none";
+        dropdown.classList.remove("is-open");
+        dropdown.classList.add("hidden");
         toggle.setAttribute("aria-expanded", "false");
         dropdown.setAttribute("aria-hidden", "true");
-        if (hamTop && hamBottom) {
-          gsap.to(hamTop, {
-            y: 0,
-            rotate: 0,
-            duration: 0.12,
-            ease: "power2.in",
-          });
-          gsap.to(hamBottom, {
-            y: 0,
-            rotate: 0,
-            duration: 0.12,
-            ease: "power2.in",
-          });
-        }
+        setHamburgerState(false);
       }
     });
   }
 
   function closeDiscoverDropdown() {
-    const discoverDropdown = document.getElementById(
-      "discover-dropdown",
-    ) as HTMLElement;
-    const discoverArrow = document.getElementById(
-      "discover-arrow",
-    ) as HTMLElement;
-    const discoverToggle = document.getElementById(
-      "discover-toggle",
-    ) as HTMLElement;
-
-    if (discoverDropdown && discoverArrow) {
-      discoverIsOpen = false;
-      gsap.to(discoverDropdown, {
-        opacity: 0,
-        visibility: "hidden",
-        y: -10,
-        pointerEvents: "none",
-        duration: 0.15,
-      });
-      gsap.to(discoverArrow, { rotate: 0, duration: 0.15 });
-
-      // Update ARIA attributes
-      if (discoverToggle) {
-        discoverToggle.setAttribute("aria-expanded", "false");
-        discoverDropdown.setAttribute("aria-hidden", "true");
-      }
-    }
+    setDiscoverState(false);
   }
 
   function initDiscoverDropdown() {
@@ -462,39 +561,18 @@ import diagArrow from "../assets/diag-arrow.svg";
 
     if (!discoverToggle || !discoverDropdown) return;
 
-    // Supprimer l'ancien handler
     if (globalClickHandler) {
       document.removeEventListener("click", globalClickHandler);
     }
 
     const toggleDropdown = (e?: Event) => {
       e?.stopPropagation();
-      discoverIsOpen = !discoverIsOpen;
-
-      // Update ARIA attributes
-      discoverToggle.setAttribute("aria-expanded", discoverIsOpen.toString());
-      discoverDropdown.setAttribute(
-        "aria-hidden",
-        (!discoverIsOpen).toString(),
-      );
-
-      if (discoverIsOpen) {
-        gsap.to(discoverDropdown, {
-          opacity: 1,
-          visibility: "visible",
-          y: 0,
-          pointerEvents: "auto",
-          duration: 0.08,
-        });
-        gsap.to(discoverArrow, { rotate: 90, duration: 0.08 });
-      } else {
-        closeDiscoverDropdown();
-      }
+      void ensureGsap();
+      setDiscoverState(!discoverIsOpen);
     };
 
     discoverToggle.addEventListener("click", toggleDropdown);
 
-    // Keyboard navigation
     discoverToggle.addEventListener("keydown", (e) => {
       if (e.key === "Enter" || e.key === " ") {
         e.preventDefault();
