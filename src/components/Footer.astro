@@ -12,7 +12,9 @@ import DiagArrow from "./DiagArrow.astro";
       <Image 
         src={logo} 
         alt="logo kiwanis" 
-        loading="eager"
+        loading="lazy"
+        fetchpriority="low"
+        decoding="async"
         quality={80}
         class="w-32 h-32 md:w-40 md:h-40 lg:w-auto lg:h-auto shrink lg:min-w-0 object-contain" 
       />

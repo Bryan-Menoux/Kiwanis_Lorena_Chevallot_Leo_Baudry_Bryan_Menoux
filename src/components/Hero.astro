@@ -39,7 +39,7 @@ const mobileImage = mobile
       /* Largeur corrigée : 440 px = taille réelle d'un mobile (880 était en double résolution) */
       width: 440,
       /* Qualité réduite à 80 : économie de ~40 % sans perte visible */
-      quality: 80,
+      quality: 72,
     })
   : null;
 
@@ -81,7 +81,7 @@ const mobileSrcSet = mobileImage?.srcSet.attribute || mobileImage?.src;
       height={desktopImage.attributes.height}
       alt={imageAlt}
       loading="eager"
-      decoding="async"
+      decoding="sync"
       fetchpriority="high"
       class="h-full w-full"
       style="height:100%;width:100%;object-fit:cover;object-position:center;"
@@ -105,9 +105,10 @@ const mobileSrcSet = mobileImage?.srcSet.attribute || mobileImage?.src;
 </div>
 
 <script>
-  import { loadGsap } from "../utils/loadGsap";
-
   type IdleCallback = (callback: () => void) => void;
+  type GsapInstance = NonNullable<Window["gsap"]>;
+
+  let gsapLoader: Promise<GsapInstance | null> | null = null;
 
   const scheduleOnIdle: IdleCallback = (callback) => {
     if (typeof window.requestIdleCallback === "function") {
@@ -118,9 +119,33 @@ const mobileSrcSet = mobileImage?.srcSet.attribute || mobileImage?.src;
     window.setTimeout(callback, 120);
   };
 
+  const runAfterWindowLoad = (callback: () => void) => {
+    if (document.readyState === "complete") {
+      callback();
+      return;
+    }
+
+    window.addEventListener("load", callback, { once: true });
+  };
+
+  const loadGsapOnDemand = () => {
+    if (window.gsap) return Promise.resolve(window.gsap);
+
+    if (!gsapLoader) {
+      gsapLoader = import("../utils/loadGsap")
+        .then(({ loadGsap }) => loadGsap())
+        .catch(() => null);
+    }
+
+    return gsapLoader;
+  };
+
   document.querySelectorAll<HTMLElement>("[data-hero-root]").forEach((root) => {
     if (root.dataset.heroBound === "true") return;
     root.dataset.heroBound = "true";
+
+    const isMobileViewport = window.matchMedia("(max-width: 1023px)").matches;
+    if (isMobileViewport) return;
 
     const prefersReducedMotion = window.matchMedia(
       "(prefers-reduced-motion: reduce)",
@@ -131,34 +156,37 @@ const mobileSrcSet = mobileImage?.srcSet.attribute || mobileImage?.src;
     const text = root.querySelector<HTMLElement>("[data-hero-text]");
     if (!title || !text) return;
 
-    const scriptStart = performance.now();
+    runAfterWindowLoad(() => {
+      const scriptStart = performance.now();
 
-    scheduleOnIdle(async () => {
-      if (!root.isConnected) return;
-      if (window.scrollY > 40) return;
+      scheduleOnIdle(async () => {
+        if (!root.isConnected) return;
+        if (window.scrollY > 40) return;
 
-      const gsap = await loadGsap();
-      if (!gsap) return;
-      if (performance.now() - scriptStart > 1200) return;
+        const gsap = await loadGsapOnDemand();
+        if (!gsap) return;
+        if (performance.now() - scriptStart > 1200) return;
 
-      gsap.from(title, {
-        opacity: 0,
-        y: 48,
-        x: -24,
-        duration: 0.8,
-        ease: "power2.out",
-        overwrite: "auto",
-      });
+        gsap.from(title, {
+          opacity: 0,
+          y: 48,
+          x: -24,
+          duration: 0.8,
+          ease: "power2.out",
+          overwrite: "auto",
+        });
 
-      gsap.from(text, {
-        opacity: 0,
-        y: 32,
-        x: 16,
-        duration: 0.7,
-        delay: 0.08,
-        ease: "power2.out",
-        overwrite: "auto",
+        gsap.from(text, {
+          opacity: 0,
+          y: 32,
+          x: 16,
+          duration: 0.7,
+          delay: 0.08,
+          ease: "power2.out",
+          overwrite: "auto",
+        });
       });
     });
   });
 </script>
+

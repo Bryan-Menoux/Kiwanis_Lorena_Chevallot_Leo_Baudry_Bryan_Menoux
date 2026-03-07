@@ -11,6 +11,8 @@ import AlertProvider from "../components/AlertProvider.astro";
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
 
+    <slot name="head" />
+
     <link
       rel="preload"
       href="/fonts/merriweather/Merriweather_24pt-Regular-latin.woff2"
@@ -18,7 +20,40 @@ import AlertProvider from "../components/AlertProvider.astro";
       type="font/woff2"
       crossorigin
     />
-    <slot name="head" />
+    <script is:inline>
+      (() => {
+        const root = document.documentElement;
+        const markFontsReady = () => root.classList.add("fonts-ready");
+
+        const schedulePoppinsLoad = () => {
+          if (!("fonts" in document)) {
+            markFontsReady();
+            return;
+          }
+
+          const loadPoppins = () => {
+            document.fonts
+              .load('400 1em "Poppins"')
+              .then(markFontsReady)
+              .catch(markFontsReady);
+          };
+
+          if ("requestIdleCallback" in window) {
+            window.requestIdleCallback(loadPoppins, { timeout: 1600 });
+            return;
+          }
+
+          window.setTimeout(loadPoppins, 320);
+        };
+
+        if (document.readyState === "complete") {
+          schedulePoppinsLoad();
+          return;
+        }
+
+        window.addEventListener("load", schedulePoppinsLoad, { once: true });
+      })();
+    </script>
 
     <!-- Favicon: Standard et fallback (requis pour compatibilite Google) -->
     <link rel="icon" type="image/x-icon" href="/favicon.ico" />

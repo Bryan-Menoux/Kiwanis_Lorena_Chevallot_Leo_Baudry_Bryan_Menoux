@@ -56,24 +56,46 @@
   font-display: swap;
 }
 
-/* Appliquer les polices */
+:root {
+  --font-sans-fallback:
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    "Segoe UI",
+    sans-serif;
+}
 
+/* Rendu initial: fallback systÃ¨me pour limiter la pression rÃ©seau critique */
 h2,
 h3,
 h4,
 h5,
 h6,
 body,
-a {
-  font-family: "poppins", serif;
+a,
+.nav-item,
+.font-poppins {
+  font-family: var(--font-sans-fallback);
+}
+
+/* Activation de Poppins aprÃ¨s chargement diffÃ©rÃ© */
+html.fonts-ready h2,
+html.fonts-ready h3,
+html.fonts-ready h4,
+html.fonts-ready h5,
+html.fonts-ready h6,
+html.fonts-ready body,
+html.fonts-ready a,
+html.fonts-ready .nav-item {
+  font-family: "Poppins", var(--font-sans-fallback);
+}
+
+html.fonts-ready .font-poppins {
+  font-family: "Poppins", var(--font-sans-fallback) !important;
 }
 
 h1 {
   font-family: "Merriweather", serif;
-}
-
-.nav-item {
-  font-family: "poppins", serif;
 }
 
 .font-merriweather {
@@ -81,9 +103,7 @@ h1 {
 }
 
 .font-poppins {
-  font-family:
-    "Poppins" !important,
-    serif;
+  font-family: var(--font-sans-fallback) !important;
 }
 
 h1 {

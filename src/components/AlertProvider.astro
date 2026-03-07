@@ -45,8 +45,6 @@ import Alert from "./Alert.astro";
 </div>
 
 <script>
-  import { loadGsap } from "../utils/loadGsap";
-
   type AlertType = "success" | "error" | "warning" | "info";
 
   interface AlertPayload {
@@ -154,10 +152,13 @@ import Alert from "./Alert.astro";
     function ensureGsap() {
       if (gsapInstance) return Promise.resolve(gsapInstance);
       if (!gsapPromise) {
-        gsapPromise = loadGsap().then((instance) => {
-          gsapInstance = instance;
-          return instance;
-        });
+        gsapPromise = import("../utils/loadGsap")
+          .then(({ loadGsap }) => loadGsap())
+          .then((instance) => {
+            gsapInstance = instance;
+            return instance;
+          })
+          .catch(() => null);
       }
       return gsapPromise;
     }

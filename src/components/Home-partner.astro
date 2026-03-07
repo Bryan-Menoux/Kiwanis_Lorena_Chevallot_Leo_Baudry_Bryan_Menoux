@@ -25,7 +25,9 @@ const images = Object.entries(imageModules).map(([path, module]) => {
             layout="constrained"
             fit="contain"
             sizes="(min-width: 1024px) 12rem, (min-width: 768px) 10rem, 8rem"
-            quality={80}
+            quality={72}
+            loading="lazy"
+            fetchpriority="low"
             class="block h-14 w-full object-contain md:h-16 lg:h-20"
           />
         </div>
@@ -41,7 +43,9 @@ const images = Object.entries(imageModules).map(([path, module]) => {
             layout="constrained"
             fit="contain"
             sizes="(min-width: 1024px) 12rem, (min-width: 768px) 10rem, 8rem"
-            quality={80}
+            quality={72}
+            loading="lazy"
+            fetchpriority="low"
             class="block h-14 w-full object-contain md:h-16 lg:h-20"
           />
         </div>

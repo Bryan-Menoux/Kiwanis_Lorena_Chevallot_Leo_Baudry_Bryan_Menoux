@@ -1,5 +1,3 @@
-import { loadGsap } from "./loadGsap";
-
 type MobileMenuOptions = {
   toggleId: string;
   dropdownId: string;
@@ -7,6 +5,26 @@ type MobileMenuOptions = {
   breakpoint?: number;
   onClose?: () => void;
 };
+
+type GsapInstance = NonNullable<Window["gsap"]>;
+
+let gsapLoader: Promise<GsapInstance | null> | null = null;
+
+function requestGsap(): Promise<GsapInstance | null> {
+  if (typeof window === "undefined") return Promise.resolve(null);
+
+  if (window.gsap) {
+    return Promise.resolve(window.gsap);
+  }
+
+  if (!gsapLoader) {
+    gsapLoader = import("./loadGsap")
+      .then(({ loadGsap }) => loadGsap())
+      .catch(() => null);
+  }
+
+  return gsapLoader;
+}
 
 function setHidden(dropdown: HTMLElement) {
   dropdown.style.display = "none";
@@ -31,7 +49,7 @@ function setHamburgerState(
   hamBottom.style.transform = isOpen ? "translateY(-3.5px) rotate(-45deg)" : "";
 }
 
-export async function initMobileMenu({
+export function initMobileMenu({
   toggleId,
   dropdownId,
   itemSelector,
@@ -51,18 +69,14 @@ export async function initMobileMenu({
   const items = Array.from(dropdown.querySelectorAll<HTMLElement>(itemSelector));
   const hamTop = document.getElementById("ham-top");
   const hamBottom = document.getElementById("ham-bottom");
-  const gsap = await loadGsap();
+  let gsap: GsapInstance | null = null;
 
   let isOpen = false;
   let hideTimer = 0;
 
   prepareHamburger(hamTop, hamBottom);
 
-  if (gsap) {
-    gsap.set(dropdown, { display: "none", opacity: 0, y: -10 });
-  } else {
-    setHidden(dropdown);
-  }
+  setHidden(dropdown);
 
   const closeMenu = (immediate = false) => {
     window.clearTimeout(hideTimer);
@@ -104,6 +118,12 @@ export async function initMobileMenu({
     isOpen = true;
     toggle.setAttribute("aria-expanded", "true");
     dropdown.setAttribute("aria-hidden", "false");
+
+    if (!gsap) {
+      void requestGsap().then((instance) => {
+        gsap = instance;
+      });
+    }
 
     if (gsap) {
       gsap.killTweensOf([dropdown, ...items]);

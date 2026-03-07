@@ -7,6 +7,7 @@ import { Image } from "astro:assets";
 
 const currentUser = Astro.locals.pb.authStore.record;
 import DiagArrow from "./DiagArrow.astro";
+const mobileLogoSrc = "/favicon-96.png";
 ---
 
 <header
@@ -15,7 +16,16 @@ import DiagArrow from "./DiagArrow.astro";
 >
   <div class="hidden lg:flex py-4 px-12 items-center justify-between">
     <a href="/" class="flex items-center gap-4">
-      <Image src={Logo} alt="Logo" loading="eager" quality={80} class="h-14 w-auto" draggable="false" />
+      <Image
+        src={Logo}
+        alt="Logo"
+        loading="lazy"
+        fetchpriority="low"
+        decoding="async"
+        quality={80}
+        class="h-14 w-auto"
+        draggable="false"
+      />
       <div class="flex flex-col text-gray-900 leading-tight">
         <span class="text-xl font-bold tracking-tighter font-merriweather"
           >KIWANIS</span
@@ -135,7 +145,16 @@ import DiagArrow from "./DiagArrow.astro";
   <div class="lg:hidden flex flex-col items-center p-4 gap-3 w-full">
     <div class="w-full flex items-center justify-between gap-4 max-w-[90dvw]">
       <a href="/" class="shrink-0">
-        <Image src={Logo} alt="Logo" loading="eager" quality={80} class="h-12 w-auto" />
+        <img
+          src={mobileLogoSrc}
+          alt="Logo Kiwanis"
+          width="96"
+          height="96"
+          loading="eager"
+          fetchpriority="high"
+          decoding="async"
+          class="h-12 w-12 object-contain"
+        />
       </a>
 
       <button
@@ -310,8 +329,6 @@ import DiagArrow from "./DiagArrow.astro";
 </style>
 
 <script>
-  import { initMobileMenu } from "../utils/mobileMenu";
-
   let discoverIsOpen = false;
   let globalClickHandler: ((e: Event) => void) | null = null;
 
@@ -401,11 +418,15 @@ import DiagArrow from "./DiagArrow.astro";
       });
     }
 
-    void initMobileMenu({
-      toggleId: "menu-toggle",
-      dropdownId: "mobile-dropdown",
-      itemSelector: ".mob-link",
-    });
+    void import("../utils/mobileMenu")
+      .then(({ initMobileMenu }) => {
+        initMobileMenu({
+          toggleId: "menu-toggle",
+          dropdownId: "mobile-dropdown",
+          itemSelector: ".mob-link",
+        });
+      })
+      .catch(() => {});
     initDiscoverDropdown();
   });
 </script>
