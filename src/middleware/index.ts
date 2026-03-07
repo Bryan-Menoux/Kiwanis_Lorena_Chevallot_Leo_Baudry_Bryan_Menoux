@@ -6,10 +6,13 @@ export const onRequest = defineMiddleware(
   async ({ locals, request, isPrerendered }, next: () => any) => {
 
     // Host public (derrière Apache)
-    const host =
+    const rawHost =
       request.headers.get("x-forwarded-host") ||
       request.headers.get("host") ||
       "";
+
+    // supprimer le port éventuel (:443)
+    const host = rawHost.split(":")[0];
 
     const proto = request.headers.get("x-forwarded-proto") || "https";
 
