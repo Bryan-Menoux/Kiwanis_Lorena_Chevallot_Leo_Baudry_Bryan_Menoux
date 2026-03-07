@@ -502,9 +502,9 @@ const navItems = [
 
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", () => {
-      void initAccountPage();
+      document.fonts.ready.then(() => void initAccountPage());
     }, { once: true });
   } else {
-    void initAccountPage();
+    document.fonts.ready.then(() => void initAccountPage());
   }
 </script>
