@@ -15,16 +15,18 @@ export const onRequest = defineMiddleware(
 
     // Rediriger tout le trafic vers la page de construction si activé via .env
     if (process.env.UNDER_CONSTRUCTION === "true") {
-      const requestUrl = new URL(request.url);
-      const { pathname } = requestUrl;
-      // Laisser passer uniquement la page construction elle-même et les assets statiques
+      const { pathname } = new URL(request.url);
       const isAllowed =
         pathname === "/construction" ||
         pathname.startsWith("/_astro/") ||
         pathname.startsWith("/fonts/") ||
         pathname.startsWith("/vendor/");
       if (!isAllowed) {
-        return Response.redirect(new URL("/construction", request.url).toString(), 302);
+        // request.url est l'URL interne (127.0.0.1:8085) derrière Apache
+        // On reconstruit l'URL publique depuis les headers transmis par Apache
+        const proto = request.headers.get("x-forwarded-proto") || "https";
+        const host = request.headers.get("x-forwarded-host") || request.headers.get("host") || "";
+        return Response.redirect(`${proto}://${host}/construction`, 302);
       }
     }
 
