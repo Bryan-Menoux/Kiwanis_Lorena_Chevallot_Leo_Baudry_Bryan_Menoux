@@ -6,15 +6,13 @@ export const onRequest = defineMiddleware(
   async ({ locals, request, isPrerendered }, next: () => any) => {
 
     // Host public (derrière Apache)
+    // On prend uniquement la 1ère valeur — Apache peut envoyer des headers multi-valeurs (ex: "https, http")
     const rawHost =
       request.headers.get("x-forwarded-host") ||
       request.headers.get("host") ||
       "";
-
-    // suppression éventuelle du port (:443)
-    const host = rawHost.split(":")[0].toLowerCase();
-
-    const proto = request.headers.get("x-forwarded-proto") || "https";
+    const host = rawHost.split(",")[0].split(":")[0].trim().toLowerCase();
+    const proto = (request.headers.get("x-forwarded-proto") || "https").split(",")[0].trim();
 
     const isProductionDomain =
       host === "www.kiwanis-pays-de-montbeliard.fr" ||
