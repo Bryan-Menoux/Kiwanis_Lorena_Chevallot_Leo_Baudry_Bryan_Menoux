@@ -13,13 +13,8 @@ export const onRequest = defineMiddleware(
       // Le journal des origines en mode debug a été retiré pour réduire le bruit console.
     }
 
-    const host = request.headers.get("x-forwarded-host") || request.headers.get("host") || "";
-    const isNewDomain = host === "www.kiwanis-pays-de-montbeliard.fr" || host === "kiwanis-pays-de-montbeliard.fr";
-
     const pbUrl = import.meta.env.PROD
-      ? isNewDomain
-        ? "https://pb.kiwanis-pays-de-montbeliard.fr"
-        : "https://pb-kiwanis.bryan-menoux.fr"
+      ? (process.env.POCKETBASE_URL ?? "https://pb-kiwanis.bryan-menoux.fr")
       : "http://127.0.0.1:8090";
     
     locals.pb = new PocketBase(pbUrl);
