@@ -28,12 +28,8 @@ export const onRequest = defineMiddleware(
       host.includes("bryan-menoux.fr");
 
     // Redirection vers la page construction
-    if (
-      process.env.UNDER_CONSTRUCTION === "true" &&
-      isProductionDomain &&
-      !isLocal &&
-      !isBryanDomain
-    ) {
+    // Contrôlé uniquement par UNDER_CONSTRUCTION=true dans le .env PM2 du VPS
+    if (process.env.UNDER_CONSTRUCTION === "true") {
       const { pathname } = new URL(request.url);
 
       const isAllowed =
