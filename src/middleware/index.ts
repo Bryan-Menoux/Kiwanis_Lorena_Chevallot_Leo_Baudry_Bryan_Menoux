@@ -9,12 +9,17 @@ export const onRequest = defineMiddleware(
     // Débogage : journaliser les en-têtes d'origine sur les requêtes POST (temporaire, piloté par DEBUG_ORIGIN)
     if (request.method === "POST" && process.env.DEBUG_ORIGIN === "true") {
       const proto = request.headers.get("x-forwarded-proto") || "http";
-      const host = request.headers.get("x-forwarded-host") || request.headers.get("host");
+      const debugHost = request.headers.get("x-forwarded-host") || request.headers.get("host");
       // Le journal des origines en mode debug a été retiré pour réduire le bruit console.
     }
 
-    const pbUrl = import.meta.env.PROD 
-      ? "https://pb-kiwanis.bryan-menoux.fr"
+    const host = request.headers.get("x-forwarded-host") || request.headers.get("host") || "";
+    const isNewDomain = host === "www.kiwanis-pays-de-montbeliard.fr" || host === "kiwanis-pays-de-montbeliard.fr";
+
+    const pbUrl = import.meta.env.PROD
+      ? isNewDomain
+        ? "https://pb.kiwanis-pays-de-montbeliard.fr"
+        : "https://pb-kiwanis.bryan-menoux.fr"
       : "http://127.0.0.1:8090";
     
     locals.pb = new PocketBase(pbUrl);
