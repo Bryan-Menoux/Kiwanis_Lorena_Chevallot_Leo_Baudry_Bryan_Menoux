@@ -21,7 +21,7 @@ export default defineConfig({
     allowedDomains: [
       {
         protocol: "https",
-        hostname: "kiwanis-pays-de-montbeliard.bryan-menoux.fr",
+        hostname: "kiwanis-pays-de-montbeliard.bryan-menoux.fr" || "https://www.kiwanis-pays-de-montbeliard.fr",
       },
     ],
   },
