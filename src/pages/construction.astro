@@ -1,6 +1,5 @@
 ---
-import { Image } from "astro:assets";
-import logo from "../assets/logo-kiwanis-full.svg";
+import logo from "../assets/logo-kiwanis-full.svg?url";
 import "../styles/global.css";
 ---
 
@@ -21,11 +20,10 @@ import "../styles/global.css";
 
     <!-- Logo -->
     <div class="flex flex-col items-center gap-2">
-      <Image
+      <img
         src={logo}
         alt="Logo Kiwanis Pays de Montbéliard"
         loading="eager"
-        quality={80}
         class="h-14 w-auto"
         draggable="false"
       />
