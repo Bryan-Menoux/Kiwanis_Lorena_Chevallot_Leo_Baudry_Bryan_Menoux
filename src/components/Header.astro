@@ -1,6 +1,7 @@
 ---
 // src/components/Header.astro
 import Logo from "../assets/logo-kiwanis-full.svg";
+import arrowPreviousSmall from "../assets/arrow-previous-small.svg";
 import user from "../assets/user.svg";
 import userWhite from "../assets/user-white.svg";
 import { Image } from "astro:assets";
@@ -60,8 +61,17 @@ const mobileLogoSrc = "/favicon-96.png";
           <span class="whitespace-nowrap">Nous découvrir</span>
           <span
             id="discover-arrow"
-            class="text-[10px] transition-transform duration-300"
-            aria-hidden="true">></span
+            class="inline-flex transition-transform duration-300"
+            aria-hidden="true"
+          >
+            <Image
+              src={arrowPreviousSmall}
+              alt=""
+              aria-hidden="true"
+              loading="eager"
+              class="h-6 w-6 rotate-180"
+            />
+          </span
           >
         </div>
         <div
@@ -301,6 +311,11 @@ const mobileLogoSrc = "/favicon-96.png";
 </header>
 
 <style is:global>
+  #main-header a,
+  #main-header .nav-item {
+    font-family: "Poppins", var(--font-sans-fallback);
+  }
+
   #main-header.header-hidden {
     transform: translateY(-110%);
   }
