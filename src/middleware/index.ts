@@ -11,13 +11,14 @@ export const onRequest = defineMiddleware(
       request.headers.get("host") ||
       "";
 
-    // supprimer le port éventuel (:443)
-    const host = rawHost.split(":")[0];
+    // suppression éventuelle du port (:443)
+    const host = rawHost.split(":")[0].toLowerCase();
 
     const proto = request.headers.get("x-forwarded-proto") || "https";
 
     const isProductionDomain =
-      host === "www.kiwanis-pays-de-montbeliard.fr";
+      host === "www.kiwanis-pays-de-montbeliard.fr" ||
+      host === "kiwanis-pays-de-montbeliard.fr";
 
     const isLocal =
       host.includes("localhost") ||
@@ -39,7 +40,9 @@ export const onRequest = defineMiddleware(
         pathname === "/construction" ||
         pathname.startsWith("/_astro/") ||
         pathname.startsWith("/fonts/") ||
-        pathname.startsWith("/vendor/");
+        pathname.startsWith("/vendor/") ||
+        pathname === "/favicon.ico" ||
+        pathname === "/favicon.svg";
 
       if (!isAllowed) {
         return Response.redirect(
@@ -59,8 +62,9 @@ export const onRequest = defineMiddleware(
       locals.pb.authStore.loadFromCookie(request.headers.get("cookie") || "");
 
       try {
-        locals.pb.authStore.isValid &&
-          (await locals.pb.collection("users").authRefresh());
+        if (locals.pb.authStore.isValid) {
+          await locals.pb.collection("users").authRefresh();
+        }
       } catch (_) {
         locals.pb.authStore.clear();
       }
