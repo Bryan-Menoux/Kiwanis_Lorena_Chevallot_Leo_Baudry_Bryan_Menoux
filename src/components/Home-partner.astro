@@ -4,7 +4,7 @@ import type { ImageMetadata } from "astro";
 
 const imageModules = import.meta.glob<{ default: ImageMetadata }>('/src/assets/partners/*.webp', { eager: true });
 
-const images = Object.entries(imageModules).map(([path, module]) => {
+const images = Object.entries(imageModules).sort(([pathA], [pathB]) => pathA.localeCompare(pathB)).map(([path, module]) => {
   const name = path.split('/').pop()!.replace('.webp', '');
   return {
     src: module.default,
@@ -25,7 +25,7 @@ const images = Object.entries(imageModules).map(([path, module]) => {
             layout="constrained"
             fit="contain"
             sizes="(min-width: 1024px) 12rem, (min-width: 768px) 10rem, 8rem"
-            quality={72}
+            quality={60}
             loading="lazy"
             fetchpriority="low"
             class="block h-14 w-full object-contain md:h-16 lg:h-20"
@@ -43,7 +43,7 @@ const images = Object.entries(imageModules).map(([path, module]) => {
             layout="constrained"
             fit="contain"
             sizes="(min-width: 1024px) 12rem, (min-width: 768px) 10rem, 8rem"
-            quality={72}
+            quality={60}
             loading="lazy"
             fetchpriority="low"
             class="block h-14 w-full object-contain md:h-16 lg:h-20"

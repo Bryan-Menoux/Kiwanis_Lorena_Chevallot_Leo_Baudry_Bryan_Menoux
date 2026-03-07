@@ -65,7 +65,7 @@
     sans-serif;
 }
 
-/* Rendu initial: fallback systÃ¨me pour limiter la pression rÃ©seau critique */
+/* Rendu initial: fallback systeme pour limiter la pression reseau critique */
 h2,
 h3,
 h4,
@@ -78,7 +78,7 @@ a,
   font-family: var(--font-sans-fallback);
 }
 
-/* Activation de Poppins aprÃ¨s chargement diffÃ©rÃ© */
+/* Activation de Poppins apres chargement differe */
 html.fonts-ready h2,
 html.fonts-ready h3,
 html.fonts-ready h4,
@@ -263,5 +263,12 @@ header span {
 @media (min-width: 1024px) {
   header span {
     font-size: 1rem !important;
+  }
+}
+
+@supports (content-visibility: auto) {
+  .defer-render {
+    content-visibility: auto;
+    contain-intrinsic-size: 900px;
   }
 }
