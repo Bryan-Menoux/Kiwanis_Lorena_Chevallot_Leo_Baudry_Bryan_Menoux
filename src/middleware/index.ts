@@ -13,12 +13,12 @@ export const onRequest = defineMiddleware(
       // Le journal des origines en mode debug a été retiré pour réduire le bruit console.
     }
 
-    // Rediriger tout le trafic du nouveau domaine vers la page de construction
-    const requestHost = request.headers.get("x-forwarded-host") || request.headers.get("host") || "";
-    const isNewDomain = requestHost === "www.kiwanis-pays-de-montbeliard.fr" || requestHost === "kiwanis-pays-de-montbeliard.fr";
-    const requestUrl = new URL(request.url);
-    if (isNewDomain && requestUrl.pathname !== "/construction") {
-      return Response.redirect(new URL("/construction", request.url).toString(), 302);
+    // Rediriger tout le trafic vers la page de construction si activé via .env
+    if (import.meta.env.PROD && process.env.UNDER_CONSTRUCTION === "true") {
+      const requestUrl = new URL(request.url);
+      if (requestUrl.pathname !== "/construction") {
+        return Response.redirect(new URL("/construction", request.url).toString(), 302);
+      }
     }
 
     const pbUrl = import.meta.env.PROD
