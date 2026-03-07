@@ -14,9 +14,16 @@ export const onRequest = defineMiddleware(
     }
 
     // Rediriger tout le trafic vers la page de construction si activé via .env
-    if (import.meta.env.PROD && process.env.UNDER_CONSTRUCTION === "true") {
+    if (process.env.UNDER_CONSTRUCTION === "true") {
       const requestUrl = new URL(request.url);
-      if (requestUrl.pathname !== "/construction") {
+      const { pathname } = requestUrl;
+      // Laisser passer uniquement la page construction elle-même et les assets statiques
+      const isAllowed =
+        pathname === "/construction" ||
+        pathname.startsWith("/_astro/") ||
+        pathname.startsWith("/fonts/") ||
+        pathname.startsWith("/vendor/");
+      if (!isAllowed) {
         return Response.redirect(new URL("/construction", request.url).toString(), 302);
       }
     }
