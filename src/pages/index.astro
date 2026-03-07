@@ -9,7 +9,7 @@ import landing1 from "../assets/landing-page/landing-1.webp";
 import HomeCarousel from "../components/Home-carousel.astro";
 import DiagArrow from "../components/DiagArrow.astro";
 import kiwanismembres1 from "../assets/landing-page/kiwanismembres1.webp";
-import rollUp from "../assets/landing-page/rollup.webp";
+import rollUp from "../assets/landing-page/rollup-kiwanis-pays-de-montbeliard.webp";
 import fanion from "../assets/landing-page/fanion.webp";
 import why1 from "../assets/landing-page/why-1.webp";
 import why2 from "../assets/landing-page/why-2.webp";
@@ -67,13 +67,11 @@ const mapAddress = "76 bis faubourg de Besançon, 25200 Montbéliard";
         <Image
           src={landing1}
           alt="Photographie de membres du Kiwanis aux 12 coups de Midi"
-          layout="constrained"
-          fit="cover"
-          sizes="(min-width: 1024px) 34vw, 80vw"
-          quality={72}
           loading="lazy"
           fetchpriority="low"
-          class="block w-full h-full object-cover"
+          quality={72}
+          decoding="async"
+          class="block h-full w-full object-cover"
         />
       </div>
       <p class="text-sm mt-2">Le Kiwanis Féminin aux 12 coups de Midi</p>
@@ -195,7 +193,7 @@ const mapAddress = "76 bis faubourg de Besançon, 25200 Montbéliard";
         </h3>
         <a
           href={rollUp.src}
-          download="roll-up.png"
+          download="roll-up-kiwanis-pays-de-montbeliard.png"
           class="btn btn-accent w-fit px-8 py-6"
           >Télécharger notre roll-up<DiagArrow /></a
         >
