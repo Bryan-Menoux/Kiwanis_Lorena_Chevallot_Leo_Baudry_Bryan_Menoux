@@ -253,19 +253,21 @@ const allActions = actions;
   />
 </Layout>
 
-<script type="module">
+<script>
   import "../../../utils/utilitaires.js";
   import "../../../utils/scroll.js";
 </script>
-<script type="module">
+<script>
   import { showConfirm } from "../../../utils/alerts";
 
-  const BIND_FLAG = "__kcPublishActionConfirmBound";
   const PUBLISH_CONFIRMED_ATTR = "data-publish-confirmed";
-  const globalWindow = window;
+  type PublishWindowState = Window & {
+    __kcPublishActionConfirmBound?: boolean;
+  };
+  const globalWindow = window as PublishWindowState;
 
-  if (!globalWindow[BIND_FLAG]) {
-    globalWindow[BIND_FLAG] = true;
+  if (!globalWindow.__kcPublishActionConfirmBound) {
+    globalWindow.__kcPublishActionConfirmBound = true;
 
     document.addEventListener("submit", (event) => {
       const target = event.target;
