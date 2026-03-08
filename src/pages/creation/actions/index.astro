@@ -3,8 +3,6 @@ import Layout from "../../../layouts/Layout-back-office.astro";
 import slugify from "slugify";
 import ActionsSearch from "../../../components/ActionsSearch.astro";
 import FormSubmitOverlay from "../../../components/FormSubmitOverlay.astro";
-import utilUrl from "../../../utils/utilitaires.js?url";
-import scrollUtilUrl from "../../../utils/scroll.js?url";
 import { formatDateShort } from "../../../utils/utilitaires.js";
 import { ActionsTypeActionOptions } from "../../../pocketbase-types";
 
@@ -255,15 +253,16 @@ const allActions = actions;
   />
 </Layout>
 
-<script type="module" src={utilUrl}></script>
-<!-- Charge l'utilitaire de scroll pour l'exposer globalement aux scripts inline. -->
-<script type="module" src={scrollUtilUrl}></script>
+<script type="module">
+  import "../../../utils/utilitaires.js";
+  import "../../../utils/scroll.js";
+</script>
 <script type="module">
   import { showConfirm } from "../../../utils/alerts";
 
   const BIND_FLAG = "__kcPublishActionConfirmBound";
   const PUBLISH_CONFIRMED_ATTR = "data-publish-confirmed";
-  const globalWindow = window as Window & Record<string, unknown>;
+  const globalWindow = window;
 
   if (!globalWindow[BIND_FLAG]) {
     globalWindow[BIND_FLAG] = true;
@@ -314,7 +313,8 @@ const allActions = actions;
   let filteredActions = actions.slice();
   // Au changement de page, recentre la vue sur le haut de la liste paginée.
   const scrollTopOnPageChange = () => {
-    const globalScrollUtils = (window as any).scrollUtils;
+    const globalScrollUtils =
+      typeof window !== "undefined" ? window.scrollUtils : null;
     if (globalScrollUtils && typeof globalScrollUtils.scrollToTarget === "function") {
       globalScrollUtils.scrollToTarget("#pages-container");
       return;
