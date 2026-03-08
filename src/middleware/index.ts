@@ -6,8 +6,19 @@ import PocketBase from "pocketbase";
 import { defineMiddleware } from "astro/middleware";
 
 const require = createRequire(import.meta.url);
-const DEFAULT_POCKETBASE_URL = "https://pb.kiwanis-pays-de-montbeliard.fr";
+const PROD_POCKETBASE_URL = "https://pb.kiwanis-pays-de-montbeliard.fr";
+const DEV_POCKETBASE_URL = "https://pb-kiwanis.bryan-menoux.fr";
 const LOCAL_POCKETBASE_URL = "http://127.0.0.1:8090";
+
+const PROD_HOSTS = new Set([
+  "www.kiwanis-pays-de-montbeliard.fr",
+  "kiwanis-pays-de-montbeliard.fr",
+]);
+
+const DEV_HOSTS = new Set([
+  "kiwanis-pays-de-montbeliard.bryan-menoux.fr",
+  "www.kiwanis-pays-de-montbeliard.bryan-menoux.fr",
+]);
 
 function readPocketBaseUrlFromEcosystem(): string | null {
   const configuredPath = process.env.PM2_ECOSYSTEM_FILE || process.env.ECOSYSTEM_CONFIG_PATH;
@@ -61,9 +72,17 @@ function readPocketBaseUrlFromEcosystem(): string | null {
   return null;
 }
 
-function resolvePocketBaseUrl(isProd: boolean): string {
+function resolvePocketBaseUrl(isProd: boolean, host: string): string {
   if (!isProd) {
     return LOCAL_POCKETBASE_URL;
+  }
+
+  if (PROD_HOSTS.has(host)) {
+    return PROD_POCKETBASE_URL;
+  }
+
+  if (DEV_HOSTS.has(host)) {
+    return DEV_POCKETBASE_URL;
   }
 
   const envUrl = process.env.POCKETBASE_URL;
@@ -71,7 +90,7 @@ function resolvePocketBaseUrl(isProd: boolean): string {
     return envUrl.trim();
   }
 
-  return readPocketBaseUrlFromEcosystem() ?? DEFAULT_POCKETBASE_URL;
+  return readPocketBaseUrlFromEcosystem() ?? PROD_POCKETBASE_URL;
 }
 
 export const onRequest = defineMiddleware(
@@ -85,17 +104,6 @@ export const onRequest = defineMiddleware(
       "";
     const host = rawHost.split(",")[0].split(":")[0].trim().toLowerCase();
     const proto = (request.headers.get("x-forwarded-proto") || "https").split(",")[0].trim();
-
-    const isProductionDomain =
-      host === "www.kiwanis-pays-de-montbeliard.fr" ||
-      host === "kiwanis-pays-de-montbeliard.fr";
-
-    const isLocal =
-      host.includes("localhost") ||
-      host.includes("127.0.0.1");
-
-    const isBryanDomain =
-      host.includes("bryan-menoux.fr");
 
     // Redirection vers la page construction
     // Contrôlé uniquement par UNDER_CONSTRUCTION=true dans le .env PM2 du VPS
@@ -118,7 +126,7 @@ export const onRequest = defineMiddleware(
       }
     }
 
-    const pbUrl = resolvePocketBaseUrl(import.meta.env.PROD);
+    const pbUrl = resolvePocketBaseUrl(import.meta.env.PROD, host);
 
     locals.pb = new PocketBase(pbUrl);
 
