@@ -194,11 +194,11 @@ function renderField(prop) {
     if (prop === 'chiffre') {
       const num = Number(value);
       if (Number.isFinite(num)) {
-        element.textContent = new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 0 }).format(num) + ' EUR';
+        element.textContent = new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 0 }).format(num) + ' €';
       } else if (value && String(value).trim() !== '') {
-        element.textContent = String(value) + ' EUR';
+        element.textContent = String(value) + ' €';
       } else {
-        element.textContent = ' EUR';
+        element.textContent = ' €';
       }
     } else if (prop === 'type_de_chiffre') {
       // Si aucun type n'est choisi et que le chiffre est négatif, on affiche un libellé par défaut.
