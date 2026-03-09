@@ -72,6 +72,11 @@ const chiffreTypeLabel = hasTypeDeChiffreValue
   ? String(action?.type_de_chiffre)
   : (chiffreIsNegative ? "chiffre clé" : "");
 const hasBeneficiaireCard = hasNonEmptyText(action?.beneficiaire);
+const locationCardCount = [hasLieuCard, hasChiffreCard, hasBeneficiaireCard].filter(
+  Boolean,
+).length;
+const hasSingleLocationCard = locationCardCount === 1;
+const hasTripleLocationCards = locationCardCount === 3;
 const hasLocationSection = hasLieuCard || hasChiffreCard || hasBeneficiaireCard;
 const shouldRenderLocationSection =
   hasLocationSection || forcePreviewLocationSection;
@@ -206,7 +211,10 @@ const hasThanksSection = hasNonEmptyText(action?.description_remerciements);
           <div
             data-location-card="lieu"
             style={hasLieuCard ? "" : "display:none;"}
-            class="bg-accent text-base-100 w-full h-full rounded-2xl px-6 md:px-8 py-4 md:py-6 flex flex-col gap-4 justify-between min-h-30 md:min-h-48"
+            class:list={[
+              "bg-accent text-base-100 w-full h-full rounded-2xl px-6 md:px-8 py-4 md:py-6 flex flex-col gap-4 justify-between min-h-30 md:min-h-48",
+              hasSingleLocationCard ? "md:col-span-2 lg:col-span-1" : "",
+            ]}
           >
             <div class="flex flex-col gap-2 min-w-fit max-w-fit">
               <h2
@@ -243,7 +251,10 @@ const hasThanksSection = hasNonEmptyText(action?.description_remerciements);
           <div
             data-location-card="chiffre"
             style={hasChiffreCard ? "" : "display:none;"}
-            class="bg-accent text-base-100 w-full h-full max-w-full rounded-2xl px-6 md:px-8 py-4 md:py-6 flex flex-col justify-between min-h-30 md:min-h-48"
+            class:list={[
+              "bg-accent text-base-100 w-full h-full max-w-full rounded-2xl px-6 md:px-8 py-4 md:py-6 flex flex-col justify-between min-h-30 md:min-h-48",
+              hasSingleLocationCard ? "md:col-span-2 lg:col-span-1" : "",
+            ]}
           >
             <h2 data-field="chiffre" class="text-5xl! md:text-7xl!">
               {action.chiffre} €
@@ -262,7 +273,12 @@ const hasThanksSection = hasNonEmptyText(action?.description_remerciements);
           <div
             data-location-card="beneficiaire"
             style={hasBeneficiaireCard ? "" : "display:none;"}
-            class="bg-accent text-base-100 rounded-2xl px-6 md:px-8 py-4 md:py-6 flex flex-col justify-between min-h-30 md:min-h-48 w-full h-full"
+            class:list={[
+              "bg-accent text-base-100 rounded-2xl px-6 md:px-8 py-4 md:py-6 flex flex-col justify-between min-h-30 md:min-h-48 w-full h-full",
+              hasSingleLocationCard || hasTripleLocationCards
+                ? "md:col-span-2 lg:col-span-1"
+                : "",
+            ]}
           >
             <h2
               data-field="beneficiaire"

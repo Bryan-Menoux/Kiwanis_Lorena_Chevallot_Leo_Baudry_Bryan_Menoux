@@ -1,19 +1,26 @@
 // convertToWebp.js
 // Client-side image processing before form submit.
-// Rule:
-// - Every image except "hero" must be <= 40 KB.
-// - "hero" is left untouched to keep higher quality.
+// Goal:
+// - Reduce upload payload, especially on mobile / slow connections.
+// - Keep a higher budget for hero images, but still compress them on constrained networks.
 
 const MAX_IMAGE_BYTES = 40 * 1024;
+const MOBILE_MAX_IMAGE_BYTES = 32 * 1024;
+const HERO_MAX_IMAGE_BYTES = 700 * 1024;
+const HERO_MOBILE_MAX_IMAGE_BYTES = 280 * 1024;
 const HERO_FIELD_NAME = "hero";
 const WEBP_PROCESSING_ATTR = "data-webp-processing";
 const KEEP_OVERLAY_VISIBLE_ATTR = "data-submit-overlay-keep-visible";
 const SUBMITTER_PROXY_ATTR = "data-webp-submitter-proxy";
-const WEBP_PROCESS_TIMEOUT_MS = 20000;
+const WEBP_PROCESS_TIMEOUT_MS = 60000;
 const SUBMIT_FAILURE_EVENT_NAME = "kc:submit-overlay-failed";
 
 const QUALITY_STEPS = [0.86, 0.78, 0.7, 0.62, 0.54, 0.46, 0.38, 0.3, 0.22, 0.16];
 const SCALE_FACTOR = 0.8;
+const MAX_DIMENSION = 1600;
+const MOBILE_MAX_DIMENSION = 1200;
+const HERO_MAX_DIMENSION = 2200;
+const HERO_MOBILE_MAX_DIMENSION = 1400;
 
 function toWebpName(fileName) {
   if (typeof fileName !== "string" || fileName.trim() === "") return "image.webp";
@@ -54,7 +61,51 @@ function canvasToWebpBlob(canvas, quality) {
   });
 }
 
-async function compressImageToMaxBytes(file, maxBytes) {
+function getUploadProfile() {
+  const connection =
+    navigator.connection ||
+    navigator.mozConnection ||
+    navigator.webkitConnection ||
+    null;
+  const effectiveType =
+    typeof connection?.effectiveType === "string"
+      ? connection.effectiveType
+      : "";
+  const saveData = Boolean(connection?.saveData);
+  const downlink = Number(connection?.downlink || 0);
+  const isSlowNetwork =
+    effectiveType === "slow-2g" ||
+    effectiveType === "2g" ||
+    effectiveType === "3g";
+  const isLowBandwidth = Number.isFinite(downlink) && downlink > 0 && downlink < 1.5;
+  const isMobileViewport =
+    typeof window !== "undefined" &&
+    typeof window.matchMedia === "function" &&
+    window.matchMedia("(max-width: 1023px)").matches;
+
+  return {
+    isConstrained: isMobileViewport || saveData || isSlowNetwork || isLowBandwidth,
+  };
+}
+
+function getFieldBudget(fieldName, profile) {
+  const isHero = fieldName === HERO_FIELD_NAME;
+  const constrained = Boolean(profile?.isConstrained);
+
+  if (isHero) {
+    return {
+      maxBytes: constrained ? HERO_MOBILE_MAX_IMAGE_BYTES : HERO_MAX_IMAGE_BYTES,
+      maxDimension: constrained ? HERO_MOBILE_MAX_DIMENSION : HERO_MAX_DIMENSION,
+    };
+  }
+
+  return {
+    maxBytes: constrained ? MOBILE_MAX_IMAGE_BYTES : MAX_IMAGE_BYTES,
+    maxDimension: constrained ? MOBILE_MAX_DIMENSION : MAX_DIMENSION,
+  };
+}
+
+async function compressImageToMaxBytes(file, maxBytes, maxDimension) {
   if (!(file instanceof File)) return file;
   if (!file.type.startsWith("image/")) return file;
   if (file.size <= maxBytes) return file;
@@ -65,6 +116,13 @@ async function compressImageToMaxBytes(file, maxBytes) {
   const outputName = toWebpName(file.name);
   let bestBlob = null;
   let scale = 1;
+
+  if (Number.isFinite(maxDimension) && maxDimension > 0) {
+    const largestSide = Math.max(loaded.width, loaded.height);
+    if (largestSide > maxDimension) {
+      scale = maxDimension / largestSide;
+    }
+  }
 
   try {
     while (true) {
@@ -110,19 +168,15 @@ async function compressImageToMaxBytes(file, maxBytes) {
   return file;
 }
 
-async function processFileForField(file, fieldName) {
+async function processFileForField(file, fieldName, profile) {
   if (!(file instanceof File)) return file;
   if (!file.type.startsWith("image/")) return file;
 
-  if (fieldName === HERO_FIELD_NAME) {
-    // Keep hero untouched for better visual quality.
-    return file;
-  }
-
-  return compressImageToMaxBytes(file, MAX_IMAGE_BYTES);
+  const budget = getFieldBudget(fieldName, profile);
+  return compressImageToMaxBytes(file, budget.maxBytes, budget.maxDimension);
 }
 
-async function processInputFiles(input) {
+async function processInputFiles(input, profile) {
   if (!(input instanceof HTMLInputElement)) return;
   if (!input.files || input.files.length === 0) return;
 
@@ -130,12 +184,33 @@ async function processInputFiles(input) {
     (input.getAttribute("data-prop-file") || input.name || "").trim();
 
   const processedFiles = await Promise.all(
-    Array.from(input.files).map((file) => processFileForField(file, fieldName)),
+    Array.from(input.files).map((file) =>
+      processFileForField(file, fieldName, profile),
+    ),
   );
 
   const dataTransfer = new DataTransfer();
   processedFiles.forEach((file) => dataTransfer.items.add(file));
   input.files = dataTransfer.files;
+}
+
+async function processInputsWithConcurrency(inputs, profile) {
+  const safeInputs = Array.isArray(inputs) ? inputs : [];
+  if (!safeInputs.length) return;
+
+  const concurrency = profile?.isConstrained ? 1 : 2;
+  let index = 0;
+  const workers = Array.from({ length: Math.min(concurrency, safeInputs.length) }).map(
+    async () => {
+      while (index < safeInputs.length) {
+        const currentIndex = index;
+        index += 1;
+        const input = safeInputs[currentIndex];
+        await processInputFiles(input, profile);
+      }
+    },
+  );
+  await Promise.all(workers);
 }
 
 function clearSubmitterProxyInputs(form) {
@@ -217,12 +292,14 @@ export function initWebpConversion() {
     const fileInputs = Array.from(
       form.querySelectorAll('input[type="file"][data-prop-file]'),
     );
+    const uploadProfile = getUploadProfile();
     let timeoutId = null;
     let reachedTimeout = false;
 
     try {
-      const processingPromise = Promise.all(
-        fileInputs.map((input) => processInputFiles(input)),
+      const processingPromise = processInputsWithConcurrency(
+        fileInputs,
+        uploadProfile,
       ).then(() => "processed");
       const timeoutPromise = new Promise((resolve) => {
         timeoutId = window.setTimeout(() => {

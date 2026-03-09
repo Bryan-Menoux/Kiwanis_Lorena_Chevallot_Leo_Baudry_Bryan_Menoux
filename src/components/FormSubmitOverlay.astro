@@ -36,7 +36,8 @@ const {
   const DISABLED_BY_OVERLAY_ATTR = "data-disabled-by-submit-overlay";
   const KEEP_VISIBLE_ATTR = "data-submit-overlay-keep-visible";
   const FALLBACK_TOKEN_ATTR = "data-submit-overlay-fallback-token";
-  const FALLBACK_RESET_MS = 30000;
+  // Delai minimal de securite: 2 minutes avant de considerer la soumission bloquee.
+  const FALLBACK_RESET_MS = 120000;
   const FAILURE_EVENT_NAME = "kc:submit-overlay-failed";
   const DEFAULT_FAILURE_MESSAGE =
     "L'enregistrement a échoue. Verifiez votre connexion puis reessayez.";
@@ -178,7 +179,7 @@ const {
         form.getAttribute(KEEP_VISIBLE_ATTR) === "true";
       if (!isStillBusy) return;
       failMatchedForms(
-        "L'enregistrement a depasse le delai. Verifiez votre connexion et reessayez.",
+        "L'enregistrement prend plus de 2 minutes. Verifiez votre connexion et reessayez.",
       );
     }, FALLBACK_RESET_MS);
   };
