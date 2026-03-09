@@ -1,4 +1,4 @@
-﻿import { showAlert, showConfirm } from "../utils/alerts";
+import { showAlert, showConfirm } from "../utils/alerts";
 import { scrollToTarget } from "../utils/scroll.js";
 
 // Gestionnaires pour la section Modifications

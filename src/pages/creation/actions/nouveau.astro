@@ -1,16 +1,15 @@
-﻿---
+---
 import Layout from "../../../layouts/Layout-back-office.astro";
 import ActionContent from "../../../components/ActionContent.astro";
 import ActionForm from "../../../components/ActionForm.astro";
 import ActionEditorShell from "../../../components/actionForm/ActionEditorShell.astro";
 import slugify from "slugify";
-import galleryUrl from "../../../scripts/gallery.js?url";
-import galleryDisplayUrl from "../../../scripts/gallery-display.js?url";
 import {
   ActionsTypeActionOptions,
   ActionsTypeDeChiffreOptions,
 } from "../../../pocketbase-types";
 import previewDefaults from "../../../scripts/previewDefaults.js";
+const previewDefaultsMap = previewDefaults as Record<string, unknown>;
 
 let error: string = "";
 // Champs autorisés à être explicitement vides (on évite de les "drop" au trim).
@@ -44,7 +43,7 @@ const hasDescriptionForPartTitle = (payload: Record<string, any>, partNumber: nu
   if (typeof descriptionValue !== "string" || descriptionValue.trim() === "") {
     return false;
   }
-  const defaultDescription = previewDefaults[textKey];
+  const defaultDescription = previewDefaultsMap[textKey];
   if (typeof defaultDescription !== "string") {
     return true;
   }
@@ -63,7 +62,7 @@ const applyPartTitleRule = (payload: Record<string, any>) => {
       payload[titleKey] = currentTitleValue.trim();
       continue;
     }
-    const defaultTitle = previewDefaults[titleKey];
+    const defaultTitle = previewDefaultsMap[titleKey];
     if (typeof defaultTitle === "string" && defaultTitle.trim() !== "") {
       payload[titleKey] = defaultTitle.trim();
     }
@@ -235,6 +234,7 @@ if (Astro.request.method === "POST") {
         previewPlaceholder={previewPlaceholder}
         typeDeChiffreOptions={typeDeChiffreOptions}
         typeActionOptions={typeActionOptions}
+        error={error}
         uiMode="mobile-wizard"
         initialStep={1}
         recordKey="new"
@@ -249,7 +249,9 @@ if (Astro.request.method === "POST") {
     </Fragment>
   </ActionEditorShell>
 
-  <script set:html={`window.__previewData = ${JSON.stringify(previewPlaceholder).replace(/</g, "\\u003c")};`} />
-  <script type="module" src={galleryUrl}></script>
-  <script type="module" src={galleryDisplayUrl}></script>
+  <script set:html={`window.__previewData = ${JSON.stringify(previewPlaceholder).replace(/</g, "\\" + "u003c")};`} />
+  <script>
+    import "../../../scripts/gallery.js";
+    import "../../../scripts/gallery-display.js";
+  </script>
 </Layout>

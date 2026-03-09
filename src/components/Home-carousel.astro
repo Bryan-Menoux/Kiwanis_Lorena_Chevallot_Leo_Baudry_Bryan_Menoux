@@ -1,78 +1,116 @@
-﻿---
+---
 import { Image } from "astro:assets";
 import type { ImageMetadata } from "astro";
 
-const imageModules = import.meta.glob<{ default: ImageMetadata }>('/src/assets/home-carousel/*.webp', { eager: true });
+const imageModules = import.meta.glob<{ default: ImageMetadata }>("/src/assets/home-carousel/*.webp", { eager: true });
+const MAX_VISIBLE_IMAGES = 4;
 
-const images = Object.entries(imageModules).map(([path, module], index) => ({
-  src: module.default,
-  alt: `Image du carousel Kiwanis numéro ${index + 1}`
-}));
-
-const duplicatedImages = [...images, ...images];
+const images = Object.entries(imageModules)
+  .sort(([pathA], [pathB]) => pathA.localeCompare(pathB))
+  .slice(0, MAX_VISIBLE_IMAGES)
+  .map(([, module], index) => ({
+    src: module.default,
+    alt: `Image du carousel Kiwanis numero ${index + 1}`,
+  }));
 ---
 
 <div class="home-carousel-container relative w-full h-fit">
-  <div class="home-carousel-inner flex gap-4 md:gap-8 h-full">
-    {duplicatedImages.map((image, index) => (
-      <Image
-        src={image.src}
-        alt={image.alt}
-        layout="constrained"
-        fit="cover"
-        sizes="(min-width: 1024px) 25vw, (min-width: 768px) 50vw, 20rem"
-        quality={74}
-        class="shrink-0 w-80 md:w-1/2 lg:w-1/4 h-full object-cover rounded-box"
-      />
-    ))}
+  <div class="home-carousel-track h-full">
+    <div class="home-carousel-group flex gap-4 md:gap-8 h-full">
+      {images.map((image) => (
+        <div class="home-carousel-item shrink-0 w-72 md:w-80 lg:w-104">
+          <Image
+            src={image.src}
+            alt={image.alt}
+            layout="constrained"
+            fit="cover"
+            sizes="(min-width: 1024px) 26rem, (min-width: 768px) 20rem, 18rem"
+            quality={60}
+            loading="lazy"
+            fetchpriority="low"
+            class="block h-56 w-full object-cover rounded-box md:h-64 lg:h-76"
+          />
+        </div>
+      ))}
+    </div>
+    <div class="home-carousel-group flex gap-4 md:gap-8 h-full" aria-hidden="true">
+      {images.map((image) => (
+        <div class="home-carousel-item shrink-0 w-72 md:w-80 lg:w-104">
+          <Image
+            src={image.src}
+            alt=""
+            aria-hidden="true"
+            layout="constrained"
+            fit="cover"
+            sizes="(min-width: 1024px) 26rem, (min-width: 768px) 20rem, 18rem"
+            quality={60}
+            loading="lazy"
+            fetchpriority="low"
+            class="block h-56 w-full object-cover rounded-box md:h-64 lg:h-76"
+          />
+        </div>
+      ))}
+    </div>
   </div>
 </div>
 
 <style>
   .home-carousel-container {
-    /* Le défilement est géré par transform, pas par scroll natif */
     overflow-x: hidden;
     overflow-y: hidden;
     -webkit-overflow-scrolling: touch;
     touch-action: pan-y;
-    scrollbar-width: none; /* Firefox */
-    -ms-overflow-style: none; /* IE et Edge */
+    scrollbar-width: none;
+    -ms-overflow-style: none;
   }
-  
-  /* Cacher la scrollbar sur Webkit (Chrome, Safari, Edge) */
+
   .home-carousel-container::-webkit-scrollbar {
     height: 0;
     width: 0;
     display: none;
   }
-  
-  .home-carousel-inner {
+
+  .home-carousel-track {
+    display: flex;
+    width: max-content;
+    animation: home-carousel-marquee 38s linear infinite;
+  }
+
+  .home-carousel-group {
+    flex-shrink: 0;
+    padding-right: 1.5rem;
+  }
+
+  .home-carousel-track {
     will-change: transform;
   }
-</style>
 
-<script>
-  // Rendre le défilement infini plus fluide, sans à-coups.
-  const carousel = document.querySelector('.home-carousel-inner') as HTMLElement;
-
-  if (carousel) {
-    let startTime: number | null = null;
-    let position = 0;
-    const speed = 50; // pixels par seconde
-
-    function animate(currentTime: number) {
-      if (startTime === null) {
-        startTime = currentTime;
-      }
-      const delta = (currentTime - startTime) * speed / 1000;
-      position -= delta;
-      startTime = currentTime;
-      if (position <= -(carousel.scrollWidth / 2)) {
-        position += carousel.scrollWidth / 2;
-      }
-      carousel.style.transform = `translateX(${position}px)`;
-      requestAnimationFrame(animate);
+  @keyframes home-carousel-marquee {
+    from {
+      transform: translateX(0);
     }
-    requestAnimationFrame(animate);
+
+    to {
+      transform: translateX(-50%);
+    }
   }
-</script>
+
+  @media (prefers-reduced-motion: reduce) {
+    .home-carousel-track {
+      animation: none;
+      transform: translateX(0);
+    }
+  }
+
+  @media (min-width: 768px) {
+    .home-carousel-group {
+      padding-right: 2rem;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .home-carousel-group {
+      padding-right: 3rem;
+    }
+  }
+</style>

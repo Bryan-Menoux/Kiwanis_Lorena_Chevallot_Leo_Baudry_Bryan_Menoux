@@ -1,4 +1,4 @@
-﻿---
+---
 import Alert from "./Alert.astro";
 ---
 
@@ -138,6 +138,8 @@ import Alert from "./Alert.astro";
     const ALERT_MARGIN_MOBILE = 12;
     const ALERT_MARGIN_DESKTOP = 16;
     const timers = new WeakMap<HTMLElement, number>();
+    let gsapInstance: NonNullable<Window["gsap"]> | null = null;
+    let gsapPromise: Promise<NonNullable<Window["gsap"]> | null> | null = null;
 
     let activeConfirm: ConfirmQueueItem | null = null;
     const confirmQueue: ConfirmQueueItem[] = [];
@@ -146,6 +148,109 @@ import Alert from "./Alert.astro";
     const headerMutationObserver = new MutationObserver(() => {
       scheduleAlertOffsetUpdate();
     });
+
+    function ensureGsap() {
+      if (gsapInstance) return Promise.resolve(gsapInstance);
+      if (!gsapPromise) {
+        gsapPromise = import("../utils/loadGsap")
+          .then(({ loadGsap }) => loadGsap())
+          .then((instance) => {
+            gsapInstance = instance;
+            return instance;
+          })
+          .catch(() => null);
+      }
+      return gsapPromise;
+    }
+
+    function animateToastIn(toast: HTMLElement): void {
+      void ensureGsap();
+
+      if (!gsapInstance) {
+        toast.style.opacity = "1";
+        toast.style.transform = "translateY(0) scale(1)";
+        return;
+      }
+
+      gsapInstance.fromTo(
+        toast,
+        { opacity: 0, y: -16, scale: 0.98 },
+        {
+          opacity: 1,
+          y: 0,
+          scale: 1,
+          duration: 0.28,
+          ease: "power2.out",
+        },
+      );
+    }
+
+    function animateToastOut(toast: HTMLElement, onComplete: () => void): void {
+      void ensureGsap();
+
+      if (!gsapInstance) {
+        onComplete();
+        return;
+      }
+
+      gsapInstance.to(toast, {
+        opacity: 0,
+        y: -12,
+        scale: 0.98,
+        duration: 0.2,
+        ease: "power2.in",
+        onComplete,
+      });
+    }
+
+    function showConfirmUi(): void {
+      if (!(confirmBackdrop instanceof HTMLElement) || !(confirmPanel instanceof HTMLElement)) {
+        return;
+      }
+
+      void ensureGsap();
+
+      if (!gsapInstance) {
+        confirmBackdrop.style.opacity = "1";
+        confirmPanel.style.opacity = "1";
+        confirmPanel.style.transform = "translateY(0) scale(1)";
+        return;
+      }
+
+      gsapInstance.fromTo(confirmBackdrop, { opacity: 0 }, { opacity: 1, duration: 0.18 });
+      gsapInstance.fromTo(
+        confirmPanel,
+        { opacity: 0, scale: 0.96, y: 10 },
+        { opacity: 1, scale: 1, y: 0, duration: 0.24, ease: "power2.out" },
+      );
+    }
+
+    function hideConfirmUi(onComplete: () => void): void {
+      if (!(confirmBackdrop instanceof HTMLElement) || !(confirmPanel instanceof HTMLElement)) {
+        onComplete();
+        return;
+      }
+
+      void ensureGsap();
+
+      if (!gsapInstance) {
+        onComplete();
+        return;
+      }
+
+      gsapInstance.to([confirmBackdrop, confirmPanel], {
+        opacity: 0,
+        duration: 0.18,
+        ease: "power2.in",
+      });
+
+      gsapInstance.to(confirmPanel, {
+        scale: 0.96,
+        duration: 0.18,
+        ease: "power2.in",
+        onComplete,
+      });
+    }
 
     function getMainHeader(): HTMLElement | null {
       const header =
@@ -284,15 +389,8 @@ import Alert from "./Alert.astro";
         timers.delete(toast);
       }
 
-      gsap.to(toast, {
-        opacity: 0,
-        y: -12,
-        scale: 0.98,
-        duration: 0.2,
-        ease: "power2.in",
-        onComplete: () => {
-          toast.remove();
-        },
+      animateToastOut(toast, () => {
+        toast.remove();
       });
     }
 
@@ -341,18 +439,7 @@ import Alert from "./Alert.astro";
       }
 
       rootEl.appendChild(toast);
-
-      gsap.fromTo(
-        toast,
-        { opacity: 0, y: -16, scale: 0.98 },
-        {
-          opacity: 1,
-          y: 0,
-          scale: 1,
-          duration: 0.28,
-          ease: "power2.out",
-        },
-      );
+      animateToastIn(toast);
 
       if (normalized.duration > 0) {
         const timeoutId = window.setTimeout(() => {
@@ -374,24 +461,15 @@ import Alert from "./Alert.astro";
         return;
       }
 
-      gsap.to([confirmBackdrop, confirmPanel], {
-        opacity: 0,
-        duration: 0.18,
-        ease: "power2.in",
-      });
-
-      gsap.to(confirmPanel, {
-        scale: 0.96,
-        duration: 0.18,
-        ease: "power2.in",
-        onComplete: () => {
-          if (confirmRoot instanceof HTMLElement) {
-            confirmRoot.classList.add("hidden", "pointer-events-none");
-            confirmRoot.classList.remove("flex");
-          }
-          current.resolve(answer);
-          processConfirmQueue();
-        },
+      hideConfirmUi(() => {
+        confirmBackdrop.removeAttribute("style");
+        confirmPanel.removeAttribute("style");
+        if (confirmRoot instanceof HTMLElement) {
+          confirmRoot.classList.add("hidden", "pointer-events-none");
+          confirmRoot.classList.remove("flex");
+        }
+        current.resolve(answer);
+        processConfirmQueue();
       });
     }
 
@@ -427,13 +505,7 @@ import Alert from "./Alert.astro";
 
       confirmRoot.classList.remove("hidden", "pointer-events-none");
       confirmRoot.classList.add("flex");
-
-      gsap.fromTo(confirmBackdrop, { opacity: 0 }, { opacity: 1, duration: 0.18 });
-      gsap.fromTo(
-        confirmPanel,
-        { opacity: 0, scale: 0.96, y: 10 },
-        { opacity: 1, scale: 1, y: 0, duration: 0.24, ease: "power2.out" },
-      );
+      showConfirmUi();
     }
 
     function confirm(payload: ConfirmPayload | string): Promise<boolean> {

@@ -1,4 +1,5 @@
-﻿---
+---
+import { Image } from "astro:assets";
 import paper from "../assets/paper.svg";
 import crossCircle from "../assets/cross-circle.svg";
 import circleCheck from "../assets/circle-check.svg";
@@ -50,9 +51,9 @@ const verifiedUsers = users.filter((u: User) => u.verified === true);
       <!-- Section des demandes en attente -->
       <div class="px-8 py-8">
         <h2 class="text-2xl font-bold mb-6 flex items-center gap-3">
-          <img loading="lazy" src={wait.src} class="h-8 opacity-70" />
+          <Image src={wait} alt="" loading="lazy" quality={80} class="h-8 opacity-70" />
           Demandes en attente
-          <span class="badge badge-warning" id="pending-badge" style={pendingUsers.length > 0 ? '' : 'display: none'}>{pendingUsers.length}</span>
+          <span class="badge badge-warning text-center text-sm! md:text-md! font-bold" id="pending-badge" style={pendingUsers.length > 0 ? '' : 'display: none'}>{pendingUsers.length}</span>
         </h2>
 
         <search>
@@ -70,7 +71,7 @@ const verifiedUsers = users.filter((u: User) => u.verified === true);
               pendingUsers.map((user: User) => <PendingUserCard user={user} />)
             ) : (
               <div class="text-center py-12 text-base-content/60">
-                <img loading="lazy" src={paper.src} class="h-16 mx-auto mb-4 opacity-50" />
+                <Image src={paper} alt="" loading="lazy" quality={80} class="h-16 mx-auto mb-4 opacity-50" />
                 <p>Aucune demande en attente</p>
               </div>
             )
@@ -81,10 +82,12 @@ const verifiedUsers = users.filter((u: User) => u.verified === true);
       <!-- Section des utilisateurs rejetés -->
       <div class="px-8 pb-8">
         <details class="collapse collapse-arrow border border-base-300">
-          <summary class="collapse-title flex items-center gap-2">
-            <img loading="lazy" src={crossCircle.src} class="h-8" />
-            Utilisateurs rejetés
-            <span class="badge badge-error ml-auto" id="rejected-badge" style={rejectedUsers.length > 0 ? '' : 'display: none'}>{rejectedUsers.length}</span>
+          <summary class="collapse-title">
+            <div class="flex items-center gap-2">
+              <Image src={crossCircle} alt="" loading="lazy" quality={80} class="w-6 h-6 shrink-0" />
+              <span class="flex-1">Utilisateurs rejetés</span>
+              <span class="badge badge-error text-center text-sm! md:text-md! font-bold" id="rejected-badge" style={rejectedUsers.length > 0 ? '' : 'display: none'}>{rejectedUsers.length}</span>
+            </div>
           </summary>
 
           <div class="collapse-content space-y-2" id="rejected-list">
@@ -148,10 +151,12 @@ const verifiedUsers = users.filter((u: User) => u.verified === true);
       <!-- Section des utilisateurs vérifiés -->
       <div class="px-8 pb-8">
         <details class="collapse collapse-arrow border border-base-300">
-          <summary class="collapse-title flex items-center gap-2">
-            <img loading="lazy" src={circleCheck.src} class="h-8" />
-            Utilisateurs vérifiés
-            <span class="badge badge-success ml-auto" id="verified-badge" style={verifiedUsers.length > 0 ? '' : 'display: none'}>{verifiedUsers.length}</span>
+          <summary class="collapse-title">
+            <div class="flex items-center gap-2">
+              <Image src={circleCheck} alt="" loading="lazy" quality={80} class="w-6 h-6 shrink-0" />
+              <span class="flex-1">Utilisateurs vérifiés</span>
+              <span class="badge badge-success text-center text-sm! md:text-md! font-bold" id="verified-badge" style={verifiedUsers.length > 0 ? '' : 'display: none'}>{verifiedUsers.length}</span>
+            </div>
           </summary>
           <div class="collapse-content space-y-2" id="verified-list">
             <search>

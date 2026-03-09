@@ -1,4 +1,4 @@
-﻿---
+---
 import Layout from "../../../../layouts/Layout-back-office.astro";
 import slugify from "slugify";
 import { formatDateShort } from "../../../../utils/utilitaires.js";
@@ -224,6 +224,8 @@ try {
 
       const g = grid;
       let bypassConfirmSubmit = false;
+      // IDs sélectionnés à travers toutes les pages (persiste pendant la pagination et les filtres).
+      const selectedIds = new Set<string>();
 
       form.addEventListener("submit", async (event) => {
         if (bypassConfirmSubmit) {
@@ -233,9 +235,7 @@ try {
 
         event.preventDefault();
 
-        const selected = g.querySelectorAll(
-          'input[type="checkbox"][name="ids"]:checked',
-        ).length;
+        const selected = selectedIds.size;
 
         if (selected === 0) {
           showAlert({
@@ -254,6 +254,17 @@ try {
         });
 
         if (!confirmed) return;
+
+        // Supprimer les checkboxes DOM (page courante seulement) et injecter
+        // un hidden input pour chaque ID sélectionné, toutes pages confondues.
+        form.querySelectorAll('input[name="ids"]').forEach((el) => el.remove());
+        selectedIds.forEach((id) => {
+          const hidden = document.createElement("input");
+          hidden.type = "hidden";
+          hidden.name = "ids";
+          hidden.value = id;
+          form.appendChild(hidden);
+        });
 
         bypassConfirmSubmit = true;
         if (typeof form.requestSubmit === "function") {
@@ -294,6 +305,74 @@ try {
         `;
       }
 
+      /** Retourne toutes les cartes correspondant aux filtres actifs, toutes pages. */
+      function getFilteredCards(): HTMLElement[] {
+        const q = (currentSearch || "").toLowerCase().trim();
+        const benef = (currentBenef || "").toLowerCase().trim();
+        return allCards.filter((card) => {
+          const title = (card.dataset.title || "").toLowerCase();
+          const b = (card.dataset.beneficiary || "").toLowerCase();
+          if (benef && !b.includes(benef)) return false;
+          if (q && !title.includes(q)) return false;
+          return true;
+        });
+      }
+
+      /**
+       * Synchronise l'état coché des checkboxes visibles depuis selectedIds,
+       * et attache un listener (une seule fois) pour mettre à jour selectedIds.
+       */
+      function syncCheckboxes() {
+        g.querySelectorAll<HTMLInputElement>('input[type="checkbox"][name="ids"]').forEach((cb) => {
+          const id = cb.value;
+          cb.checked = selectedIds.has(id);
+          if (!cb.dataset.selListenerAttached) {
+            cb.dataset.selListenerAttached = "true";
+            cb.addEventListener("change", () => {
+              if (cb.checked) {
+                selectedIds.add(id);
+              } else {
+                selectedIds.delete(id);
+              }
+              updateSelectAllState();
+              updateDeleteButtonLabel();
+            });
+          }
+        });
+        updateSelectAllState();
+        updateDeleteButtonLabel();
+      }
+
+      /** Met à jour l'état checked/indeterminate du "Tout sélectionner". */
+      function updateSelectAllState() {
+        if (!(selectAll instanceof HTMLInputElement)) return;
+        const filteredIds = getFilteredCards()
+          .map((c) => c.querySelector<HTMLInputElement>('input[name="ids"]')?.value)
+          .filter((id): id is string => Boolean(id));
+        const checkedCount = filteredIds.filter((id) => selectedIds.has(id)).length;
+        if (filteredIds.length === 0) {
+          selectAll.checked = false;
+          selectAll.indeterminate = false;
+        } else if (checkedCount === filteredIds.length) {
+          selectAll.checked = true;
+          selectAll.indeterminate = false;
+        } else if (checkedCount > 0) {
+          selectAll.checked = false;
+          selectAll.indeterminate = true;
+        } else {
+          selectAll.checked = false;
+          selectAll.indeterminate = false;
+        }
+      }
+
+      /** Affiche le nombre de sélections dans le bouton Supprimer. */
+      function updateDeleteButtonLabel() {
+        const btn = document.getElementById("bulkDelete");
+        if (!(btn instanceof HTMLButtonElement)) return;
+        const count = selectedIds.size;
+        btn.textContent = count > 0 ? `Supprimer sélection (${count})` : "Supprimer sélection";
+      }
+
       function updateView() {
         const q = (currentSearch || "").toLowerCase().trim();
         const benef = (currentBenef || "").toLowerCase().trim();
@@ -327,6 +406,7 @@ try {
         g.innerHTML = "";
         pageItems.forEach((c) => g.appendChild(c));
         renderPagination(totalPages);
+        syncCheckboxes();
       }
 
       // Écouter les mises à jour de filtres du composant ActionsSearch.
@@ -387,16 +467,24 @@ try {
         });
       }
 
-      // Sélectionner uniquement les cases visibles.
+      // Sélectionner / décocher toutes les actions filtrées, toutes pages confondues.
       if (selectAll instanceof HTMLInputElement) {
         selectAll.addEventListener("change", () => {
           const checked = selectAll.checked;
-          const inputs = g.querySelectorAll(
-            'input[type="checkbox"][name="ids"]',
-          );
-          inputs.forEach((cb) => {
-            if (cb instanceof HTMLInputElement) cb.checked = checked;
+          getFilteredCards().forEach((card) => {
+            const id = card.querySelector<HTMLInputElement>('input[name="ids"]')?.value;
+            if (!id) return;
+            if (checked) {
+              selectedIds.add(id);
+            } else {
+              selectedIds.delete(id);
+            }
           });
+          // Mettre à jour immédiatement les cases de la page visible.
+          g.querySelectorAll<HTMLInputElement>('input[type="checkbox"][name="ids"]').forEach((cb) => {
+            cb.checked = selectedIds.has(cb.value);
+          });
+          updateDeleteButtonLabel();
         });
       }
 

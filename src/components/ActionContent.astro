@@ -1,6 +1,9 @@
-﻿---
-import diagArrow from "../assets/diag-arrow.svg";
+---
+import { Image } from "astro:assets";
+import DiagArrow from "./DiagArrow.astro";
 import imageIcon from "../assets/image-icon.svg";
+import backArrow from "../assets/arrow-previous-small.svg";
+import crossCircle from "../assets/cross-circle.svg";
 import galleryUrl from "../scripts/gallery.js?url";
 import galleryDisplayUrl from "../scripts/gallery-display.js?url";
 import {
@@ -69,6 +72,11 @@ const chiffreTypeLabel = hasTypeDeChiffreValue
   ? String(action?.type_de_chiffre)
   : (chiffreIsNegative ? "chiffre clé" : "");
 const hasBeneficiaireCard = hasNonEmptyText(action?.beneficiaire);
+const locationCardCount = [hasLieuCard, hasChiffreCard, hasBeneficiaireCard].filter(
+  Boolean,
+).length;
+const hasSingleLocationCard = locationCardCount === 1;
+const hasTripleLocationCards = locationCardCount === 3;
 const hasLocationSection = hasLieuCard || hasChiffreCard || hasBeneficiaireCard;
 const shouldRenderLocationSection =
   hasLocationSection || forcePreviewLocationSection;
@@ -122,7 +130,7 @@ const hasThanksSection = hasNonEmptyText(action?.description_remerciements);
           alt={action.description_hero}
           loading="lazy"
           decoding="async"
-          class="w-full min-h-[50dvh] object-cover object-center rounded-lg"
+          class="w-full min-h-[50dvh] max-h-[80dvh] object-cover object-center rounded-lg"
         />
         {action.description_hero && (
           <p data-field="description_hero" class="text-sm md:text-base mt-4">
@@ -203,7 +211,10 @@ const hasThanksSection = hasNonEmptyText(action?.description_remerciements);
           <div
             data-location-card="lieu"
             style={hasLieuCard ? "" : "display:none;"}
-            class="bg-accent text-base-100 w-full h-full rounded-2xl px-6 md:px-8 py-4 md:py-6 flex flex-col gap-4 justify-between min-h-30 md:min-h-48"
+            class:list={[
+              "bg-accent text-base-100 w-full h-full rounded-2xl px-6 md:px-8 py-4 md:py-6 flex flex-col gap-4 justify-between min-h-30 md:min-h-48",
+              hasSingleLocationCard ? "md:col-span-2 lg:col-span-1" : "",
+            ]}
           >
             <div class="flex flex-col gap-2 min-w-fit max-w-fit">
               <h2
@@ -230,7 +241,7 @@ const hasThanksSection = hasNonEmptyText(action?.description_remerciements);
                 class="flex items-center gap-2 md:gap-4 text-base md:text-xl!"
               >
                 Voir sur Google maps{" "}
-                <img loading="lazy" src={diagArrow.src} aria-hidden="true" />
+                <DiagArrow />
               </a>
               <p class="text-base md:text-xl!">LIEU</p>
             </div>
@@ -240,10 +251,13 @@ const hasThanksSection = hasNonEmptyText(action?.description_remerciements);
           <div
             data-location-card="chiffre"
             style={hasChiffreCard ? "" : "display:none;"}
-            class="bg-accent text-base-100 w-full h-full max-w-full rounded-2xl px-6 md:px-8 py-4 md:py-6 flex flex-col justify-between min-h-30 md:min-h-48"
+            class:list={[
+              "bg-accent text-base-100 w-full h-full max-w-full rounded-2xl px-6 md:px-8 py-4 md:py-6 flex flex-col justify-between min-h-30 md:min-h-48",
+              hasSingleLocationCard ? "md:col-span-2 lg:col-span-1" : "",
+            ]}
           >
             <h2 data-field="chiffre" class="text-5xl! md:text-7xl!">
-              {action.chiffre} EUR
+              {action.chiffre} €
             </h2>
             {/* Inclure l'élément systématiquement pour que le script de prévisualisation puisse le cibler. */}
             <p
@@ -259,7 +273,12 @@ const hasThanksSection = hasNonEmptyText(action?.description_remerciements);
           <div
             data-location-card="beneficiaire"
             style={hasBeneficiaireCard ? "" : "display:none;"}
-            class="bg-accent text-base-100 rounded-2xl px-6 md:px-8 py-4 md:py-6 flex flex-col justify-between min-h-30 md:min-h-48 w-full h-full"
+            class:list={[
+              "bg-accent text-base-100 rounded-2xl px-6 md:px-8 py-4 md:py-6 flex flex-col justify-between min-h-30 md:min-h-48 w-full h-full",
+              hasSingleLocationCard || hasTripleLocationCards
+                ? "md:col-span-2 lg:col-span-1"
+                : "",
+            ]}
           >
             <h2
               data-field="beneficiaire"
@@ -472,19 +491,33 @@ const hasThanksSection = hasNonEmptyText(action?.description_remerciements);
             id="closeButton"
             class="absolute top-16 right-4 text-xl! bg-base-100 bg-opacity-80 rounded-full w-8 h-8 md:w-10 md:h-10 flex items-center justify-center z-110 cursor-pointer"
           >
-            x
+            <img
+              src={crossCircle.src}
+              alt=""
+              class="w-6 h-6 md:w-5 md:h-5"
+            />
           </button>
           <button
             id="prevButton"
-            class="absolute left-4 top-1/2 -translate-y-1/2 text-xl! bg-base-100 bg-opacity-80 rounded-full w-8 h-8 md:w-10 md:h-10 flex items-center justify-center z-110"
+            type="button"
+            class="absolute left-4 lg:left-48 top-1/2 -translate-y-1/2 bg-base-100 bg-opacity-80 rounded-full h-12 w-12 flex items-center justify-center gap-2 z-110 cursor-pointer"
           >
-            Précédent
+            <img
+              src={backArrow.src}
+              alt=""
+              class="w-6 h-6 md:w-5 md:h-5"
+            />
           </button>
           <button
             id="nextButton"
-            class="absolute right-4 top-1/2 -translate-y-1/2 text-xl! bg-base-100 bg-opacity-80 rounded-full w-8 h-8 md:w-10 md:h-10 flex items-center justify-center z-110"
+            type="button"
+            class="absolute right-4 lg:right-48 top-1/2 -translate-y-1/2 bg-base-100 bg-opacity-80 rounded-full h-12 w-12 flex items-center justify-center gap-2 z-110 cursor-pointer"
           >
-            Suivant
+            <img
+              src={backArrow.src}
+              alt=""
+              class="w-6 h-6 md:w-5 md:h-5 rotate-180"
+            />
           </button>
           <div class="relative p-2 md:p-4">
             <img loading="lazy"
@@ -621,8 +654,8 @@ const hasThanksSection = hasNonEmptyText(action?.description_remerciements);
 {
   action.galerie_photos && action.galerie_photos.length > 0 && (
     <>
-      <script src={galleryUrl} />
-      <script src={galleryDisplayUrl} />
+      <script src={galleryUrl} defer></script>
+      <script src={galleryDisplayUrl} defer></script>
     </>
   )
 }

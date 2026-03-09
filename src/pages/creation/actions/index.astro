@@ -1,10 +1,8 @@
-﻿---
+---
 import Layout from "../../../layouts/Layout-back-office.astro";
 import slugify from "slugify";
 import ActionsSearch from "../../../components/ActionsSearch.astro";
 import FormSubmitOverlay from "../../../components/FormSubmitOverlay.astro";
-import utilUrl from "../../../utils/utilitaires.js?url";
-import scrollUtilUrl from "../../../utils/scroll.js?url";
 import { formatDateShort } from "../../../utils/utilitaires.js";
 import { ActionsTypeActionOptions } from "../../../pocketbase-types";
 
@@ -255,24 +253,43 @@ const allActions = actions;
   />
 </Layout>
 
-<script type="module" src={utilUrl}></script>
-<!-- Charge l'utilitaire de scroll pour l'exposer globalement aux scripts inline. -->
-<script type="module" src={scrollUtilUrl}></script>
-<script type="module">
+<script>
+  // Charge les utilitaires globaux utilises par les scripts inline:
+  // - dateUtils (formatage)
+  // - scrollUtils (scrollToTarget)
+  import "../../../utils/utilitaires.js";
+  import "../../../utils/scroll.js";
+</script>
+<script>
+  // Ouvre une modale de confirmation reutilisable avant soumission.
   import { showConfirm } from "../../../utils/alerts";
 
-  const BIND_FLAG = "__kcPublishActionConfirmBound";
+  // Attribut HTML temporaire utilise pour eviter une boucle
+  // (submit -> confirm -> requestSubmit -> submit -> confirm ...).
   const PUBLISH_CONFIRMED_ATTR = "data-publish-confirmed";
-  const globalWindow = window as Window & Record<string, unknown>;
 
-  if (!globalWindow[BIND_FLAG]) {
-    globalWindow[BIND_FLAG] = true;
+  // Extension du type Window pour stocker un etat global de binding.
+  type PublishWindowState = Window & {
+    __kcPublishActionConfirmBound?: boolean;
+  };
+  const globalWindow = window as PublishWindowState;
 
+  // Garde idempotente: le listener global "submit" ne doit etre attache qu'une seule fois.
+  if (!globalWindow.__kcPublishActionConfirmBound) {
+    globalWindow.__kcPublishActionConfirmBound = true;
+
+    // Delegation globale: on intercepte tous les submit puis on filtre.
     document.addEventListener("submit", (event) => {
       const target = event.target;
+
+      // On ne traite que les formulaires.
       if (!(target instanceof HTMLFormElement)) return;
+
+      // On ne traite que les formulaires de publication marques explicitement.
       if (target.getAttribute("data-publish-action-form") !== "true") return;
 
+      // Si un submit a deja ete confirme juste avant, on laisse passer
+      // et on nettoie le marqueur pour les soumissions futures.
       const alreadyConfirmed =
         target.getAttribute(PUBLISH_CONFIRMED_ATTR) === "true";
       if (alreadyConfirmed) {
@@ -280,9 +297,11 @@ const allActions = actions;
         return;
       }
 
+      // Bloque le submit natif tant que l'utilisateur n'a pas confirme.
       event.preventDefault();
       const submitter = event.submitter;
 
+      // Demande de confirmation utilisateur.
       void showConfirm({
         title: "Publier l'action",
         message:
@@ -291,9 +310,14 @@ const allActions = actions;
         confirmLabel: "Publier",
         cancelLabel: "Annuler",
       }).then((confirmed) => {
+        // Si annule: on ne fait rien.
         if (!confirmed) return;
 
+        // Marque ce submit comme deja confirme pour eviter la boucle.
         target.setAttribute(PUBLISH_CONFIRMED_ATTR, "true");
+
+        // Rejoue le submit en conservant le bouton declencheur si disponible.
+        // Cela preserve le comportement natif (name/value du bouton, etc.).
         if (
           submitter instanceof HTMLButtonElement ||
           submitter instanceof HTMLInputElement
@@ -301,32 +325,45 @@ const allActions = actions;
           target.requestSubmit(submitter);
           return;
         }
+
+        // Fallback si aucun submitter exploitable.
         target.requestSubmit();
       });
     });
   }
 </script>
 <script define:vars={{ allActions, q }}>
+  // Dataset injecte cote serveur (Astro define:vars).
   const actions = allActions;
+
+  // Etat UI courant des filtres/pagination.
   let currentBeneficiary = "";
   const PAGE_SIZE = 9;
   let currentPage = 1;
   let filteredActions = actions.slice();
-  // Au changement de page, recentre la vue sur le haut de la liste paginée.
+
+  // Au changement de page, recentre la vue sur le haut de la liste paginee.
   const scrollTopOnPageChange = () => {
-    const globalScrollUtils = (window as any).scrollUtils;
+    // Priorite: utilitaire global expose par scroll.js.
+    const globalScrollUtils =
+      typeof window !== "undefined" ? window.scrollUtils : null;
     if (globalScrollUtils && typeof globalScrollUtils.scrollToTarget === "function") {
       globalScrollUtils.scrollToTarget("#pages-container");
       return;
     }
+
+    // Fallback DOM standard.
     const listRoot = document.getElementById("pages-container");
     if (listRoot instanceof HTMLElement) {
       listRoot.scrollIntoView({ behavior: "smooth", block: "start" });
       return;
     }
+
+    // Dernier fallback.
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
+  // Formate une date pour affichage humain.
   function formatDate(d) {
     if (!d) return "";
     if (
@@ -335,9 +372,11 @@ const allActions = actions;
       typeof window.dateUtils.formatDateShort === "function"
     ) {
       try {
+        // Utilitaire global centralise (format homogène dans le projet).
         return window.dateUtils.formatDateShort(d);
       } catch (e) {}
     }
+    // Repli natif si utilitaire indisponible.
     return new Date(d).toLocaleDateString("fr-FR", {
       day: "numeric",
       month: "short",
@@ -345,14 +384,18 @@ const allActions = actions;
     });
   }
 
+  // URL de consultation selon la source (action publiee vs brouillon).
   function getViewUrl(id, slug, source) {
     if (source === "brouillon") return `/creation/brouillons/${id}-${slug}`;
     return `/actions/${id}-${slug}`;
   }
+
+  // URL d'edition (toujours vers l'editeur action).
   function getEditUrl(id, slug) {
     return `/creation/actions/edit/${id}-${slug}`;
   }
 
+  // Construit le HTML de pagination.
   function renderPagination(totalPages, page) {
     if (totalPages <= 1) return "";
     const pageButtons = Array.from({ length: totalPages }, (_, index) => {
@@ -371,19 +414,28 @@ const allActions = actions;
   }
 
   function filterActions(search, beneficiary, year, type) {
+    // On part toujours de la liste complete, puis on applique des filtres cumulables.
     let filtered = actions.slice();
+
+    // Logs de debug utilises pendant l'ajustement des filtres.
     if (typeof console !== "undefined" && console.debug)
       console.debug("filterActions input", { search, beneficiary, year, type });
+
+    // Filtre par beneficiaire (sous-chaine, insensible a la casse).
     if (beneficiary && beneficiary !== "")
       filtered = filtered.filter((a) =>
         (a.beneficiaire || "")
           .toLowerCase()
           .includes(beneficiary.toLowerCase()),
       );
+
+    // Filtre texte sur le titre.
     if (search && search !== "")
       filtered = filtered.filter((a) =>
         (a.titre || "").toLowerCase().includes(search.toLowerCase()),
       );
+
+    // Filtre par annee extraite de date_debut ou date_fin.
     if (year && year !== "") {
       filtered = filtered.filter((a) => {
         const d = a.date_debut || a.date_fin;
@@ -391,6 +443,8 @@ const allActions = actions;
         return new Date(d).getFullYear().toString() === year;
       });
     }
+
+    // Filtre par type metier.
     if (type && type !== "") {
       filtered = filtered.filter((a) => {
         // Le type peut venir de `a.type_action` ou de `type_de_chiffre` ; ajuster si nécessaire.
@@ -398,25 +452,33 @@ const allActions = actions;
         return arr.includes(type);
       });
     }
+
+    // Log de sortie.
     if (typeof console !== "undefined" && console.debug)
       console.debug("filterActions result count", filtered.length);
     return filtered;
   }
 
+  // Rend la grille + la pagination a partir d'une liste deja filtree.
   function renderActions(list) {
     const container = document.getElementById("pages-container");
     if (!container) return;
+
+    // Etat vide.
     if (list.length === 0) {
       container.innerHTML = `<div class="text-center py-12"><p class="text-base-content/60 mb-4">Aucune action trouvée</p></div>`;
       currentPage = 1;
       return;
     }
+
+    // Calcule les bornes de pagination.
     const totalPages = Math.max(1, Math.ceil(list.length / PAGE_SIZE));
     if (currentPage > totalPages) currentPage = totalPages;
     if (currentPage < 1) currentPage = 1;
     const startIndex = (currentPage - 1) * PAGE_SIZE;
     const pageItems = list.slice(startIndex, startIndex + PAGE_SIZE);
 
+    // Construit le HTML des cartes + controles de pagination.
     const html = `
         <div class="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-5 lg:grid-cols-3 lg:gap-6">
           ${pageItems
@@ -444,18 +506,24 @@ const allActions = actions;
       </div>
       ${renderPagination(totalPages, currentPage)}
     `;
+
+    // Injection DOM finale.
     container.innerHTML = html;
   }
 
+  // Point d'entree client: branche tous les listeners UI.
   document.addEventListener("DOMContentLoaded", () => {
     const pagesContainer = document.getElementById("pages-container");
+
+    // Valeurs initiales derivees du SSR.
     let currentSearch = pagesContainer?.dataset.initialSearch || "";
     let currentYear = "";
     let currentType = "";
 
-    // Écouter les événements du composant de recherche réutilisable.
+    // Select de tri (date desc/asc).
     const sortSelect = document.getElementById("sort-select");
 
+    // Fonction centrale: filtre -> tri -> rendu.
     function applyAndRender() {
       let filtered = filterActions(
         currentSearch,
@@ -467,6 +535,8 @@ const allActions = actions;
         sortSelect instanceof HTMLSelectElement
           ? sortSelect.value
           : "updated_desc";
+
+      // Tri final par date de mise a jour.
       filtered.sort((a, b) => {
         const da = new Date(a.updated || 0).getTime();
         const db = new Date(b.updated || 0).getTime();
@@ -476,6 +546,7 @@ const allActions = actions;
       renderActions(filteredActions);
     }
 
+    // Applique les filtres recus depuis les evenements custom.
     function handleFilters(d) {
       currentSearch = d.search || "";
       currentBeneficiary = d.beneficiary || "";
@@ -485,6 +556,7 @@ const allActions = actions;
       applyAndRender();
     }
 
+    // Gestion des clics de pagination (delegation).
     pagesContainer?.addEventListener("click", (event) => {
       const target =
         event.target instanceof HTMLElement
@@ -499,6 +571,7 @@ const allActions = actions;
       );
       const previousPage = currentPage;
 
+      // Routeur d'actions pagination.
       if (action === "prev") {
         currentPage = Math.max(1, currentPage - 1);
       } else if (action === "next") {
@@ -513,12 +586,13 @@ const allActions = actions;
       }
 
       if (currentPage !== previousPage) {
-        // Évite un défilement inutile si l'utilisateur clique sur la page déjà active.
+        // Evite un defilement inutile si la page ne change pas.
         scrollTopOnPageChange();
       }
       renderActions(filteredActions);
     });
 
+    // Reagit aux changements emis par les composants de recherche.
     document.addEventListener("actions-filter-change", (ev) => {
       handleFilters(ev.detail || {});
     });
@@ -526,16 +600,18 @@ const allActions = actions;
       handleFilters(ev.detail || {});
     });
 
-    // Rendu initial basé sur les paramètres côté serveur.
+    // Tri: declenche un rerender a chaque changement.
     if (sortSelect instanceof HTMLSelectElement) {
       sortSelect.addEventListener("change", () => {
         currentPage = 1;
         applyAndRender();
       });
     }
+
+    // Rendu initial base sur l'etat de depart SSR.
     applyAndRender();
 
-    // Pas de bouton de suppression unitaire sur cette page ; la suppression groupée est gérée par le formulaire.
+    // Note: suppression unitaire absente ici; la suppression groupee est geree ailleurs.
   });
 </script>
 

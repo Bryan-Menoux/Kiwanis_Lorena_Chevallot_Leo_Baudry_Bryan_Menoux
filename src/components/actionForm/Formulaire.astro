@@ -1,4 +1,4 @@
-﻿---
+---
 import SectionMainInfo from "./sections/SectionMainInfo.astro";
 import SectionPart from "./sections/SectionPart.astro";
 import SectionLocation from "./sections/SectionLocation.astro";
@@ -107,7 +107,11 @@ const formTitle =
     Champs obligatoires: titre, date de début, image de l'en-tête, et au moins une partie (texte ou photo).
   </p>
 
-  <div data-mobile-step-wrapper data-mobile-step="1">
+  <div
+    data-mobile-step-wrapper
+    data-mobile-step="1"
+    class:list={[isMobileWizard ? "min-h-[60dvh] lg:min-h-0" : ""]}
+  >
     <SectionMainInfo
       mode={mode}
       previewData={previewData}
@@ -117,7 +121,11 @@ const formTitle =
     />
   </div>
 
-  <div data-mobile-step-wrapper data-mobile-step="2">
+  <div
+    data-mobile-step-wrapper
+    data-mobile-step="2"
+    class:list={[isMobileWizard ? "min-h-[60dvh] lg:min-h-0" : ""]}
+  >
     <SectionPart
       partNumber={1}
       mode={mode}
@@ -127,7 +135,11 @@ const formTitle =
     />
   </div>
 
-  <div data-mobile-step-wrapper data-mobile-step="3">
+  <div
+    data-mobile-step-wrapper
+    data-mobile-step="3"
+    class:list={[isMobileWizard ? "min-h-[60dvh] lg:min-h-0" : ""]}
+  >
     <SectionLocation
       mode={mode}
       previewData={previewData}
@@ -136,7 +148,11 @@ const formTitle =
     />
   </div>
 
-  <div data-mobile-step-wrapper data-mobile-step="4">
+  <div
+    data-mobile-step-wrapper
+    data-mobile-step="4"
+    class:list={[isMobileWizard ? "min-h-[60dvh] lg:min-h-0" : ""]}
+  >
     <SectionPart
       partNumber={2}
       mode={mode}
@@ -146,7 +162,11 @@ const formTitle =
     />
   </div>
 
-  <div data-mobile-step-wrapper data-mobile-step="5">
+  <div
+    data-mobile-step-wrapper
+    data-mobile-step="5"
+    class:list={[isMobileWizard ? "min-h-[60dvh] lg:min-h-0" : ""]}
+  >
     <SectionPart
       partNumber={3}
       mode={mode}
@@ -156,7 +176,11 @@ const formTitle =
     />
   </div>
 
-  <div data-mobile-step-wrapper data-mobile-step="6">
+  <div
+    data-mobile-step-wrapper
+    data-mobile-step="6"
+    class:list={[isMobileWizard ? "min-h-[60dvh] lg:min-h-0" : ""]}
+  >
     <SectionThanks
       mode={mode}
       previewData={previewData}
@@ -164,7 +188,11 @@ const formTitle =
     />
   </div>
 
-  <div data-mobile-step-wrapper data-mobile-step="7">
+  <div
+    data-mobile-step-wrapper
+    data-mobile-step="7"
+    class:list={[isMobileWizard ? "min-h-[60dvh] lg:min-h-0" : ""]}
+  >
     <SectionGallery
       mode={mode}
       previewData={previewData}
@@ -217,7 +245,8 @@ const formTitle =
     isMobileWizard && (
       <div
         data-mobile-wizard-footer
-        class="lg:hidden sticky bottom-2 z-40 bg-base-100/95 backdrop-blur border border-base-300 rounded-2xl px-3 py-3 space-y-2"
+        class="lg:hidden sticky bottom-0 z-40 -mx-4 mt-4 border-t border-base-300 bg-base-100/95 px-4 pt-3 space-y-2 backdrop-blur"
+        style="padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 0.75rem);"
       >
         <div class="flex gap-2">
           <button
@@ -275,8 +304,43 @@ const formTitle =
 
 <FormSubmitOverlay
   formSelector="#leftForm"
-  message="Enregistrement en cours..."
+  message="Enregistrement en cours... Cela peut prendre jusqu’à une minute."
 />
+
+<script define:vars={{ serverErrorMessage: error }}>
+  function pushErrorAlert(message) {
+    if (!message) return;
+
+    const payload = {
+      type: "error",
+      message,
+    };
+
+    if (
+      typeof window !== "undefined" &&
+      window.KiwanisAlert &&
+      typeof window.KiwanisAlert.show === "function"
+    ) {
+      window.KiwanisAlert.show(payload);
+      return;
+    }
+
+    if (typeof window !== "undefined" && typeof CustomEvent === "function") {
+      window.dispatchEvent(
+        new CustomEvent("kiwanis:alert", {
+          detail: payload,
+        }),
+      );
+    }
+  }
+
+  const message =
+    typeof serverErrorMessage === "string" ? serverErrorMessage.trim() : "";
+
+  if (message) {
+    pushErrorAlert(message);
+  }
+</script>
 
 <script>
   // Scripts métier du formulaire:
@@ -292,6 +356,7 @@ const formTitle =
   import "../../scripts/actionForm/editableTitle.js";
   import "../../scripts/actionForm/mobileWizard.js";
   import "../../scripts/preview/index.js";
+  import { initWebpConversion } from "../../scripts/actionForm/convertToWebp.js";
   import { showAlert, showConfirm } from "../../utils/alerts";
 
   const PUBLISH_CONFIRMED_ATTR = "data-publish-confirmed";
@@ -579,11 +644,16 @@ const formTitle =
     document.addEventListener("DOMContentLoaded", initActionFormRequiredValidation, {
       once: true,
     });
+    document.addEventListener("DOMContentLoaded", initWebpConversion, {
+      once: true,
+    });
   } else {
     initCardAnimation();
     initActionFormRequiredValidation();
+    initWebpConversion();
   }
 
   document.addEventListener("astro:page-load", initCardAnimation);
   document.addEventListener("astro:page-load", initActionFormRequiredValidation);
+  document.addEventListener("astro:page-load", initWebpConversion);
 </script>

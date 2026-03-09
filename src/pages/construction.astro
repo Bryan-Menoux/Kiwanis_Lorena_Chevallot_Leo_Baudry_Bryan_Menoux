@@ -1,0 +1,69 @@
+---
+import logo from "../assets/logo-kiwanis-full.svg?url";
+import "../styles/global.css";
+---
+
+<!doctype html>
+<html lang="fr" data-theme="Kiwanis">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="preload" href="/fonts/merriweather/Merriweather_24pt-Regular-latin.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+    <link rel="manifest" href="/site.webmanifest" />
+    <meta name="theme-color" content="#1e3c71" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>Site en construction — Kiwanis Pays de Montbéliard</title>
+  </head>
+
+  <body class="min-h-screen flex flex-col items-center justify-center bg-base-100 px-6 font-sans gap-10">
+
+    <!-- Logo -->
+    <div class="flex flex-col items-center gap-2">
+      <img
+        src={logo}
+        alt="Logo Kiwanis Pays de Montbéliard"
+        loading="eager"
+        class="h-14 w-auto"
+        draggable="false"
+      />
+      <div class="text-center leading-tight">
+        <p class="text-sm font-bold tracking-tighter font-merriweather uppercase text-base-content">KIWANIS</p>
+        <p class="text-[0.6rem] font-light tracking-[0.2em] uppercase font-merriweather text-base-content/40">Pays de Montbéliard</p>
+      </div>
+    </div>
+
+    <!-- Carte -->
+    <div class="w-full max-w-xl bg-white rounded-2xl shadow-md border border-base-200 px-10 py-10 flex flex-col items-center gap-5 text-center">
+
+
+      <div class="flex flex-col gap-2">
+        <h2 class="text-7xl! font-bold text-base-content font-merriweather leading-snug">
+          🚧
+        </h2>
+        <h1 class="text-[1.35rem] font-bold text-base-content font-merriweather leading-snug">
+          Site en construction
+        </h1>
+        <p class="text-base-content/55 text-sm leading-relaxed">
+          Notre nouveau site est en cours de préparation.<br />
+          Revenez bientôt pour découvrir le site officiel<br />du Kiwanis Pays de Montbéliard.
+        </p>
+      </div>
+
+      <div class="w-8 h-px rounded-full" style="background-color: #e8a958;"></div>
+
+      <a
+        href="mailto:contact@kiwanis-pays-de-montbeliard.fr"
+        class="text-xs text-base-content/40 hover:text-accent transition-colors underline underline-offset-2 decoration-transparent hover:decoration-accent"
+      >
+        contact@kiwanis-pays-de-montbeliard.fr
+      </a>
+    </div>
+
+    <!-- Footer -->
+    <p class="text-[0.65rem] text-base-content/25 font-merriweather">
+      &copy; {new Date().getFullYear()} Kiwanis Pays de Montbéliard
+    </p>
+
+  </body>
+</html>

@@ -1,5 +1,10 @@
-﻿// Script minimal d'affichage de galerie : attendre les images, puis appeler window.setGridStyles()
+// Script minimal d'affichage de galerie : attendre les images, puis appeler window.setGridStyles()
 // et révéler la grille. Aucune logique de mise en page ici ; resize et clic sont gérés dans gallery.js.
+
+(function () {
+  if (typeof window === 'undefined') return;
+  if (window.__kcGalleryDisplayBound) return;
+  window.__kcGalleryDisplayBound = true;
 
 document.addEventListener("DOMContentLoaded", function () {
   var grid = document.getElementById("photoGrid");
@@ -7,26 +12,46 @@ document.addEventListener("DOMContentLoaded", function () {
 
   var imgs = Array.from(grid.querySelectorAll('img'));
 
-  var reveal = function () {
-    if (typeof window !== 'undefined' && typeof window.setGridStyles === 'function') {
-      window.setGridStyles();
+  var stylesPoll = null;
+
+  var tryApplyGridStyles = function () {
+    if (typeof window === 'undefined' || typeof window.setGridStyles !== 'function') {
+      return false;
     }
-    grid.classList.remove('opacity-0');
+    try { window.setGridStyles(); } catch (e) {}
+    return true;
   };
 
-  if (imgs.length === 0) {
-    reveal();
-    return;
-  }
-
-  var loaded = 0;
-  imgs.forEach(function (img) {
-    if (img.complete && img.naturalWidth) {
-      loaded++;
-      if (loaded === imgs.length) reveal();
-    } else {
-      img.addEventListener('load', function () { loaded++; if (loaded === imgs.length) reveal(); }, { once: true });
+  var ensureGridStyles = function () {
+    if (tryApplyGridStyles()) {
+      if (stylesPoll) {
+        clearInterval(stylesPoll);
+        stylesPoll = null;
+      }
+      return;
     }
+    if (stylesPoll) return;
+
+    var attempts = 0;
+    stylesPoll = setInterval(function () {
+      attempts++;
+      if (tryApplyGridStyles() || attempts > 40) {
+        clearInterval(stylesPoll);
+        stylesPoll = null;
+      }
+    }, 50);
+  };
+
+  // Afficher la galerie tout de suite pour éviter de bloquer le lazy loading natif.
+  grid.classList.remove('opacity-0');
+  ensureGridStyles();
+
+  imgs.forEach(function (img) {
+    if (img.complete && img.naturalWidth) return;
+
+    var onStateChange = function () { ensureGridStyles(); };
+    img.addEventListener('load', onStateChange, { once: true });
+    img.addEventListener('error', onStateChange, { once: true });
   });
 });
 
@@ -117,8 +142,33 @@ document.addEventListener("DOMContentLoaded", function () {
 
   document.addEventListener('keydown', function (e) {
     if (!modal || modal.classList.contains('hidden')) return;
-    if (e.key === 'Escape') closeModal();
-    if (e.key === 'ArrowLeft') showIndex(currentIndex - 1);
-    if (e.key === 'ArrowRight') showIndex(currentIndex + 1);
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      e.stopPropagation();
+      if (typeof e.stopImmediatePropagation === 'function') {
+        e.stopImmediatePropagation();
+      }
+      closeModal();
+      return;
+    }
+    if (e.key === 'ArrowLeft') {
+      e.preventDefault();
+      e.stopPropagation();
+      if (typeof e.stopImmediatePropagation === 'function') {
+        e.stopImmediatePropagation();
+      }
+      showIndex(currentIndex - 1);
+      return;
+    }
+    if (e.key === 'ArrowRight') {
+      e.preventDefault();
+      e.stopPropagation();
+      if (typeof e.stopImmediatePropagation === 'function') {
+        e.stopImmediatePropagation();
+      }
+      showIndex(currentIndex + 1);
+    }
   });
+})();
+
 })();

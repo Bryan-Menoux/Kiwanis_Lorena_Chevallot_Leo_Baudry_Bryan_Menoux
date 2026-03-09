@@ -34,6 +34,13 @@ const {
   const PENDING_ATTR = "data-submit-overlay-pending";
   const IN_FLIGHT_ATTR = "data-submit-overlay-in-flight";
   const DISABLED_BY_OVERLAY_ATTR = "data-disabled-by-submit-overlay";
+  const KEEP_VISIBLE_ATTR = "data-submit-overlay-keep-visible";
+  const FALLBACK_TOKEN_ATTR = "data-submit-overlay-fallback-token";
+  // Delai minimal de securite: 2 minutes avant de considerer la soumission bloquee.
+  const FALLBACK_RESET_MS = 120000;
+  const FAILURE_EVENT_NAME = "kc:submit-overlay-failed";
+  const DEFAULT_FAILURE_MESSAGE =
+    "L'enregistrement a échoue. Verifiez votre connexion puis reessayez.";
 
   const overlayNode = document.getElementById(overlayId);
   if (!(overlayNode instanceof HTMLElement)) {
@@ -75,6 +82,29 @@ const {
     overlay.setAttribute("aria-hidden", "true");
   };
 
+  const normalizeFailureMessage = (rawMessage) => {
+    if (typeof rawMessage === "string" && rawMessage.trim() !== "") {
+      return rawMessage.trim();
+    }
+    return DEFAULT_FAILURE_MESSAGE;
+  };
+
+  const pushErrorAlert = (message) => {
+    const payload = { type: "error", message };
+    if (
+      window.KiwanisAlert &&
+      typeof window.KiwanisAlert.show === "function"
+    ) {
+      window.KiwanisAlert.show(payload);
+      return;
+    }
+    window.dispatchEvent(
+      new CustomEvent("kiwanis:alert", {
+        detail: payload,
+      }),
+    );
+  };
+
   const disableSubmitControls = (form) => {
     const controls = form.querySelectorAll('button[type="submit"], input[type="submit"]');
     controls.forEach((control) => {
@@ -108,9 +138,50 @@ const {
       if (!(form instanceof HTMLFormElement)) return;
       form.removeAttribute(PENDING_ATTR);
       form.removeAttribute(IN_FLIGHT_ATTR);
+      form.removeAttribute(KEEP_VISIBLE_ATTR);
+      form.removeAttribute(FALLBACK_TOKEN_ATTR);
       restoreSubmitControls(form);
     });
     hideOverlay();
+  };
+
+  const failMatchedForms = (rawMessage) => {
+    const message = normalizeFailureMessage(rawMessage);
+    let hasMatchedForm = false;
+
+    const forms = document.querySelectorAll(formSelector);
+    forms.forEach((form) => {
+      if (!(form instanceof HTMLFormElement)) return;
+      hasMatchedForm = true;
+      form.removeAttribute(PENDING_ATTR);
+      form.removeAttribute(IN_FLIGHT_ATTR);
+      form.removeAttribute(KEEP_VISIBLE_ATTR);
+      form.removeAttribute(FALLBACK_TOKEN_ATTR);
+      restoreSubmitControls(form);
+    });
+
+    if (!hasMatchedForm) return;
+    hideOverlay();
+    pushErrorAlert(message);
+  };
+
+  const scheduleFallbackReset = (form) => {
+    const token = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    form.setAttribute(FALLBACK_TOKEN_ATTR, token);
+
+    window.setTimeout(() => {
+      const stillSameToken = form.getAttribute(FALLBACK_TOKEN_ATTR) === token;
+      if (!stillSameToken) return;
+
+      const isStillBusy =
+        form.getAttribute(PENDING_ATTR) === "true" ||
+        form.getAttribute(IN_FLIGHT_ATTR) === "true" ||
+        form.getAttribute(KEEP_VISIBLE_ATTR) === "true";
+      if (!isStillBusy) return;
+      failMatchedForms(
+        "L'enregistrement prend plus de 2 minutes. Verifiez votre connexion et reessayez.",
+      );
+    }, FALLBACK_RESET_MS);
   };
 
   const bindingKey = formSelector;
@@ -131,15 +202,39 @@ const {
       }
 
       target.setAttribute(PENDING_ATTR, "true");
+      showOverlay();
+      scheduleFallbackReset(target);
 
       // La validation et les autres ecouteurs peuvent annuler la soumission.
       queueMicrotask(() => {
         target.removeAttribute(PENDING_ATTR);
-        if (event.defaultPrevented) return;
+        if (event.defaultPrevented) {
+          const keepVisible = target.getAttribute(KEEP_VISIBLE_ATTR) === "true";
+          if (keepVisible) return;
+          target.removeAttribute(IN_FLIGHT_ATTR);
+          target.removeAttribute(FALLBACK_TOKEN_ATTR);
+          restoreSubmitControls(target);
+          hideOverlay();
+          return;
+        }
         target.setAttribute(IN_FLIGHT_ATTR, "true");
         disableSubmitControls(target);
-        showOverlay();
       });
+    }, true);
+
+    window.addEventListener(FAILURE_EVENT_NAME, (event) => {
+      if (!(event instanceof CustomEvent)) return;
+      const detail = event.detail;
+      const detailForm = detail?.form;
+      if (detailForm instanceof HTMLFormElement && !detailForm.matches(formSelector)) {
+        return;
+      }
+      const detailSelector =
+        typeof detail?.formSelector === "string" ? detail.formSelector : "";
+      if (detailSelector && detailSelector !== formSelector) {
+        return;
+      }
+      failMatchedForms(detail?.message);
     });
 
     document.addEventListener("astro:page-load", resetMatchedForms);

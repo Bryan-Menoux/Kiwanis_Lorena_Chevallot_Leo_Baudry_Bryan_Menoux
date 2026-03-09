@@ -1,4 +1,4 @@
-﻿export type AlertType = "success" | "error" | "warning" | "info";
+export type AlertType = "success" | "error" | "warning" | "info";
 
 export interface AlertPayload {
   message: string;

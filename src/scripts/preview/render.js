@@ -1,4 +1,4 @@
-﻿import { formatDateRange, escapeHtml, isDataUrl } from '../../utils/utilitaires.js';
+import { formatDateRange, escapeHtml, isDataUrl } from '../../utils/utilitaires.js';
 import { previewState } from './state.js';
 import { renderGallery } from './gallery.js';
 
@@ -93,6 +93,34 @@ function hasTypeDeChiffreValue(value) {
   return normalized !== '' && normalized !== 'type de chiffre';
 }
 
+function syncLocationSectionLayout(sectionNode) {
+  if (!(sectionNode instanceof HTMLElement)) return;
+
+  const cards = Array.from(sectionNode.querySelectorAll('[data-location-card]')).filter(
+    (card) => card instanceof HTMLElement,
+  );
+  if (!cards.length) return;
+
+  const visibleCards = cards.filter((card) => card.style.display !== 'none');
+
+  cards.forEach((card) => {
+    card.classList.remove('md:col-span-2', 'lg:col-span-1');
+  });
+
+  // Tablette:
+  // - 1 carte -> pleine largeur
+  // - 2 cartes -> cote a cote (comportement grille standard)
+  // - 3 cartes -> 2 en haut + la 3e en pleine largeur en bas
+  if (visibleCards.length === 1) {
+    visibleCards[0].classList.add('md:col-span-2', 'lg:col-span-1');
+    return;
+  }
+
+  if (visibleCards.length === 3) {
+    visibleCards[2].classList.add('md:col-span-2', 'lg:col-span-1');
+  }
+}
+
 function syncLocationCardsVisibility() {
   const sectionNodes = Array.from(document.querySelectorAll('[data-location-section]'));
   if (!sectionNodes.length) return;
@@ -119,6 +147,7 @@ function syncLocationCardsVisibility() {
     if (lieuCard) lieuCard.style.display = hasLieu ? '' : 'none';
     if (chiffreCard) chiffreCard.style.display = hasChiffre ? '' : 'none';
     if (beneficiaireCard) beneficiaireCard.style.display = hasBeneficiaire ? '' : 'none';
+    syncLocationSectionLayout(sectionNode);
   });
 
   const nomLieuNodes = Array.from(document.querySelectorAll('[data-field="nom_lieu"]'));

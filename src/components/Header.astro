@@ -1,12 +1,14 @@
-﻿---
+---
 // src/components/Header.astro
 import Logo from "../assets/logo-kiwanis-full.svg";
+import arrowPreviousSmall from "../assets/arrow-previous-small.svg";
 import user from "../assets/user.svg";
 import userWhite from "../assets/user-white.svg";
 import { Image } from "astro:assets";
 
 const currentUser = Astro.locals.pb.authStore.record;
-import diagArrow from "../assets/diag-arrow.svg";
+import DiagArrow from "./DiagArrow.astro";
+const mobileLogoSrc = "/favicon-96.png";
 ---
 
 <header
@@ -15,7 +17,16 @@ import diagArrow from "../assets/diag-arrow.svg";
 >
   <div class="hidden lg:flex py-4 px-12 items-center justify-between">
     <a href="/" class="flex items-center gap-4">
-      <Image src={Logo} alt="Logo" loading="eager" class="h-14 w-auto" draggable="false" />
+      <Image
+        src={Logo}
+        alt="Logo"
+        loading="lazy"
+        fetchpriority="low"
+        decoding="async"
+        quality={80}
+        class="h-14 w-auto"
+        draggable="false"
+      />
       <div class="flex flex-col text-gray-900 leading-tight">
         <span class="text-xl font-bold tracking-tighter font-merriweather"
           >KIWANIS</span
@@ -50,8 +61,17 @@ import diagArrow from "../assets/diag-arrow.svg";
           <span class="whitespace-nowrap">Nous découvrir</span>
           <span
             id="discover-arrow"
-            class="text-[10px] transition-transform duration-300"
-            aria-hidden="true">></span
+            class="inline-flex transition-transform duration-300"
+            aria-hidden="true"
+          >
+            <Image
+              src={arrowPreviousSmall}
+              alt=""
+              aria-hidden="true"
+              loading="eager"
+              class="h-6 w-6 rotate-180"
+            />
+          </span
           >
         </div>
         <div
@@ -135,7 +155,16 @@ import diagArrow from "../assets/diag-arrow.svg";
   <div class="lg:hidden flex flex-col items-center p-4 gap-3 w-full">
     <div class="w-full flex items-center justify-between gap-4 max-w-[90dvw]">
       <a href="/" class="shrink-0">
-        <Image src={Logo} alt="Logo" loading="eager" class="h-12 w-auto" />
+        <img
+          src={mobileLogoSrc}
+          alt="Logo Kiwanis"
+          width="96"
+          height="96"
+          loading="eager"
+          fetchpriority="high"
+          decoding="async"
+          class="h-12 w-12 object-contain"
+        />
       </a>
 
       <button
@@ -146,28 +175,9 @@ import diagArrow from "../assets/diag-arrow.svg";
         aria-label="Ouvrir le menu"
       >
         <span class="text-base font-medium">Menu</span>
-        <div class="relative w-6 h-6">
-          <svg
-            id="ham-icon"
-            class="w-6 h-6 absolute"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            aria-hidden="true"
-          >
-            <path
-              id="ham-top"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="1.5"
-              d="M4 8h16"></path>
-            <path
-              id="ham-bottom"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="1.5"
-              d="M4 16h16"></path>
-          </svg>
+        <div class="relative w-6 h-6 flex flex-col justify-center items-center gap-1.25 pointer-events-none">
+          <span id="ham-top" class="block w-full h-0.5 bg-white rounded-full" style="transition: transform 0.2s ease;"></span>
+          <span id="ham-bottom" class="block w-full h-0.5 bg-white rounded-full" style="transition: transform 0.2s ease;"></span>
         </div>
       </button>
     </div>
@@ -189,14 +199,14 @@ import diagArrow from "../assets/diag-arrow.svg";
           class="mob-link flex justify-between items-center py-2 text-base"
           role="menuitem"
         >
-          Nos membres <span class="opacity-40" aria-hidden="true"><Image src={diagArrow} alt="" layout="fixed" class="h-3 w-auto" aria-hidden="true" /> </span>
+          Nos membres <span class="opacity-40" aria-hidden="true"><DiagArrow class="h-3 w-auto" /> </span>
         </a>
         <a
           href="/don"
           class="mob-link flex justify-between items-center py-2 text-base"
           role="menuitem"
         >
-          Faire un don <span class="opacity-40" aria-hidden="true"><Image src={diagArrow} alt="" layout="fixed" class="h-3 w-auto" aria-hidden="true" /> </span>
+          Faire un don <span class="opacity-40" aria-hidden="true"><DiagArrow class="h-3 w-auto" /> </span>
         </a>
 
         <div
@@ -211,21 +221,21 @@ import diagArrow from "../assets/diag-arrow.svg";
           class="mob-link flex justify-between items-center py-2 text-base"
           role="menuitem"
         >
-          Nos actions <span class="opacity-40" aria-hidden="true"><Image src={diagArrow} alt="" layout="fixed" class="h-3 w-auto" aria-hidden="true" /> </span>
+          Nos actions <span class="opacity-40" aria-hidden="true"><DiagArrow class="h-3 w-auto" /> </span>
         </a>
         <a
           href="/projets"
           class="mob-link flex justify-between items-center py-2 text-base"
           role="menuitem"
         >
-          Nos projets <span class="opacity-40" aria-hidden="true"><Image src={diagArrow} alt="" layout="fixed" class="h-3 w-auto" aria-hidden="true" /> </span>
+          Nos projets <span class="opacity-40" aria-hidden="true"><DiagArrow class="h-3 w-auto" /> </span>
         </a>
         <a
           href="/produits"
           class="mob-link flex justify-between items-center py-2 text-base"
           role="menuitem"
         >
-          Nos produits <span class="opacity-40" aria-hidden="true"><Image src={diagArrow} alt="" layout="fixed" class="h-3 w-auto" aria-hidden="true" /> </span>
+          Nos produits <span class="opacity-40" aria-hidden="true"><DiagArrow class="h-3 w-auto" /> </span>
         </a>
 
         <div
@@ -267,7 +277,7 @@ import diagArrow from "../assets/diag-arrow.svg";
                   >
                     <div class="avatar">
                       <div class="w-10 rounded-full ring ring-offset-base-100 ring-white/30 overflow-hidden">
-                        <Image src={userWhite} alt="" aria-hidden="true" loading="eager" />
+                        <Image src={userWhite} alt="" aria-hidden="true" loading="eager" quality={80} />
                       </div>
                     </div>
                     <span class="text-sm font-semibold">Mon compte</span>
@@ -301,152 +311,65 @@ import diagArrow from "../assets/diag-arrow.svg";
 </header>
 
 <style is:global>
+  #main-header a,
+  #main-header .nav-item {
+    font-family: "Poppins", var(--font-sans-fallback);
+  }
+
   #main-header.header-hidden {
     transform: translateY(-110%);
+  }
+
+  #discover-dropdown {
+    transition:
+      opacity 0.15s ease,
+      transform 0.15s ease,
+      visibility 0.15s ease;
+  }
+
+  #discover-dropdown.is-open {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+    pointer-events: auto;
+  }
+
+  #discover-arrow {
+    transition: transform 0.15s ease;
+  }
+
+  #discover-arrow.is-open {
+    transform: rotate(90deg);
   }
 </style>
 
 <script>
   let discoverIsOpen = false;
   let globalClickHandler: ((e: Event) => void) | null = null;
-  
-  function initMenu() {
-    const toggle = document.getElementById("menu-toggle") as HTMLButtonElement;
-    const dropdown = document.getElementById("mobile-dropdown") as HTMLElement;
-    const links = document.querySelectorAll(".mob-link");
+  let mobileMenuInitialized = false;
 
-    if (!toggle || !dropdown) return;
+  function setDiscoverState(isOpen: boolean) {
+    const discoverDropdown = document.getElementById(
+      "discover-dropdown",
+    ) as HTMLElement | null;
+    const discoverArrow = document.getElementById(
+      "discover-arrow",
+    ) as HTMLElement | null;
+    const discoverToggle = document.getElementById(
+      "discover-toggle",
+    ) as HTMLElement | null;
 
-    let isOpen = false;
-    gsap.set(dropdown, { display: "none", opacity: 0, y: -10 });
+    if (!discoverDropdown || !discoverArrow || !discoverToggle) return;
 
-    const hamTop = document.getElementById("ham-top");
-    const hamBottom = document.getElementById("ham-bottom");
-    if (hamTop && hamBottom) {
-      gsap.set([hamTop, hamBottom], {
-        transformOrigin: "50% 50%",
-        y: 0,
-        rotate: 0,
-      });
-    }
-
-    const toggleMenu = (e?: Event) => {
-      e?.stopPropagation();
-      isOpen = !isOpen;
-
-      // Update ARIA attributes
-      toggle.setAttribute("aria-expanded", isOpen.toString());
-      dropdown.setAttribute("aria-hidden", (!isOpen).toString());
-
-      if (isOpen) {
-        dropdown.style.display = "block";
-        gsap
-          .timeline()
-          .to(dropdown, { opacity: 1, y: 0, duration: 0.2, ease: "power2.out" })
-          .fromTo(
-            links,
-            { opacity: 0, y: 5 },
-            { opacity: 1, y: 0, stagger: 0.02, duration: 0.15 },
-            "-=0.1",
-          );
-        if (hamTop && hamBottom) {
-          gsap.to(hamTop, {
-            y: 4,
-            rotate: 45,
-            duration: 0.18,
-            ease: "power2.out",
-          });
-          gsap.to(hamBottom, {
-            y: -4,
-            rotate: -45,
-            duration: 0.18,
-            ease: "power2.out",
-          });
-        }
-      } else {
-        gsap
-          .timeline()
-          .to(dropdown, { opacity: 0, y: -10, duration: 0.15 })
-          .set(dropdown, { display: "none" });
-        if (hamTop && hamBottom) {
-          gsap.to(hamTop, {
-            y: 0,
-            rotate: 0,
-            duration: 0.12,
-            ease: "power2.in",
-          });
-          gsap.to(hamBottom, {
-            y: 0,
-            rotate: 0,
-            duration: 0.12,
-            ease: "power2.in",
-          });
-        }
-      }
-    };
-
-    toggle.addEventListener("click", toggleMenu);
-
-    // Keyboard navigation
-    toggle.addEventListener("keydown", (e) => {
-      if (e.key === "Enter" || e.key === " ") {
-        e.preventDefault();
-        toggleMenu();
-      }
-    });
-
-    window.addEventListener("resize", () => {
-      if (window.innerWidth >= 1024 && isOpen) {
-        isOpen = false;
-        dropdown.style.display = "none";
-        toggle.setAttribute("aria-expanded", "false");
-        dropdown.setAttribute("aria-hidden", "true");
-        if (hamTop && hamBottom) {
-          gsap.to(hamTop, {
-            y: 0,
-            rotate: 0,
-            duration: 0.12,
-            ease: "power2.in",
-          });
-          gsap.to(hamBottom, {
-            y: 0,
-            rotate: 0,
-            duration: 0.12,
-            ease: "power2.in",
-          });
-        }
-      }
-    });
+    discoverIsOpen = isOpen;
+    discoverToggle.setAttribute("aria-expanded", isOpen.toString());
+    discoverDropdown.setAttribute("aria-hidden", (!isOpen).toString());
+    discoverDropdown.classList.toggle("is-open", isOpen);
+    discoverArrow.classList.toggle("is-open", isOpen);
   }
 
   function closeDiscoverDropdown() {
-    const discoverDropdown = document.getElementById(
-      "discover-dropdown",
-    ) as HTMLElement;
-    const discoverArrow = document.getElementById(
-      "discover-arrow",
-    ) as HTMLElement;
-    const discoverToggle = document.getElementById(
-      "discover-toggle",
-    ) as HTMLElement;
-
-    if (discoverDropdown && discoverArrow) {
-      discoverIsOpen = false;
-      gsap.to(discoverDropdown, {
-        opacity: 0,
-        visibility: "hidden",
-        y: -10,
-        pointerEvents: "none",
-        duration: 0.15,
-      });
-      gsap.to(discoverArrow, { rotate: 0, duration: 0.15 });
-
-      // Update ARIA attributes
-      if (discoverToggle) {
-        discoverToggle.setAttribute("aria-expanded", "false");
-        discoverDropdown.setAttribute("aria-hidden", "true");
-      }
-    }
+    setDiscoverState(false);
   }
 
   function initDiscoverDropdown() {
@@ -456,53 +379,28 @@ import diagArrow from "../assets/diag-arrow.svg";
     const discoverDropdown = document.getElementById(
       "discover-dropdown",
     ) as HTMLElement;
-    const discoverArrow = document.getElementById(
-      "discover-arrow",
-    ) as HTMLElement;
 
     if (!discoverToggle || !discoverDropdown) return;
+    if (discoverToggle.dataset.discoverBound === "true") return;
+    discoverToggle.dataset.discoverBound = "true";
 
-    // Supprimer l'ancien handler
     if (globalClickHandler) {
       document.removeEventListener("click", globalClickHandler);
     }
 
     const toggleDropdown = (e?: Event) => {
       e?.stopPropagation();
-      discoverIsOpen = !discoverIsOpen;
-
-      // Update ARIA attributes
-      discoverToggle.setAttribute("aria-expanded", discoverIsOpen.toString());
-      discoverDropdown.setAttribute(
-        "aria-hidden",
-        (!discoverIsOpen).toString(),
-      );
-
-      if (discoverIsOpen) {
-        gsap.to(discoverDropdown, {
-          opacity: 1,
-          visibility: "visible",
-          y: 0,
-          pointerEvents: "auto",
-          duration: 0.08,
-        });
-        gsap.to(discoverArrow, { rotate: 90, duration: 0.08 });
-      } else {
-        closeDiscoverDropdown();
-      }
+      setDiscoverState(!discoverIsOpen);
     };
 
     discoverToggle.addEventListener("click", toggleDropdown);
 
-    // Keyboard navigation
     discoverToggle.addEventListener("keydown", (e) => {
       if (e.key === "Enter" || e.key === " ") {
         e.preventDefault();
         toggleDropdown();
       } else if (e.key === "Escape" && discoverIsOpen) {
         closeDiscoverDropdown();
-        discoverToggle.setAttribute("aria-expanded", "false");
-        discoverDropdown.setAttribute("aria-hidden", "true");
       }
     });
 
@@ -514,11 +412,25 @@ import diagArrow from "../assets/diag-arrow.svg";
         !discoverDropdown.contains(e.target as Node)
       ) {
         closeDiscoverDropdown();
-        discoverToggle.setAttribute("aria-expanded", "false");
-        discoverDropdown.setAttribute("aria-hidden", "true");
       }
     };
     document.addEventListener("click", globalClickHandler);
+  }
+
+  function initMobileMenuWhenNeeded() {
+    if (mobileMenuInitialized) return;
+    if (!window.matchMedia("(max-width: 1023px)").matches) return;
+
+    mobileMenuInitialized = true;
+    void import("../utils/mobileMenu")
+      .then(({ initMobileMenu }) => {
+        initMobileMenu({
+          toggleId: "menu-toggle",
+          dropdownId: "mobile-dropdown",
+          itemSelector: ".mob-link",
+        });
+      })
+      .catch(() => {});
   }
 
   document.addEventListener("DOMContentLoaded", () => {
@@ -538,7 +450,14 @@ import diagArrow from "../assets/diag-arrow.svg";
       });
     }
 
-    initMenu();
-    initDiscoverDropdown();
+    const initViewportFeatures = () => {
+      initMobileMenuWhenNeeded();
+      if (window.matchMedia("(min-width: 1024px)").matches) {
+        initDiscoverDropdown();
+      }
+    };
+
+    initViewportFeatures();
+    window.addEventListener("resize", initViewportFeatures, { passive: true });
   });
 </script>

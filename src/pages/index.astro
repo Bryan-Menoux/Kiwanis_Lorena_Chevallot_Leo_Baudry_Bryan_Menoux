@@ -1,39 +1,41 @@
-﻿---
+---
 import Layout from "../layouts/Layout.astro";
-import { Image } from "astro:assets";
+import { Image, getImage } from "astro:assets";
 import heroLandingfinal from "../assets/landing-page/hero-landing-final.webp";
 import heroLandingfinalMobile from "../assets/landing-page/hero-landing-final-mobile.webp";
-import heroLandingfinalTablette from "../assets/landing-page/hero-landing-final-tablette.webp";
+import heroLandingfinalTablet from "../assets/landing-page/hero-landing-final-tablette.webp";
 import Hero from "../components/Hero.astro";
 import landing1 from "../assets/landing-page/landing-1.webp";
 import HomeCarousel from "../components/Home-carousel.astro";
-import diagArrow from "../assets/diag-arrow.svg";
+import DiagArrow from "../components/DiagArrow.astro";
 import kiwanismembres1 from "../assets/landing-page/kiwanismembres1.webp";
-import rollUp from "../assets/landing-page/rollup.webp";
+import rollUp from "../assets/landing-page/rollup-kiwanis-pays-de-montbeliard.webp";
 import fanion from "../assets/landing-page/fanion.webp";
 import why1 from "../assets/landing-page/why-1.webp";
 import why2 from "../assets/landing-page/why-2.webp";
 import why3 from "../assets/landing-page/why-3.webp";
 import HomePartner from "../components/Home-partner.astro";
+
+const lcpMobile = await getImage({ src: heroLandingfinalMobile, format: "webp", width: 440, quality: 68 });
+const lcpTablet = await getImage({ src: heroLandingfinalTablet, format: "webp", width: 1280, quality: 72 });
+const lcpDesktop = await getImage({ src: heroLandingfinal, format: "webp", width: 1600, quality: 74 });
+
+const mapEmbedUrl =
+  "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2694.976201081879!2d6.781242576695513!3d47.5098546946529!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x479216ec97288eb1%3A0x14b7da3408d3161f!2s76%20Fbg%20de%20Besan%C3%A7on%2C%2025200%20Montb%C3%A9liard!5e0!3m2!1sfr!2sfr!4v1768495883263!5m2!1sfr!2sfr";
+const mapAddress = "76 bis faubourg de Besançon, 25200 Montbéliard";
 ---
 
-<Layout>
-  <div class="hidden lg:block" ><Hero
+<Layout includeAlertProvider={false} loadPoppinsFont={false} includeManifest={false}>
+  <Fragment slot="head">
+    <link rel="preload" as="image" href={lcpMobile.src} type="image/webp" media="(max-width: 767px)" fetchpriority="high" />
+    <link rel="preload" as="image" href={lcpTablet.src} type="image/webp" media="(min-width: 768px) and (max-width: 1023px)" fetchpriority="high" />
+    <link rel="preload" as="image" href={lcpDesktop.src} type="image/webp" media="(min-width: 1024px)" fetchpriority="high" />
+  </Fragment>
+  <Hero
     image={heroLandingfinal}
     title="Kiwanis Pays de Montbéliard"
     subtitle="Servir les enfants du monde, au cœur de notre territoire"
-  /></div>
-  <div class="md:hidden" ><Hero
-    image={heroLandingfinalMobile}
-    title="Kiwanis Pays de Montbéliard"
-    subtitle="Servir les enfants du monde, au cœur de notre territoire"
-  /></div>
-  <div class="hidden md:block lg:hidden" ><Hero
-    image={heroLandingfinalTablette}
-    title="Kiwanis Pays de Montbéliard"
-    subtitle="Servir les enfants du monde, au cœur de notre territoire"
-  /></div>
-
+  />
   <!-- Section qui sommes nous -->
   <div
     class="grid grid-cols-1 lg:grid-cols-[3fr_2fr] gap-8 lg:gap-32 min-h-[40dvh] max-w-[85dvw]! md:max-w-[80dvw]! mx-auto my-32"
@@ -61,20 +63,23 @@ import HomePartner from "../components/Home-partner.astro";
     <div
       class="flex flex-col w-full mx-auto max-h-[40dvh] lg:max-h-[60dvh] max-w-full"
     >
-      <Image
-        src={landing1}
-        alt="Photographie de membres du Kiwanis aux 12 coups de Midi"
-        layout="constrained"
-        fit="cover"
-        sizes="(min-width: 1024px) 34vw, 80vw"
-        quality={82}
-        class="w-full max-h-full flex-1 object-cover rounded-box"
-      />
+      <div class="w-full aspect-565/569 overflow-hidden rounded-box">
+        <Image
+          src={landing1}
+          alt="Photographie de membres du Kiwanis aux 12 coups de Midi"
+          loading="lazy"
+          fetchpriority="low"
+          quality={60}
+          decoding="async"
+          class="block h-full w-full object-cover"
+        />
+      </div>
       <p class="text-sm mt-2">Le Kiwanis Féminin aux 12 coups de Midi</p>
     </div>
   </div>
 
-  <HomeCarousel />
+  <div class="defer-render">
+    <HomeCarousel />
 
   <!-- Section Membres -->
   <div
@@ -101,7 +106,7 @@ import HomePartner from "../components/Home-partner.astro";
         voudrais qu’il te fasse. »
       </p>
       <a href="/membres" class="btn btn-accent w-fit px-8 py-6 mt-auto self-end"
-        >Voir tous les membres <Image src={diagArrow} alt="" aria-hidden="true" layout="fixed" /></a
+        >Voir tous les membres <DiagArrow /></a
       >
     </div>
     <div
@@ -109,11 +114,13 @@ import HomePartner from "../components/Home-partner.astro";
     >
       <Image
         src={kiwanismembres1}
-        alt="Photographie de Evelyne PERRIOT"
+        alt="Photographie des membres du groupe Kiwanis Pays de Montbéliard"
         layout="constrained"
         fit="cover"
         sizes="(min-width: 1024px) 34vw, 80vw"
-        quality={82}
+        quality={60}
+        loading="lazy"
+        fetchpriority="low"
         class="w-full max-h-full flex-1 object-cover rounded-box"
       />
       <p class="text-sm mt-2">
@@ -146,24 +153,45 @@ import HomePartner from "../components/Home-partner.astro";
         pas à nous contacter via la page Contact du site.
       </p>
       <a href="/contact" class="btn btn-accent w-fit px-8 py-6 mt-auto self-end"
-        >Nous contacter<Image src={diagArrow} alt="" aria-hidden="true" layout="fixed" /></a
+        >Nous contacter<DiagArrow /></a
       >
     </div>
 
-    <div class="relative h-full min-h-fit">
+    <div
+      class="relative h-full min-h-96 md:min-h-fit rounded-box! overflow-hidden border border-base-300/60 bg-base-200/50"
+      data-map-loader
+      data-map-src={mapEmbedUrl}
+    >
+      <div
+        data-map-placeholder
+        class="flex h-full min-h-56 flex-col items-center justify-center gap-4 px-6 py-8 text-center"
+      >
+        <p class="text-sm text-base-content/80 md:text-base">
+          Carte non chargee automatiquement pour limiter les requetes externes.
+        </p>
+        <button type="button" data-map-trigger class="btn btn-accent px-6 py-3">
+          Afficher la carte
+        </button>
+      </div>
       <iframe
-        src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2694.976201081879!2d6.781242576695513!3d47.5098546946529!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x479216ec97288eb1%3A0x14b7da3408d3161f!2s76%20Fbg%20de%20Besan%C3%A7on%2C%2025200%20Montb%C3%A9liard!5e0!3m2!1sfr!2sfr!4v1768495883263!5m2!1sfr!2sfr"
-        class="w-full h-full min-h-56 rounded-box"
+        data-map-target
+        title={`Carte interactive de ${mapAddress}`}
+        class="hidden w-full h-full min-h-56"
         style="border:0;"
         allowfullscreen=""
         loading="lazy"
-        referrerpolicy="no-referrer-when-downgrade"></iframe>
-      <a
-        href="https://www.google.com/maps?ll=47.509851,6.783818&z=16&t=m&hl=fr&gl=FR&mapclient=embed&q=76+Fbg+de+Besan%C3%A7on+25200+Montb%C3%A9liard"
-        target="_blank"
-        class="btn btn-accent w-fit px-4 py-2 lg:px-8 lg:py-6 mt-auto self-end absolute right-2 bottom-3 md:right-3 lg:right-2"
-        >Voir sur maps<Image src={diagArrow} alt="" aria-hidden="true" layout="fixed" /></a
-      >
+        referrerpolicy="no-referrer-when-downgrade"
+      ></iframe>
+      <noscript>
+        <iframe
+          src={mapEmbedUrl}
+          class="block w-full min-h-56"
+          style="border:0;"
+          allowfullscreen=""
+          loading="lazy"
+          referrerpolicy="no-referrer-when-downgrade"
+        ></iframe>
+      </noscript>
     </div>
   </div>
 
@@ -181,9 +209,9 @@ import HomePartner from "../components/Home-partner.astro";
         </h3>
         <a
           href={rollUp.src}
-          download="roll-up.png"
+          download="roll-up-kiwanis-pays-de-montbeliard.png"
           class="btn btn-accent w-fit px-8 py-6"
-          >Télécharger notre roll-up<Image src={diagArrow} alt="" aria-hidden="true" layout="fixed" /></a
+          >Télécharger notre roll-up<DiagArrow /></a
         >
       </div>
       <div class="flex gap-8 w-full mx-auto justify-center items-center">
@@ -193,7 +221,9 @@ import HomePartner from "../components/Home-partner.astro";
           layout="constrained"
           fit="contain"
           sizes="(min-width: 1024px) 20vw, 40vw"
-          quality={78}
+          quality={60}
+          loading="lazy"
+          fetchpriority="low"
           class="flex-1 h-auto object-contain w-fit max-w-[40dvw] lg:w-1/2 max-h-[50dvh] lg:max-h-[65dvh]"
         />
         <Image
@@ -202,7 +232,9 @@ import HomePartner from "../components/Home-partner.astro";
           layout="constrained"
           fit="contain"
           sizes="(min-width: 1024px) 20vw, 40vw"
-          quality={78}
+          quality={60}
+          loading="lazy"
+          fetchpriority="low"
           class="flex-1 h-auto object-contain w-fit max-w-[40dvw] lg:w-1/2 max-h-[50dvh] lg:max-h-[65dvh] mix-blend-multiply"
         />
       </div>
@@ -225,7 +257,7 @@ import HomePartner from "../components/Home-partner.astro";
       class="grid grid-cols-1 lg:grid-cols-[1fr_1fr] gap-8 lg:gap-16 min-h-[40dvh]"
     >
       <div class="flex flex-col gap-4 mt-6">
-        <h4>Des effets concrets pour les enfants d'ici</h4>
+        <h3>Des effets concrets pour les enfants d'ici</h3>
         <p>
           Votre soutien permet de financer des projets concrets pour les enfants
           du Pays de Montbéliard, comme des actions menées avec des écoles, des
@@ -240,7 +272,9 @@ import HomePartner from "../components/Home-partner.astro";
           layout="constrained"
           fit="cover"
           sizes="(min-width: 1024px) 40vw, 80vw"
-          quality={80}
+          quality={60}
+          loading="lazy"
+          fetchpriority="low"
           class="w-full flex-1 object-cover rounded-box min-h-[30dvh] md:min-h-[40dvh]"
         />
       </div>
@@ -255,12 +289,14 @@ import HomePartner from "../components/Home-partner.astro";
           layout="constrained"
           fit="cover"
           sizes="(min-width: 1024px) 40vw, 80vw"
-          quality={80}
+          quality={60}
+          loading="lazy"
+          fetchpriority="low"
           class="w-full flex-1 object-cover rounded-box min-h-[30dvh] md:min-h-[40dvh]"
         />
       </div>
       <div class="flex flex-col gap-4 mt-6">
-        <h4>Plusieurs façons de vous engager à nos côtés</h4>
+        <h3>Plusieurs façons de vous engager à nos côtés</h3>
         <p>
           Entreprises, commerces, collectivités ou particuliers, chacun peut
           s'engager à sa manière, par un don, un partenariat, des lots ou la
@@ -275,7 +311,9 @@ import HomePartner from "../components/Home-partner.astro";
           layout="constrained"
           fit="cover"
           sizes="(min-width: 1024px) 40vw, 80vw"
-          quality={80}
+          quality={60}
+          loading="lazy"
+          fetchpriority="low"
           class="w-full flex-1 object-cover rounded-box min-h-[30dvh] md:min-h-[40dvh]"
         />
       </div>
@@ -284,7 +322,7 @@ import HomePartner from "../components/Home-partner.astro";
       class="grid grid-cols-1 lg:grid-cols-[1fr_1fr] gap-8 lg:gap-16 min-h-[40dvh]"
     >
       <div class="flex flex-col gap-4 mt-6">
-        <h4>Un cadre clair pour votre contribution</h4>
+        <h3>Un cadre clair pour votre contribution</h3>
         <p>
           Les cotisations de nos membres assurent le fonctionnement du club. Les
           recettes des événements et les dons sont entièrement dédiés aux
@@ -299,12 +337,40 @@ import HomePartner from "../components/Home-partner.astro";
           layout="constrained"
           fit="cover"
           sizes="(min-width: 1024px) 40vw, 80vw"
-          quality={80}
+          quality={60}
+          loading="lazy"
+          fetchpriority="low"
           class="w-full flex-1 object-cover rounded-box min-h-[30dvh] md:min-h-[40dvh]"
         />
       </div>
     </div>
   </div>
 
-  <HomePartner />
+    <HomePartner />
+  </div>
+
+  <script>
+    document.querySelectorAll<HTMLElement>("[data-map-loader]").forEach((root) => {
+      if (root.dataset.mapBound === "true") return;
+      root.dataset.mapBound = "true";
+
+      const target = root.querySelector<HTMLIFrameElement>("[data-map-target]");
+      const trigger = root.querySelector<HTMLButtonElement>("[data-map-trigger]");
+      const placeholder = root.querySelector<HTMLElement>("[data-map-placeholder]");
+      const mapSrc = root.dataset.mapSrc;
+
+      if (!target || !trigger || !mapSrc) return;
+
+      const loadMap = () => {
+        if (root.dataset.mapLoaded === "true") return;
+
+        root.dataset.mapLoaded = "true";
+        target.src = mapSrc;
+        target.classList.remove("hidden");
+        placeholder?.remove();
+      };
+
+      trigger.addEventListener("click", loadMap, { once: true });
+    });
+  </script>
 </Layout>

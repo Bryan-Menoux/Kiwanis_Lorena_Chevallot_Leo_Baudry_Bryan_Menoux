@@ -1,10 +1,14 @@
-﻿---
+---
 import Layout from "../../layouts/Layout.astro";
 import Hero from "../../components/Hero.astro";
 import heroImg from "../../assets/action-page/hero-action-page.webp";
 import SearchActions from "../../components/SearchActions.astro";
 import slugify from "slugify";
 import { formatDateShort } from "../../utils/utilitaires.js";
+import HeroActions from "../../assets/action-page/hero-action-page.webp";
+import HeroActionsMobile from "../../assets/action-page/hero-action-page-mobile.webp";
+import HeroActionsTablet from "../../assets/action-page/hero-action-page-tablette.webp";
+import { getImage } from "astro:assets";
 
 let actionsRaw: any[] = [];
 try {
@@ -30,7 +34,7 @@ const formatActionDate = (
     return formatDateShort(dateDebut);
   }
   if (updated) {
-    return `Mise a jour le ${formatDateShort(updated)}`;
+    return `Mise à jour le ${formatDateShort(updated)}`;
   }
   return "";
 };
@@ -56,11 +60,20 @@ const actionsWithUrls = actions.map((action) => {
   };
 });
 
+const stripCombiningMarks = (value: string) =>
+  Array.from(value)
+    .filter((char) => {
+      const code = char.codePointAt(0);
+      return code === undefined || code < 768 || code > 879;
+    })
+    .join("");
+
 const normalizeRole = (value: unknown) =>
-  String(value || "")
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "");
+  stripCombiningMarks(
+    String(value || "")
+      .toLowerCase()
+      .normalize("NFD"),
+  );
 
 let users: any[] = [];
 try {
@@ -88,13 +101,23 @@ const yearOptions = Array.from(
       .filter((v): v is string => Boolean(v)),
   ),
 ).sort((a, b) => b.localeCompare(a));
+
+
+const lcpMobile = await getImage({ src: HeroActionsMobile, format: "webp", width: 440, quality: 80 });
+const lcpTablet = await getImage({ src: HeroActionsTablet, format: "webp", width: 1280, quality: 80 });
+const lcpDesktop = await getImage({ src: HeroActions, format: "webp", width: 1600, quality: 80 });
 ---
 
 <Layout>
+  <Fragment slot="head">
+    <link rel="preload" as="image" href={lcpMobile.src} type="image/webp" media="(max-width: 767px)" fetchpriority="high" />
+    <link rel="preload" as="image" href={lcpTablet.src} type="image/webp" media="(min-width: 768px) and (max-width: 1023px)" fetchpriority="high" />
+    <link rel="preload" as="image" href={lcpDesktop.src} type="image/webp" media="(min-width: 1024px)" fetchpriority="high" />
+  </Fragment>
   <Hero
-    image={heroImg}
-    title="Actions"
-    subtitle="Découvrez les actions menées par notre communauté."
+    image={HeroActions}
+    title="Kiwanis Pays de Montbéliard"
+    subtitle="Servir les enfants du monde, au cœur de notre territoire"
   />
 
   <section
@@ -105,19 +128,19 @@ const yearOptions = Array.from(
     >
       <div class="rounded-2xl bg-accent flex flex-col items-center p-4 text-base-100 md:p-5 lg:p-6">
         <p class="text-3xl! font-bold md:text-4xl!">{actions.length}</p>
-        <p class="mt-2 whitespace-nowrap">Actions realisees</p>
+        <p class="mt-2 whitespace-nowrap">Actions réalisées</p>
       </div>
       <div class="rounded-2xl bg-accent flex flex-col items-center p-4 text-base-100 md:p-5 lg:p-6">
         <p class="text-3xl! font-bold md:text-4xl!">+150</p>
-        <p class="mt-2 whitespace-nowrap">Enfants aides</p>
+        <p class="mt-2 whitespace-nowrap">Enfants aidés</p>
       </div>
       <div class="rounded-2xl bg-accent flex flex-col items-center p-4 text-base-100 md:p-5 lg:p-6">
         <p class="text-3xl! font-bold md:text-4xl!">{membres.length}</p>
-        <p class="mt-2 whitespace-nowrap">Benevoles engages</p>
+        <p class="mt-2 whitespace-nowrap">Bénévoles engagés</p>
       </div>
       <div class="rounded-2xl bg-accent flex flex-col items-center p-4 text-base-100 md:p-5 lg:p-6">
         <p class="text-3xl! font-bold md:text-4xl!">{dureeEngagement}</p>
-        <p class="mt-2 whitespace-nowrap">Annees d'engagement</p>
+        <p class="mt-2 whitespace-nowrap">Années d'engagement</p>
       </div>
     </div>
   </section>
@@ -133,7 +156,7 @@ const yearOptions = Array.from(
           Nos actions sur le terrain
         </h2>
         <p class="text-sm leading-relaxed text-base-content/75 md:text-base">
-          Decouvrez les actions menees par le club Kiwanis Pays de Montbeliard
+          Découvrez les actions menées par le club Kiwanis Pays de Montbéliard
           pour soutenir les enfants et les familles du territoire.
         </p>
       </div>
@@ -286,7 +309,7 @@ const yearOptions = Array.from(
       }).join("");
 
       container.innerHTML = `
-        <button type="button" class="btn btn-sm btn-ghost" data-page-action="prev" ${currentPage === 1 ? "disabled" : ""}>Precedent</button>
+        <button type="button" class="btn btn-sm btn-ghost" data-page-action="prev" ${currentPage === 1 ? "disabled" : ""}>Précédent</button>
         ${pageButtons}
         <button type="button" class="btn btn-sm btn-ghost" data-page-action="next" ${currentPage === totalPages ? "disabled" : ""}>Suivant</button>
       `;

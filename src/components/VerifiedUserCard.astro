@@ -1,4 +1,5 @@
-﻿---
+---
+import { Image } from "astro:assets";
 import crossCircle from "../assets/cross-circle.svg";
 
 type User = {
@@ -33,7 +34,7 @@ const { user, currentUserId = '', showUnverifyButton = true } = Astro.props as P
       data-list-type="verified"
       type="button"
     >
-      <img loading="lazy" src={crossCircle.src} class="w-5 h-5 invert" />
+      <Image src={crossCircle} alt="" loading="lazy" quality={80} class="w-5 h-5 invert" />
       Retirer l'utilisateur de la liste
     </button>
   )}

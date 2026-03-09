@@ -1,4 +1,4 @@
-﻿---
+---
 import Logo from "../assets/logo-kiwanis-full.svg";
 import userIcon from "../assets/user.svg";
 import userWhite from "../assets/user-white.svg";
@@ -6,13 +6,13 @@ import { Image } from "astro:assets";
 
 const currentUser = Astro.locals.pb.authStore.record;
 
-import diagArrow from "../assets/diag-arrow.svg";
+import DiagArrow from "./DiagArrow.astro";
 ---
 
 <header class="fixed top-0 left-0 right-0 z-50">
   <div class="hidden lg:flex items-center justify-center gap-8 py-6">
     <a href="/">
-      <Image src={Logo} alt="Kiwanis Logo" loading="eager" class="w-14 h-14 object-fit" />
+      <Image src={Logo} alt="Kiwanis Logo" loading="eager" quality={80} class="w-14 h-14 object-fit" />
     </a>
     <div
       class="w-full h-14 max-w-[80dvw] flex items-center justify-between gap-4 bg-accent rounded-xl px-4"
@@ -174,6 +174,7 @@ import diagArrow from "../assets/diag-arrow.svg";
           src={userIcon}
           alt=""
           aria-hidden="true"
+          quality={80}
           class="w-8 h-8 rounded-full invert"
         />
       </a>
@@ -183,7 +184,7 @@ import diagArrow from "../assets/diag-arrow.svg";
   <div class="lg:hidden flex flex-col items-center p-4 gap-3 w-full">
     <div class="w-full flex items-center justify-between gap-4 max-w-[90dvw]">
       <a href="/" class="shrink-0">
-        <Image src={Logo} alt="Kiwanis Logo" loading="eager" class="h-12 w-auto" />
+        <Image src={Logo} alt="Kiwanis Logo" loading="eager" quality={80} class="h-12 w-auto" />
       </a>
 
       <button
@@ -194,28 +195,9 @@ import diagArrow from "../assets/diag-arrow.svg";
         aria-label="Ouvrir le menu"
       >
         <span class="text-base font-medium">Menu</span>
-        <div class="relative w-6 h-6">
-          <svg
-            id="ham-icon"
-            class="w-6 h-6 absolute"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            aria-hidden="true"
-          >
-            <path
-              id="ham-top"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="1.5"
-              d="M4 8h16"></path>
-            <path
-              id="ham-bottom"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="1.5"
-              d="M4 16h16"></path>
-          </svg>
+        <div class="relative w-6 h-6 flex flex-col justify-center items-center gap-1.25 pointer-events-none">
+          <span id="ham-top" class="block w-full h-0.5 bg-white rounded-full" style="transition: transform 0.2s ease;"></span>
+          <span id="ham-bottom" class="block w-full h-0.5 bg-white rounded-full" style="transition: transform 0.2s ease;"></span>
         </div>
       </button>
     </div>
@@ -243,21 +225,21 @@ import diagArrow from "../assets/diag-arrow.svg";
               class="py-2 flex justify-between items-center text-base"
               role="menuitem"
             >
-              Actions <span class="opacity-40" aria-hidden="true"><Image src={diagArrow} alt="" layout="fixed" class="h-3 w-auto" aria-hidden="true" /> </span>
+              Actions <span class="opacity-40" aria-hidden="true"><DiagArrow class="h-3 w-auto" /> </span>
             </a>
             <a
               href="/creation/projets/nouveau"
               class="py-2 flex justify-between items-center text-base"
               role="menuitem"
             >
-              Projets <span class="opacity-40" aria-hidden="true"><Image src={diagArrow} alt="" layout="fixed" class="h-3 w-auto" aria-hidden="true" /> </span>
+              Projets <span class="opacity-40" aria-hidden="true"><DiagArrow class="h-3 w-auto" /> </span>
             </a>
             <a
               href="/creation/produits/nouveau"
               class="py-2 flex justify-between items-center text-base"
               role="menuitem"
             >
-              Produits <span class="opacity-40" aria-hidden="true"><Image src={diagArrow} alt="" layout="fixed" class="h-3 w-auto" aria-hidden="true" /> </span>
+              Produits <span class="opacity-40" aria-hidden="true"><DiagArrow class="h-3 w-auto" /> </span>
             </a>
           </div>
         </details>
@@ -273,21 +255,21 @@ import diagArrow from "../assets/diag-arrow.svg";
               class="py-2 flex justify-between items-center text-base"
               role="menuitem"
             >
-              Actions <span class="opacity-40" aria-hidden="true"><Image src={diagArrow} alt="" layout="fixed" class="h-3 w-auto" aria-hidden="true" /> </span>
+              Actions <span class="opacity-40" aria-hidden="true"><DiagArrow class="h-3 w-auto" /> </span>
             </a>
             <a
               href="/creation/projets/delete"
               class="py-2 flex justify-between items-center text-base"
               role="menuitem"
             >
-              Projets <span class="opacity-40" aria-hidden="true"><Image src={diagArrow} alt="" layout="fixed" class="h-3 w-auto" aria-hidden="true" /> </span>
+              Projets <span class="opacity-40" aria-hidden="true"><DiagArrow class="h-3 w-auto" /> </span>
             </a>
             <a
               href="/creation/produits/delete"
               class="py-2 flex justify-between items-center text-base"
               role="menuitem"
             >
-              Produits <span class="opacity-40" aria-hidden="true"><Image src={diagArrow} alt="" layout="fixed" class="h-3 w-auto" aria-hidden="true" /> </span>
+              Produits <span class="opacity-40" aria-hidden="true"><DiagArrow class="h-3 w-auto" /> </span>
             </a>
           </div>
         </details>
@@ -303,21 +285,21 @@ import diagArrow from "../assets/diag-arrow.svg";
               class="py-2 flex justify-between items-center text-base"
               role="menuitem"
             >
-              Actions <span class="opacity-40" aria-hidden="true"><Image src={diagArrow} alt="" layout="fixed" class="h-3 w-auto" aria-hidden="true" /> </span>
+              Actions <span class="opacity-40" aria-hidden="true"><DiagArrow class="h-3 w-auto" /> </span>
             </a>
             <a
               href="/creation/projets"
               class="py-2 flex justify-between items-center text-base"
               role="menuitem"
             >
-              Projets <span class="opacity-40" aria-hidden="true"><Image src={diagArrow} alt="" layout="fixed" class="h-3 w-auto" aria-hidden="true" /> </span>
+              Projets <span class="opacity-40" aria-hidden="true"><DiagArrow class="h-3 w-auto" /> </span>
             </a>
             <a
               href="/creation/produits"
               class="py-2 flex justify-between items-center text-base"
               role="menuitem"
             >
-              Produits <span class="opacity-40" aria-hidden="true"><Image src={diagArrow} alt="" layout="fixed" class="h-3 w-auto" aria-hidden="true" /> </span>
+              Produits <span class="opacity-40" aria-hidden="true"><DiagArrow class="h-3 w-auto" /> </span>
             </a>
           </div>
         </details>
@@ -353,7 +335,7 @@ import diagArrow from "../assets/diag-arrow.svg";
                   >
                     <div class="avatar">
                       <div class="w-10 rounded-full ring ring-offset-base-100 ring-white/30 overflow-hidden">
-                        <Image src={userWhite} alt="" aria-hidden="true" loading="eager" />
+                        <Image src={userWhite} alt="" aria-hidden="true" loading="eager" quality={80} />
                       </div>
                     </div>
                     <span class="text-sm font-semibold">Mon compte</span>
@@ -401,118 +383,21 @@ import diagArrow from "../assets/diag-arrow.svg";
 </style>
 
 <script>
-  function initMenu() {
-    const toggle = document.getElementById("menu-toggle") as HTMLButtonElement;
-    const dropdown = document.getElementById("mobile-dropdown") as HTMLElement;
-    const links = document.querySelectorAll(".mob-link");
-    const subMenus = dropdown?.querySelectorAll("details");
+  import { initMobileMenu } from "../utils/mobileMenu";
 
-    if (!toggle || !dropdown) return;
-
-    let isOpen = false;
-    gsap.set(dropdown, { display: "none", opacity: 0, y: -10 });
-
-    const hamTop = document.getElementById("ham-top");
-    const hamBottom = document.getElementById("ham-bottom");
-    if (hamTop && hamBottom) {
-      gsap.set([hamTop, hamBottom], {
-        transformOrigin: "50% 50%",
-        y: 0,
-        rotate: 0,
-      });
-    }
-
-    const toggleMenu = (e?: Event) => {
-      e?.stopPropagation();
-      isOpen = !isOpen;
-
-      toggle.setAttribute("aria-expanded", isOpen.toString());
-      dropdown.setAttribute("aria-hidden", (!isOpen).toString());
-
-      if (isOpen) {
-        dropdown.style.display = "block";
-        gsap
-          .timeline()
-          .to(dropdown, { opacity: 1, y: 0, duration: 0.2, ease: "power2.out" })
-          .fromTo(
-            links,
-            { opacity: 0, y: 5 },
-            { opacity: 1, y: 0, stagger: 0.02, duration: 0.15 },
-            "-=0.1",
-          );
-        if (hamTop && hamBottom) {
-          gsap.to(hamTop, {
-            y: 4,
-            rotate: 45,
-            duration: 0.18,
-            ease: "power2.out",
-          });
-          gsap.to(hamBottom, {
-            y: -4,
-            rotate: -45,
-            duration: 0.18,
-            ease: "power2.out",
-          });
-        }
-      } else {
-        gsap
-          .timeline()
-          .to(dropdown, { opacity: 0, y: -10, duration: 0.15 })
-          .set(dropdown, { display: "none" });
-        subMenus?.forEach((menu) => menu.removeAttribute("open"));
-        if (hamTop && hamBottom) {
-          gsap.to(hamTop, {
-            y: 0,
-            rotate: 0,
-            duration: 0.12,
-            ease: "power2.in",
-          });
-          gsap.to(hamBottom, {
-            y: 0,
-            rotate: 0,
-            duration: 0.12,
-            ease: "power2.in",
-          });
-        }
-      }
-    };
-
-    toggle.addEventListener("click", toggleMenu);
-
-    toggle.addEventListener("keydown", (e) => {
-      if (e.key === "Enter" || e.key === " ") {
-        e.preventDefault();
-        toggleMenu();
-      }
-    });
-
-    window.addEventListener("resize", () => {
-      if (window.innerWidth >= 1024 && isOpen) {
-        isOpen = false;
-        dropdown.style.display = "none";
-        subMenus?.forEach((menu) => menu.removeAttribute("open"));
-        toggle.setAttribute("aria-expanded", "false");
-        dropdown.setAttribute("aria-hidden", "true");
-        if (hamTop && hamBottom) {
-          gsap.to(hamTop, {
-            y: 0,
-            rotate: 0,
-            duration: 0.12,
-            ease: "power2.in",
-          });
-          gsap.to(hamBottom, {
-            y: 0,
-            rotate: 0,
-            duration: 0.12,
-            ease: "power2.in",
-          });
-        }
-      }
+  function resetSubMenus() {
+    document.querySelectorAll<HTMLDetailsElement>("#mobile-dropdown details").forEach((menu) => {
+      menu.removeAttribute("open");
     });
   }
 
   document.addEventListener("DOMContentLoaded", () => {
-    initMenu();
+    void initMobileMenu({
+      toggleId: "menu-toggle",
+      dropdownId: "mobile-dropdown",
+      itemSelector: ".mob-link",
+      onClose: resetSubMenus,
+    });
   });
 </script>
 

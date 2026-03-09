@@ -1,4 +1,4 @@
-﻿/*
+/*
  * gallery.js
  * Implémentation unique et stable de setGridStyles() pour les grilles photo.
  * - Supprime la logique de mise en page dupliquée ou héritée

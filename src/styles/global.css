@@ -42,37 +42,60 @@
 
 @font-face {
   font-family: "Poppins";
-  src: url("/fonts/poppins/Poppins-Regular.ttf") format("truetype");
-  font-weight: 400;
-  font-style: normal;
-}
-
-@font-face {
-  font-family: "Merriweather";
-  src: url("/fonts/merriweather/Merriweather_24pt-Regular.ttf");
+  src: url("/fonts/poppins/Poppins-Regular.woff2") format("woff2");
   font-weight: 400;
   font-style: normal;
   font-display: swap;
 }
 
-/* Appliquer les polices */
+@font-face {
+  font-family: "Merriweather";
+  src: url("/fonts/merriweather/Merriweather_24pt-Regular-latin.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
 
+:root {
+  --font-sans-fallback:
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    "Segoe UI",
+    sans-serif;
+}
+
+/* Rendu initial: fallback systeme pour limiter la pression reseau critique */
 h2,
 h3,
 h4,
 h5,
 h6,
 body,
-a {
-  font-family: "poppins", serif;
+a,
+.nav-item,
+.font-poppins {
+  font-family: var(--font-sans-fallback);
+}
+
+/* Activation de Poppins apres chargement differe */
+html.fonts-ready h2,
+html.fonts-ready h3,
+html.fonts-ready h4,
+html.fonts-ready h5,
+html.fonts-ready h6,
+html.fonts-ready body,
+html.fonts-ready a,
+html.fonts-ready .nav-item {
+  font-family: "Poppins", var(--font-sans-fallback);
+}
+
+html.fonts-ready .font-poppins {
+  font-family: "Poppins", var(--font-sans-fallback) !important;
 }
 
 h1 {
   font-family: "Merriweather", serif;
-}
-
-.nav-item {
-  font-family: "poppins", serif;
 }
 
 .font-merriweather {
@@ -80,9 +103,7 @@ h1 {
 }
 
 .font-poppins {
-  font-family:
-    "Poppins" !important,
-    serif;
+  font-family: var(--font-sans-fallback) !important;
 }
 
 h1 {
@@ -242,5 +263,12 @@ header span {
 @media (min-width: 1024px) {
   header span {
     font-size: 1rem !important;
+  }
+}
+
+@supports (content-visibility: auto) {
+  .defer-render {
+    content-visibility: auto;
+    contain-intrinsic-size: 900px;
   }
 }

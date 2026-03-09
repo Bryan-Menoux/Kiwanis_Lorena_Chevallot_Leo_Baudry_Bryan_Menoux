@@ -1,4 +1,4 @@
-﻿import PREVIEW_DEFAULTS from "../previewDefaults.js";
+import PREVIEW_DEFAULTS from "../previewDefaults.js";
 
 document.addEventListener("DOMContentLoaded", () => {
   document.querySelectorAll("[data-edit-target]").forEach((btn) => {

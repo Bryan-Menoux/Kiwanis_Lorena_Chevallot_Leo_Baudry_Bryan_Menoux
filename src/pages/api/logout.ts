@@ -1,4 +1,4 @@
-﻿import type { APIRoute } from 'astro';
+import type { APIRoute } from 'astro';
 
 export const POST: APIRoute = async ({ locals }) => {
   // Déconnecter l'utilisateur

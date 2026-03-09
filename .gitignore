@@ -25,5 +25,4 @@ pnpm-debug.log*
 
 /.vscode/mcp.json
 
-check-encoding.js
 encoding-report.txt

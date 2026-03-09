@@ -8,6 +8,10 @@ export default defineConfig({
     responsiveStyles: true,
   },
 
+  build: {
+    inlineStylesheets: "auto",
+  },
+
   vite: {
     plugins: [tailwindcss()],
   },
@@ -18,6 +22,14 @@ export default defineConfig({
       {
         protocol: "https",
         hostname: "kiwanis-pays-de-montbeliard.bryan-menoux.fr",
+      },
+      {
+        protocol: "https",
+        hostname: "www.kiwanis-pays-de-montbeliard.fr",
+      },
+      {
+        protocol: "https",
+        hostname: "kiwanis-pays-de-montbeliard.fr",
       },
     ],
   },
