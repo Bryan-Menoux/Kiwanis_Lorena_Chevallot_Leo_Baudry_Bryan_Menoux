@@ -45,13 +45,7 @@ const { mode = "create", previewData, imageIcon } = Astro.props;
     </div>
   </label>
 
-  <HiddenField
-    id="hidden_galerie_photos"
-    name="galerie_photos"
-    value={mode === "edit" && previewData
-      ? JSON.stringify(previewData.galerie_photos)
-      : undefined}
-  />
+  <input type="hidden" id="hidden_galerie_photos" />
   <HiddenField id="hidden_remove_galerie_photos" name="remove_galerie_photos" />
 
   <div class="mt-3 grid grid-cols-4 gap-2">

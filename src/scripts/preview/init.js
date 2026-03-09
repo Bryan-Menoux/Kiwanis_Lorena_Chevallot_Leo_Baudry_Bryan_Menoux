@@ -73,6 +73,15 @@ function updateHidden(prop) {
   const hiddenInput = document.getElementById(`hidden_${prop}`);
   if (!hiddenInput) return;
   const value = previewState[prop];
+  if (prop === 'galerie_photos') {
+    // Ne jamais soumettre de DataURL de previsualisation:
+    // on garde uniquement les references serveur (si presentes).
+    const serverGalleryRefs = Array.isArray(value)
+      ? value.filter((item) => typeof item === 'string' && !isDataUrl(item))
+      : [];
+    hiddenInput.value = serverGalleryRefs.length ? JSON.stringify(serverGalleryRefs) : '';
+    return;
+  }
   hiddenInput.value = Array.isArray(value) ? JSON.stringify(value) : (value ?? '');
 }
 
