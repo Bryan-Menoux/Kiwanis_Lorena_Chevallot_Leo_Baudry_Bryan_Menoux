@@ -63,7 +63,7 @@ function renderFormImagePreview(prop, dataUrl) {
   const removeButton = document.createElement('button');
   removeButton.type = 'button';
   removeButton.className = 'absolute top-1 right-1 bg-black/60 text-white rounded-full w-6 h-6 flex items-center justify-center';
-  removeButton.innerHTML = 'x';
+  removeButton.innerHTML = '✖';
   previewWrap.appendChild(removeButton);
 
   const labelWrap = document.createElement('div');

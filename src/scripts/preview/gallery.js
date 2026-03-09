@@ -45,9 +45,8 @@ function renderGallery(photoUrls) {
   photoGrid.dataset.photoCount = String(photoUrls.length);
 
   const galleryImageElements = photoGrid.querySelectorAll('img');
-  let loadedCount = 0;
   const applyAndReveal = () => {
-    // Recalcule la grille seulement quand toutes les images sont prêtes.
+    // Recalcule la grille au fil des chargements pour éviter le blocage du lazy loading.
     if (typeof window !== 'undefined' && typeof window.setGridStyles === 'function') {
       try { window.setGridStyles(); } catch (error) {}
     }
@@ -67,25 +66,14 @@ function renderGallery(photoUrls) {
     }
   };
 
-  if (galleryImageElements.length === 0) {
-    applyAndReveal();
-  } else {
-    galleryImageElements.forEach((imageElement) => {
-      if (imageElement.complete) {
-        loadedCount += 1;
-        if (loadedCount === galleryImageElements.length) applyAndReveal();
-      } else {
-        imageElement.addEventListener('load', () => {
-          loadedCount += 1;
-          if (loadedCount === galleryImageElements.length) applyAndReveal();
-        });
-        imageElement.addEventListener('error', () => {
-          loadedCount += 1;
-          if (loadedCount === galleryImageElements.length) applyAndReveal();
-        });
-      }
-    });
-  }
+  applyAndReveal();
+
+  galleryImageElements.forEach((imageElement) => {
+    if (imageElement.complete && imageElement.naturalWidth) return;
+    const onStateChange = () => applyAndReveal();
+    imageElement.addEventListener('load', onStateChange, { once: true });
+    imageElement.addEventListener('error', onStateChange, { once: true });
+  });
 }
 
 function renderFormGalleryThumbnails() {
@@ -108,7 +96,7 @@ function renderFormGalleryThumbnails() {
     removeButton.type = 'button';
     removeButton.className = 'absolute top-1 right-1 bg-black/60 text-white rounded-full w-6 h-6 flex items-center justify-center';
     removeButton.setAttribute('data-gallery-index', String(index));
-    removeButton.innerHTML = 'x';
+    removeButton.innerHTML = '✖';
     thumbnailWrap.appendChild(removeButton);
 
     container.appendChild(thumbnailWrap);
@@ -163,7 +151,7 @@ function renderExistingThumbnails(existingPhotoUrls) {
     removeButton.type = 'button';
     removeButton.className = 'absolute top-1 right-1 bg-black/60 text-white rounded-full w-6 h-6 flex items-center justify-center';
     removeButton.setAttribute('data-remove-url', photoUrl);
-    removeButton.innerHTML = 'x';
+    removeButton.innerHTML = '✖';
     thumbnailWrap.appendChild(removeButton);
 
     container.appendChild(thumbnailWrap);

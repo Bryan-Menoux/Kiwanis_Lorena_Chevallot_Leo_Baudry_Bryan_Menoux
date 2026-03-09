@@ -654,6 +654,7 @@ if (Astro.request.method === "POST") {
         imageIcon={imageIcon}
         actionRecord={actionRecord}
         isDraft={actionRecordFromBrouillon}
+        error={error}
         uiMode="mobile-wizard"
         initialStep={1}
         recordKey={idParam ? String(idParam) : "new"}

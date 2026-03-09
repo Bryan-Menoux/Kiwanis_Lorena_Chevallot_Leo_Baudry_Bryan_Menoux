@@ -2,6 +2,8 @@
 import { Image } from "astro:assets";
 import DiagArrow from "./DiagArrow.astro";
 import imageIcon from "../assets/image-icon.svg";
+import backArrow from "../assets/arrow-previous-small.svg";
+import crossCircle from "../assets/cross-circle.svg";
 import galleryUrl from "../scripts/gallery.js?url";
 import galleryDisplayUrl from "../scripts/gallery-display.js?url";
 import {
@@ -244,7 +246,7 @@ const hasThanksSection = hasNonEmptyText(action?.description_remerciements);
             class="bg-accent text-base-100 w-full h-full max-w-full rounded-2xl px-6 md:px-8 py-4 md:py-6 flex flex-col justify-between min-h-30 md:min-h-48"
           >
             <h2 data-field="chiffre" class="text-5xl! md:text-7xl!">
-              {action.chiffre} EUR
+              {action.chiffre} €
             </h2>
             {/* Inclure l'élément systématiquement pour que le script de prévisualisation puisse le cibler. */}
             <p
@@ -473,19 +475,33 @@ const hasThanksSection = hasNonEmptyText(action?.description_remerciements);
             id="closeButton"
             class="absolute top-16 right-4 text-xl! bg-base-100 bg-opacity-80 rounded-full w-8 h-8 md:w-10 md:h-10 flex items-center justify-center z-110 cursor-pointer"
           >
-            x
+            <img
+              src={crossCircle.src}
+              alt=""
+              class="w-6 h-6 md:w-5 md:h-5"
+            />
           </button>
           <button
             id="prevButton"
-            class="absolute left-4 top-1/2 -translate-y-1/2 text-xl! bg-base-100 bg-opacity-80 rounded-full w-8 h-8 md:w-10 md:h-10 flex items-center justify-center z-110"
+            type="button"
+            class="absolute left-4 lg:left-48 top-1/2 -translate-y-1/2 bg-base-100 bg-opacity-80 rounded-full h-12 w-12 flex items-center justify-center gap-2 z-110 cursor-pointer"
           >
-            Précédent
+            <img
+              src={backArrow.src}
+              alt=""
+              class="w-6 h-6 md:w-5 md:h-5"
+            />
           </button>
           <button
             id="nextButton"
-            class="absolute right-4 top-1/2 -translate-y-1/2 text-xl! bg-base-100 bg-opacity-80 rounded-full w-8 h-8 md:w-10 md:h-10 flex items-center justify-center z-110"
+            type="button"
+            class="absolute right-4 lg:right-48 top-1/2 -translate-y-1/2 bg-base-100 bg-opacity-80 rounded-full h-12 w-12 flex items-center justify-center gap-2 z-110 cursor-pointer"
           >
-            Suivant
+            <img
+              src={backArrow.src}
+              alt=""
+              class="w-6 h-6 md:w-5 md:h-5 rotate-180"
+            />
           </button>
           <div class="relative p-2 md:p-4">
             <img loading="lazy"
