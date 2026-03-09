@@ -11,16 +11,28 @@ const HERO_MOBILE_MAX_IMAGE_BYTES = 280 * 1024;
 const HERO_FIELD_NAME = "hero";
 const WEBP_PROCESSING_ATTR = "data-webp-processing";
 const KEEP_OVERLAY_VISIBLE_ATTR = "data-submit-overlay-keep-visible";
+export const WEBP_PREOPTIMIZED_ATTR = "data-webp-preoptimized";
 const SUBMITTER_PROXY_ATTR = "data-webp-submitter-proxy";
 const WEBP_PROCESS_TIMEOUT_MS = 60000;
 const SUBMIT_FAILURE_EVENT_NAME = "kc:submit-overlay-failed";
 
-const QUALITY_STEPS = [0.86, 0.78, 0.7, 0.62, 0.54, 0.46, 0.38, 0.3, 0.22, 0.16];
+const QUALITY_STEPS = [0.86, 0.74, 0.62, 0.5, 0.38];
 const SCALE_FACTOR = 0.8;
 const MAX_DIMENSION = 1600;
 const MOBILE_MAX_DIMENSION = 1200;
 const HERO_MAX_DIMENSION = 2200;
 const HERO_MOBILE_MAX_DIMENSION = 1400;
+const MAX_SCALE_PASSES = 4;
+const CONSTRAINED_MAX_SCALE_PASSES = 3;
+const MAX_FILE_PROCESS_MS = 5000;
+const CONSTRAINED_MAX_FILE_PROCESS_MS = 2500;
+
+function nowMs() {
+  if (typeof performance !== "undefined" && typeof performance.now === "function") {
+    return performance.now();
+  }
+  return Date.now();
+}
 
 function toWebpName(fileName) {
   if (typeof fileName !== "string" || fileName.trim() === "") return "image.webp";
@@ -96,16 +108,28 @@ function getFieldBudget(fieldName, profile) {
     return {
       maxBytes: constrained ? HERO_MOBILE_MAX_IMAGE_BYTES : HERO_MAX_IMAGE_BYTES,
       maxDimension: constrained ? HERO_MOBILE_MAX_DIMENSION : HERO_MAX_DIMENSION,
+      maxScalePasses: constrained ? CONSTRAINED_MAX_SCALE_PASSES : MAX_SCALE_PASSES,
+      maxProcessMs: constrained ? CONSTRAINED_MAX_FILE_PROCESS_MS : MAX_FILE_PROCESS_MS,
     };
   }
 
   return {
     maxBytes: constrained ? MOBILE_MAX_IMAGE_BYTES : MAX_IMAGE_BYTES,
     maxDimension: constrained ? MOBILE_MAX_DIMENSION : MAX_DIMENSION,
+    maxScalePasses: constrained ? CONSTRAINED_MAX_SCALE_PASSES : MAX_SCALE_PASSES,
+    maxProcessMs: constrained ? CONSTRAINED_MAX_FILE_PROCESS_MS : MAX_FILE_PROCESS_MS,
   };
 }
 
-async function compressImageToMaxBytes(file, maxBytes, maxDimension) {
+async function compressImageToMaxBytes(
+  file,
+  {
+    maxBytes,
+    maxDimension,
+    maxScalePasses = MAX_SCALE_PASSES,
+    maxProcessMs = MAX_FILE_PROCESS_MS,
+  },
+) {
   if (!(file instanceof File)) return file;
   if (!file.type.startsWith("image/")) return file;
   if (file.size <= maxBytes) return file;
@@ -125,7 +149,14 @@ async function compressImageToMaxBytes(file, maxBytes, maxDimension) {
   }
 
   try {
-    while (true) {
+    const startedAt = nowMs();
+    let passIndex = 0;
+
+    while (passIndex < maxScalePasses) {
+      if (nowMs() - startedAt > maxProcessMs) {
+        break;
+      }
+
       const targetWidth = Math.max(1, Math.round(loaded.width * scale));
       const targetHeight = Math.max(1, Math.round(loaded.height * scale));
 
@@ -139,6 +170,10 @@ async function compressImageToMaxBytes(file, maxBytes, maxDimension) {
       context.drawImage(loaded.image, 0, 0, targetWidth, targetHeight);
 
       for (const quality of QUALITY_STEPS) {
+        if (nowMs() - startedAt > maxProcessMs) {
+          break;
+        }
+
         const blob = await canvasToWebpBlob(canvas, quality);
         if (!blob) continue;
 
@@ -156,6 +191,7 @@ async function compressImageToMaxBytes(file, maxBytes, maxDimension) {
       }
 
       scale *= SCALE_FACTOR;
+      passIndex += 1;
     }
   } finally {
     loaded.dispose();
@@ -173,7 +209,7 @@ async function processFileForField(file, fieldName, profile) {
   if (!file.type.startsWith("image/")) return file;
 
   const budget = getFieldBudget(fieldName, profile);
-  return compressImageToMaxBytes(file, budget.maxBytes, budget.maxDimension);
+  return compressImageToMaxBytes(file, budget);
 }
 
 export async function optimizeFileListForField(files, fieldName, profile) {
@@ -195,6 +231,7 @@ export async function optimizeFileListForField(files, fieldName, profile) {
 async function processInputFiles(input, profile) {
   if (!(input instanceof HTMLInputElement)) return;
   if (!input.files || input.files.length === 0) return;
+  if (input.getAttribute(WEBP_PREOPTIMIZED_ATTR) === "true") return;
 
   const fieldName =
     (input.getAttribute("data-prop-file") || input.name || "").trim();
@@ -208,6 +245,7 @@ async function processInputFiles(input, profile) {
   const dataTransfer = new DataTransfer();
   processedFiles.forEach((file) => dataTransfer.items.add(file));
   input.files = dataTransfer.files;
+  input.setAttribute(WEBP_PREOPTIMIZED_ATTR, "true");
 }
 
 async function processInputsWithConcurrency(inputs, profile) {

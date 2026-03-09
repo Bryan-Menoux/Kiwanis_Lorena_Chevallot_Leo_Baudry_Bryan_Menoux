@@ -2,7 +2,10 @@ import { isDataUrl } from '../../utils/utilitaires.js';
 import { previewState } from './state.js';
 import { renderField } from './render.js';
 import { updateHidden } from './init.js';
-import { optimizeFileListForField } from '../actionForm/convertToWebp.js';
+import {
+  optimizeFileListForField,
+  WEBP_PREOPTIMIZED_ATTR,
+} from '../actionForm/convertToWebp.js';
 
 const WEBP_BG_TOKEN_ATTR = 'data-webp-bg-token';
 
@@ -18,6 +21,7 @@ function handleFileElement(inputElement) {
   if (!selectedFiles || selectedFiles.length === 0) return;
 
   const file = selectedFiles[0];
+  inputElement.setAttribute(WEBP_PREOPTIMIZED_ATTR, 'false');
 
   try {
     if (inputElement) {
@@ -57,7 +61,13 @@ function handleFileElement(inputElement) {
     if (inputElement.getAttribute(WEBP_BG_TOKEN_ATTR) !== asyncToken) return;
 
     const optimizedFile = optimizedFiles[0];
-    if (!(optimizedFile instanceof File) || optimizedFile === file) return;
+    if (!(optimizedFile instanceof File)) return;
+
+    // Meme sans changement de taille, la passe est terminee pour ce champ.
+    if (optimizedFile === file) {
+      inputElement.setAttribute(WEBP_PREOPTIMIZED_ATTR, 'true');
+      return;
+    }
 
     const currentFiles = inputElement.files;
     if (!currentFiles || currentFiles.length === 0) return;
@@ -66,6 +76,7 @@ function handleFileElement(inputElement) {
     dt.items.add(optimizedFile);
     inputElement.__dt = dt;
     inputElement.files = dt.files;
+    inputElement.setAttribute(WEBP_PREOPTIMIZED_ATTR, 'true');
   }).catch(() => {});
 }
 
@@ -109,6 +120,7 @@ function renderFormImagePreview(prop, dataUrl) {
       try {
         fileInput.value = '';
         fileInput.removeAttribute(WEBP_BG_TOKEN_ATTR);
+        fileInput.removeAttribute(WEBP_PREOPTIMIZED_ATTR);
         if (fileInput.__dt) {
           fileInput.__dt = new DataTransfer();
           fileInput.files = fileInput.__dt.files;

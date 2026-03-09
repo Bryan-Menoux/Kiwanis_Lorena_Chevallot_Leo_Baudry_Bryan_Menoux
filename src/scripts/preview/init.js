@@ -11,7 +11,16 @@ import {
 import { renderAll, renderField } from './render.js';
 import { handleFileElement, bindExistingSingleRemoveButtons } from './singleImage.js';
 import { renderGallery, renderFormGalleryThumbnails, renderExistingThumbnails } from './gallery.js';
-import { optimizeFileListForField } from '../actionForm/convertToWebp.js';
+import {
+  optimizeFileListForField,
+  WEBP_PREOPTIMIZED_ATTR,
+} from '../actionForm/convertToWebp.js';
+
+const WEBP_BG_TOKEN_ATTR = 'data-webp-bg-token';
+
+function createAsyncToken() {
+  return `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+}
 
 const selectOne = (selector, context = document) => context.querySelector(selector);
 const NO_DEFAULT_FALLBACK_PROPS = new Set([
@@ -197,6 +206,10 @@ function initPreview() {
         if (!selectedFiles || selectedFiles.length === 0) return;
 
         if (prop === 'galerie_photos') {
+          inputElement.setAttribute(WEBP_PREOPTIMIZED_ATTR, 'false');
+          const asyncToken = createAsyncToken();
+          inputElement.setAttribute(WEBP_BG_TOKEN_ATTR, asyncToken);
+
           // La galerie est plafonnée à 8 images (existantes + nouvelles).
           const existingCount = Array.isArray(previewState.galerie_photos)
             ? previewState.galerie_photos.filter((u) => typeof u === 'string' && !isDataUrl(u)).length
@@ -211,6 +224,7 @@ function initPreview() {
           // de fichiers du formulaire est remplacee par la version optimisee.
           void optimizeFileListForField(newFiles, prop).then((optimizedFiles) => {
             if (!Array.isArray(optimizedFiles) || optimizedFiles.length === 0) return;
+            if (inputElement.getAttribute(WEBP_BG_TOKEN_ATTR) !== asyncToken) return;
 
             const replacementMap = new Map();
             newFiles.forEach((originalFile, index) => {
@@ -231,6 +245,7 @@ function initPreview() {
               updatedGalleryFiles.forEach((f) => dt.items.add(f));
               fileInputElement.files = dt.files;
             }
+            inputElement.setAttribute(WEBP_PREOPTIMIZED_ATTR, 'true');
           }).catch(() => {});
 
           const readPromises = newFiles.map((file) => new Promise((resolve) => {
