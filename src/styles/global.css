@@ -50,7 +50,8 @@
 
 @font-face {
   font-family: "Merriweather";
-  src: url("/fonts/merriweather/Merriweather_24pt-Regular-latin.woff2") format("woff2");
+  src: url("/fonts/merriweather/Merriweather_24pt-Regular-latin.woff2")
+    format("woff2");
   font-weight: 400;
   font-style: normal;
   font-display: swap;
@@ -58,11 +59,7 @@
 
 :root {
   --font-sans-fallback:
-    ui-sans-serif,
-    system-ui,
-    -apple-system,
-    "Segoe UI",
-    sans-serif;
+    ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
 }
 
 /* Rendu initial: fallback systeme pour limiter la pression reseau critique */
@@ -201,10 +198,16 @@ span {
 
 p,
 span {
-  font-size: 1rem;
+  font-size: 1rem !important;
   line-height: 1.7;
 }
 
+@media (min-width: 768px) {
+  p,
+  span {
+    font-size: 1.125rem !important;
+  }
+}
 
 @media (min-width: 1024px) {
   p,

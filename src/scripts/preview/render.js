@@ -101,24 +101,9 @@ function syncLocationSectionLayout(sectionNode) {
   );
   if (!cards.length) return;
 
-  const visibleCards = cards.filter((card) => card.style.display !== 'none');
-
   cards.forEach((card) => {
     card.classList.remove('md:col-span-2', 'lg:col-span-1');
   });
-
-  // Tablette:
-  // - 1 carte -> pleine largeur
-  // - 2 cartes -> cote a cote (comportement grille standard)
-  // - 3 cartes -> 2 en haut + la 3e en pleine largeur en bas
-  if (visibleCards.length === 1) {
-    visibleCards[0].classList.add('md:col-span-2', 'lg:col-span-1');
-    return;
-  }
-
-  if (visibleCards.length === 3) {
-    visibleCards[2].classList.add('md:col-span-2', 'lg:col-span-1');
-  }
 }
 
 function syncLocationCardsVisibility() {
