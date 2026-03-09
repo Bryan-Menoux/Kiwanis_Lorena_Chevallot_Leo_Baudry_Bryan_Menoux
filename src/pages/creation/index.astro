@@ -297,7 +297,7 @@ const allPages = db.pages;
   let filteredPagesCache = pages.slice();
   // Au changement de page, on remonte en douceur vers le haut de la liste (et non en haut du document).
   const scrollTopOnPageChange = () => {
-    const globalScrollUtils = (window as any).scrollUtils;
+    const globalScrollUtils = window.scrollUtils;
     if (globalScrollUtils && typeof globalScrollUtils.scrollToTarget === "function") {
       globalScrollUtils.scrollToTarget("#pages-container");
       return;

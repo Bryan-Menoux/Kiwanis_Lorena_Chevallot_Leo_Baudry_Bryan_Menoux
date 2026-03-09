@@ -73,6 +73,24 @@ const hasBeneficiaireCard = hasNonEmptyText(action?.beneficiaire);
 const hasLocationSection = hasLieuCard || hasChiffreCard || hasBeneficiaireCard;
 const shouldRenderLocationSection =
   hasLocationSection || forcePreviewLocationSection;
+type LocationCardKey = "lieu" | "chiffre" | "beneficiaire";
+const renderedLocationCardKeys = ([
+  (hasLieuCard || forcePreviewLocationSection) ? "lieu" : null,
+  (hasChiffreCard || forcePreviewLocationSection) ? "chiffre" : null,
+  (hasBeneficiaireCard || forcePreviewLocationSection) ? "beneficiaire" : null,
+].filter(Boolean)) as LocationCardKey[];
+const getTabletLocationSpanClass = (cardKey: LocationCardKey) => {
+  if (
+    renderedLocationCardKeys.length === 1 &&
+    renderedLocationCardKeys[0] === cardKey
+  ) {
+    return "md:col-span-2 lg:col-span-1";
+  }
+  if (renderedLocationCardKeys.length === 3 && cardKey === "beneficiaire") {
+    return "md:col-span-2 lg:col-span-1";
+  }
+  return "";
+};
 const hasPart1Section = hasNonEmptyText(action?.texte_partie_1);
 const hasPart2Section = hasNonEmptyText(action?.texte_partie_2);
 const hasPart3Section = hasNonEmptyText(action?.texte_partie_3);
@@ -204,7 +222,7 @@ const hasThanksSection = hasNonEmptyText(action?.description_remerciements);
           <div
             data-location-card="lieu"
             style={hasLieuCard ? "" : "display:none;"}
-            class="bg-accent text-base-100 w-full h-full rounded-2xl px-6 md:px-8 py-4 md:py-6 flex flex-col gap-4 justify-between min-h-30 md:min-h-48"
+            class={`bg-accent text-base-100 w-full h-full rounded-2xl px-6 md:px-8 py-4 md:py-6 flex flex-col gap-4 justify-between min-h-30 md:min-h-48 ${getTabletLocationSpanClass("lieu")}`}
           >
             <div class="flex flex-col gap-2 min-w-fit max-w-fit">
               <h2
@@ -241,7 +259,7 @@ const hasThanksSection = hasNonEmptyText(action?.description_remerciements);
           <div
             data-location-card="chiffre"
             style={hasChiffreCard ? "" : "display:none;"}
-            class="bg-accent text-base-100 w-full h-full max-w-full rounded-2xl px-6 md:px-8 py-4 md:py-6 flex flex-col justify-between min-h-30 md:min-h-48"
+            class={`bg-accent text-base-100 w-full h-full max-w-full rounded-2xl px-6 md:px-8 py-4 md:py-6 flex flex-col justify-between min-h-30 md:min-h-48 ${getTabletLocationSpanClass("chiffre")}`}
           >
             <h2 data-field="chiffre" class="text-5xl! md:text-7xl!">
               {action.chiffre} EUR
@@ -260,7 +278,7 @@ const hasThanksSection = hasNonEmptyText(action?.description_remerciements);
           <div
             data-location-card="beneficiaire"
             style={hasBeneficiaireCard ? "" : "display:none;"}
-            class="bg-accent text-base-100 rounded-2xl px-6 md:px-8 py-4 md:py-6 flex flex-col justify-between min-h-30 md:min-h-48 w-full h-full"
+            class={`bg-accent text-base-100 rounded-2xl px-6 md:px-8 py-4 md:py-6 flex flex-col justify-between min-h-30 md:min-h-48 w-full h-full ${getTabletLocationSpanClass("beneficiaire")}`}
           >
             <h2
               data-field="beneficiaire"

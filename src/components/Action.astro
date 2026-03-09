@@ -299,8 +299,8 @@ import { ActionsTypeDeChiffreOptions } from '../pocketbase-types';
           // attendre que toutes les images du grid soient décodées, puis appliquer les styles et révéler
           const imgs = Array.from(photoGrid.querySelectorAll('img')) as HTMLImageElement[];
           Promise.all(imgs.map((i) => i.decode().catch(() => {}))).then(() => {
-            if (typeof window !== 'undefined' && typeof (window as any).setGridStyles === 'function') {
-              try { (window as any).setGridStyles(); } catch (e) {}
+            if (typeof window !== 'undefined' && typeof window.setGridStyles === 'function') {
+              try { window.setGridStyles(); } catch (e) {}
             }
             photoGrid.classList.remove('opacity-0');
             // révoquer uniquement les object URLs créées
@@ -314,8 +314,8 @@ import { ActionsTypeDeChiffreOptions } from '../pocketbase-types';
     const grid = document.getElementById('photoGrid');
     if (grid) {
       window.addEventListener('resize', () => {
-        if (typeof (window as any).setGridStyles === 'function') {
-          try { (window as any).setGridStyles(); } catch (e) {}
+        if (typeof window.setGridStyles === 'function') {
+          try { window.setGridStyles(); } catch (e) {}
         }
       });
     }

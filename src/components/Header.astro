@@ -15,7 +15,14 @@ import diagArrow from "../assets/diag-arrow.svg";
 >
   <div class="hidden lg:flex py-4 px-12 items-center justify-between">
     <a href="/" class="flex items-center gap-4">
-      <Image src={Logo} alt="Logo" loading="eager" quality={100} class="h-14 w-auto" draggable="false" />
+      <Image
+        src={Logo}
+        alt="Logo"
+        loading="eager"
+        quality={100}
+        class="h-14 w-auto"
+        draggable="false"
+      />
       <div class="flex flex-col text-gray-900 leading-tight">
         <span class="text-xl font-bold tracking-tighter font-merriweather"
           >KIWANIS</span
@@ -35,7 +42,6 @@ import diagArrow from "../assets/diag-arrow.svg";
         class="hover:text-accent transition-colors uppercase whitespace-nowrap"
         >Nos membres</a
       >
-
       <div class="h-4 xl:h-6 w-px bg-base-content/20"></div>
 
       <div class="relative cursor-pointer py-2">
@@ -77,14 +83,22 @@ import diagArrow from "../assets/diag-arrow.svg";
           >
         </div>
       </div>
-
       <div class="h-4 xl:h-6 w-px bg-base-content/20"></div>
 
       <a
-        href="/don"
+        href="/remerciments"
         class="hover:text-accent transition-colors uppercase whitespace-nowrap"
-        >Faire un don</a
+        >Remerciements</a
       >
+      <div class="h-4 xl:h-6 w-px bg-base-content/20"></div>
+
+      <a
+        href="/recrutement"
+        class="hover:text-accent transition-colors uppercase whitespace-nowrap"
+        >Recrutement</a
+      >
+
+
       {
         Astro.locals.pb.authStore.isValid &&
           currentUser?.verified &&
@@ -135,7 +149,13 @@ import diagArrow from "../assets/diag-arrow.svg";
   <div class="lg:hidden flex flex-col items-center p-4 gap-3 w-full">
     <div class="w-full flex items-center justify-between gap-4 max-w-[90dvw]">
       <a href="/" class="shrink-0">
-        <Image src={Logo} alt="Logo" loading="eager" quality={100} class="h-12 w-auto" />
+        <Image
+          src={Logo}
+          alt="Logo"
+          loading="eager"
+          quality={100}
+          class="h-12 w-auto"
+        />
       </a>
 
       <button
@@ -189,14 +209,48 @@ import diagArrow from "../assets/diag-arrow.svg";
           class="mob-link flex justify-between items-center py-2 text-base"
           role="menuitem"
         >
-          Nos membres <span class="opacity-40" aria-hidden="true"><Image src={diagArrow} alt="" layout="fixed" quality={100} class="h-3 w-auto" aria-hidden="true" /> </span>
+          Nos membres <span class="opacity-40" aria-hidden="true"
+            ><Image
+              src={diagArrow}
+              alt=""
+              layout="fixed"
+              quality={100}
+              class="h-3 w-auto"
+              aria-hidden="true"
+            />
+          </span>
         </a>
         <a
-          href="/don"
+          href="/remerciments"
           class="mob-link flex justify-between items-center py-2 text-base"
           role="menuitem"
         >
-          Faire un don <span class="opacity-40" aria-hidden="true"><Image src={diagArrow} alt="" layout="fixed" quality={100} class="h-3 w-auto" aria-hidden="true" /> </span>
+          Remerciements <span class="opacity-40" aria-hidden="true"
+            ><Image
+              src={diagArrow}
+              alt=""
+              layout="fixed"
+              quality={100}
+              class="h-3 w-auto"
+              aria-hidden="true"
+            />
+          </span>
+        </a>
+        <a
+          href="/recrutement"
+          class="mob-link flex justify-between items-center py-2 text-base"
+          role="menuitem"
+        >
+          Recrutement <span class="opacity-40" aria-hidden="true"
+            ><Image
+              src={diagArrow}
+              alt=""
+              layout="fixed"
+              quality={100}
+              class="h-3 w-auto"
+              aria-hidden="true"
+            />
+          </span>
         </a>
 
         <div
@@ -211,21 +265,48 @@ import diagArrow from "../assets/diag-arrow.svg";
           class="mob-link flex justify-between items-center py-2 text-base"
           role="menuitem"
         >
-          Nos actions <span class="opacity-40" aria-hidden="true"><Image src={diagArrow} alt="" layout="fixed" quality={100} class="h-3 w-auto" aria-hidden="true" /> </span>
+          Nos actions <span class="opacity-40" aria-hidden="true"
+            ><Image
+              src={diagArrow}
+              alt=""
+              layout="fixed"
+              quality={100}
+              class="h-3 w-auto"
+              aria-hidden="true"
+            />
+          </span>
         </a>
         <a
           href="/projets"
           class="mob-link flex justify-between items-center py-2 text-base"
           role="menuitem"
         >
-          Nos projets <span class="opacity-40" aria-hidden="true"><Image src={diagArrow} alt="" layout="fixed" quality={100} class="h-3 w-auto" aria-hidden="true" /> </span>
+          Nos projets <span class="opacity-40" aria-hidden="true"
+            ><Image
+              src={diagArrow}
+              alt=""
+              layout="fixed"
+              quality={100}
+              class="h-3 w-auto"
+              aria-hidden="true"
+            />
+          </span>
         </a>
         <a
           href="/produits"
           class="mob-link flex justify-between items-center py-2 text-base"
           role="menuitem"
         >
-          Nos produits <span class="opacity-40" aria-hidden="true"><Image src={diagArrow} alt="" layout="fixed" quality={100} class="h-3 w-auto" aria-hidden="true" /> </span>
+          Nos produits <span class="opacity-40" aria-hidden="true"
+            ><Image
+              src={diagArrow}
+              alt=""
+              layout="fixed"
+              quality={100}
+              class="h-3 w-auto"
+              aria-hidden="true"
+            />
+          </span>
         </a>
 
         <div
@@ -267,7 +348,13 @@ import diagArrow from "../assets/diag-arrow.svg";
                   >
                     <div class="avatar">
                       <div class="w-10 rounded-full ring ring-offset-base-100 ring-white/30 overflow-hidden">
-                        <Image src={userWhite} alt="" aria-hidden="true" loading="eager" quality={100} />
+                        <Image
+                          src={userWhite}
+                          alt=""
+                          aria-hidden="true"
+                          loading="eager"
+                          quality={100}
+                        />
                       </div>
                     </div>
                     <span class="text-sm font-semibold">Mon compte</span>
@@ -309,7 +396,7 @@ import diagArrow from "../assets/diag-arrow.svg";
 <script>
   let discoverIsOpen = false;
   let globalClickHandler: ((e: Event) => void) | null = null;
-  
+
   function initMenu() {
     const toggle = document.getElementById("menu-toggle") as HTMLButtonElement;
     const dropdown = document.getElementById("mobile-dropdown") as HTMLElement;
@@ -530,13 +617,26 @@ import diagArrow from "../assets/diag-arrow.svg";
         try {
           const response = await fetch("/api/logout", { method: "POST" });
           if (response.ok) {
-            window.location.href = "/connexion";
+            window.location.reload();
           }
         } catch (error) {
           console.error("Erreur lors de la déconnexion:", error);
         }
       });
     }
+
+    // si l'utilisateur clique sur un lien de connexion, on ajoute le param
+    // redirect avec la page courante (sauf si on est déjà sur la page de connexion)
+    const updateLoginLinks = () => {
+      const current = window.location.pathname + window.location.search;
+      if (current.startsWith("/connexion")) return;
+      const enc = encodeURIComponent(current);
+      const desktop = document.getElementById("connexion-link") as HTMLAnchorElement | null;
+      const mobile = document.getElementById("mobile-connexion-link") as HTMLAnchorElement | null;
+      if (desktop) desktop.setAttribute("href", "/connexion?redirect=" + enc);
+      if (mobile) mobile.setAttribute("href", "/connexion?redirect=" + enc);
+    };
+    updateLoginLinks();
 
     initMenu();
     initDiscoverDropdown();

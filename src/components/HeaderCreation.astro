@@ -514,6 +514,33 @@ import diagArrow from "../assets/diag-arrow.svg";
 
   document.addEventListener("DOMContentLoaded", () => {
     initMenu();
+
+    // logout mobile bouton : on recharge la page au lieu de rediriger vers /connexion
+    const mobileLogoutBtn = document.getElementById(
+      "mobile-logout-btn",
+    ) as HTMLButtonElement | null;
+    if (mobileLogoutBtn) {
+      mobileLogoutBtn.addEventListener("click", async () => {
+        try {
+          const response = await fetch("/api/logout", { method: "POST" });
+          if (response.ok) {
+            window.location.reload();
+          }
+        } catch (e) {
+          console.error(e);
+        }
+      });
+    }
+
+    // idem pour les liens de connexion : attachons le param redirect
+    const updateLoginLinks = () => {
+      const current = window.location.pathname + window.location.search;
+      if (current.startsWith("/connexion")) return;
+      const enc = encodeURIComponent(current);
+      const mobile = document.getElementById("mobile-connexion-link") as HTMLAnchorElement | null;
+      if (mobile) mobile.setAttribute("href", "/connexion?redirect=" + enc);
+    };
+    updateLoginLinks();
   });
 </script>
 

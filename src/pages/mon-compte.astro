@@ -297,7 +297,7 @@ const navItems = [
   initVerifications();
 
   // Déconnexion : appel POST pour supprimer la session côté serveur
-  // et redirection vers la page de connexion en cas de succès
+  // et reload de la page pour conserver l'utilisateur à l'endroit où il se trouve
   const logoutBtn = document.getElementById("logout-btn");
   if (logoutBtn) {
     logoutBtn.addEventListener("click", async () => {
@@ -310,7 +310,8 @@ const navItems = [
         });
 
         if (response.ok) {
-          window.location.href = "/connexion";
+          // on recharge simplement la page courante
+          window.location.reload();
         }
       } catch (error) {
         console.error("Erreur lors de la déconnexion:", error);
