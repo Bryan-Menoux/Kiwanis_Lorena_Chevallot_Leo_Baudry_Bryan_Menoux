@@ -6,6 +6,8 @@ let previewState = {};
 let galleryFiles = [];
 // Versions Data URL des fichiers galerie pour affichage immédiat.
 let galleryDataUrls = [];
+// Etat d'optimisation des miniatures galerie (progression par image).
+let galleryOptimizationStates = [];
 
 function setPreviewState(value) {
   previewState = value;
@@ -19,11 +21,17 @@ function setGalleryDataUrls(value) {
   galleryDataUrls = value;
 }
 
+function setGalleryOptimizationStates(value) {
+  galleryOptimizationStates = Array.isArray(value) ? value : [];
+}
+
 export {
   previewState,
   galleryFiles,
   galleryDataUrls,
+  galleryOptimizationStates,
   setPreviewState,
   setGalleryFiles,
   setGalleryDataUrls,
+  setGalleryOptimizationStates,
 };

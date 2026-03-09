@@ -1,12 +1,89 @@
-import { isDataUrl } from '../../utils/utilitaires.js';
+﻿import { isDataUrl } from '../../utils/utilitaires.js';
 import {
   previewState,
   galleryFiles,
   galleryDataUrls,
-  setGalleryFiles,
-  setGalleryDataUrls,
+  galleryOptimizationStates,
+  setGalleryOptimizationStates,
 } from './state.js';
 import { updateHidden } from './init.js';
+
+const GALLERY_THUMB_ATTR = 'data-gallery-thumb-index';
+const OPTIMIZE_OVERLAY_ATTR = 'data-optimize-overlay';
+const OPTIMIZE_FILL_ATTR = 'data-optimize-fill';
+const OPTIMIZE_LABEL_ATTR = 'data-optimize-label';
+
+function clampPercent(value) {
+  const n = Number(value);
+  if (!Number.isFinite(n)) return 0;
+  return Math.max(0, Math.min(100, Math.round(n)));
+}
+
+function ensureGalleryProgressState(index) {
+  const current = Array.isArray(galleryOptimizationStates)
+    ? galleryOptimizationStates.slice()
+    : [];
+  while (current.length <= index) {
+    current.push({ active: false, progress: 0 });
+  }
+  return current;
+}
+
+function createThumbnailOptimizationOverlay(progressState) {
+  const safeProgress = clampPercent(progressState?.progress ?? 0);
+  const isActive = Boolean(progressState?.active);
+
+  const overlay = document.createElement('div');
+  overlay.setAttribute(OPTIMIZE_OVERLAY_ATTR, 'true');
+  overlay.className = 'absolute inset-0 pointer-events-none z-[5]';
+  overlay.classList.toggle('hidden', !isActive);
+
+  const fill = document.createElement('div');
+  fill.setAttribute(OPTIMIZE_FILL_ATTR, 'true');
+  fill.className = 'absolute inset-x-0 bottom-0 bg-black/50 transition-[height] duration-200 ease-linear';
+  fill.style.height = `${safeProgress}%`;
+
+  const label = document.createElement('p');
+  label.setAttribute(OPTIMIZE_LABEL_ATTR, 'true');
+  label.className = 'absolute inset-0 flex items-center justify-center text-sm font-semibold text-white drop-shadow';
+  label.textContent = `${safeProgress}%`;
+
+  overlay.appendChild(fill);
+  overlay.appendChild(label);
+  return overlay;
+}
+
+function applyGalleryThumbnailOptimizationDom(index, progress, isActive) {
+  const container = document.getElementById('gallerySelected');
+  if (!(container instanceof HTMLElement)) return;
+
+  const thumb = container.querySelector(`[${GALLERY_THUMB_ATTR}="${index}"]`);
+  if (!(thumb instanceof HTMLElement)) return;
+
+  const overlay = thumb.querySelector(`[${OPTIMIZE_OVERLAY_ATTR}="true"]`);
+  if (!(overlay instanceof HTMLElement)) return;
+
+  const fill = overlay.querySelector(`[${OPTIMIZE_FILL_ATTR}="true"]`);
+  const label = overlay.querySelector(`[${OPTIMIZE_LABEL_ATTR}="true"]`);
+  if (!(fill instanceof HTMLElement) || !(label instanceof HTMLElement)) return;
+
+  const safeProgress = clampPercent(progress);
+  fill.style.height = `${safeProgress}%`;
+  label.textContent = `${safeProgress}%`;
+  overlay.classList.toggle('hidden', !isActive);
+}
+
+function setGalleryThumbnailOptimizationProgress(index, progress, isActive) {
+  if (!Number.isInteger(index) || index < 0) return;
+
+  const nextStates = ensureGalleryProgressState(index);
+  nextStates[index] = {
+    active: Boolean(isActive),
+    progress: clampPercent(progress),
+  };
+  setGalleryOptimizationStates(nextStates);
+  applyGalleryThumbnailOptimizationDom(index, progress, isActive);
+}
 
 function renderGallery(photoUrls) {
   const previewRoot = document.getElementById('actionPreview');
@@ -16,7 +93,6 @@ function renderGallery(photoUrls) {
   if (!photoGrid) return;
 
   const gallerieSection = previewRoot.querySelector('#gallerieSection');
-
   photoGrid.innerHTML = '';
 
   if (!photoUrls || photoUrls.length === 0) {
@@ -42,23 +118,35 @@ function renderGallery(photoUrls) {
 
     photoGrid.appendChild(thumbnailDiv);
   });
+
   photoGrid.dataset.photoCount = String(photoUrls.length);
 
   const galleryImageElements = photoGrid.querySelectorAll('img');
   const applyAndReveal = () => {
-    // Recalcule la grille au fil des chargements pour éviter le blocage du lazy loading.
     if (typeof window !== 'undefined' && typeof window.setGridStyles === 'function') {
-      try { window.setGridStyles(); } catch (error) {}
+      try {
+        window.setGridStyles();
+      } catch (error) {
+        // no-op
+      }
     }
 
     if (!photoGrid.__previewBound) {
-      // Délégation d'événement : évite un écouteur par vignette.
-      photoGrid.addEventListener('click', function (event) {
-        const photoElement = event.target.closest && event.target.closest('[data-photo-index]') ? event.target.closest('[data-photo-index]') : null;
-        if (photoElement) {
-          const photoUrl = photoElement.getAttribute('data-photo-url');
-          if (photoUrl && typeof window !== 'undefined' && typeof window.openModal === 'function') {
-            try { window.openModal(photoUrl); } catch (err) {}
+      photoGrid.addEventListener('click', (event) => {
+        const photoElement =
+          event.target.closest && event.target.closest('[data-photo-index]')
+            ? event.target.closest('[data-photo-index]')
+            : null;
+        if (!photoElement) return;
+
+        const photoUrl = photoElement.getAttribute('data-photo-url');
+        if (!photoUrl) return;
+
+        if (typeof window !== 'undefined' && typeof window.openModal === 'function') {
+          try {
+            window.openModal(photoUrl);
+          } catch (error) {
+            // no-op
           }
         }
       });
@@ -85,6 +173,7 @@ function renderFormGalleryThumbnails() {
     const thumbnailWrap = document.createElement('div');
     thumbnailWrap.className = 'relative overflow-hidden rounded-md';
     thumbnailWrap.style.paddingBottom = '100%';
+    thumbnailWrap.setAttribute(GALLERY_THUMB_ATTR, String(index));
 
     const thumbnailImage = document.createElement('img');
     thumbnailImage.src = dataUrl;
@@ -92,29 +181,37 @@ function renderFormGalleryThumbnails() {
     thumbnailImage.className = 'absolute inset-0 w-full h-full object-cover';
     thumbnailWrap.appendChild(thumbnailImage);
 
+    thumbnailWrap.appendChild(createThumbnailOptimizationOverlay(galleryOptimizationStates[index]));
+
     const removeButton = document.createElement('button');
     removeButton.type = 'button';
-    removeButton.className = 'absolute top-1 right-1 bg-black/60 text-white rounded-full w-6 h-6 flex items-center justify-center';
+    removeButton.className =
+      'absolute top-1 right-1 bg-black/60 text-white rounded-full w-6 h-6 flex items-center justify-center z-10';
     removeButton.setAttribute('data-gallery-index', String(index));
-    removeButton.innerHTML = '✖';
+    removeButton.textContent = '\u2716';
     thumbnailWrap.appendChild(removeButton);
 
     container.appendChild(thumbnailWrap);
   });
 
   if (!container.__galleryBound) {
-    container.addEventListener('click', function (event) {
-      const clickedButton = event.target.closest && event.target.closest('[data-gallery-index]');
+    container.addEventListener('click', (event) => {
+      const clickedButton =
+        event.target.closest && event.target.closest('[data-gallery-index]');
       if (!clickedButton) return;
+
       const removeIndex = parseInt(clickedButton.getAttribute('data-gallery-index'), 10);
       if (Number.isNaN(removeIndex)) return;
 
       galleryFiles.splice(removeIndex, 1);
       galleryDataUrls.splice(removeIndex, 1);
 
+      const nextOptimizationStates = galleryOptimizationStates.slice();
+      nextOptimizationStates.splice(removeIndex, 1);
+      setGalleryOptimizationStates(nextOptimizationStates);
+
       const fileInput = document.getElementById('input_galerie_photos');
       if (fileInput) {
-        // On reconstruit FileList via DataTransfer (FileList natif est en lecture seule).
         const dt = new DataTransfer();
         galleryFiles.forEach((f) => dt.items.add(f));
         fileInput.files = dt.files;
@@ -124,6 +221,7 @@ function renderFormGalleryThumbnails() {
         ? previewState.galerie_photos.filter((u) => typeof u === 'string' && !isDataUrl(u))
         : [];
       previewState.galerie_photos = serverUrls.concat(galleryDataUrls);
+
       renderGallery(previewState.galerie_photos);
       updateHidden('galerie_photos');
       renderFormGalleryThumbnails();
@@ -136,7 +234,8 @@ function renderExistingThumbnails(existingPhotoUrls) {
   const container = document.getElementById('galleryExisting');
   if (!container) return;
   container.innerHTML = '';
-  existingPhotoUrls.forEach((photoUrl, index) => {
+
+  existingPhotoUrls.forEach((photoUrl) => {
     const thumbnailWrap = document.createElement('div');
     thumbnailWrap.className = 'relative overflow-hidden rounded-md';
     thumbnailWrap.style.paddingBottom = '100%';
@@ -151,28 +250,34 @@ function renderExistingThumbnails(existingPhotoUrls) {
     removeButton.type = 'button';
     removeButton.className = 'absolute top-1 right-1 bg-black/60 text-white rounded-full w-6 h-6 flex items-center justify-center';
     removeButton.setAttribute('data-remove-url', photoUrl);
-    removeButton.innerHTML = '✖';
+    removeButton.textContent = '\u2716';
     thumbnailWrap.appendChild(removeButton);
 
     container.appendChild(thumbnailWrap);
   });
 
   if (!container.__bound) {
-    container.addEventListener('click', function (event) {
-      const clickedButton = event.target.closest && event.target.closest('[data-remove-url]');
+    container.addEventListener('click', (event) => {
+      const clickedButton =
+        event.target.closest && event.target.closest('[data-remove-url]');
       if (!clickedButton) return;
+
       event.stopPropagation();
       const photoUrl = clickedButton.getAttribute('data-remove-url');
       if (!photoUrl) return;
 
       const hiddenRemoveInput = document.getElementById('hidden_remove_galerie_photos');
-      // On accumule les suppressions pour que le serveur retire aussi les anciennes images.
       container.__removed = container.__removed || [];
       container.__removed.push(photoUrl);
       if (hiddenRemoveInput) hiddenRemoveInput.value = JSON.stringify(container.__removed);
 
-      previewState.galerie_photos = (previewState.galerie_photos || []).filter((url) => url !== photoUrl);
-      const remainingExisting = (previewState.galerie_photos || []).filter((url) => typeof url === 'string' && !isDataUrl(url));
+      previewState.galerie_photos = (previewState.galerie_photos || []).filter(
+        (url) => url !== photoUrl,
+      );
+      const remainingExisting = (previewState.galerie_photos || []).filter(
+        (url) => typeof url === 'string' && !isDataUrl(url),
+      );
+
       renderExistingThumbnails(remainingExisting);
       renderGallery(previewState.galerie_photos || []);
       updateHidden('galerie_photos');
@@ -181,5 +286,9 @@ function renderExistingThumbnails(existingPhotoUrls) {
   }
 }
 
-export { renderGallery, renderFormGalleryThumbnails, renderExistingThumbnails };
-
+export {
+  renderGallery,
+  renderFormGalleryThumbnails,
+  renderExistingThumbnails,
+  setGalleryThumbnailOptimizationProgress,
+};

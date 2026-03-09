@@ -73,6 +73,17 @@ function canvasToWebpBlob(canvas, quality) {
   });
 }
 
+function clampPercent(value) {
+  const n = Number(value);
+  if (!Number.isFinite(n)) return 0;
+  return Math.max(0, Math.min(100, Math.round(n)));
+}
+
+function notifyProgress(onProgress, value) {
+  if (typeof onProgress !== "function") return;
+  onProgress(clampPercent(value));
+}
+
 function getUploadProfile() {
   const connection =
     navigator.connection ||
@@ -129,13 +140,23 @@ async function compressImageToMaxBytes(
     maxScalePasses = MAX_SCALE_PASSES,
     maxProcessMs = MAX_FILE_PROCESS_MS,
   },
+  onProgress,
 ) {
   if (!(file instanceof File)) return file;
   if (!file.type.startsWith("image/")) return file;
-  if (file.size <= maxBytes) return file;
+  if (file.size <= maxBytes) {
+    notifyProgress(onProgress, 100);
+    return file;
+  }
+
+  notifyProgress(onProgress, 6);
 
   const loaded = await loadImageFromFile(file);
-  if (!loaded || !loaded.width || !loaded.height) return file;
+  if (!loaded || !loaded.width || !loaded.height) {
+    notifyProgress(onProgress, 100);
+    return file;
+  }
+  notifyProgress(onProgress, 12);
 
   const outputName = toWebpName(file.name);
   let bestBlob = null;
@@ -151,6 +172,8 @@ async function compressImageToMaxBytes(
   try {
     const startedAt = nowMs();
     let passIndex = 0;
+    const totalIterations = Math.max(1, maxScalePasses * QUALITY_STEPS.length);
+    let completedIterations = 0;
 
     while (passIndex < maxScalePasses) {
       if (nowMs() - startedAt > maxProcessMs) {
@@ -176,12 +199,16 @@ async function compressImageToMaxBytes(
 
         const blob = await canvasToWebpBlob(canvas, quality);
         if (!blob) continue;
+        completedIterations += 1;
+        const sweepProgress = 12 + (completedIterations / totalIterations) * 83;
+        notifyProgress(onProgress, Math.min(95, sweepProgress));
 
         if (!bestBlob || blob.size < bestBlob.size) {
           bestBlob = blob;
         }
 
         if (blob.size <= maxBytes) {
+          notifyProgress(onProgress, 100);
           return new File([blob], outputName, { type: "image/webp" });
         }
       }
@@ -198,30 +225,50 @@ async function compressImageToMaxBytes(
   }
 
   if (bestBlob) {
+    notifyProgress(onProgress, 100);
     return new File([bestBlob], outputName, { type: "image/webp" });
   }
 
+  notifyProgress(onProgress, 100);
   return file;
 }
 
-async function processFileForField(file, fieldName, profile) {
+async function processFileForField(file, fieldName, profile, onProgress) {
   if (!(file instanceof File)) return file;
   if (!file.type.startsWith("image/")) return file;
 
   const budget = getFieldBudget(fieldName, profile);
-  return compressImageToMaxBytes(file, budget);
+  return compressImageToMaxBytes(file, budget, onProgress);
 }
 
-export async function optimizeFileListForField(files, fieldName, profile) {
+export async function optimizeFileListForField(
+  files,
+  fieldName,
+  profile,
+  onFileProgress,
+) {
   const safeFiles = Array.isArray(files) ? files : [];
   if (!safeFiles.length) return [];
 
   const resolvedProfile = profile || getUploadProfile();
   return Promise.all(
-    safeFiles.map(async (file) => {
+    safeFiles.map(async (file, fileIndex) => {
+      const reportProgress = (percent) => {
+        if (typeof onFileProgress !== "function") return;
+        onFileProgress(fileIndex, clampPercent(percent));
+      };
+      reportProgress(0);
       try {
-        return await processFileForField(file, fieldName, resolvedProfile);
+        const optimizedFile = await processFileForField(
+          file,
+          fieldName,
+          resolvedProfile,
+          reportProgress,
+        );
+        reportProgress(100);
+        return optimizedFile;
       } catch (error) {
+        reportProgress(100);
         return file;
       }
     }),

@@ -8,9 +8,55 @@ import {
 } from '../actionForm/convertToWebp.js';
 
 const WEBP_BG_TOKEN_ATTR = 'data-webp-bg-token';
+const OPTIMIZE_OVERLAY_ATTR = 'data-optimize-overlay';
+const OPTIMIZE_FILL_ATTR = 'data-optimize-fill';
+const OPTIMIZE_LABEL_ATTR = 'data-optimize-label';
 
 function createAsyncToken() {
   return `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+}
+
+function clampPercent(value) {
+  const n = Number(value);
+  if (!Number.isFinite(n)) return 0;
+  return Math.max(0, Math.min(100, Math.round(n)));
+}
+
+function updateSinglePreviewOptimization(prop, percent, isActive) {
+  const container = document.getElementById(`preview_${prop}`);
+  if (!container) return;
+
+  const overlay = container.querySelector(`[${OPTIMIZE_OVERLAY_ATTR}="true"]`);
+  if (!(overlay instanceof HTMLElement)) return;
+
+  const fill = overlay.querySelector(`[${OPTIMIZE_FILL_ATTR}="true"]`);
+  const label = overlay.querySelector(`[${OPTIMIZE_LABEL_ATTR}="true"]`);
+  if (!(fill instanceof HTMLElement) || !(label instanceof HTMLElement)) return;
+
+  const safePercent = clampPercent(percent);
+  fill.style.height = `${safePercent}%`;
+  label.textContent = `${safePercent}%`;
+  overlay.classList.toggle('hidden', !isActive);
+}
+
+function createSinglePreviewOptimizationOverlay() {
+  const overlay = document.createElement('div');
+  overlay.setAttribute(OPTIMIZE_OVERLAY_ATTR, 'true');
+  overlay.className = 'absolute inset-0 hidden pointer-events-none z-[5]';
+
+  const fill = document.createElement('div');
+  fill.setAttribute(OPTIMIZE_FILL_ATTR, 'true');
+  fill.className = 'absolute inset-x-0 bottom-0 bg-black/50 transition-[height] duration-200 ease-linear';
+  fill.style.height = '0%';
+
+  const label = document.createElement('p');
+  label.setAttribute(OPTIMIZE_LABEL_ATTR, 'true');
+  label.className = 'absolute inset-0 flex items-center justify-center text-sm font-semibold text-white drop-shadow';
+  label.textContent = '0%';
+
+  overlay.appendChild(fill);
+  overlay.appendChild(label);
+  return overlay;
 }
 
 function handleFileElement(inputElement) {
@@ -56,7 +102,11 @@ function handleFileElement(inputElement) {
   // Compression silencieuse en arriere-plan au moment de l'ajout.
   const asyncToken = createAsyncToken();
   inputElement.setAttribute(WEBP_BG_TOKEN_ATTR, asyncToken);
-  void optimizeFileListForField([file], prop).then((optimizedFiles) => {
+  updateSinglePreviewOptimization(prop, 0, true);
+  void optimizeFileListForField([file], prop, undefined, (_, percent) => {
+    if (inputElement.getAttribute(WEBP_BG_TOKEN_ATTR) !== asyncToken) return;
+    updateSinglePreviewOptimization(prop, percent, true);
+  }).then((optimizedFiles) => {
     if (!Array.isArray(optimizedFiles) || optimizedFiles.length === 0) return;
     if (inputElement.getAttribute(WEBP_BG_TOKEN_ATTR) !== asyncToken) return;
 
@@ -66,6 +116,7 @@ function handleFileElement(inputElement) {
     // Meme sans changement de taille, la passe est terminee pour ce champ.
     if (optimizedFile === file) {
       inputElement.setAttribute(WEBP_PREOPTIMIZED_ATTR, 'true');
+      updateSinglePreviewOptimization(prop, 100, false);
       return;
     }
 
@@ -77,7 +128,10 @@ function handleFileElement(inputElement) {
     inputElement.__dt = dt;
     inputElement.files = dt.files;
     inputElement.setAttribute(WEBP_PREOPTIMIZED_ATTR, 'true');
-  }).catch(() => {});
+    updateSinglePreviewOptimization(prop, 100, false);
+  }).catch(() => {
+    updateSinglePreviewOptimization(prop, 100, false);
+  });
 }
 
 function renderFormImagePreview(prop, dataUrl) {
@@ -96,11 +150,12 @@ function renderFormImagePreview(prop, dataUrl) {
   previewImage.alt = 'Aperçu';
   previewImage.className = 'absolute inset-0 w-full h-full object-cover';
   previewWrap.appendChild(previewImage);
+  previewWrap.appendChild(createSinglePreviewOptimizationOverlay());
 
   const removeButton = document.createElement('button');
   removeButton.type = 'button';
-  removeButton.className = 'absolute top-1 right-1 bg-black/60 text-white rounded-full w-6 h-6 flex items-center justify-center';
-  removeButton.innerHTML = '✖';
+  removeButton.className = 'absolute top-1 right-1 bg-black/60 text-white rounded-full w-6 h-6 flex items-center justify-center z-10';
+  removeButton.textContent = '\u2716';
   previewWrap.appendChild(removeButton);
 
   const labelWrap = document.createElement('div');

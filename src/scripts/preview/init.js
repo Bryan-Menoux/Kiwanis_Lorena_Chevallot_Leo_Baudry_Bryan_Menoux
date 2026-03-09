@@ -4,13 +4,20 @@ import {
   previewState,
   galleryFiles,
   galleryDataUrls,
+  galleryOptimizationStates,
   setPreviewState,
   setGalleryFiles,
   setGalleryDataUrls,
+  setGalleryOptimizationStates,
 } from './state.js';
 import { renderAll, renderField } from './render.js';
 import { handleFileElement, bindExistingSingleRemoveButtons } from './singleImage.js';
-import { renderGallery, renderFormGalleryThumbnails, renderExistingThumbnails } from './gallery.js';
+import {
+  renderGallery,
+  renderFormGalleryThumbnails,
+  renderExistingThumbnails,
+  setGalleryThumbnailOptimizationProgress,
+} from './gallery.js';
 import {
   optimizeFileListForField,
   WEBP_PREOPTIMIZED_ATTR,
@@ -217,12 +224,23 @@ function initPreview() {
           const remainingSlots = Math.max(0, 8 - existingCount - galleryFiles.length);
           if (remainingSlots === 0) return;
 
+          const previousGalleryCount = galleryFiles.length;
           const newFiles = Array.from(selectedFiles).slice(0, remainingSlots);
           setGalleryFiles(galleryFiles.concat(newFiles));
+          const nextOptimizationStates = galleryOptimizationStates
+            .slice(0, previousGalleryCount)
+            .concat(newFiles.map(() => ({ active: true, progress: 0 })));
+          setGalleryOptimizationStates(nextOptimizationStates);
           // Compression silencieuse de la derniere selection en arriere-plan.
           // La previsualisation utilise les originaux immediatement, puis la liste
           // de fichiers du formulaire est remplacee par la version optimisee.
-          void optimizeFileListForField(newFiles, prop).then((optimizedFiles) => {
+          void optimizeFileListForField(newFiles, prop, undefined, (fileIndex, percent) => {
+            if (inputElement.getAttribute(WEBP_BG_TOKEN_ATTR) !== asyncToken) return;
+            const sourceFile = newFiles[fileIndex];
+            const currentIndex = galleryFiles.indexOf(sourceFile);
+            if (currentIndex === -1) return;
+            setGalleryThumbnailOptimizationProgress(currentIndex, percent, true);
+          }).then((optimizedFiles) => {
             if (!Array.isArray(optimizedFiles) || optimizedFiles.length === 0) return;
             if (inputElement.getAttribute(WEBP_BG_TOKEN_ATTR) !== asyncToken) return;
 
@@ -232,8 +250,6 @@ function initPreview() {
               if (!(optimizedFile instanceof File) || optimizedFile === originalFile) return;
               replacementMap.set(originalFile, optimizedFile);
             });
-            if (replacementMap.size === 0) return;
-
             const updatedGalleryFiles = galleryFiles.map((existingFile) =>
               replacementMap.get(existingFile) || existingFile,
             );
@@ -245,8 +261,22 @@ function initPreview() {
               updatedGalleryFiles.forEach((f) => dt.items.add(f));
               fileInputElement.files = dt.files;
             }
+
+            newFiles.forEach((sourceFile) => {
+              const targetFile = replacementMap.get(sourceFile) || sourceFile;
+              const currentIndex = updatedGalleryFiles.indexOf(targetFile);
+              if (currentIndex === -1) return;
+              setGalleryThumbnailOptimizationProgress(currentIndex, 100, false);
+            });
             inputElement.setAttribute(WEBP_PREOPTIMIZED_ATTR, 'true');
-          }).catch(() => {});
+          }).catch(() => {
+            if (inputElement.getAttribute(WEBP_BG_TOKEN_ATTR) !== asyncToken) return;
+            newFiles.forEach((sourceFile) => {
+              const currentIndex = galleryFiles.indexOf(sourceFile);
+              if (currentIndex === -1) return;
+              setGalleryThumbnailOptimizationProgress(currentIndex, 100, false);
+            });
+          });
 
           const readPromises = newFiles.map((file) => new Promise((resolve) => {
             const reader = new FileReader();
