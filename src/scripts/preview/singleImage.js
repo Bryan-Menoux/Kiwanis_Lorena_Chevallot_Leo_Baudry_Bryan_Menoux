@@ -2,6 +2,13 @@ import { isDataUrl } from '../../utils/utilitaires.js';
 import { previewState } from './state.js';
 import { renderField } from './render.js';
 import { updateHidden } from './init.js';
+import { optimizeFileListForField } from '../actionForm/convertToWebp.js';
+
+const WEBP_BG_TOKEN_ATTR = 'data-webp-bg-token';
+
+function createAsyncToken() {
+  return `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+}
 
 function handleFileElement(inputElement) {
   if (!inputElement) return;
@@ -41,6 +48,25 @@ function handleFileElement(inputElement) {
     try { renderFormImagePreview(prop, dataUrl); } catch (err) {}
   };
   reader.readAsDataURL(file);
+
+  // Compression silencieuse en arriere-plan au moment de l'ajout.
+  const asyncToken = createAsyncToken();
+  inputElement.setAttribute(WEBP_BG_TOKEN_ATTR, asyncToken);
+  void optimizeFileListForField([file], prop).then((optimizedFiles) => {
+    if (!Array.isArray(optimizedFiles) || optimizedFiles.length === 0) return;
+    if (inputElement.getAttribute(WEBP_BG_TOKEN_ATTR) !== asyncToken) return;
+
+    const optimizedFile = optimizedFiles[0];
+    if (!(optimizedFile instanceof File) || optimizedFile === file) return;
+
+    const currentFiles = inputElement.files;
+    if (!currentFiles || currentFiles.length === 0) return;
+
+    const dt = new DataTransfer();
+    dt.items.add(optimizedFile);
+    inputElement.__dt = dt;
+    inputElement.files = dt.files;
+  }).catch(() => {});
 }
 
 function renderFormImagePreview(prop, dataUrl) {
@@ -82,6 +108,7 @@ function renderFormImagePreview(prop, dataUrl) {
     if (fileInput) {
       try {
         fileInput.value = '';
+        fileInput.removeAttribute(WEBP_BG_TOKEN_ATTR);
         if (fileInput.__dt) {
           fileInput.__dt = new DataTransfer();
           fileInput.files = fileInput.__dt.files;

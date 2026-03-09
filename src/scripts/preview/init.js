@@ -11,6 +11,7 @@ import {
 import { renderAll, renderField } from './render.js';
 import { handleFileElement, bindExistingSingleRemoveButtons } from './singleImage.js';
 import { renderGallery, renderFormGalleryThumbnails, renderExistingThumbnails } from './gallery.js';
+import { optimizeFileListForField } from '../actionForm/convertToWebp.js';
 
 const selectOne = (selector, context = document) => context.querySelector(selector);
 const NO_DEFAULT_FALLBACK_PROPS = new Set([
@@ -205,6 +206,32 @@ function initPreview() {
 
           const newFiles = Array.from(selectedFiles).slice(0, remainingSlots);
           setGalleryFiles(galleryFiles.concat(newFiles));
+          // Compression silencieuse de la derniere selection en arriere-plan.
+          // La previsualisation utilise les originaux immediatement, puis la liste
+          // de fichiers du formulaire est remplacee par la version optimisee.
+          void optimizeFileListForField(newFiles, prop).then((optimizedFiles) => {
+            if (!Array.isArray(optimizedFiles) || optimizedFiles.length === 0) return;
+
+            const replacementMap = new Map();
+            newFiles.forEach((originalFile, index) => {
+              const optimizedFile = optimizedFiles[index];
+              if (!(optimizedFile instanceof File) || optimizedFile === originalFile) return;
+              replacementMap.set(originalFile, optimizedFile);
+            });
+            if (replacementMap.size === 0) return;
+
+            const updatedGalleryFiles = galleryFiles.map((existingFile) =>
+              replacementMap.get(existingFile) || existingFile,
+            );
+            setGalleryFiles(updatedGalleryFiles);
+
+            const fileInputElement = document.getElementById('input_galerie_photos');
+            if (fileInputElement) {
+              const dt = new DataTransfer();
+              updatedGalleryFiles.forEach((f) => dt.items.add(f));
+              fileInputElement.files = dt.files;
+            }
+          }).catch(() => {});
 
           const readPromises = newFiles.map((file) => new Promise((resolve) => {
             const reader = new FileReader();

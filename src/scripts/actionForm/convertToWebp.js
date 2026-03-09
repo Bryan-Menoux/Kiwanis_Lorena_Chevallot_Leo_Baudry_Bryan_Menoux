@@ -1,5 +1,5 @@
 // convertToWebp.js
-// Client-side image processing before form submit.
+// Client-side image processing for file inputs and final submit fallback.
 // Goal:
 // - Reduce upload payload, especially on mobile / slow connections.
 // - Keep a higher budget for hero images, but still compress them on constrained networks.
@@ -176,6 +176,22 @@ async function processFileForField(file, fieldName, profile) {
   return compressImageToMaxBytes(file, budget.maxBytes, budget.maxDimension);
 }
 
+export async function optimizeFileListForField(files, fieldName, profile) {
+  const safeFiles = Array.isArray(files) ? files : [];
+  if (!safeFiles.length) return [];
+
+  const resolvedProfile = profile || getUploadProfile();
+  return Promise.all(
+    safeFiles.map(async (file) => {
+      try {
+        return await processFileForField(file, fieldName, resolvedProfile);
+      } catch (error) {
+        return file;
+      }
+    }),
+  );
+}
+
 async function processInputFiles(input, profile) {
   if (!(input instanceof HTMLInputElement)) return;
   if (!input.files || input.files.length === 0) return;
@@ -183,10 +199,10 @@ async function processInputFiles(input, profile) {
   const fieldName =
     (input.getAttribute("data-prop-file") || input.name || "").trim();
 
-  const processedFiles = await Promise.all(
-    Array.from(input.files).map((file) =>
-      processFileForField(file, fieldName, profile),
-    ),
+  const processedFiles = await optimizeFileListForField(
+    Array.from(input.files),
+    fieldName,
+    profile,
   );
 
   const dataTransfer = new DataTransfer();
