@@ -52,15 +52,17 @@ try {
     />Retour aux actions</a
   >
   
-  <a href={`/creation/actions/edit/${id}-${slug}`} class="flex lg:hidden items-center text-sm w-fit btn btn-accent">
-    Modifier l'action</a
-  >
-  </div>
-  <a
+  {
+    Astro.locals.pb.authStore.isValid && (
+      <a href={`/creation/actions/edit/${id}-${slug}`} class="flex lg:hidden items-center text-sm w-fit btn btn-accent">
+      Modifier l'action</a>
+    <a
     href={`/creation/actions/edit/${id}-${slug}`}
     class="hidden fixed px-4 py-3 min-h-11 lg:flex items-center justify-center z-50 bg-opacity-80 rounded-box text-sm lg:text-base lg:right-[2%] lg:top-[12%] btn btn-accent"
-  >
-    Modifier l'action</a
-  >
+    >
+      Modifier l'action</a>
+    )
+  }
+  </div>
   <ActionContent action={action} />
 </Layout>

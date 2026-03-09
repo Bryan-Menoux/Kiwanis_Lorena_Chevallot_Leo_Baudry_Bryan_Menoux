@@ -80,6 +80,24 @@ const hasTripleLocationCards = locationCardCount === 3;
 const hasLocationSection = hasLieuCard || hasChiffreCard || hasBeneficiaireCard;
 const shouldRenderLocationSection =
   hasLocationSection || forcePreviewLocationSection;
+type LocationCardKey = "lieu" | "chiffre" | "beneficiaire";
+const renderedLocationCardKeys = ([
+  (hasLieuCard || forcePreviewLocationSection) ? "lieu" : null,
+  (hasChiffreCard || forcePreviewLocationSection) ? "chiffre" : null,
+  (hasBeneficiaireCard || forcePreviewLocationSection) ? "beneficiaire" : null,
+].filter(Boolean)) as LocationCardKey[];
+const getTabletLocationSpanClass = (cardKey: LocationCardKey) => {
+  if (
+    renderedLocationCardKeys.length === 1 &&
+    renderedLocationCardKeys[0] === cardKey
+  ) {
+    return "md:col-span-2 lg:col-span-1";
+  }
+  if (renderedLocationCardKeys.length === 3 && cardKey === "beneficiaire") {
+    return "md:col-span-2 lg:col-span-1";
+  }
+  return "";
+};
 const hasPart1Section = hasNonEmptyText(action?.texte_partie_1);
 const hasPart2Section = hasNonEmptyText(action?.texte_partie_2);
 const hasPart3Section = hasNonEmptyText(action?.texte_partie_3);

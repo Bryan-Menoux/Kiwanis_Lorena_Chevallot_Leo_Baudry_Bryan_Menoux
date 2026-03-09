@@ -48,8 +48,20 @@ if (isPostForm) {
       cookie,
     );
     
+    // destination finale : soit le paramètre redirect, sinon la racine
+    let dest = "/";
+    const redirectParam = data.get("redirect")?.toString();
+    if (redirectParam) {
+      try {
+        // protéger contre les redirections externes
+        const u = new URL(redirectParam, Astro.request.url);
+        if (u.origin === new URL(Astro.request.url).origin) {
+          dest = u.pathname + u.search;
+        }
+      } catch {}
+    }
     Astro.response.status = 302;
-    Astro.response.headers.set("Location", "/");
+    Astro.response.headers.set("Location", dest);
   } catch (error) {
     
     if (userVerificated === true) {
@@ -106,6 +118,8 @@ if (isPostForm) {
       </div>
 
       <form method="POST" class="flex flex-col w-full relative">
+        <!-- garder l'URL de redirection si fournie -->
+        <input type="hidden" name="redirect" value={Astro.url.searchParams.get("redirect") ?? ""} />
         <div class="relative my-2">
           <Image
             src={userIcon}
