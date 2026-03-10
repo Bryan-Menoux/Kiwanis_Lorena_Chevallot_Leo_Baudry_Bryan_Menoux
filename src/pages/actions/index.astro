@@ -196,7 +196,7 @@ const lcpDesktop = await getImage({ src: HeroActions, format: "webp", width: 160
                   data-beneficiary={action.beneficiaire || ""}
                   data-year={action.year}
                   data-types={action.typeActionNormalized.join("||")}
-                  class="overflow-hidden rounded-2xl border border-base-300 bg-base-100 shadow-sm"
+                  class="overflow-hidden rounded-2xl border border-base-300 bg-base-100 shadow-sm min-h-[55dvh]"
                 >
                   <div class="flex h-full flex-col lg:flex-row">
                     {action.heroUrl ? (
