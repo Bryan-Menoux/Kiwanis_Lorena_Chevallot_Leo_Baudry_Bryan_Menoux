@@ -1,4 +1,4 @@
-﻿import type { APIRoute } from 'astro';
+import type { APIRoute } from 'astro';
 import { capitalizeName } from '../../utils/utilitaires.js';
 import { nowIso } from '../../utils/utilitaires.js';
 import {

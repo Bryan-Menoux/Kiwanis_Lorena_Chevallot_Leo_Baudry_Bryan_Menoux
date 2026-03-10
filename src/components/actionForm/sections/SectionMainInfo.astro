@@ -60,10 +60,10 @@ const selectedTypeActions =
     value={mode === "edit" && previewData ? previewData.sous_titre : undefined}
   />
 
-  <div class="flex gap-4">
+  <div class="flex items-end gap-4">
     <div class="w-1/2">
       <label class="text-sm mt-3 mb-1">
-        Date début <span class="text-error">*</span>
+        Date de début <span class="text-error">*</span>
       </label>
       <input
         data-prop="date_debut"
@@ -79,7 +79,7 @@ const selectedTypeActions =
       />
     </div>
     <div class="w-1/2">
-      <label class="text-sm mt-3 mb-1">Date fin</label>
+      <label class="text-sm mt-3 mb-1">Date de fin</label>
       <input
         data-prop="date_fin"
         id="input_date_fin"
@@ -128,7 +128,7 @@ const selectedTypeActions =
   />
 
   <label class="block text-sm font-medium mt-3 mb-1">
-    Type d'action (vous pouvez en sélectionner plusieurs)
+    Type d'action (vous pouvez en sélectionner plusieurs) <span class="text-error">*</span>
   </label>
   <MultiSelectDropdown
     id="input_type_action"
@@ -139,7 +139,7 @@ const selectedTypeActions =
     placeholder="Sélectionner des types d'action"
   />
   <p class="text-xs text-base-content/70">
-    Vous pouvez sélectionner jusqu'à 7 types.
+    Vous pouvez sélectionner jusqu'à 7 types. Au moins un type d'action est obligatoire.
   </p>
   <HiddenField
     name="type_action"

@@ -1,3 +1,7 @@
+import { previewState } from "../preview/state.js";
+import { renderField } from "../preview/render.js";
+import { updateHidden } from "../preview/init.js";
+
 document.addEventListener("DOMContentLoaded", () => {
   const form = document.getElementById("leftForm");
   if (!form) return;
@@ -33,6 +37,12 @@ document.addEventListener("DOMContentLoaded", () => {
       fileInput.value = "";
       if (fileInput.__dt) fileInput.__dt = null;
     }
+
+    // Synchroniser l'état de prévisualisation pour éviter toute réapparition
+    // de l'image lors d'un rendu ultérieur.
+    previewState[fieldName] = "";
+    renderField(fieldName);
+    updateHidden(fieldName);
 
     document.querySelectorAll(`[data-field="${fieldName}"]`).forEach((el) => {
       if (el.tagName === "IMG") {

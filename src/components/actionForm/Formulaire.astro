@@ -62,7 +62,10 @@ const formTitle =
 
 <form
   id="leftForm"
-  class:list={["space-y-8 text-accent", isMobileWizard ? "pb-10" : ""]}
+  class:list={[
+    "space-y-8 text-accent",
+    isMobileWizard ? "[--mobile-wizard-footer-offset:0px]" : "",
+  ]}
   method="POST"
   enctype="multipart/form-data"
   data-submit-overlay-requires-ready="true"
@@ -107,13 +110,17 @@ const formTitle =
 
   {error && <p class="text-red-300 mb-2">{error}</p>}
   <p class="text-xs text-base-100/80">
-    Pour publier: titre, date de début, image de l'en-tête, et au moins une partie (texte ou photo).
+    Pour publier: titre, date de début, image de l'en-tête, type d'action, et au moins une partie (texte ou photo).
   </p>
 
   <div
     data-mobile-step-wrapper
     data-mobile-step="1"
-    class:list={[isMobileWizard ? "min-h-[60dvh] lg:min-h-0" : ""]}
+    class:list={[
+      isMobileWizard
+        ? "min-h-[60dvh] pb-[var(--mobile-wizard-footer-offset)] lg:min-h-0 lg:pb-0"
+        : "",
+    ]}
   >
     <SectionMainInfo
       mode={mode}
@@ -127,7 +134,11 @@ const formTitle =
   <div
     data-mobile-step-wrapper
     data-mobile-step="2"
-    class:list={[isMobileWizard ? "min-h-[60dvh] lg:min-h-0" : ""]}
+    class:list={[
+      isMobileWizard
+        ? "min-h-[60dvh] pb-[var(--mobile-wizard-footer-offset)] lg:min-h-0 lg:pb-0"
+        : "",
+    ]}
   >
     <SectionPart
       partNumber={1}
@@ -141,7 +152,11 @@ const formTitle =
   <div
     data-mobile-step-wrapper
     data-mobile-step="3"
-    class:list={[isMobileWizard ? "min-h-[60dvh] lg:min-h-0" : ""]}
+    class:list={[
+      isMobileWizard
+        ? "min-h-[60dvh] pb-[var(--mobile-wizard-footer-offset)] lg:min-h-0 lg:pb-0"
+        : "",
+    ]}
   >
     <SectionLocation
       mode={mode}
@@ -154,7 +169,11 @@ const formTitle =
   <div
     data-mobile-step-wrapper
     data-mobile-step="4"
-    class:list={[isMobileWizard ? "min-h-[60dvh] lg:min-h-0" : ""]}
+    class:list={[
+      isMobileWizard
+        ? "min-h-[60dvh] pb-[var(--mobile-wizard-footer-offset)] lg:min-h-0 lg:pb-0"
+        : "",
+    ]}
   >
     <SectionPart
       partNumber={2}
@@ -168,7 +187,11 @@ const formTitle =
   <div
     data-mobile-step-wrapper
     data-mobile-step="5"
-    class:list={[isMobileWizard ? "min-h-[60dvh] lg:min-h-0" : ""]}
+    class:list={[
+      isMobileWizard
+        ? "min-h-[60dvh] pb-[var(--mobile-wizard-footer-offset)] lg:min-h-0 lg:pb-0"
+        : "",
+    ]}
   >
     <SectionPart
       partNumber={3}
@@ -182,7 +205,11 @@ const formTitle =
   <div
     data-mobile-step-wrapper
     data-mobile-step="6"
-    class:list={[isMobileWizard ? "min-h-[60dvh] lg:min-h-0" : ""]}
+    class:list={[
+      isMobileWizard
+        ? "min-h-[60dvh] pb-[var(--mobile-wizard-footer-offset)] lg:min-h-0 lg:pb-0"
+        : "",
+    ]}
   >
     <SectionThanks
       mode={mode}
@@ -194,7 +221,11 @@ const formTitle =
   <div
     data-mobile-step-wrapper
     data-mobile-step="7"
-    class:list={[isMobileWizard ? "min-h-[60dvh] lg:min-h-0" : ""]}
+    class:list={[
+      isMobileWizard
+        ? "min-h-[60dvh] pb-[var(--mobile-wizard-footer-offset)] lg:min-h-0 lg:pb-0"
+        : "",
+    ]}
   >
     <SectionGallery
       mode={mode}
@@ -458,6 +489,12 @@ const formTitle =
       hasSelectedFile(form, "hero") || hasExistingImagePreview(form, "hero");
     if (!hasHero) missingFields.push("image de l'en-tête");
 
+    const typeActionSelect = form.querySelector("#input_type_action");
+    const hasTypeAction =
+      typeActionSelect instanceof HTMLSelectElement &&
+      Array.from(typeActionSelect.selectedOptions).length > 0;
+    if (!hasTypeAction) missingFields.push("type d'action");
+
     return missingFields;
   }
 
@@ -541,6 +578,16 @@ const formTitle =
         if (missingHeaderFields.includes("image de l'en-tête")) {
           const heroInput = form.querySelector("#input_hero_file");
           if (heroInput instanceof HTMLInputElement) heroInput.focus();
+          return;
+        }
+
+        if (missingHeaderFields.includes("type d'action")) {
+          const typeActionToggle = form.querySelector(
+            '[data-select-id="input_type_action"] [data-kc-ms-toggle]',
+          );
+          if (typeActionToggle instanceof HTMLButtonElement) {
+            typeActionToggle.focus();
+          }
           return;
         }
 
