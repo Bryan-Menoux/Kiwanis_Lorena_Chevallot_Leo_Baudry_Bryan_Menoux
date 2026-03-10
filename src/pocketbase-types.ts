@@ -195,11 +195,13 @@ export enum MembresRoleOptions {
 	"présidente" = "présidente",
 }
 export type MembresRecord = {
+	avatar?: FileNameString
 	created: IsoAutoDateString
 	id: string
-	nom?: RecordIdString
+	nom?: string
 	role?: MembresRoleOptions
 	updated: IsoAutoDateString
+	utilisateur?: RecordIdString
 }
 
 export type ProduitsRecord = {

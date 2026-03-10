@@ -6,6 +6,7 @@ import {
   MembresRoleOptions,
   UsersGenreOptions,
   type MembresResponse,
+  type UsersResponse,
 } from '../../pocketbase-types';
 
 export const POST: APIRoute = async ({ locals, request }) => {
@@ -22,30 +23,122 @@ export const POST: APIRoute = async ({ locals, request }) => {
     return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
   }
 
-  const upsertMemberRecord = async (
-    memberUserId: string,
-    role: MembresRoleOptions,
-  ) => {
-    try {
-      const existing = await locals.pb
-        .collection(Collections.Membres)
-        .getFirstListItem<MembresResponse>(`nom = "${memberUserId}"`);
+  const getAvatarFileName = (value: unknown) => {
+    if (typeof value === "string") return value;
+    if (Array.isArray(value)) return String(value[0] || "");
+    return "";
+  };
 
-      await locals.pb.collection(Collections.Membres).update(existing.id, {
-        nom: memberUserId,
-        role,
-      });
-      return;
+  const getMemberDisplayName = (user: Pick<UsersResponse, "name" | "email">) => {
+    const name = String(user.name || "").trim();
+    if (name.length > 0) {
+      return capitalizeName(name);
+    }
+    return String(user.email || "").trim() || "Membre Kiwanis";
+  };
+
+  const getMemberUser = async (memberUserId: string) =>
+    locals.pb.collection(Collections.Users).getOne<UsersResponse>(memberUserId);
+
+  const findExistingMemberRecord = async (memberUserId: string) => {
+    try {
+      return await locals.pb
+        .collection(Collections.Membres)
+        .getFirstListItem<MembresResponse>(`utilisateur = "${memberUserId}"`);
     } catch (error: any) {
       if (error?.status !== 404) {
         throw error;
       }
     }
 
-    await locals.pb.collection(Collections.Membres).create({
-      nom: memberUserId,
+    // Compatibilite anciens enregistrements: nom contenait l'id utilisateur.
+    try {
+      return await locals.pb
+        .collection(Collections.Membres)
+        .getFirstListItem<MembresResponse>(`nom = "${memberUserId}"`);
+    } catch (error: any) {
+      if (error?.status !== 404) {
+        throw error;
+      }
+    }
+
+    return null;
+  };
+
+  const saveMemberRecord = async (
+    existingRecordId: string | null,
+    payload: Record<string, unknown>,
+  ) => {
+    if (existingRecordId) {
+      await locals.pb.collection(Collections.Membres).update(existingRecordId, payload);
+    } else {
+      await locals.pb.collection(Collections.Membres).create(payload);
+    }
+  };
+
+  const downloadAvatarFileForMember = async (memberUser: UsersResponse) => {
+    const sourceAvatarFileName = getAvatarFileName(memberUser.avatar);
+    if (!sourceAvatarFileName) {
+      return { sourceAvatarFileName: "", avatarFile: null as File | null };
+    }
+
+    const authToken = locals.pb.authStore.token;
+    const tryFetchAvatar = async (url: string) => {
+      const response = await fetch(url, {
+        headers: authToken ? { Authorization: `Bearer ${authToken}` } : undefined,
+      });
+
+      if (!response.ok) {
+        return null;
+      }
+
+      const avatarBlob = await response.blob();
+      return new File(
+        [avatarBlob],
+        sourceAvatarFileName,
+        { type: avatarBlob.type || "application/octet-stream" },
+      );
+    };
+
+    let avatarFile = await tryFetchAvatar(
+      locals.pb.files.getURL(memberUser, sourceAvatarFileName),
+    );
+
+    if (!avatarFile) {
+      try {
+        const fileToken = await locals.pb.files.getToken();
+        avatarFile = await tryFetchAvatar(
+          locals.pb.files.getURL(memberUser, sourceAvatarFileName, { token: fileToken }),
+        );
+      } catch {
+        // Rien à faire : on conservera l'avatar existant côté membres.
+      }
+    }
+
+    return { sourceAvatarFileName, avatarFile };
+  };
+
+  const upsertMemberRecord = async (
+    memberUserId: string,
+    role: MembresRoleOptions,
+  ) => {
+    const memberUser = await getMemberUser(memberUserId);
+    const existingRecord = await findExistingMemberRecord(memberUserId);
+    const { sourceAvatarFileName, avatarFile } = await downloadAvatarFileForMember(memberUser);
+
+    const memberPayload: Record<string, unknown> = {
+      utilisateur: memberUser.id,
+      nom: getMemberDisplayName(memberUser),
       role,
-    });
+    };
+
+    if (avatarFile) {
+      memberPayload.avatar = avatarFile;
+    } else if (!sourceAvatarFileName) {
+      memberPayload.avatar = null;
+    }
+
+    await saveMemberRecord(existingRecord?.id ?? null, memberPayload);
   };
 
   const ensureMemberRecord = async (memberUserId: string) => {
@@ -56,7 +149,7 @@ export const POST: APIRoute = async ({ locals, request }) => {
     const memberRows = await locals.pb
       .collection(Collections.Membres)
       .getFullList<MembresResponse>({
-        filter: `nom = "${memberUserId}"`,
+        filter: `utilisateur = "${memberUserId}" || nom = "${memberUserId}"`,
       });
 
     await Promise.all(
@@ -128,6 +221,18 @@ export const POST: APIRoute = async ({ locals, request }) => {
         const passwordChanged = oldPassword && newPassword;
 
         await locals.pb.collection("users").update(currentUser.id, updateData);
+
+        try {
+          const existingMember = await findExistingMemberRecord(currentUser.id);
+          if (existingMember) {
+            await upsertMemberRecord(
+              currentUser.id,
+              existingMember.role || MembresRoleOptions.membre,
+            );
+          }
+        } catch (memberSyncError) {
+          console.error("Impossible de synchroniser le membre après mise à jour du profil:", memberSyncError);
+        }
 
         // Si l'email ou le mot de passe a changé, déconnecter l'utilisateur
         const shouldLogout = emailChanged || passwordChanged;
@@ -246,6 +351,18 @@ export const POST: APIRoute = async ({ locals, request }) => {
         
         await locals.pb.collection("users").update(modUserId, updateDataMod);
 
+        try {
+          const existingMember = await findExistingMemberRecord(modUserId);
+          if (existingMember) {
+            await upsertMemberRecord(
+              modUserId,
+              existingMember.role || MembresRoleOptions.membre,
+            );
+          }
+        } catch (memberSyncError) {
+          console.error("Impossible de synchroniser le membre après modification admin:", memberSyncError);
+        }
+
         return new Response(
           JSON.stringify({ 
             success: true, 
@@ -262,10 +379,17 @@ export const POST: APIRoute = async ({ locals, request }) => {
         const { targetUserId } = formData;
         let currentRoleValue: unknown = (currentUser as any)?.role;
         try {
-          const currentMember = await locals.pb
-            .collection(Collections.Membres)
-            .getFirstListItem<MembresResponse>(`nom = "${currentUser.id}"`);
-          currentRoleValue = currentMember?.role ?? currentRoleValue;
+          try {
+            const currentMember = await locals.pb
+              .collection(Collections.Membres)
+              .getFirstListItem<MembresResponse>(`utilisateur = "${currentUser.id}"`);
+            currentRoleValue = currentMember?.role ?? currentRoleValue;
+          } catch {
+            const legacyMember = await locals.pb
+              .collection(Collections.Membres)
+              .getFirstListItem<MembresResponse>(`nom = "${currentUser.id}"`);
+            currentRoleValue = legacyMember?.role ?? currentRoleValue;
+          }
         } catch {
           // Aucun enregistrement membre lié : on conserve le rôle utilisateur.
         }
@@ -361,6 +485,7 @@ export const POST: APIRoute = async ({ locals, request }) => {
           );
         }
 
+        await removeMemberRecords(deleteUserId);
         await locals.pb.collection("users").delete(deleteUserId);
 
         return new Response(

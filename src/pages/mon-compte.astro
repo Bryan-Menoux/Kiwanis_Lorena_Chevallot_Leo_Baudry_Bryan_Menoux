@@ -14,7 +14,7 @@ import arrow from "../assets/arrow-previous-small.svg";
 
 // Redirige vers la page de connexion si l'utilisateur n'est pas authentifié
 if (!Astro.locals.pb.authStore.isValid) {
-  throw Astro.redirect("/connexion");
+  return Astro.redirect("/connexion");
 }
 
 // Récupère l'utilisateur courant depuis PocketBase
@@ -23,7 +23,7 @@ const currentUser = Astro.locals.pb.authStore.model;
 // Si l'utilisateur est absent ou non vérifié, nettoie la session et redirige
 if (!currentUser || !currentUser.verified) {
   Astro.locals.pb.authStore.clear();
-  throw Astro.redirect("/connexion");
+  return Astro.redirect("/connexion");
 }
 
 const isAdmin = currentUser.administrateur === true;

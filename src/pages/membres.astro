@@ -2,6 +2,7 @@
 import Hero from "../components/Hero.astro";
 import Layout from "../layouts/Layout.astro";
 import { Image, getImage } from "astro:assets";
+import PocketBase from "pocketbase";
 import MembersGrid from "../components/Members-grid.astro";
 import DiagArrow from "../components/DiagArrow.astro";
 import members1 from "../assets/members-page/members-1.webp";
@@ -13,7 +14,6 @@ import {
   Collections,
   MembresRoleOptions,
   type MembresResponse,
-  type UsersResponse,
 } from "../pocketbase-types";
 
 const lcpMobile = await getImage({ src: HeroMembresMobile, format: "webp", width: 440, quality: 80 });
@@ -27,58 +27,70 @@ type PublicMember = {
   avatarUrl: string | null;
 };
 
-type MembreExpand = {
-  nom?: UsersResponse;
-};
-
 const roleLabels: Record<MembresRoleOptions, string> = {
   [MembresRoleOptions.membre]: "Membre",
   [MembresRoleOptions["président"]]: "Président",
   [MembresRoleOptions["présidente"]]: "Présidente",
 };
 
+const roleOrder = ["Présidente", "Président", "Membre"];
 let members: PublicMember[] = [];
+const defaultMemberName = "Membre Kiwanis";
 
-try {
-  const membreRecords = await Astro.locals.pb
+function sortMembers(list: PublicMember[]) {
+  return [...list].sort((a, b) => {
+    const roleIndexA = roleOrder.indexOf(a.status);
+    const roleIndexB = roleOrder.indexOf(b.status);
+
+    if (roleIndexA !== roleIndexB) {
+      return (roleIndexA === -1 ? Number.MAX_SAFE_INTEGER : roleIndexA) -
+        (roleIndexB === -1 ? Number.MAX_SAFE_INTEGER : roleIndexB);
+    }
+
+    return a.name.localeCompare(b.name, "fr", { sensitivity: "base" });
+  });
+}
+
+async function loadMembersFromCollection(pbClient: PocketBase): Promise<PublicMember[]> {
+  const membreRecords = await pbClient
     .collection(Collections.Membres)
-    .getFullList<MembresResponse<MembreExpand>>({
-      expand: "nom",
+    .getFullList<MembresResponse>({
       sort: "-created",
     });
 
-  members = membreRecords.map((membreRecord) => {
-    const linkedUser = membreRecord.expand?.nom;
-    const avatarFile = typeof linkedUser?.avatar === "string" ? linkedUser.avatar : "";
+  const members = membreRecords.map((membreRecord) => {
+    const avatarValue = membreRecord.avatar;
+    const avatarFile = typeof avatarValue === "string"
+      ? avatarValue
+      : Array.isArray(avatarValue)
+        ? String(avatarValue[0] || "")
+        : "";
     const role = membreRecord.role as MembresRoleOptions;
 
     return {
       id: membreRecord.id,
-      name: linkedUser?.name?.trim() || linkedUser?.email || "Membre Kiwanis",
+      name: String(membreRecord.nom || "").trim() || defaultMemberName,
       status: roleLabels[role] || "Membre",
       avatarUrl:
-        avatarFile && linkedUser
-          ? Astro.locals.pb.files.getURL(linkedUser, avatarFile)
+        avatarFile
+          ? pbClient.files.getURL(membreRecord, avatarFile)
           : null,
     };
   });
-} catch (error) {
-  console.error("Erreur lors du chargement des membres:", error);
+
+  return members;
 }
 
-const roleOrder = ["Présidente", "Président", "Membre"];
-
-members = members.sort((a, b) => {
-  const roleIndexA = roleOrder.indexOf(a.status);
-  const roleIndexB = roleOrder.indexOf(b.status);
-
-  if (roleIndexA !== roleIndexB) {
-    return (roleIndexA === -1 ? Number.MAX_SAFE_INTEGER : roleIndexA) -
-      (roleIndexB === -1 ? Number.MAX_SAFE_INTEGER : roleIndexB);
+try {
+  const membersFromCurrentSession = await loadMembersFromCollection(Astro.locals.pb);
+  if (membersFromCurrentSession.length > 0) {
+    members = membersFromCurrentSession;
   }
+} catch (error) {
+  console.error("Erreur lors du chargement public des membres:", error);
+}
 
-  return a.name.localeCompare(b.name, "fr", { sensitivity: "base" });
-});
+members = sortMembers(members);
 ---
 
 <Layout>

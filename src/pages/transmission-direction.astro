@@ -7,21 +7,28 @@ import {
 } from "../pocketbase-types";
 
 if (!Astro.locals.pb.authStore.isValid) {
-  throw Astro.redirect("/connexion");
+  return Astro.redirect("/connexion");
 }
 
 const currentUser = Astro.locals.pb.authStore.record;
 if (!currentUser || currentUser.verified !== true) {
   Astro.locals.pb.authStore.clear();
-  throw Astro.redirect("/connexion");
+  return Astro.redirect("/connexion");
 }
 
 let effectiveRole: unknown = (currentUser as any)?.role;
 try {
-  const currentMember = await Astro.locals.pb
-    .collection(Collections.Membres)
-    .getFirstListItem<MembresResponse>(`nom = "${currentUser.id}"`);
-  effectiveRole = currentMember?.role ?? effectiveRole;
+  try {
+    const currentMember = await Astro.locals.pb
+      .collection(Collections.Membres)
+      .getFirstListItem<MembresResponse>(`utilisateur = "${currentUser.id}"`);
+    effectiveRole = currentMember?.role ?? effectiveRole;
+  } catch {
+    const legacyMember = await Astro.locals.pb
+      .collection(Collections.Membres)
+      .getFirstListItem<MembresResponse>(`nom = "${currentUser.id}"`);
+    effectiveRole = legacyMember?.role ?? effectiveRole;
+  }
 } catch {
   // Aucun enregistrement membre lié : on conserve le rôle utilisateur.
 }
@@ -35,7 +42,7 @@ const isPresidentOrPresidente = [
 ].includes(roleActuel);
 
 if (!isPresidentOrPresidente) {
-  throw Astro.redirect("/mon-compte");
+  return Astro.redirect("/mon-compte");
 }
 
 const isMemberRole = (value: unknown) => {
@@ -49,10 +56,6 @@ const isMemberRole = (value: unknown) => {
   );
 };
 
-type MembreExpand = {
-  nom?: UsersResponse;
-};
-
 type Candidate = {
   id: string;
   name: string;
@@ -63,25 +66,36 @@ type Candidate = {
 let candidates: Candidate[] = [];
 
 try {
-  const memberRecords = await Astro.locals.pb
-    .collection(Collections.Membres)
-    .getFullList<MembresResponse<MembreExpand>>({
-      expand: "nom",
-      sort: "-created",
-    });
+  const [memberRecords, verifiedUsers] = await Promise.all([
+    Astro.locals.pb
+      .collection(Collections.Membres)
+      .getFullList<MembresResponse>({
+        sort: "-created",
+      }),
+    Astro.locals.pb
+      .collection(Collections.Users)
+      .getFullList<UsersResponse>({
+        filter: "verified = true && rejected = false",
+        fields: "id,collectionId,collectionName,name,email,avatar,verified,rejected",
+      }),
+  ]);
+
+  const usersById = new Map(verifiedUsers.map((userRecord) => [userRecord.id, userRecord]));
 
   candidates = memberRecords
     .map((memberRecord) => {
-      const relatedUser = memberRecord.expand?.nom;
+      const relatedUserId =
+        typeof memberRecord.utilisateur === "string" ? memberRecord.utilisateur : "";
+      if (!relatedUserId) {
+        return null;
+      }
+
+      const relatedUser = usersById.get(relatedUserId);
       if (!relatedUser) {
         return null;
       }
 
-      if (relatedUser.verified !== true || relatedUser.rejected === true) {
-        return null;
-      }
-
-      if (!isMemberRole(memberRecord.role || relatedUser.role)) {
+      if (!isMemberRole(memberRecord.role)) {
         return null;
       }
 
@@ -89,17 +103,28 @@ try {
         return null;
       }
 
-      const avatarFile = typeof relatedUser.avatar === "string" ? relatedUser.avatar : "";
-      const displayName = relatedUser.name?.trim() || relatedUser.email;
+      const memberAvatarValue = memberRecord.avatar;
+      const memberAvatarFile = typeof memberAvatarValue === "string"
+        ? memberAvatarValue
+        : Array.isArray(memberAvatarValue)
+          ? String(memberAvatarValue[0] || "")
+          : "";
+      const userAvatarFile = typeof relatedUser.avatar === "string" ? relatedUser.avatar : "";
+      const displayName =
+        String(memberRecord.nom || "").trim() ||
+        relatedUser.name?.trim() ||
+        relatedUser.email;
 
       return {
         id: relatedUser.id,
         name: displayName,
         email: relatedUser.email,
         avatarUrl:
-          avatarFile.length > 0
-            ? Astro.locals.pb.files.getURL(relatedUser, avatarFile)
-            : null,
+          memberAvatarFile.length > 0
+            ? Astro.locals.pb.files.getURL(memberRecord, memberAvatarFile)
+            : userAvatarFile.length > 0
+              ? Astro.locals.pb.files.getURL(relatedUser, userAvatarFile)
+              : null,
       };
     })
     .filter((candidate): candidate is Candidate => candidate !== null);
