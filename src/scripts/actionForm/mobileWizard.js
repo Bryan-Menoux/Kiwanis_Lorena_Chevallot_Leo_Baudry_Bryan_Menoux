@@ -8,6 +8,7 @@ const CLEANUP_FN_KEY = "__kcMobileWizardCleanup";
 const RESET_FN_KEY = "__kcMobileWizardReset";
 const ASTRO_PAGE_LOAD_FLAG = "__kcMobileWizardPageLoadBound";
 const VALIDATION_ALERT_DEBOUNCE_MS = 1200;
+const FOOTER_OFFSET_CSS_VAR = "--mobile-wizard-footer-offset";
 let lastWizardErrorMessage = "";
 let lastWizardErrorAt = 0;
 
@@ -129,12 +130,18 @@ function getMissingHeaderFields(form) {
     hasSelectedFile(form, "hero") || hasExistingImagePreview(form, "hero");
   if (!hasHero) missingFields.push("image de l'en-tête");
 
+  const typeActionSelect = form.querySelector("#input_type_action");
+  const hasTypeAction =
+    typeActionSelect instanceof HTMLSelectElement &&
+    Array.from(typeActionSelect.selectedOptions).length > 0;
+  if (!hasTypeAction) missingFields.push("type d'action");
+
   return missingFields;
 }
 
 function buildStepOneRequiredMessage(missingHeaderFields) {
   if (!missingHeaderFields.length) return "";
-  return `Complétez l'étape 1 : ${missingHeaderFields.join(", ")}.`;
+  return `Complétez l'étape 1 en renseignant : ${missingHeaderFields.join(", ")}.`;
 }
 
 
@@ -172,6 +179,11 @@ function validateStep(form, step) {
       } else if (missingHeaderFields.includes("image de l'en-tête")) {
         const heroInput = form.querySelector("#input_hero_file");
         heroInput?.focus?.();
+      } else if (missingHeaderFields.includes("type d'action")) {
+        const typeActionToggle = form.querySelector(
+          '[data-select-id="input_type_action"] [data-kc-ms-toggle]',
+        );
+        typeActionToggle?.focus?.();
       }
       return false;
     }
@@ -183,7 +195,10 @@ function validateStep(form, step) {
 
   if (invalidElement instanceof HTMLElement) {
     invalidElement.reportValidity?.();
-    setError(form, "Certains champs de cette étape sont invalides.");
+    setError(
+      form,
+      "Certains champs de cette étape ne sont pas valides. Corrigez-les puis réessayez.",
+    );
     return false;
   }
 
@@ -232,6 +247,18 @@ function initMobileWizard() {
   const mediaQuery = window.matchMedia(MOBILE_QUERY);
   const initialFromMarkup = parseStep(form.dataset.initialStep || "1", 1);
   let currentStep = initialFromMarkup;
+  const wizardHeader = form.querySelector("[data-mobile-wizard-header]");
+  const wizardFooter = form.querySelector("[data-mobile-wizard-footer]");
+
+  const syncFooterOffset = () => {
+    if (!mediaQuery.matches || !(wizardFooter instanceof HTMLElement)) {
+      form.style.setProperty(FOOTER_OFFSET_CSS_VAR, "0px");
+      return;
+    }
+    const footerHeight = wizardFooter.offsetHeight;
+    // Keep the current step content fully visible above the sticky footer.
+    form.style.setProperty(FOOTER_OFFSET_CSS_VAR, `${Math.max(0, footerHeight + 12)}px`);
+  };
 
   const sync = () => {
     const isMobile = mediaQuery.matches;
@@ -239,10 +266,12 @@ function initMobileWizard() {
     currentStep = parseStep(currentStep, initialFromMarkup);
     form.dataset.isMobileWizard = isMobile ? "true" : "false";
 
-    const wizardHeader = form.querySelector("[data-mobile-wizard-header]");
-    const wizardFooter = form.querySelector("[data-mobile-wizard-footer]");
-    if (wizardHeader) wizardHeader.classList.toggle("hidden", !isMobile);
-    if (wizardFooter) wizardFooter.classList.toggle("hidden", !isMobile);
+    if (wizardHeader instanceof HTMLElement) {
+      wizardHeader.classList.toggle("hidden", !isMobile);
+    }
+    if (wizardFooter instanceof HTMLElement) {
+      wizardFooter.classList.toggle("hidden", !isMobile);
+    }
 
     const stepWrappers = Array.from(
       form.querySelectorAll("[data-mobile-step-wrapper]"),
@@ -251,11 +280,13 @@ function initMobileWizard() {
       // En desktop/tablette large, on repasse en affichage complet.
       stepWrappers.forEach((wrapper) => wrapper.classList.remove("hidden"));
       setError(form, "");
+      syncFooterOffset();
       return;
     }
 
     setStepVisibility(form, currentStep);
     setNavState(form, currentStep);
+    syncFooterOffset();
   };
 
   const forceFormTab = () => {
@@ -276,6 +307,7 @@ function initMobileWizard() {
       forceFormTab();
       setStepVisibility(form, currentStep);
       setNavState(form, currentStep);
+      syncFooterOffset();
     }
   };
 
@@ -298,6 +330,7 @@ function initMobileWizard() {
     if (mediaQuery.matches) {
       setStepVisibility(form, currentStep);
       setNavState(form, currentStep);
+      syncFooterOffset();
       // Sur mobile, on replace le haut du formulaire en vue à chaque changement d'étape.
       scrollToTarget(0);
     }
@@ -359,6 +392,15 @@ function initMobileWizard() {
   mediaQuery.addEventListener("change", mediaChangeHandler);
   const pageShowHandler = () => resetToFirstStep();
   window.addEventListener("pageshow", pageShowHandler);
+  const viewportResizeHandler = () => syncFooterOffset();
+  window.addEventListener("resize", viewportResizeHandler);
+  const footerResizeObserver =
+    wizardFooter instanceof HTMLElement && typeof ResizeObserver === "function"
+      ? new ResizeObserver(() => syncFooterOffset())
+      : null;
+  if (footerResizeObserver && wizardFooter instanceof HTMLElement) {
+    footerResizeObserver.observe(wizardFooter);
+  }
 
   form[SYNC_FN_KEY] = sync;
   form[RESET_FN_KEY] = resetToFirstStep;
@@ -378,6 +420,11 @@ function initMobileWizard() {
     form.removeEventListener("submit", submitHandler);
     mediaQuery.removeEventListener("change", mediaChangeHandler);
     window.removeEventListener("pageshow", pageShowHandler);
+    window.removeEventListener("resize", viewportResizeHandler);
+    if (footerResizeObserver) {
+      footerResizeObserver.disconnect();
+    }
+    form.style.setProperty(FOOTER_OFFSET_CSS_VAR, "0px");
   };
 
   resetToFirstStep();
@@ -395,3 +442,4 @@ if (!window[ASTRO_PAGE_LOAD_FLAG]) {
   document.addEventListener("astro:page-load", initMobileWizard);
   window[ASTRO_PAGE_LOAD_FLAG] = true;
 }
+

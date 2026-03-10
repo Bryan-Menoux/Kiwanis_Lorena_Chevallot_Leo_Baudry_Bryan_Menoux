@@ -37,7 +37,7 @@ if (isPostForm) {
       Astro.locals.pb.authStore.clear();
       userVerificated = false;
       serverMessage =
-        "Vous devez attendre la vérification de votre compte par un administrateur.";
+        "Votre compte n'est pas encore vérifié. Un administrateur doit valider votre inscription avant la connexion.";
       throw new Error("not_verified");
     }
 
@@ -66,7 +66,8 @@ if (isPostForm) {
     
     if (userVerificated === true) {
       userVerificated = false;
-      serverMessage = "Échec de la connexion. Vérifiez vos identifiants.";
+      serverMessage =
+        "Connexion impossible. Vérifiez votre adresse e-mail et votre mot de passe.";
     }
   }
 }
@@ -188,12 +189,12 @@ if (isPostForm) {
     if (!userVerificated) {
       showError(
         message ||
-          "Veuillez vérifier votre adresse e-mail avant de vous connecter.",
+          "Votre compte n'est pas encore vérifié. Vérifiez votre adresse e-mail, puis attendez la validation d'un administrateur.",
         "warning",
       );
     }
   } else {
-    showError("Une erreur est survenue. Veuillez réessayer plus tard.");
+    showError("Une erreur est survenue lors du chargement de la page de connexion.");
   }
 
   // Bonus : journalise les événements du formulaire

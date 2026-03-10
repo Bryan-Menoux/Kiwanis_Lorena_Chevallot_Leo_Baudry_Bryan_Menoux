@@ -15,7 +15,7 @@ try {
     .getFullList(500, { sort: "-updated" });
 } catch (e) {
   console.error("Impossible de récupérer les actions:", e);
-  error = "Impossible de charger la liste des actions";
+  error = "Impossible de charger la liste des actions.";
 }
 
 // Mapper les données essentielles
@@ -39,7 +39,7 @@ if (Astro.request.method === "POST") {
       .map((v) => v.toString())
       .filter(Boolean);
     if (!ids || ids.length === 0) {
-      error = "Aucun élément sélectionné";
+      error = "Aucune action sélectionnée.";
     } else {
       const failed: string[] = [];
       for (const id of ids) {
@@ -52,15 +52,15 @@ if (Astro.request.method === "POST") {
       }
       if (failed.length === 0) {
         return Astro.redirect(
-          `/creation/actions/delete?success=${encodeURIComponent(`${ids.length} action(s) supprimée(s)`)}`,
+          `/creation/actions/delete?success=${encodeURIComponent(`${ids.length} action(s) supprimée(s) avec succès.`)}`,
         );
       } else {
-        error = `Échec suppression pour ${failed.length} élément(s)`;
+        error = `Échec de la suppression pour ${failed.length} action(s).`;
       }
     }
   } catch (e) {
     console.error("Erreur lors du POST suppression:", e);
-    error = "Erreur lors de la suppression";
+    error = "La suppression des actions a échoué.";
   }
 }
 
@@ -240,14 +240,14 @@ try {
         if (selected === 0) {
           showAlert({
             type: "warning",
-            message: "Sélectionnez au moins une action à supprimer.",
+            message: "Sélectionnez au moins une action avant de lancer la suppression.",
           });
           return;
         }
 
         const confirmed = await showConfirm({
-          title: "Supprimer des actions",
-          message: `Confirmer la suppression de ${selected} élément(s) ?`,
+          title: "Confirmer la suppression",
+          message: `Confirmez-vous la suppression de ${selected} action(s) ? Cette action est irréversible.`,
           type: "warning",
           confirmLabel: "Supprimer",
           cancelLabel: "Annuler",

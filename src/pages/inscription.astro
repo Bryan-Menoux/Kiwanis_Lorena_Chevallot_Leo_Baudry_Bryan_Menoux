@@ -25,8 +25,12 @@ if (isPostForm) {
     const password = data.get("password")?.toString() ?? "";
     const passwordConfirm = data.get("passwordConfirm")?.toString() ?? "";
 
-    if (!email || !password || password !== passwordConfirm) {
-      throw new Error("Informations invalides.");
+    if (!email || !password) {
+      throw new Error("Veuillez renseigner une adresse e-mail et un mot de passe.");
+    }
+
+    if (password !== passwordConfirm) {
+      throw new Error("Les mots de passe saisis ne correspondent pas.");
     }
 
     await Astro.locals.pb.collection("users").create({
@@ -42,12 +46,12 @@ if (isPostForm) {
 
     success = true;
     serverMessage =
-      "Inscription réussie. Un e-mail de vérification vous a été envoyé.";
+      "Inscription réussie. Un e-mail de vérification vient de vous être envoyé.";
   } catch (error) {
     serverMessage =
       error instanceof Error
         ? error.message
-        : "Erreur lors de l'inscription.";
+        : "Impossible de finaliser l'inscription. Veuillez réessayer.";
   }
 }
 ---

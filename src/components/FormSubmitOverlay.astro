@@ -42,7 +42,7 @@ const {
   const FALLBACK_RESET_MS = 120000;
   const FAILURE_EVENT_NAME = "kc:submit-overlay-failed";
   const DEFAULT_FAILURE_MESSAGE =
-    "L'enregistrement a échoue. Verifiez votre connexion puis reessayez.";
+    "L'enregistrement a échoué. Vérifiez votre connexion puis réessayez.";
 
   const overlayNode = document.getElementById(overlayId);
   if (!(overlayNode instanceof HTMLElement)) {
@@ -183,7 +183,7 @@ const {
         form.getAttribute(KEEP_VISIBLE_ATTR) === "true";
       if (!isStillBusy) return;
       failMatchedForms(
-        "L'enregistrement prend plus de 2 minutes. Verifiez votre connexion et reessayez.",
+        "L'enregistrement prend plus de deux minutes. Vérifiez votre connexion puis réessayez.",
       );
     }, FALLBACK_RESET_MS);
   };

@@ -37,6 +37,18 @@ const hasAtLeastOnePartContent = (formData: FormData) =>
     return isNonEmptyString(formData.get(textKey)) || hasUploadedFile(formData, photoKey);
   });
 
+const getSelectedTypeActions = (formData: FormData): string[] => {
+  const rawValue = formData.get("type_action");
+  if (typeof rawValue !== "string") return [];
+  try {
+    const parsed = JSON.parse(rawValue);
+    if (!Array.isArray(parsed)) return [];
+    return parsed.map((value) => String(value).trim()).filter(Boolean);
+  } catch {
+    return [];
+  }
+};
+
 const hasDescriptionForPartTitle = (payload: Record<string, any>, partNumber: number) => {
   const textKey = `texte_partie_${partNumber}`;
   const descriptionValue = payload[textKey];
@@ -81,6 +93,9 @@ const getMissingRequiredFields = (formData: FormData) => {
   }
   if (!hasUploadedFile(formData, "hero")) {
     missing.push("image de l'en-tête");
+  }
+  if (getSelectedTypeActions(formData).length === 0) {
+    missing.push("type d'action");
   }
   if (!hasAtLeastOnePartContent(formData)) {
     missing.push("au moins une partie (texte ou photo)");
@@ -180,6 +195,10 @@ if (Astro.request.method === "POST") {
     }
 
     // Gérer les fichiers
+    if (!isBrouillon && (!Array.isArray(data.type_action) || data.type_action.length === 0)) {
+      throw new Error("Au moins un type d'action est obligatoire.");
+    }
+
     const files: any = {};
     // Deuxième passe: fichiers uploadés.
     for (const [key, value] of formData.entries()) {

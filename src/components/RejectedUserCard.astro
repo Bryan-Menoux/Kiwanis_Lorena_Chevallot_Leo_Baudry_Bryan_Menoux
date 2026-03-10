@@ -17,7 +17,7 @@ const user = Astro.props.user as any as User;
 ---
 
 <div
-  class="flex items-start justify-between gap-4 p-3 bg-error/10 rounded-lg border border-error/20 transition-all duration-300"
+  class="flex flex-col md:flex-row md:items-start md:justify-between gap-4 p-3 bg-error/10 rounded-lg border border-error/20 transition-all duration-300"
   data-user-id={user.id}
   data-list-type="rejected"
 >
@@ -40,7 +40,7 @@ const user = Astro.props.user as any as User;
   </div>
 
   <button
-    class="btn btn-warning btn-sm verify-action ml-auto shrink-0"
+    class="btn btn-warning btn-sm verify-action self-end md:self-auto md:ml-auto md:shrink-0 w-full md:w-fit"
     data-user-id={user.id}
     data-action="unreject"
     data-list-type="rejected"

@@ -58,7 +58,7 @@ const { animateDesktopSidebar = false } = Astro.props;
         id="sidebar"
         data-shell-sidebar
         class:list={[
-          "bg-accent pb-8 p-4 lg:p-6 lg:pb-24 lg:h-[105dvh] lg:sticky lg:left-0 lg:top-0 lg:rounded-br-box lg:overflow-auto",
+          "bg-accent p-4 pb-0 lg:p-6 lg:pb-24 lg:h-[105dvh] lg:sticky lg:left-0 lg:top-0 lg:rounded-br-box lg:overflow-auto",
           animateDesktopSidebar
             ? "lg:transform lg:-translate-x-full lg:opacity-0 lg:transition-all lg:duration-500 lg:ease-out"
             : "",
@@ -82,6 +82,8 @@ const { animateDesktopSidebar = false } = Astro.props;
 </div>
 
 <script>
+  import { scrollToTarget } from "../../utils/scroll.js";
+
   // Mobile/tablette: on affiche un onglet à la fois.
   // Bureau: les deux panneaux restent visibles en parallèle.
   const MOBILE_QUERY = "(max-width: 1023px)";
@@ -89,9 +91,30 @@ const { animateDesktopSidebar = false } = Astro.props;
   const DESKTOP_QUERY = "(min-width: 1024px)";
   const desktopMediaQuery = window.matchMedia(DESKTOP_QUERY);
   const VALID_TABS = new Set(["form", "preview"]);
+  const TAB_SWITCH_SCROLL_DURATION = 0.35;
 
   const normalizeTab = (rawTab: string | null | undefined) =>
     VALID_TABS.has(rawTab || "") ? (rawTab as string) : "form";
+
+  const setActiveTab = (shell: HTMLElement, nextTabRaw: string | null | undefined) => {
+    const nextTab = normalizeTab(nextTabRaw);
+    const currentTab = normalizeTab(shell.dataset.activeTab);
+    if (nextTab === currentTab) return;
+    const shouldScrollAfterSwitch =
+      mediaQuery.matches &&
+      currentTab === "preview" &&
+      nextTab === "form" &&
+      window.scrollY > 2;
+
+    shell.dataset.activeTab = nextTab;
+    syncShell(shell);
+
+    // Demandé: uniquement lors du passage Aperçu -> Formulaire,
+    // et le scroll se déclenche après l'arrivée sur l'onglet Formulaire.
+    if (shouldScrollAfterSwitch) {
+      scrollToTarget(0, { behavior: "smooth", duration: TAB_SWITCH_SCROLL_DURATION });
+    }
+  };
 
   const setPanelVisibility = (panel: HTMLElement, isVisible: boolean) => {
     // On force les 3 sources de vérité (classe, style inline, aria) pour éviter les états fantômes.
@@ -132,6 +155,9 @@ const { animateDesktopSidebar = false } = Astro.props;
       btn.classList.remove("hidden");
       btn.classList.toggle("btn-accent", isActive);
       btn.classList.toggle("btn-ghost", !isActive);
+      // Le libellé du bouton actif doit rester blanc immédiatement au clic.
+      btn.classList.toggle("text-white", isActive);
+      btn.classList.toggle("text-base-content", !isActive);
     });
 
     panels.forEach((panel) => {
@@ -173,10 +199,7 @@ const { animateDesktopSidebar = false } = Astro.props;
         const trigger = target.closest("[data-shell-tab-trigger]");
         if (!(trigger instanceof HTMLElement)) return;
         event.preventDefault();
-        shell.dataset.activeTab = normalizeTab(
-          trigger.getAttribute("data-shell-tab-trigger"),
-        );
-        syncShell(shell);
+        setActiveTab(shell, trigger.getAttribute("data-shell-tab-trigger"));
       });
 
       shell.addEventListener("keydown", (event) => {
@@ -195,8 +218,7 @@ const { animateDesktopSidebar = false } = Astro.props;
             : currentTab === "preview"
               ? "form"
               : "preview";
-        shell.dataset.activeTab = nextTab;
-        syncShell(shell);
+        setActiveTab(shell, nextTab);
 
         const nextTrigger = shell.querySelector(
           `[data-shell-tab-trigger="${nextTab}"]`,

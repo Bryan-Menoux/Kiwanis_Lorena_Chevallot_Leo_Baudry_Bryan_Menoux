@@ -38,6 +38,9 @@ const getDraftMissingRequiredFields = (record: Record<string, any>) => {
   if (!hasFilledValue(record?.titre)) missing.push("titre");
   if (!hasFilledValue(record?.date_debut)) missing.push("date de début");
   if (!hasFilledValue(record?.hero)) missing.push("image de l'en-tête");
+  const hasTypeAction =
+    Array.isArray(record?.type_action) && record.type_action.length > 0;
+  if (!hasTypeAction) missing.push("type d'action");
   if (!hasAtLeastOnePart(record)) missing.push("au moins une partie (texte ou photo)");
   return missing;
 };
@@ -314,7 +317,7 @@ const allActions = actions;
         event.preventDefault();
         showAlert({
           type: "error",
-          message: `Publication impossible. Champs obligatoires manquants: ${missingFields.join(", ")}.`,
+          message: `Publication impossible : champs obligatoires manquants (${missingFields.join(", ")}).`,
         });
         return;
       }
@@ -336,7 +339,7 @@ const allActions = actions;
       void showConfirm({
         title: "Publier l'action",
         message:
-          "Confirmez-vous la publication de ce brouillon ? Cette action sera visible sur le site.",
+          "Confirmez la publication de ce brouillon. Cette action sera visible publiquement sur le site.",
         type: "warning",
         confirmLabel: "Publier",
         cancelLabel: "Annuler",

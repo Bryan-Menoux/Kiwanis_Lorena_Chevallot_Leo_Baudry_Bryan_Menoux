@@ -37,6 +37,10 @@ function syncImageSectionLayout(imageProp) {
   layoutNodes.forEach((layoutNode) => {
     // Sans image, on force un layout texte pleine largeur.
     layoutNode.style.gridTemplateColumns = hasImage ? '' : '1fr';
+    // Certains layouts partent avec `min-h-[40dvh]` côté SSR si une image existait.
+    // Après suppression, on retire cette contrainte pour revenir à une hauteur au contenu.
+    layoutNode.classList.toggle('min-h-[40dvh]', hasImage);
+    layoutNode.style.minHeight = hasImage ? '' : 'fit-content';
 
     const mediaNodes = Array.from(layoutNode.querySelectorAll(`[data-image-layout-media="${imageProp}"]`));
     mediaNodes.forEach((mediaNode) => {

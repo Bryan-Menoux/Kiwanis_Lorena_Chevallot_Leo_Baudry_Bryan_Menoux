@@ -438,7 +438,7 @@ export function initWebpConversion() {
       console.error("[Image processing] Native submit failed:", error);
       notifySubmitFailure(
         form,
-        "Impossible d'envoyer le formulaire. Verifiez votre connexion puis reessayez.",
+        "Impossible d'envoyer le formulaire. Vérifiez votre connexion puis réessayez.",
       );
     }
     form.removeAttribute(WEBP_PROCESSING_ATTR);
