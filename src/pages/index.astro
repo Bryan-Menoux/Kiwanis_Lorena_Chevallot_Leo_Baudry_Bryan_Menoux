@@ -16,9 +16,9 @@ import why2 from "../assets/landing-page/why-2.png";
 import why3 from "../assets/landing-page/why-3.png";
 import HomePartner from "../components/Home-partner.astro";
 
-const lcpMobile = await getImage({ src: heroLandingfinalMobile, format: "png", width: 440, quality: 68 });
-const lcpTablet = await getImage({ src: heroLandingfinalTablet, format: "png", width: 1280, quality: 72 });
-const lcpDesktop = await getImage({ src: heroLandingfinal, format: "png", width: 1600, quality: 74 });
+const lcpMobile = await getImage({ src: heroLandingfinalMobile, format: "webp", width: 440, quality: 74 });
+const lcpTablet = await getImage({ src: heroLandingfinalTablet, format: "webp", width: 1024, quality: 18 });
+const lcpDesktop = await getImage({ src: heroLandingfinal, format: "webp", width: 1600, quality: 19 });
 
 const mapEmbedUrl =
   "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2694.976201081879!2d6.781242576695513!3d47.5098546946529!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x479216ec97288eb1%3A0x14b7da3408d3161f!2s76%20Fbg%20de%20Besan%C3%A7on%2C%2025200%20Montb%C3%A9liard!5e0!3m2!1sfr!2sfr!4v1768495883263!5m2!1sfr!2sfr";
@@ -27,9 +27,9 @@ const mapAddress = "76 bis faubourg de Besançon, 25200 Montbéliard";
 
 <Layout includeAlertProvider={false} loadPoppinsFont={false} includeManifest={false}>
   <Fragment slot="head">
-    <link rel="preload" as="image" href={lcpMobile.src} type="image/png" media="(max-width: 767px)" fetchpriority="high" />
-    <link rel="preload" as="image" href={lcpTablet.src} type="image/png" media="(min-width: 768px) and (max-width: 1023px)" fetchpriority="high" />
-    <link rel="preload" as="image" href={lcpDesktop.src} type="image/png" media="(min-width: 1024px)" fetchpriority="high" />
+    <link rel="preload" as="image" href={lcpMobile.src} type="image/webp" media="(max-width: 767px)" fetchpriority="high" />
+    <link rel="preload" as="image" href={lcpTablet.src} type="image/webp" media="(min-width: 768px) and (max-width: 1023px)" fetchpriority="high" />
+    <link rel="preload" as="image" href={lcpDesktop.src} type="image/webp" media="(min-width: 1024px)" fetchpriority="high" />
   </Fragment>
   <Hero
     image={heroLandingfinal}
@@ -69,7 +69,7 @@ const mapAddress = "76 bis faubourg de Besançon, 25200 Montbéliard";
           alt="Photographie de membres du Kiwanis aux 12 coups de Midi"
           loading="lazy"
           fetchpriority="low"
-          quality={60}
+          quality={80}
           decoding="async"
           class="block h-full w-full object-cover"
         />
@@ -118,7 +118,7 @@ const mapAddress = "76 bis faubourg de Besançon, 25200 Montbéliard";
         layout="constrained"
         fit="cover"
         sizes="(min-width: 1024px) 34vw, 80vw"
-        quality={60}
+        quality={80}
         loading="lazy"
         fetchpriority="low"
         class="w-full max-h-full flex-1 object-cover rounded-box"
@@ -221,7 +221,7 @@ const mapAddress = "76 bis faubourg de Besançon, 25200 Montbéliard";
           layout="constrained"
           fit="contain"
           sizes="(min-width: 1024px) 20vw, 40vw"
-          quality={60}
+          quality={80}
           loading="lazy"
           fetchpriority="low"
           class="flex-1 h-auto object-contain w-fit max-w-[40dvw] lg:w-1/2 max-h-[50dvh] lg:max-h-[65dvh]"
@@ -232,7 +232,7 @@ const mapAddress = "76 bis faubourg de Besançon, 25200 Montbéliard";
           layout="constrained"
           fit="contain"
           sizes="(min-width: 1024px) 20vw, 40vw"
-          quality={60}
+          quality={80}
           loading="lazy"
           fetchpriority="low"
           class="flex-1 h-auto object-contain w-fit max-w-[40dvw] lg:w-1/2 max-h-[50dvh] lg:max-h-[65dvh] mix-blend-multiply"
@@ -272,7 +272,7 @@ const mapAddress = "76 bis faubourg de Besançon, 25200 Montbéliard";
           layout="constrained"
           fit="cover"
           sizes="(min-width: 1024px) 40vw, 80vw"
-          quality={60}
+          quality={80}
           loading="lazy"
           fetchpriority="low"
           class="w-full flex-1 object-cover rounded-box min-h-[30dvh] md:min-h-[40dvh]"
@@ -289,7 +289,7 @@ const mapAddress = "76 bis faubourg de Besançon, 25200 Montbéliard";
           layout="constrained"
           fit="cover"
           sizes="(min-width: 1024px) 40vw, 80vw"
-          quality={60}
+          quality={68}
           loading="lazy"
           fetchpriority="low"
           class="w-full flex-1 object-cover rounded-box min-h-[30dvh] md:min-h-[40dvh]"
@@ -311,7 +311,7 @@ const mapAddress = "76 bis faubourg de Besançon, 25200 Montbéliard";
           layout="constrained"
           fit="cover"
           sizes="(min-width: 1024px) 40vw, 80vw"
-          quality={60}
+          quality={68}
           loading="lazy"
           fetchpriority="low"
           class="w-full flex-1 object-cover rounded-box min-h-[30dvh] md:min-h-[40dvh]"
@@ -337,7 +337,7 @@ const mapAddress = "76 bis faubourg de Besançon, 25200 Montbéliard";
           layout="constrained"
           fit="cover"
           sizes="(min-width: 1024px) 40vw, 80vw"
-          quality={60}
+          quality={68}
           loading="lazy"
           fetchpriority="low"
           class="w-full flex-1 object-cover rounded-box min-h-[30dvh] md:min-h-[40dvh]"
@@ -359,7 +359,8 @@ const mapAddress = "76 bis faubourg de Besançon, 25200 Montbéliard";
       const placeholder = root.querySelector<HTMLElement>("[data-map-placeholder]");
       const mapSrc = root.dataset.mapSrc;
 
-      if (!target || !trigger || !mapSrc) return;
+      if (!target || !mapSrc) return;
+      let observer: IntersectionObserver | null = null;
 
       const loadMap = () => {
         if (root.dataset.mapLoaded === "true") return;
@@ -368,9 +369,28 @@ const mapAddress = "76 bis faubourg de Besançon, 25200 Montbéliard";
         target.src = mapSrc;
         target.classList.remove("hidden");
         placeholder?.remove();
+        observer?.disconnect();
+        observer = null;
       };
 
-      trigger.addEventListener("click", loadMap, { once: true });
+      if ("IntersectionObserver" in window) {
+        observer = new IntersectionObserver(
+          (entries) => {
+            const entry = entries[0];
+            if (!entry?.isIntersecting) return;
+            loadMap();
+          },
+          {
+            root: null,
+            rootMargin: "600px 0px",
+            threshold: 0,
+          },
+        );
+        observer.observe(root);
+      }
+
+      root.addEventListener("focusin", loadMap, { once: true });
+      trigger?.addEventListener("click", loadMap, { once: true });
     });
   </script>
 </Layout>

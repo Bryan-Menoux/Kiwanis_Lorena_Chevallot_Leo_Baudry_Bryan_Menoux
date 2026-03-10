@@ -2,7 +2,7 @@
 import { Image } from "astro:assets";
 import type { ImageMetadata } from "astro";
 
-const imageModules = import.meta.glob<{ default: ImageMetadata }>("/src/assets/home-carousel/*.webp", { eager: true });
+const imageModules = import.meta.glob<{ default: ImageMetadata }>("/src/assets/home-carousel/*.png", { eager: true });
 const MAX_VISIBLE_IMAGES = 4;
 
 const images = Object.entries(imageModules)
