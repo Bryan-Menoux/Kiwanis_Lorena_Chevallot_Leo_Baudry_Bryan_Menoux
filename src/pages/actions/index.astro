@@ -234,12 +234,12 @@ const lcpDesktop = await getImage({ src: HeroActions, format: "webp", width: 160
 
                       <div class="flex flex-wrap gap-2 md:gap-2.5">
                         {action.typeActionSafe.slice(0, 3).map((type: unknown) => (
-                          <span class="badge badge-secondary badge-outline !text-xs md:!text-sm">
+                          <span class="badge badge-secondary badge-outline text-xs! md:text-sm!">
                             {String(type)}
                           </span>
                         ))}
                         {action.typeActionSafe.length === 0 && (
-                          <span class="badge badge-secondary badge-outline !text-xs md:!text-sm">
+                          <span class="badge badge-secondary badge-outline text-xs! md:text-sm!">
                             Action solidaire
                           </span>
                         )}
