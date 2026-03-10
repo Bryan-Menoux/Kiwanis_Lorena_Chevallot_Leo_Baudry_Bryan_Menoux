@@ -14,10 +14,16 @@ interface Props {
 const { image, title, subtitle, imageAlt = "" } = Astro.props as Props;
 const { desktop, tablet, mobile } = resolveHeroVariants(image);
 
-const desktopImage = await getImage({
+const desktopImageMd = await getImage({
   src: desktop,
   format: "webp",
-  width: 1600,
+  width: 1440,
+  quality: 80,
+});
+const desktopImageLg = await getImage({
+  src: desktop,
+  format: "webp",
+  width: 1840,
   quality: 80,
 });
 
@@ -39,7 +45,6 @@ const mobileImage = mobile
     })
   : null;
 
-const desktopSrcSet = desktopImage.srcSet.attribute || desktopImage.src;
 const tabletSrcSet = tabletImage?.srcSet.attribute || tabletImage?.src;
 const mobileSrcSet = mobileImage?.srcSet.attribute || mobileImage?.src;
 ---
@@ -67,11 +72,11 @@ const mobileSrcSet = mobileImage?.srcSet.attribute || mobileImage?.src;
       )
     }
     <img
-      src={desktopImage.src}
-      srcset={desktopSrcSet !== desktopImage.src ? desktopSrcSet : undefined}
+      src={desktopImageLg.src}
+      srcset={`${desktopImageMd.src} 1440w, ${desktopImageLg.src} 1840w`}
       sizes="95vw"
-      width={desktopImage.attributes.width}
-      height={desktopImage.attributes.height}
+      width={desktopImageLg.attributes.width}
+      height={desktopImageLg.attributes.height}
       alt={imageAlt}
       loading="eager"
       decoding="sync"

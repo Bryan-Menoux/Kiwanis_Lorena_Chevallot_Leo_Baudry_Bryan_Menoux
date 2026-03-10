@@ -11,9 +11,11 @@ const images = await Promise.all(
     .sort(([pathA], [pathB]) => pathA.localeCompare(pathB))
     .slice(0, MAX_VISIBLE_IMAGES)
     .map(async ([, module], index) => {
-      const sized = await getImage({ src: module.default, width: 900 });
+      const srcSm = await getImage({ src: module.default, width: 320, format: "webp" });
+      const src = await getImage({ src: module.default, width: 500, format: "webp" });
       return {
-        src: sized,
+        src,
+        srcSm,
         alt: `Image du carousel Kiwanis numero ${index + 1}`,
       };
     }),
@@ -27,6 +29,8 @@ const images = await Promise.all(
         <div class="home-carousel-item shrink-0 w-72 md:w-80 lg:w-104">
           <img
             src={image.src.src}
+            srcset={`${image.srcSm.src} 320w, ${image.src.src} 500w`}
+            sizes="(min-width: 1024px) 416px, (min-width: 768px) 320px, 288px"
             alt={image.alt}
             width={image.src.attributes.width}
             height={image.src.attributes.height}
@@ -42,6 +46,8 @@ const images = await Promise.all(
         <div class="home-carousel-item shrink-0 w-72 md:w-80 lg:w-104">
           <img
             src={image.src.src}
+            srcset={`${image.srcSm.src} 320w, ${image.src.src} 500w`}
+            sizes="(min-width: 1024px) 416px, (min-width: 768px) 320px, 288px"
             alt=""
             aria-hidden="true"
             width={image.src.attributes.width}

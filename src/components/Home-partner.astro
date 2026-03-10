@@ -10,9 +10,11 @@ const images = await Promise.all(
     .sort(([pathA], [pathB]) => pathA.localeCompare(pathB))
     .map(async ([path, module]) => {
       const name = path.split('/').pop()!.replace('.webp', '');
-      const sized = await getImage({ src: module.default, width: 400 });
+      const srcSm = await getImage({ src: module.default, width: 160, format: "webp" });
+      const src = await getImage({ src: module.default, width: 220, format: "webp" });
       return {
-        src: sized,
+        src,
+        srcSm,
         alt: `Logo du partenaire ${name}`,
       };
     }),
@@ -27,6 +29,8 @@ const images = await Promise.all(
         <div class="partner-carousel-item shrink-0 flex w-32 items-center justify-center md:w-40 lg:w-48">
           <img
             src={image.src.src}
+            srcset={`${image.srcSm.src} 160w, ${image.src.src} 220w`}
+            sizes="(min-width: 1024px) 192px, (min-width: 768px) 160px, 128px"
             alt={image.alt}
             width={image.src.attributes.width}
             height={image.src.attributes.height}
@@ -42,6 +46,8 @@ const images = await Promise.all(
         <div class="partner-carousel-item shrink-0 flex w-32 items-center justify-center md:w-40 lg:w-48">
           <img
             src={image.src.src}
+            srcset={`${image.srcSm.src} 160w, ${image.src.src} 220w`}
+            sizes="(min-width: 1024px) 192px, (min-width: 768px) 160px, 128px"
             alt=""
             aria-hidden="true"
             width={image.src.attributes.width}
