@@ -1,5 +1,5 @@
 ---
-import { Image } from "astro:assets";
+
 import type { ImageMetadata } from "astro";
 
 const imageModules = import.meta.glob<{ default: ImageMetadata }>('/src/assets/partners/*.webp', { eager: true });
@@ -19,35 +19,31 @@ const images = Object.entries(imageModules).sort(([pathA], [pathB]) => pathA.loc
     <div class="partner-carousel-group flex items-center gap-10 md:gap-14 lg:gap-20 h-full">
       {images.map((image) => (
         <div class="partner-carousel-item shrink-0 flex w-32 items-center justify-center md:w-40 lg:w-48">
-          <Image
-            src={image.src}
+          <img
+            src={image.src.src}
             alt={image.alt}
-            layout="constrained"
-            fit="contain"
-            sizes="(min-width: 1024px) 12rem, (min-width: 768px) 10rem, 8rem"
-            quality={60}
+            width={image.src.width}
+            height={image.src.height}
             loading="lazy"
             fetchpriority="low"
             class="block h-14 w-full object-contain md:h-16 lg:h-20"
-          />
+           decoding="async" />
         </div>
       ))}
     </div>
     <div class="partner-carousel-group flex items-center gap-10 md:gap-14 lg:gap-20 h-full" aria-hidden="true">
       {images.map((image) => (
         <div class="partner-carousel-item shrink-0 flex w-32 items-center justify-center md:w-40 lg:w-48">
-          <Image
-            src={image.src}
+          <img
+            src={image.src.src}
             alt=""
             aria-hidden="true"
-            layout="constrained"
-            fit="contain"
-            sizes="(min-width: 1024px) 12rem, (min-width: 768px) 10rem, 8rem"
-            quality={60}
+            width={image.src.width}
+            height={image.src.height}
             loading="lazy"
             fetchpriority="low"
             class="block h-14 w-full object-contain md:h-16 lg:h-20"
-          />
+           decoding="async" />
         </div>
       ))}
     </div>

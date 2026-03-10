@@ -1,6 +1,6 @@
 ---
 import Layout from "../../../layouts/Layout.astro";
-import { Image } from "astro:assets";
+
 import ActionContent from "../../../components/ActionContent.astro";
 import backArrow from "../../../assets/back-arrow.svg";
 import type { ActionsResponse } from "../../../pocketbase-types";
@@ -34,24 +34,22 @@ try {
     href="/creation"
     class="hidden fixed px-4 py-3 min-h-11 lg:flex items-center justify-center z-50 bg-base-100 bg-opacity-80 rounded-box text-sm lg:text-base lg:left-[2%] lg:top-[12%]"
   >
-    <Image
-      src={backArrow}
+    <img
+      src={backArrow.src}
       alt="Retour à la création"
       loading="lazy"
-      quality={80}
       class="inline-block mr-2 invert w-4 h-4 md:w-5 md:h-5"
-    />Retour à la création</a
+     decoding="async" />Retour à la création</a
   >
 
   <div class="flex w-full justify-between mb-8 mt-24 px-4">
     <a href="/creation" class="flex lg:hidden items-center text-sm">
-      <Image
-        src={backArrow}
+      <img
+        src={backArrow.src}
         alt="Retour à la création"
         loading="lazy"
-        quality={80}
         class="inline-block mr-2 invert w-4 h-4 md:w-5 md:h-5"
-      />Retour à la création</a
+       decoding="async" />Retour à la création</a
     >
     <a
       href={`/creation/actions/edit/${id}-${slug}`}

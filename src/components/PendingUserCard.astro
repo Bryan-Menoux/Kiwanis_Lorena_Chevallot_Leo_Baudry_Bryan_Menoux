@@ -1,5 +1,5 @@
 ---
-import { Image } from "astro:assets";
+
 import circleCheck from "../assets/circle-check.svg";
 import crossCircle from "../assets/cross-circle.svg";
 import { formatDateShort } from "../utils/utilitaires.js";
@@ -43,7 +43,7 @@ const user = Astro.props.user as any as User;
       data-list-type="pending"
       type="button"
     >
-      <Image src={crossCircle} alt="" loading="lazy" quality={80} class="w-5 h-5 invert" />
+      <img src={crossCircle.src} alt="" loading="lazy" class="w-5 h-5 invert"  decoding="async" />
       Rejeter
     </button>
     <button
@@ -53,7 +53,7 @@ const user = Astro.props.user as any as User;
       data-list-type="pending"
       type="button"
     >
-      <Image src={circleCheck} alt="" loading="lazy" quality={80} class="w-5 h-5 invert" />
+      <img src={circleCheck.src} alt="" loading="lazy" class="w-5 h-5 invert"  decoding="async" />
       Approuver
     </button>
   </div>

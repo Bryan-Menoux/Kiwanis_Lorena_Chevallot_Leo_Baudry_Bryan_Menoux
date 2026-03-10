@@ -1,5 +1,5 @@
 ---
-import { Image } from "astro:assets";
+
 import wait from "../assets/wait.svg";
 import { formatDateShort } from "../utils/utilitaires.js";
 
@@ -46,7 +46,7 @@ const user = Astro.props.user as any as User;
     data-list-type="rejected"
     type="button"
   >
-    <Image src={wait} alt="" loading="lazy" quality={80} class="w-5 h-5 invert" />
+    <img src={wait.src} alt="" loading="lazy" class="w-5 h-5 invert"  decoding="async" />
     Remettre en attente
   </button>
 </div>

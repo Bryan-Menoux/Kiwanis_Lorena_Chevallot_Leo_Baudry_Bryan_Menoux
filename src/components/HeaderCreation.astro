@@ -2,7 +2,7 @@
 import Logo from "../assets/logo-kiwanis-full.svg";
 import userIcon from "../assets/user.svg";
 import userWhite from "../assets/user-white.svg";
-import { Image } from "astro:assets";
+
 
 const currentUser = Astro.locals.pb.authStore.record;
 
@@ -12,7 +12,7 @@ import DiagArrow from "./DiagArrow.astro";
 <header class="fixed top-0 left-0 right-0 z-50">
   <div class="hidden lg:flex items-center justify-center gap-8 py-6">
     <a href="/">
-      <Image src={Logo} alt="Kiwanis Logo" loading="eager" quality={80} class="w-14 h-14 object-fit" />
+      <img src={Logo.src} alt="Kiwanis Logo" loading="eager" class="w-14 h-14 object-fit"  decoding="async" />
     </a>
     <div
       class="w-full h-14 max-w-[80dvw] flex items-center justify-between gap-4 bg-accent rounded-xl px-4"
@@ -170,13 +170,12 @@ import DiagArrow from "./DiagArrow.astro";
       </div>
       <a href="/mon-compte" class="flex items-center gap-4">
         <span class="text-sm text-white">Mon compte</span>
-        <Image
-          src={userIcon}
+        <img
+          src={userIcon.src}
           alt=""
           aria-hidden="true"
-          quality={80}
           class="w-8 h-8 rounded-full invert"
-        />
+         loading="lazy"  decoding="async" />
       </a>
     </div>
   </div>
@@ -184,7 +183,7 @@ import DiagArrow from "./DiagArrow.astro";
   <div class="lg:hidden flex flex-col items-center p-4 gap-3 w-full">
     <div class="w-full flex items-center justify-between gap-4 max-w-[90dvw]">
       <a href="/" class="shrink-0">
-        <Image src={Logo} alt="Kiwanis Logo" loading="eager" quality={80} class="h-12 w-auto" />
+        <img src={Logo.src} alt="Kiwanis Logo" loading="eager" class="h-12 w-auto"  decoding="async" />
       </a>
 
       <button
@@ -335,7 +334,7 @@ import DiagArrow from "./DiagArrow.astro";
                   >
                     <div class="avatar">
                       <div class="w-10 rounded-full ring ring-offset-base-100 ring-white/30 overflow-hidden">
-                        <Image src={userWhite} alt="" aria-hidden="true" loading="eager" quality={80} />
+                        <img src={userWhite.src} alt="" aria-hidden="true" loading="eager"  decoding="async" />
                       </div>
                     </div>
                     <span class="text-sm font-semibold">Mon compte</span>

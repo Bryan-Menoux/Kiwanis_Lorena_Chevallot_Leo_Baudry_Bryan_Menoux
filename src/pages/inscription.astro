@@ -1,6 +1,6 @@
 ---
 import Layout from "../layouts/Layout-login.astro";
-import { Image } from "astro:assets";
+
 import shapesLeft from "../assets/login-page/shapes-left.svg";
 import shapesRight from "../assets/login-page/shapes-right.svg";
 import logo from "../assets/logo-kiwanis-full.svg";
@@ -58,20 +58,20 @@ if (isPostForm) {
 
 <Layout>
   <div class="absolute top-8 left-8 flex items-center text-white hover:underline z-10">
-    <Image src={backArrow} alt="" loading="lazy" aria-hidden="true" quality={80} />
+    <img src={backArrow.src} alt="" loading="lazy" aria-hidden="true"  decoding="async" />
     <a href="/" class="text-white ml-2">Retour à l'accueil</a>
   </div>
 
-  <Image src={shapesLeft} alt="" loading="lazy" aria-hidden="true" quality={80}
-    class="absolute left-0 bottom-0 w-[50dvw] lg:w-[25dvw] select-none" />
-  <Image src={shapesRight} alt="" loading="lazy" aria-hidden="true" quality={80}
-    class="absolute right-0 top-0 w-[70dvw] md:w-[50dvw] lg:w-[40dvw] select-none" />
+  <img src={shapesLeft.src} alt="" loading="lazy" aria-hidden="true"
+    class="absolute left-0 bottom-0 w-[50dvw] lg:w-[25dvw] select-none"  decoding="async" />
+  <img src={shapesRight.src} alt="" loading="lazy" aria-hidden="true"
+    class="absolute right-0 top-0 w-[70dvw] md:w-[50dvw] lg:w-[40dvw] select-none"  decoding="async" />
 
   <div class="absolute -translate-x-1/2 -translate-y-1/2 left-1/2 top-1/2
               flex flex-col lg:flex-row gap-4 md:gap-16 justify-center items-center z-10">
 
-    <Image src={logo} alt="Logo Kiwanis Pays de Montbéliard" loading="lazy" quality={80}
-      class="md:w-[30dvw] lg:w-[15dvw]" />
+    <img src={logo.src} alt="Logo Kiwanis Pays de Montbéliard" loading="lazy"
+      class="md:w-[30dvw] lg:w-[15dvw]"  decoding="async" />
 
     <div class="w-fit min-w-[70dvw] md:min-w-[60dvw] lg:min-w-[20dvw] lg:max-w-[60dvw]">
 
@@ -86,31 +86,31 @@ if (isPostForm) {
       <form method="post" class="flex flex-col w-full relative">
 
         <div class="relative my-2">
-          <Image src={userIcon} alt="" loading="lazy" quality={80} class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 opacity-70" />
+          <img src={userIcon.src} alt="" loading="lazy" class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 opacity-70"  decoding="async" />
           <input type="text" name="firstName" placeholder="Prénom"
             class="input input-bordered w-full pl-10 bg-transparent border-gray-200 text-gray-200" required />
         </div>
 
         <div class="relative my-2">
-          <Image src={userIcon} alt="" loading="lazy" quality={80} class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 opacity-70" />
+          <img src={userIcon.src} alt="" loading="lazy" class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 opacity-70"  decoding="async" />
           <input type="text" name="lastName" placeholder="Nom"
             class="input input-bordered w-full pl-10 bg-transparent border-gray-200 text-gray-200" required />
         </div>
 
         <div class="relative my-2">
-          <Image src={userIcon} alt="" loading="lazy" quality={80} class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 opacity-70" />
+          <img src={userIcon.src} alt="" loading="lazy" class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 opacity-70"  decoding="async" />
           <input type="email" name="email" placeholder="Adresse e-mail"
             class="input input-bordered w-full pl-10 bg-transparent border-gray-200 text-gray-200" required />
         </div>
 
         <div class="relative my-2">
-          <Image src={lockIcon} alt="" loading="lazy" quality={80} class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 opacity-70" />
+          <img src={lockIcon.src} alt="" loading="lazy" class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 opacity-70"  decoding="async" />
           <input type="password" name="password" placeholder="Mot de passe"
             class="input input-bordered w-full pl-10 bg-transparent border-gray-200 text-gray-200" required />
         </div>
 
         <div class="relative my-2">
-          <Image src={lockIcon} alt="" loading="lazy" quality={80} class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 opacity-70" />
+          <img src={lockIcon.src} alt="" loading="lazy" class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 opacity-70"  decoding="async" />
           <input type="password" name="passwordConfirm" placeholder="Confirmer le mot de passe"
             class="input input-bordered w-full pl-10 bg-transparent border-gray-200 text-gray-200" required />
         </div>

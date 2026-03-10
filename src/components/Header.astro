@@ -4,7 +4,7 @@ import Logo from "../assets/logo-kiwanis-full.svg";
 import arrowPreviousSmall from "../assets/arrow-previous-small.svg";
 import user from "../assets/user.svg";
 import userWhite from "../assets/user-white.svg";
-import { Image } from "astro:assets";
+
 
 const currentUser = Astro.locals.pb.authStore.record;
 import DiagArrow from "./DiagArrow.astro";
@@ -17,14 +17,13 @@ const mobileLogoSrc = "/favicon-96.png";
 >
   <div class="hidden lg:flex py-4 px-12 items-center justify-between">
     <a href="/" class="flex items-center gap-4">
-      <Image
-        src={Logo}
+      <img
+        src={Logo.src}
         alt="Logo"
         loading="eager"
-        quality={100}
         class="h-14 w-auto"
         draggable="false"
-      />
+       decoding="async" />
       <div class="flex flex-col text-gray-900 leading-tight">
         <span class="text-xl font-bold tracking-tighter font-merriweather"
           >KIWANIS</span
@@ -61,13 +60,13 @@ const mobileLogoSrc = "/favicon-96.png";
             class="inline-flex transition-transform duration-300"
             aria-hidden="true"
           >
-            <Image
-              src={arrowPreviousSmall}
+            <img
+              src={arrowPreviousSmall.src}
               alt=""
               aria-hidden="true"
               loading="eager"
               class="h-6 w-6 rotate-180"
-            />
+             decoding="async" />
           </span
           >
         </div>
@@ -160,13 +159,12 @@ const mobileLogoSrc = "/favicon-96.png";
   <div class="lg:hidden flex flex-col items-center p-4 gap-3 w-full">
     <div class="w-full flex items-center justify-between gap-4 max-w-[90dvw]">
       <a href="/" class="shrink-0">
-        <Image
-          src={Logo}
+        <img
+          src={Logo.src}
           alt="Logo"
           loading="eager"
-          quality={100}
           class="h-12 w-auto"
-        />
+         decoding="async" />
       </a>
 
       <button
@@ -298,13 +296,12 @@ const mobileLogoSrc = "/favicon-96.png";
                   >
                     <div class="avatar">
                       <div class="w-10 rounded-full ring ring-offset-base-100 ring-white/30 overflow-hidden">
-                        <Image
-                          src={userWhite}
+                        <img
+                          src={userWhite.src}
                           alt=""
                           aria-hidden="true"
                           loading="eager"
-                          quality={100}
-                        />
+                         decoding="async" />
                       </div>
                     </div>
                     <span class="text-sm font-semibold">Mon compte</span>

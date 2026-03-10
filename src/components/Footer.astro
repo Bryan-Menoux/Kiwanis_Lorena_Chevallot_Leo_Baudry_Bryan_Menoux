@@ -1,6 +1,6 @@
 ---
 import logo from "../assets/logo.svg";
-import { Image } from "astro:assets";
+
 import DiagArrow from "./DiagArrow.astro";
 ---
 
@@ -9,13 +9,12 @@ import DiagArrow from "./DiagArrow.astro";
     
     <!-- Logo et Titre -->
     <div class="h-full flex flex-col items-center gap-6 mb-10 sm:flex-row-reverse sm:items-start sm:gap-6 lg:mb-0 lg:justify-end lg:w-1/2 lg:h-full lg:flex-row-reverse lg:gap-12 lg:items-center min-w-0">
-      <Image 
-        src={logo} 
+      <img 
+        src={logo.src} 
         alt="logo kiwanis" 
         loading="lazy"
         fetchpriority="low"
         decoding="async"
-        quality={80}
         class="w-32 h-32 md:w-40 md:h-40 lg:w-auto lg:h-auto shrink lg:min-w-0 object-contain" 
       />
       <div class="text-left flex flex-col flex-1 lg:flex-initial justify-between lg:h-full gap-0 w-fit font-merriweather">

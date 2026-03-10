@@ -1,5 +1,5 @@
 ---
-import { Image } from "astro:assets";
+
 import HiddenField from "../partials/HiddenField.astro";
 
 export interface Props {
@@ -9,6 +9,7 @@ export interface Props {
 }
 
 const { mode = "create", previewData, imageIcon } = Astro.props;
+const imageIconSrc = typeof imageIcon === "string" ? imageIcon : imageIcon?.src;
 
 // `galerie_photos` contient l'etat courant (edition incluse),
 // `remove_galerie_photos` transporte les suppressions explicites.
@@ -32,13 +33,12 @@ const { mode = "create", previewData, imageIcon } = Astro.props;
     />
     <div class="flex flex-col items-center text-center pointer-events-none">
       {imageIcon && (
-        <Image
-          src={imageIcon}
+        <img
+          src={imageIconSrc}
           alt="Icone image"
-          quality={80}
           class="h-16 w-16"
           style="filter:grayscale(100%) brightness(0.5); opacity:0.3;"
-        />
+         loading="lazy"  decoding="async" />
       )}
       <span class="text-sm">Cliquez ou glissez vos photos</span>
       <span class="text-xs text-gray-400">Jusqu'à 8 images</span>

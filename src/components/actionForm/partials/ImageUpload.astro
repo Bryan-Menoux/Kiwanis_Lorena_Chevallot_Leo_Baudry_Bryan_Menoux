@@ -1,5 +1,5 @@
 ---
-import { Image } from "astro:assets";
+
 
 export interface Props {
   fieldName: string;
@@ -29,6 +29,7 @@ const {
 const inputId = fieldName === "hero" ? "input_hero_file" : `input_${fieldName}`;
 const blockHeight = heightClass || (fieldName === "hero" ? "h-40" : "h-36");
 const currentImage = mode === "edit" && previewData ? previewData[fieldName] : null;
+const imageIconSrc = typeof imageIcon === "string" ? imageIcon : imageIcon?.src;
 ---
 
 <label
@@ -45,14 +46,13 @@ const currentImage = mode === "edit" && previewData ? previewData[fieldName] : n
   />
   <div class="flex flex-col items-center text-center pointer-events-none">
     {imageIcon && (
-      <Image
-        src={imageIcon}
+      <img
+        src={imageIconSrc}
         alt="Icône image"
         loading="lazy"
-        quality={80}
         class="h-16 w-16"
         style="filter:grayscale(100%) brightness(0.5); opacity:0.3;"
-      />
+       decoding="async" />
     )}
     <span class="text-sm">{ctaText}</span>
     {helperText ? <span class="text-xs text-gray-400">{helperText}</span> : null}

@@ -1,5 +1,5 @@
 ---
-import { Image } from "astro:assets";
+
 import arrowNextSmall from "../../../assets/arrow-next-small.svg";
 
 export interface Props {
@@ -37,15 +37,14 @@ const selectedSet = new Set((selectedValues || []).map((v) => String(v)));
     aria-expanded="false"
   >
     <span data-kc-ms-label>{placeholder}</span>
-    <Image
+    <img
       data-kc-ms-arrow
-      src={arrowNextSmall}
+      src={arrowNextSmall.src}
       alt=""
       aria-hidden="true"
       loading="lazy"
-      quality={80}
       class="w-6 h-6 shrink-0 rotate-0 opacity-80 transition-transform duration-200"
-    />
+     decoding="async" />
   </button>
 
   <div
