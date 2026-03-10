@@ -16,9 +16,17 @@ import why2 from "../assets/landing-page/why-2.webp";
 import why3 from "../assets/landing-page/why-3.webp";
 import HomePartner from "../components/Home-partner.astro";
 
-const lcpMobile = await getImage({ src: heroLandingfinalMobile, format: "webp", width: 440, quality: 74 });
-const lcpTablet = await getImage({ src: heroLandingfinalTablet, format: "webp", width: 1024, quality: 18 });
-const lcpDesktop = await getImage({ src: heroLandingfinal, format: "webp", width: 1600, quality: 19 });
+const lcpMobile = await getImage({ src: heroLandingfinalMobile, format: "webp", width: 440, quality: 68 });
+const lcpTablet = await getImage({ src: heroLandingfinalTablet, format: "webp", width: 1280, quality: 72 });
+const lcpDesktop = await getImage({ src: heroLandingfinal, format: "webp", width: 1600, quality: 85 });
+
+const landing1Sized = await getImage({ src: landing1, width: 960 });
+const membersPhotoSized = await getImage({ src: kiwanismembres1, width: 960 });
+const rollUpSized = await getImage({ src: rollUp, width: 720 });
+const fanionSized = await getImage({ src: fanion, width: 720 });
+const why1Sized = await getImage({ src: why1, width: 1024 });
+const why2Sized = await getImage({ src: why2, width: 1024 });
+const why3Sized = await getImage({ src: why3, width: 1024 });
 
 const mapEmbedUrl =
   "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2694.976201081879!2d6.781242576695513!3d47.5098546946529!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x479216ec97288eb1%3A0x14b7da3408d3161f!2s76%20Fbg%20de%20Besan%C3%A7on%2C%2025200%20Montb%C3%A9liard!5e0!3m2!1sfr!2sfr!4v1768495883263!5m2!1sfr!2sfr";
@@ -65,13 +73,13 @@ const mapAddress = "76 bis faubourg de Besançon, 25200 Montbéliard";
     >
       <div class="w-full aspect-565/569 overflow-hidden rounded-box">
         <img
-          src={landing1.src}
+          src={landing1Sized.src}
           alt="Photographie de membres du Kiwanis aux 12 coups de Midi"
           loading="lazy"
           fetchpriority="low"
           decoding="async"
           class="block h-full w-full object-cover"
-         width={landing1.width} height={landing1.height} />
+         width={landing1Sized.attributes.width} height={landing1Sized.attributes.height} />
       </div>
       <p class="text-sm mt-2">Le Kiwanis Féminin aux 12 coups de Midi</p>
     </div>
@@ -112,12 +120,12 @@ const mapAddress = "76 bis faubourg de Besançon, 25200 Montbéliard";
       class="flex flex-col w-full mx-auto max-h-[40dvh] lg:max-h-[60dvh] max-w-full"
     >
       <img
-        src={kiwanismembres1.src}
+        src={membersPhotoSized.src}
         alt="Photographie des membres du groupe Kiwanis Pays de Montbéliard"
         loading="lazy"
         fetchpriority="low"
         class="w-full max-h-full flex-1 object-cover rounded-box"
-       width={kiwanismembres1.width} height={kiwanismembres1.height}  decoding="async" />
+       width={membersPhotoSized.attributes.width} height={membersPhotoSized.attributes.height}  decoding="async" />
       <p class="text-sm mt-2">
         Les membres du groupe Kiwanis Pays de Montbéliard.
       </p>
@@ -211,19 +219,19 @@ const mapAddress = "76 bis faubourg de Besançon, 25200 Montbéliard";
       </div>
       <div class="flex gap-8 w-full mx-auto justify-center items-center">
         <img
-          src={rollUp.src}
+          src={rollUpSized.src}
           alt="Photographie du rollup du kiwanis pays de montbéliard"
           loading="lazy"
           fetchpriority="low"
           class="flex-1 h-auto object-contain w-fit max-w-[40dvw] lg:w-1/2 max-h-[50dvh] lg:max-h-[65dvh]"
-         width={rollUp.width} height={rollUp.height}  decoding="async" />
+         width={rollUpSized.attributes.width} height={rollUpSized.attributes.height}  decoding="async" />
         <img
-          src={fanion.src}
+          src={fanionSized.src}
           alt="Photographie du fanion du kiwanis pays de montbéliard"
           loading="lazy"
           fetchpriority="low"
           class="flex-1 h-auto object-contain w-fit max-w-[40dvw] lg:w-1/2 max-h-[50dvh] lg:max-h-[65dvh] mix-blend-multiply"
-         width={fanion.width} height={fanion.height}  decoding="async" />
+         width={fanionSized.attributes.width} height={fanionSized.attributes.height}  decoding="async" />
       </div>
     </div>
   </div>
@@ -254,12 +262,12 @@ const mapAddress = "76 bis faubourg de Besançon, 25200 Montbéliard";
       </div>
       <div class="flex flex-col w-full mx-auto md:max-w-full h-fit">
         <img
-          src={why1.src}
+          src={why1Sized.src}
           alt="Photographie de collégiens avec les kiwaniens"
           loading="lazy"
           fetchpriority="low"
           class="w-full flex-1 object-cover rounded-box min-h-[30dvh] md:min-h-[40dvh]"
-         width={why1.width} height={why1.height}  decoding="async" />
+         width={why1Sized.attributes.width} height={why1Sized.attributes.height}  decoding="async" />
       </div>
     </div>
     <div
@@ -267,12 +275,12 @@ const mapAddress = "76 bis faubourg de Besançon, 25200 Montbéliard";
     >
       <div class="flex-col w-full mx-auto lg:max-w-full hidden lg:flex">
         <img
-          src={why2.src}
+          src={why2Sized.src}
           alt="Photographie des Kiwaniens avec Loïc Ballet"
           loading="lazy"
           fetchpriority="low"
           class="w-full flex-1 object-cover rounded-box min-h-[30dvh] md:min-h-[40dvh]"
-         width={why2.width} height={why2.height}  decoding="async" />
+         width={why2Sized.attributes.width} height={why2Sized.attributes.height}  decoding="async" />
       </div>
       <div class="flex flex-col gap-4 mt-6">
         <h3>Plusieurs façons de vous engager à nos côtés</h3>
@@ -285,12 +293,12 @@ const mapAddress = "76 bis faubourg de Besançon, 25200 Montbéliard";
       </div>
       <div class="flex flex-col w-full mx-auto lg:max-w-full lg:hidden">
         <img
-          src={why2.src}
+          src={why2Sized.src}
           alt="Photographie des Kiwaniens avec Loïc Ballet"
           loading="lazy"
           fetchpriority="low"
           class="w-full flex-1 object-cover rounded-box min-h-[30dvh] md:min-h-[40dvh]"
-         width={why2.width} height={why2.height}  decoding="async" />
+         width={why2Sized.attributes.width} height={why2Sized.attributes.height}  decoding="async" />
       </div>
     </div>
     <div
@@ -307,12 +315,12 @@ const mapAddress = "76 bis faubourg de Besançon, 25200 Montbéliard";
       </div>
       <div class="flex flex-col w-full mx-auto md:max-w-full">
         <img
-          src={why3.src}
+          src={why3Sized.src}
           alt="Photographie des Kiwaniens"
           loading="lazy"
           fetchpriority="low"
           class="w-full flex-1 object-cover rounded-box min-h-[30dvh] md:min-h-[40dvh]"
-         width={why3.width} height={why3.height}  decoding="async" />
+         width={why3Sized.attributes.width} height={why3Sized.attributes.height}  decoding="async" />
       </div>
     </div>
   </div>
@@ -353,14 +361,13 @@ const mapAddress = "76 bis faubourg de Besançon, 25200 Montbéliard";
           },
           {
             root: null,
-            rootMargin: "600px 0px",
-            threshold: 0,
+            rootMargin: "0px",
+            threshold: 0.15,
           },
         );
         observer.observe(root);
       }
 
-      root.addEventListener("focusin", loadMap, { once: true });
       trigger?.addEventListener("click", loadMap, { once: true });
     });
   </script>

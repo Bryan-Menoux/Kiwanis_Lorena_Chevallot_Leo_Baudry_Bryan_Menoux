@@ -1,16 +1,22 @@
 ---
+import { getImage } from "astro:assets";
 
 import type { ImageMetadata } from "astro";
 
 const imageModules = import.meta.glob<{ default: ImageMetadata }>('/src/assets/partners/*.webp', { eager: true });
 
-const images = Object.entries(imageModules).sort(([pathA], [pathB]) => pathA.localeCompare(pathB)).map(([path, module]) => {
-  const name = path.split('/').pop()!.replace('.webp', '');
-  return {
-    src: module.default,
-    alt: `Logo du partenaire ${name}`
-  };
-});
+const images = await Promise.all(
+  Object.entries(imageModules)
+    .sort(([pathA], [pathB]) => pathA.localeCompare(pathB))
+    .map(async ([path, module]) => {
+      const name = path.split('/').pop()!.replace('.webp', '');
+      const sized = await getImage({ src: module.default, width: 400 });
+      return {
+        src: sized,
+        alt: `Logo du partenaire ${name}`,
+      };
+    }),
+);
 
 ---
 
@@ -22,8 +28,8 @@ const images = Object.entries(imageModules).sort(([pathA], [pathB]) => pathA.loc
           <img
             src={image.src.src}
             alt={image.alt}
-            width={image.src.width}
-            height={image.src.height}
+            width={image.src.attributes.width}
+            height={image.src.attributes.height}
             loading="lazy"
             fetchpriority="low"
             class="block h-14 w-full object-contain md:h-16 lg:h-20"
@@ -38,8 +44,8 @@ const images = Object.entries(imageModules).sort(([pathA], [pathB]) => pathA.loc
             src={image.src.src}
             alt=""
             aria-hidden="true"
-            width={image.src.width}
-            height={image.src.height}
+            width={image.src.attributes.width}
+            height={image.src.attributes.height}
             loading="lazy"
             fetchpriority="low"
             class="block h-14 w-full object-contain md:h-16 lg:h-20"
