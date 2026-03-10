@@ -65,6 +65,9 @@ const formTitle =
   class:list={["space-y-8 text-accent", isMobileWizard ? "pb-10" : ""]}
   method="POST"
   enctype="multipart/form-data"
+  data-submit-overlay-requires-ready="true"
+  data-form-mode={mode}
+  data-is-draft={isDraft ? "true" : "false"}
   data-ui-mode={uiMode}
   data-initial-step={String(initialStep)}
   data-wizard-storage-key={recordKey}
@@ -104,7 +107,7 @@ const formTitle =
 
   {error && <p class="text-red-300 mb-2">{error}</p>}
   <p class="text-xs text-base-100/80">
-    Champs obligatoires: titre, date de début, image de l'en-tête, et au moins une partie (texte ou photo).
+    Pour publier: titre, date de début, image de l'en-tête, et au moins une partie (texte ou photo).
   </p>
 
   <div
@@ -360,6 +363,7 @@ const formTitle =
   import { showAlert, showConfirm } from "../../utils/alerts";
 
   const PUBLISH_CONFIRMED_ATTR = "data-publish-confirmed";
+  const SUBMIT_OVERLAY_READY_ATTR = "data-submit-overlay-ready";
   const VALIDATION_ALERT_DEBOUNCE_MS = 1200;
   let lastValidationAlertMessage = "";
   let lastValidationAlertAt = 0;
@@ -483,6 +487,12 @@ const formTitle =
     form.addEventListener("submit", (event) => {
       if (event.defaultPrevented) return;
 
+      const hasPreapprovedSubmit =
+        form.getAttribute(SUBMIT_OVERLAY_READY_ATTR) === "true";
+      if (!hasPreapprovedSubmit) {
+        form.removeAttribute(SUBMIT_OVERLAY_READY_ATTR);
+      }
+
       const submitter = event.submitter;
       const submitterName =
         submitter instanceof HTMLButtonElement ||
@@ -491,7 +501,12 @@ const formTitle =
           : "";
       const isDraftSave = submitterName === "save_as";
       const isPublishSubmit = submitterName === "publish_action";
-      if (isDraftSave) {
+      const isEditDraftSubmit =
+        form.getAttribute("data-form-mode") === "edit" &&
+        form.getAttribute("data-is-draft") === "true" &&
+        !isPublishSubmit;
+      if (isDraftSave || isEditDraftSubmit) {
+        form.setAttribute(SUBMIT_OVERLAY_READY_ATTR, "true");
         setClientValidationError(form, "");
         return;
       }
@@ -500,6 +515,7 @@ const formTitle =
       const missingPart = !hasAtLeastOnePart(form);
       if (missingHeaderFields.length > 0 || missingPart) {
         event.preventDefault();
+        form.removeAttribute(SUBMIT_OVERLAY_READY_ATTR);
         setClientValidationError(
           form,
           buildRequiredMessage(missingHeaderFields, missingPart),
@@ -545,12 +561,14 @@ const formTitle =
           form.getAttribute(PUBLISH_CONFIRMED_ATTR) === "true";
         if (!alreadyConfirmed) {
           event.preventDefault();
+          form.removeAttribute(SUBMIT_OVERLAY_READY_ATTR);
           setClientValidationError(form, "");
 
           void confirmPublish().then((confirmed) => {
             if (!confirmed) return;
 
             form.setAttribute(PUBLISH_CONFIRMED_ATTR, "true");
+            form.setAttribute(SUBMIT_OVERLAY_READY_ATTR, "true");
             if (
               submitter instanceof HTMLButtonElement ||
               submitter instanceof HTMLInputElement
@@ -575,8 +593,12 @@ const formTitle =
           return;
         }
         form.removeAttribute(PUBLISH_CONFIRMED_ATTR);
+        form.setAttribute(SUBMIT_OVERLAY_READY_ATTR, "true");
       }
 
+      if (!isPublishSubmit) {
+        form.setAttribute(SUBMIT_OVERLAY_READY_ATTR, "true");
+      }
       setClientValidationError(form, "");
     });
   }
@@ -657,3 +679,4 @@ const formTitle =
   document.addEventListener("astro:page-load", initActionFormRequiredValidation);
   document.addEventListener("astro:page-load", initWebpConversion);
 </script>
+

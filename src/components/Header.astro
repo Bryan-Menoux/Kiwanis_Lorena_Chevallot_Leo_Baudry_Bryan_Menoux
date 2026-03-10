@@ -1,4 +1,4 @@
----
+﻿---
 // src/components/Header.astro
 import Logo from "../assets/logo-kiwanis-full.svg";
 import arrowPreviousSmall from "../assets/arrow-previous-small.svg";
@@ -20,10 +20,8 @@ const mobileLogoSrc = "/favicon-96.png";
       <Image
         src={Logo}
         alt="Logo"
-        loading="lazy"
-        fetchpriority="low"
-        decoding="async"
-        quality={80}
+        loading="eager"
+        quality={100}
         class="h-14 w-auto"
         draggable="false"
       />
@@ -46,7 +44,6 @@ const mobileLogoSrc = "/favicon-96.png";
         class="hover:text-accent transition-colors uppercase whitespace-nowrap"
         >Nos membres</a
       >
-
       <div class="h-4 xl:h-6 w-px bg-base-content/20"></div>
 
       <div class="relative cursor-pointer py-2">
@@ -97,14 +94,22 @@ const mobileLogoSrc = "/favicon-96.png";
           >
         </div>
       </div>
-
       <div class="h-4 xl:h-6 w-px bg-base-content/20"></div>
 
       <a
-        href="/don"
+        href="/remerciments"
         class="hover:text-accent transition-colors uppercase whitespace-nowrap"
-        >Faire un don</a
+        >Remerciements</a
       >
+      <div class="h-4 xl:h-6 w-px bg-base-content/20"></div>
+
+      <a
+        href="/recrutement"
+        class="hover:text-accent transition-colors uppercase whitespace-nowrap"
+        >Recrutement</a
+      >
+
+
       {
         Astro.locals.pb.authStore.isValid &&
           currentUser?.verified &&
@@ -155,15 +160,12 @@ const mobileLogoSrc = "/favicon-96.png";
   <div class="lg:hidden flex flex-col items-center p-4 gap-3 w-full">
     <div class="w-full flex items-center justify-between gap-4 max-w-[90dvw]">
       <a href="/" class="shrink-0">
-        <img
-          src={mobileLogoSrc}
-          alt="Logo Kiwanis"
-          width="96"
-          height="96"
+        <Image
+          src={Logo}
+          alt="Logo"
           loading="eager"
-          fetchpriority="high"
-          decoding="async"
-          class="h-12 w-12 object-contain"
+          quality={100}
+          class="h-12 w-auto"
         />
       </a>
 
@@ -199,14 +201,27 @@ const mobileLogoSrc = "/favicon-96.png";
           class="mob-link flex justify-between items-center py-2 text-base"
           role="menuitem"
         >
-          Nos membres <span class="opacity-40" aria-hidden="true"><DiagArrow class="h-3 w-auto" /> </span>
+          Nos membres <span class="opacity-40" aria-hidden="true"
+            ><DiagArrow class="h-3 w-auto" />
+           </span>
         </a>
         <a
-          href="/don"
+          href="/remerciments"
           class="mob-link flex justify-between items-center py-2 text-base"
           role="menuitem"
         >
-          Faire un don <span class="opacity-40" aria-hidden="true"><DiagArrow class="h-3 w-auto" /> </span>
+          Remerciements <span class="opacity-40" aria-hidden="true"
+            ><DiagArrow class="h-3 w-auto" />
+           </span>
+        </a>
+        <a
+          href="/recrutement"
+          class="mob-link flex justify-between items-center py-2 text-base"
+          role="menuitem"
+        >
+          Recrutement <span class="opacity-40" aria-hidden="true"
+            ><DiagArrow class="h-3 w-auto" />
+           </span>
         </a>
 
         <div
@@ -221,21 +236,27 @@ const mobileLogoSrc = "/favicon-96.png";
           class="mob-link flex justify-between items-center py-2 text-base"
           role="menuitem"
         >
-          Nos actions <span class="opacity-40" aria-hidden="true"><DiagArrow class="h-3 w-auto" /> </span>
+          Nos actions <span class="opacity-40" aria-hidden="true"
+            ><DiagArrow class="h-3 w-auto" />
+           </span>
         </a>
         <a
           href="/projets"
           class="mob-link flex justify-between items-center py-2 text-base"
           role="menuitem"
         >
-          Nos projets <span class="opacity-40" aria-hidden="true"><DiagArrow class="h-3 w-auto" /> </span>
+          Nos projets <span class="opacity-40" aria-hidden="true"
+            ><DiagArrow class="h-3 w-auto" />
+           </span>
         </a>
         <a
           href="/produits"
           class="mob-link flex justify-between items-center py-2 text-base"
           role="menuitem"
         >
-          Nos produits <span class="opacity-40" aria-hidden="true"><DiagArrow class="h-3 w-auto" /> </span>
+          Nos produits <span class="opacity-40" aria-hidden="true"
+            ><DiagArrow class="h-3 w-auto" />
+           </span>
         </a>
 
         <div
@@ -277,7 +298,13 @@ const mobileLogoSrc = "/favicon-96.png";
                   >
                     <div class="avatar">
                       <div class="w-10 rounded-full ring ring-offset-base-100 ring-white/30 overflow-hidden">
-                        <Image src={userWhite} alt="" aria-hidden="true" loading="eager" quality={80} />
+                        <Image
+                          src={userWhite}
+                          alt=""
+                          aria-hidden="true"
+                          loading="eager"
+                          quality={100}
+                        />
                       </div>
                     </div>
                     <span class="text-sm font-semibold">Mon compte</span>
@@ -347,6 +374,10 @@ const mobileLogoSrc = "/favicon-96.png";
   let discoverIsOpen = false;
   let globalClickHandler: ((e: Event) => void) | null = null;
   let mobileMenuInitialized = false;
+
+  function initMenu() {
+    initMobileMenuWhenNeeded();
+  }
 
   function setDiscoverState(isOpen: boolean) {
     const discoverDropdown = document.getElementById(
@@ -442,7 +473,7 @@ const mobileLogoSrc = "/favicon-96.png";
         try {
           const response = await fetch("/api/logout", { method: "POST" });
           if (response.ok) {
-            window.location.href = "/connexion";
+            window.location.reload();
           }
         } catch (error) {
           console.error("Erreur lors de la déconnexion:", error);
@@ -450,14 +481,20 @@ const mobileLogoSrc = "/favicon-96.png";
       });
     }
 
-    const initViewportFeatures = () => {
-      initMobileMenuWhenNeeded();
-      if (window.matchMedia("(min-width: 1024px)").matches) {
-        initDiscoverDropdown();
-      }
+    // si l'utilisateur clique sur un lien de connexion, on ajoute le param
+    // redirect avec la page courante (sauf si on est déjà sur la page de connexion)
+    const updateLoginLinks = () => {
+      const current = window.location.pathname + window.location.search;
+      if (current.startsWith("/connexion")) return;
+      const enc = encodeURIComponent(current);
+      const desktop = document.getElementById("connexion-link") as HTMLAnchorElement | null;
+      const mobile = document.getElementById("mobile-connexion-link") as HTMLAnchorElement | null;
+      if (desktop) desktop.setAttribute("href", "/connexion?redirect=" + enc);
+      if (mobile) mobile.setAttribute("href", "/connexion?redirect=" + enc);
     };
+    updateLoginLinks();
 
-    initViewportFeatures();
-    window.addEventListener("resize", initViewportFeatures, { passive: true });
+    initMenu();
+    initDiscoverDropdown();
   });
 </script>

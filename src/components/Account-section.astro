@@ -1,5 +1,6 @@
 ---
 import { splitUserName } from "../utils/utilitaires.js";
+import { UsersGenreOptions } from "../pocketbase-types";
 
 interface Props {
   success?: boolean;
@@ -9,6 +10,9 @@ const { success = false } = Astro.props;
 
 let user = Astro.locals.pb.authStore.record;
 const isAdmin = user?.administrateur === true;
+const userGenre = user?.genre === UsersGenreOptions.femme
+  ? UsersGenreOptions.femme
+  : UsersGenreOptions.homme;
 
 const { firstName, lastName } = splitUserName(user!.name);
 ---
@@ -81,6 +85,31 @@ const { firstName, lastName } = splitUserName(user!.name);
                 value={lastName || ""}
               />
             </div>
+          </div>
+
+          <!-- Champ genre -->
+          <div class="form-control w-full mt-6">
+            <label class="label pb-2">
+              <span class="label-text font-semibold text-base-content">Genre</span>
+            </label>
+            <select
+              id="genre"
+              name="genre"
+              class="select select-bordered w-full"
+            >
+              <option
+                value={UsersGenreOptions.femme}
+                selected={userGenre === UsersGenreOptions.femme}
+              >
+                Femme
+              </option>
+              <option
+                value={UsersGenreOptions.homme}
+                selected={userGenre === UsersGenreOptions.homme}
+              >
+                Homme
+              </option>
+            </select>
           </div>
 
           <!-- Champ email -->
@@ -234,6 +263,7 @@ const { firstName, lastName } = splitUserName(user!.name);
         const formData = new FormData(profileForm as HTMLFormElement);
         const firstName = (formData.get("firstName") as string) || "";
         const lastName = (formData.get("lastName") as string) || "";
+        const genre = (formData.get("genre") as string) || "";
         const email = (formData.get("email") as string) || "";
         const oldPassword = (formData.get("oldPassword") as string) || "";
         const newPassword = (formData.get("newPassword") as string) || "";
@@ -256,11 +286,15 @@ const { firstName, lastName } = splitUserName(user!.name);
         const displayEmail = document.querySelector(
           `input[name="email"]`,
         ) as HTMLInputElement;
+        const displayGenre = document.querySelector(
+          `select[name="genre"]`,
+        ) as HTMLSelectElement;
 
         // État avant optimistic update (pour rollback si erreur)
         const oldFirstName = displayFirstName?.value;
         const oldLastName = displayLastName?.value;
         const oldEmail = displayEmail?.value;
+        const oldGenre = displayGenre?.value;
 
         // Optimistic UI: afficher immédiatement
         submitBtn.disabled = true;
@@ -279,6 +313,7 @@ const { firstName, lastName } = splitUserName(user!.name);
               firstName,
               lastName,
               email,
+              genre,
               oldPassword,
               newPassword,
               newPasswordConfirm,
@@ -292,6 +327,7 @@ const { firstName, lastName } = splitUserName(user!.name);
             if (displayFirstName) displayFirstName.value = firstName;
             if (displayLastName) displayLastName.value = lastName;
             if (displayEmail) displayEmail.value = result.email;
+            if (displayGenre) displayGenre.value = genre;
 
             // Réinitialiser les champs de mot de passe
             const oldPasswordInput = profileForm.querySelector(
@@ -327,6 +363,7 @@ const { firstName, lastName } = splitUserName(user!.name);
             if (displayFirstName) displayFirstName.value = oldFirstName!;
             if (displayLastName) displayLastName.value = oldLastName!;
             if (displayEmail) displayEmail.value = oldEmail!;
+            if (displayGenre) displayGenre.value = oldGenre!;
 
             showError(
               result.error || "Erreur lors de la mise à jour",
@@ -337,6 +374,7 @@ const { firstName, lastName } = splitUserName(user!.name);
           if (displayFirstName) displayFirstName.value = oldFirstName!;
           if (displayLastName) displayLastName.value = oldLastName!;
           if (displayEmail) displayEmail.value = oldEmail!;
+          if (displayGenre) displayGenre.value = oldGenre!;
 
           showError("Erreur de connexion au serveur");
         } finally {
@@ -347,5 +385,6 @@ const { firstName, lastName } = splitUserName(user!.name);
       },
     );
   }
+
 </script>
 

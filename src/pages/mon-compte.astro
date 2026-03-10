@@ -27,6 +27,7 @@ if (!currentUser || !currentUser.verified) {
 }
 
 const isAdmin = currentUser.administrateur === true;
+
 let users: any[] = [];
 
 // Si l'utilisateur est admin, récupérer la liste complète des utilisateurs
@@ -274,6 +275,7 @@ const navItems = [
 
     updateMobileIndicator(0);
     initVerifications();
+    initModifications();
 
     const logoutBtn = document.getElementById("logout-btn");
     if (logoutBtn instanceof HTMLButtonElement) {
@@ -508,3 +510,5 @@ const navItems = [
     document.fonts.ready.then(() => void initAccountPage());
   }
 </script>
+</Layout>
+

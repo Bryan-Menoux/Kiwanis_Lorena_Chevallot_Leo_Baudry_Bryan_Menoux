@@ -33,6 +33,8 @@ const {
 <script define:vars={{ formSelector, overlayId: id }}>
   const PENDING_ATTR = "data-submit-overlay-pending";
   const IN_FLIGHT_ATTR = "data-submit-overlay-in-flight";
+  const READY_ATTR = "data-submit-overlay-ready";
+  const REQUIRES_READY_ATTR = "data-submit-overlay-requires-ready";
   const DISABLED_BY_OVERLAY_ATTR = "data-disabled-by-submit-overlay";
   const KEEP_VISIBLE_ATTR = "data-submit-overlay-keep-visible";
   const FALLBACK_TOKEN_ATTR = "data-submit-overlay-fallback-token";
@@ -138,6 +140,7 @@ const {
       if (!(form instanceof HTMLFormElement)) return;
       form.removeAttribute(PENDING_ATTR);
       form.removeAttribute(IN_FLIGHT_ATTR);
+      form.removeAttribute(READY_ATTR);
       form.removeAttribute(KEEP_VISIBLE_ATTR);
       form.removeAttribute(FALLBACK_TOKEN_ATTR);
       restoreSubmitControls(form);
@@ -155,6 +158,7 @@ const {
       hasMatchedForm = true;
       form.removeAttribute(PENDING_ATTR);
       form.removeAttribute(IN_FLIGHT_ATTR);
+      form.removeAttribute(READY_ATTR);
       form.removeAttribute(KEEP_VISIBLE_ATTR);
       form.removeAttribute(FALLBACK_TOKEN_ATTR);
       restoreSubmitControls(form);
@@ -184,6 +188,12 @@ const {
     }, FALLBACK_RESET_MS);
   };
 
+  const isOverlayReady = (form) => {
+    const requiresReady = form.getAttribute(REQUIRES_READY_ATTR) === "true";
+    if (!requiresReady) return true;
+    return form.getAttribute(READY_ATTR) === "true";
+  };
+
   const bindingKey = formSelector;
   if (overlayBindings.has(bindingKey)) {
     resetMatchedForms();
@@ -202,21 +212,40 @@ const {
       }
 
       target.setAttribute(PENDING_ATTR, "true");
-      showOverlay();
-      scheduleFallbackReset(target);
 
       // La validation et les autres ecouteurs peuvent annuler la soumission.
       queueMicrotask(() => {
         target.removeAttribute(PENDING_ATTR);
+        const overlayReady = isOverlayReady(target);
         if (event.defaultPrevented) {
           const keepVisible = target.getAttribute(KEEP_VISIBLE_ATTR) === "true";
-          if (keepVisible) return;
+          if (keepVisible && overlayReady) {
+            // Cas special (ex: pre-traitement images): garder/afficher l'overlay
+            // meme si la soumission native est temporairement annulee.
+            target.removeAttribute(READY_ATTR);
+            showOverlay();
+            scheduleFallbackReset(target);
+            return;
+          }
           target.removeAttribute(IN_FLIGHT_ATTR);
+          target.removeAttribute(READY_ATTR);
           target.removeAttribute(FALLBACK_TOKEN_ATTR);
           restoreSubmitControls(target);
           hideOverlay();
           return;
         }
+        if (!overlayReady) {
+          target.removeAttribute(IN_FLIGHT_ATTR);
+          target.removeAttribute(READY_ATTR);
+          target.removeAttribute(FALLBACK_TOKEN_ATTR);
+          restoreSubmitControls(target);
+          hideOverlay();
+          return;
+        }
+        // Soumission valide: afficher l'overlay seulement a partir de ce point.
+        target.removeAttribute(READY_ATTR);
+        showOverlay();
+        scheduleFallbackReset(target);
         target.setAttribute(IN_FLIGHT_ATTR, "true");
         disableSubmitControls(target);
       });

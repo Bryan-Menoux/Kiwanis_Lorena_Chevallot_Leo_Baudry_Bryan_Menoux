@@ -137,6 +137,22 @@ function buildStepOneRequiredMessage(missingHeaderFields) {
   return `Complétez l'étape 1 : ${missingHeaderFields.join(", ")}.`;
 }
 
+
+function isEditDraftContext(form) {
+  return (
+    form.getAttribute("data-form-mode") === "edit" &&
+    form.getAttribute("data-is-draft") === "true"
+  );
+}
+
+function shouldSkipStepValidationForDraftFlow(form) {
+  return isEditDraftContext(form);
+}
+
+function isDraftSubmitAction(form, submitterName) {
+  if (submitterName === "save_as") return true;
+  return isEditDraftContext(form) && submitterName !== "publish_action";
+}
 function validateStep(form, step) {
   const currentStep = form.querySelector(
     `[data-mobile-step="${step}"][data-mobile-step-wrapper]`,
@@ -267,7 +283,13 @@ function initMobileWizard() {
     const safeStep = parseStep(nextStep, currentStep);
     if (safeStep === currentStep) return;
     // La validation n'est bloquante que lors d'une avancée volontaire.
-    if (mediaQuery.matches && shouldValidateCurrent && !validateStep(form, currentStep)) {
+    const shouldSkipValidation = shouldSkipStepValidationForDraftFlow(form);
+    if (
+      mediaQuery.matches &&
+      shouldValidateCurrent &&
+      !shouldSkipValidation &&
+      !validateStep(form, currentStep)
+    ) {
       return;
     }
     currentStep = safeStep;
@@ -311,16 +333,16 @@ function initMobileWizard() {
   const submitHandler = (event) => {
     if (!mediaQuery.matches) return;
     const submitterName = event.submitter?.name || "";
-    const isDraftSave = submitterName === "save_as";
+    const isPublishSubmit = submitterName === "publish_action";
+    const isDraftSave = isDraftSubmitAction(form, submitterName);
     if (isDraftSave) {
       setError(form, "");
       persistStep(form, currentStep);
       return;
     }
 
-    // Les actions "brouillon" / "publication" restent possibles hors étape 7.
-    const isDraftOrPublish = submitterName === "publish_action";
-    if (currentStep !== TOTAL_STEPS && !isDraftOrPublish) {
+    // Hors brouillon, seule la publication peut partir hors étape 7.
+    if (currentStep !== TOTAL_STEPS && !isPublishSubmit) {
       event.preventDefault();
       setError(form, "Passe à l'étape 7 pour enregistrer l'action.");
       return;

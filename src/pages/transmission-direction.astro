@@ -1,0 +1,428 @@
+---
+import Layout from "../layouts/Layout.astro";
+import {
+  Collections,
+  type MembresResponse,
+  type UsersResponse,
+} from "../pocketbase-types";
+
+if (!Astro.locals.pb.authStore.isValid) {
+  throw Astro.redirect("/connexion");
+}
+
+const currentUser = Astro.locals.pb.authStore.record;
+if (!currentUser || currentUser.verified !== true) {
+  Astro.locals.pb.authStore.clear();
+  throw Astro.redirect("/connexion");
+}
+
+let effectiveRole: unknown = (currentUser as any)?.role;
+try {
+  const currentMember = await Astro.locals.pb
+    .collection(Collections.Membres)
+    .getFirstListItem<MembresResponse>(`nom = "${currentUser.id}"`);
+  effectiveRole = currentMember?.role ?? effectiveRole;
+} catch {
+  // Aucun enregistrement membre lié : on conserve le rôle utilisateur.
+}
+
+const roleActuel = String(effectiveRole || "").trim().toLowerCase();
+const isPresidentOrPresidente = [
+  "président",
+  "présidente",
+  "president",
+  "presidente",
+].includes(roleActuel);
+
+if (!isPresidentOrPresidente) {
+  throw Astro.redirect("/mon-compte");
+}
+
+const isMemberRole = (value: unknown) => {
+  const role = String(value || "").trim().toLowerCase();
+  return (
+    role === "membre" ||
+    role === "président" ||
+    role === "présidente" ||
+    role === "president" ||
+    role === "presidente"
+  );
+};
+
+type MembreExpand = {
+  nom?: UsersResponse;
+};
+
+type Candidate = {
+  id: string;
+  name: string;
+  email: string;
+  avatarUrl: string | null;
+};
+
+let candidates: Candidate[] = [];
+
+try {
+  const memberRecords = await Astro.locals.pb
+    .collection(Collections.Membres)
+    .getFullList<MembresResponse<MembreExpand>>({
+      expand: "nom",
+      sort: "-created",
+    });
+
+  candidates = memberRecords
+    .map((memberRecord) => {
+      const relatedUser = memberRecord.expand?.nom;
+      if (!relatedUser) {
+        return null;
+      }
+
+      if (relatedUser.verified !== true || relatedUser.rejected === true) {
+        return null;
+      }
+
+      if (!isMemberRole(memberRecord.role || relatedUser.role)) {
+        return null;
+      }
+
+      if (relatedUser.id === currentUser.id) {
+        return null;
+      }
+
+      const avatarFile = typeof relatedUser.avatar === "string" ? relatedUser.avatar : "";
+      const displayName = relatedUser.name?.trim() || relatedUser.email;
+
+      return {
+        id: relatedUser.id,
+        name: displayName,
+        email: relatedUser.email,
+        avatarUrl:
+          avatarFile.length > 0
+            ? Astro.locals.pb.files.getURL(relatedUser, avatarFile)
+            : null,
+      };
+    })
+    .filter((candidate): candidate is Candidate => candidate !== null);
+
+  const uniqueById = new Map(candidates.map((candidate) => [candidate.id, candidate]));
+  candidates = Array.from(uniqueById.values()).sort((a, b) =>
+    a.name.localeCompare(b.name, "fr", {
+      sensitivity: "base",
+    }),
+  );
+} catch (error) {
+  console.error("Erreur lors du chargement des candidats à la transmission:", error);
+}
+---
+
+<Layout>
+  <section class="min-h-screen mt-24 py-8 px-4 md:px-8 pt-4 md:pt-12">
+    <div class="max-w-3xl mx-auto">
+      <div class="mb-12 text-center">
+        <h1 class="text-4xl md:text-5xl lg:text-6xl font-bold title font-merriweather mb-4">
+          Transmission de direction
+        </h1>
+        <p class="text-base-content/60 text-lg">
+          Choisissez la personne qui prendra le relai.
+        </p>
+      </div>
+
+      <div class="bg-white rounded-2xl shadow-2xl overflow-hidden">
+        <div class="px-8 py-8 space-y-6">
+          <p class="text-sm text-base-content/70">
+            Cette action attribue le rôle administrateur au membre sélectionné. Vous conservez votre statut administrateur.
+          </p>
+
+          {
+            candidates.length > 0 ? (
+              <>
+                <div class="form-control w-full">
+                  <label class="label pb-2">
+                    <span class="label-text font-semibold text-base-content">
+                      Rechercher un membre
+                    </span>
+                  </label>
+                  <input
+                    id="handover-search"
+                    type="text"
+                    class="input input-bordered input-primary w-full mb-4"
+                    placeholder="Nom ou e-mail..."
+                    aria-label="Rechercher un membre pour la succession"
+                  />
+
+                  <label class="label pb-2">
+                    <span class="label-text font-semibold text-base-content">
+                      Nouveau directeur / directrice
+                    </span>
+                  </label>
+
+                  <div class="space-y-3" id="handover-candidates-list">
+                    {
+                      candidates.map((candidate) => {
+                        const label = candidate.name;
+                        return (
+                          <label
+                            class="flex items-start gap-4 p-4 rounded-xl border border-base-300 hover:border-warning/60 cursor-pointer transition-colors"
+                            data-candidate-card
+                            data-candidate-name={label}
+                            data-candidate-email={candidate.email}
+                          >
+                            <input
+                              type="radio"
+                              name="handover-target-radio"
+                              value={candidate.id}
+                              class="radio radio-warning mt-1"
+                              data-candidate-label={label}
+                            />
+                            {
+                              candidate.avatarUrl ? (
+                                <img
+                                  src={candidate.avatarUrl}
+                                  alt={`Avatar de ${label}`}
+                                  loading="lazy"
+                                  decoding="async"
+                                  class="w-12 h-12 rounded-full object-cover border border-base-300 shrink-0"
+                                />
+                              ) : (
+                                <div class="w-12 h-12 rounded-full bg-base-200 border border-base-300 shrink-0 flex items-center justify-center text-sm font-semibold text-base-content/70">
+                                  {(label.trim().charAt(0) || "?").toUpperCase()}
+                                </div>
+                              )
+                            }
+                            <div class="flex-1 min-w-0">
+                              <p class="font-semibold">{label}</p>
+                              <p class="text-sm text-base-content/70 break-all">{candidate.email}</p>
+                            </div>
+                          </label>
+                        );
+                      })
+                    }
+                  </div>
+
+                  <p id="handover-search-empty" class="hidden text-sm text-base-content/70 mt-3">
+                    Aucun membre ne correspond à votre recherche.
+                  </p>
+
+                  <div
+                    id="handover-pagination"
+                    class="mt-4 flex items-center justify-center gap-4"
+                  >
+                    <button id="handover-prev" type="button" class="btn btn-sm">
+                      Précédent
+                    </button>
+                    <span id="handover-page-indicator" class="text-sm text-base-content/70">
+                      Page 1 sur 1
+                    </span>
+                    <button id="handover-next" type="button" class="btn btn-sm">
+                      Suivant
+                    </button>
+                  </div>
+                </div>
+
+                <div class="flex flex-col md:flex-row gap-4 pt-2">
+                  <a href="/mon-compte" class="btn btn-outline">
+                    Retour
+                  </a>
+                  <button
+                    type="button"
+                    id="handover-btn"
+                    class="btn btn-warning flex-1"
+                  >
+                    Confirmer la transmission
+                  </button>
+                </div>
+              </>
+            ) : (
+              <div class="space-y-4">
+                <p class="text-sm text-base-content/70">
+                  Aucun membre vérifié n'est disponible pour recevoir la direction.
+                </p>
+                <a href="/mon-compte" class="btn btn-outline w-fit">
+                  Retour
+                </a>
+              </div>
+            )
+          }
+        </div>
+      </div>
+    </div>
+  </section>
+</Layout>
+
+<script>
+  import { showAlert, showConfirm } from "../utils/alerts";
+
+  const handoverButton = document.getElementById("handover-btn") as HTMLButtonElement | null;
+  const handoverSearch = document.getElementById("handover-search") as HTMLInputElement | null;
+  const handoverSearchEmpty = document.getElementById("handover-search-empty") as HTMLElement | null;
+  const handoverPagination = document.getElementById("handover-pagination") as HTMLElement | null;
+  const handoverPrev = document.getElementById("handover-prev") as HTMLButtonElement | null;
+  const handoverNext = document.getElementById("handover-next") as HTMLButtonElement | null;
+  const handoverPageIndicator = document.getElementById("handover-page-indicator") as HTMLElement | null;
+  const candidateCards = Array.from(
+    document.querySelectorAll<HTMLElement>("[data-candidate-card]"),
+  );
+
+  function toSearchTerm(value: string) {
+    return value.toLowerCase().trim();
+  }
+
+  const PAGE_SIZE = 6;
+  let filteredCards = [...candidateCards];
+  let currentPage = 0;
+
+  function getCheckedRadio() {
+    return document.querySelector(
+      'input[name="handover-target-radio"]:checked',
+    ) as HTMLInputElement | null;
+  }
+
+  function updatePagination() {
+    const totalPages = Math.max(1, Math.ceil(filteredCards.length / PAGE_SIZE));
+    if (currentPage >= totalPages) currentPage = totalPages - 1;
+
+    const start = currentPage * PAGE_SIZE;
+    const end = start + PAGE_SIZE;
+
+    candidateCards.forEach((card) => card.classList.add("hidden"));
+    filteredCards.slice(start, end).forEach((card) => card.classList.remove("hidden"));
+
+    const checkedRadio = getCheckedRadio();
+    if (checkedRadio) {
+      const parent = checkedRadio.closest("[data-candidate-card]");
+      if (parent instanceof HTMLElement && parent.classList.contains("hidden")) {
+        checkedRadio.checked = false;
+      }
+    }
+
+    if (handoverSearchEmpty) {
+      handoverSearchEmpty.classList.toggle("hidden", filteredCards.length > 0);
+    }
+
+    if (handoverPagination) {
+      handoverPagination.classList.toggle("hidden", filteredCards.length <= PAGE_SIZE);
+    }
+
+    if (handoverPrev) handoverPrev.disabled = currentPage === 0 || filteredCards.length === 0;
+    if (handoverNext) handoverNext.disabled = currentPage >= totalPages - 1 || filteredCards.length === 0;
+
+    if (handoverPageIndicator) {
+      handoverPageIndicator.textContent =
+        filteredCards.length === 0
+          ? "Page 0 sur 0"
+          : `Page ${currentPage + 1} sur ${totalPages}`;
+    }
+  }
+
+  function applyFilter() {
+    const query = toSearchTerm(handoverSearch?.value.trim() || "");
+    filteredCards = candidateCards.filter((card) => {
+      const name = toSearchTerm(card.dataset.candidateName || "");
+      const email = toSearchTerm(card.dataset.candidateEmail || "");
+      return query === "" || name.includes(query) || email.includes(query);
+    });
+    currentPage = 0;
+    updatePagination();
+  }
+
+  if (candidateCards.length > 0) {
+    applyFilter();
+  }
+
+  if (handoverSearch) {
+    handoverSearch.addEventListener("input", applyFilter);
+  }
+
+  if (handoverPrev) {
+    handoverPrev.addEventListener("click", () => {
+      if (currentPage > 0) {
+        currentPage -= 1;
+        updatePagination();
+      }
+    });
+  }
+
+  if (handoverNext) {
+    handoverNext.addEventListener("click", () => {
+      const totalPages = Math.max(1, Math.ceil(filteredCards.length / PAGE_SIZE));
+      if (currentPage < totalPages - 1) {
+        currentPage += 1;
+        updatePagination();
+      }
+    });
+  }
+
+  if (handoverButton) {
+    handoverButton.addEventListener("click", async () => {
+      const selectedRadio = getCheckedRadio();
+      const targetUserId = selectedRadio?.value || "";
+
+      if (!targetUserId) {
+        showAlert({
+          type: "error",
+          message: "Sélectionnez un membre avant de confirmer la transmission.",
+        });
+        return;
+      }
+
+      const selectedLabel = selectedRadio?.dataset.candidateLabel || "ce membre";
+
+      const confirmed = await showConfirm({
+        title: "Confirmer la transmission",
+        message: `Confirmez la transmission du rôle de directeur/directrice à ${selectedLabel}.`,
+        type: "warning",
+        confirmLabel: "Transmettre",
+        cancelLabel: "Annuler",
+      });
+
+      if (!confirmed) {
+        return;
+      }
+
+      const initialButtonText = handoverButton.textContent || "Confirmer la transmission";
+      handoverButton.disabled = true;
+      handoverButton.textContent = "Transmission...";
+
+      try {
+        const response = await fetch("/api/form-submit", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Requested-With": "XMLHttpRequest",
+          },
+          body: JSON.stringify({
+            formType: "handover",
+            targetUserId,
+          }),
+        });
+
+        const result = await response.json();
+
+        if (response.ok && result.success) {
+          showAlert({
+            type: "success",
+            message: result.message || "Transmission de direction effectuée avec succès",
+          });
+          setTimeout(() => {
+            window.location.href = "/mon-compte";
+          }, 1500);
+          return;
+        }
+
+        showAlert({
+          type: "error",
+          message: result.error || "Erreur lors de la transmission de direction",
+        });
+      } catch (error) {
+        showAlert({
+          type: "error",
+          message: "Erreur réseau",
+        });
+      } finally {
+        handoverButton.disabled = false;
+        handoverButton.textContent = initialButtonText;
+      }
+    });
+  }
+</script>
+

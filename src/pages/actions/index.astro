@@ -60,20 +60,7 @@ const actionsWithUrls = actions.map((action) => {
   };
 });
 
-const stripCombiningMarks = (value: string) =>
-  Array.from(value)
-    .filter((char) => {
-      const code = char.codePointAt(0);
-      return code === undefined || code < 768 || code > 879;
-    })
-    .join("");
-
-const normalizeRole = (value: unknown) =>
-  stripCombiningMarks(
-    String(value || "")
-      .toLowerCase()
-      .normalize("NFD"),
-  );
+const roleTexte = (value: unknown) => String(value || "").trim().toLowerCase();
 
 let users: any[] = [];
 try {
@@ -83,8 +70,14 @@ try {
 }
 
 const membres = users.filter((user) => {
-  const role = normalizeRole(user.role);
-  return role === "membre" || role === "president" || role === "presidente";
+  const role = roleTexte(user.role);
+  return (
+    role === "membre" ||
+    role === "président" ||
+    role === "présidente" ||
+    role === "president" ||
+    role === "presidente"
+  );
 });
 
 const date = new Date().getFullYear();
@@ -203,9 +196,9 @@ const lcpDesktop = await getImage({ src: HeroActions, format: "webp", width: 160
                   data-beneficiary={action.beneficiaire || ""}
                   data-year={action.year}
                   data-types={action.typeActionNormalized.join("||")}
-                  class="overflow-hidden min-h-[45dvh] rounded-2xl border border-base-300 bg-base-100 shadow-sm"
+                  class="overflow-hidden rounded-2xl border border-base-300 bg-base-100 shadow-sm"
                 >
-                  <div class="flex flex-col md:flex-row h-full">
+                  <div class="flex h-full flex-col lg:flex-row">
                     {action.heroUrl ? (
                       <img loading="lazy"
                         src={action.heroUrl}
@@ -215,18 +208,18 @@ const lcpDesktop = await getImage({ src: HeroActions, format: "webp", width: 160
                         }
                         loading="lazy"
                         decoding="async"
-                        class={`h-56 w-full object-cover md:min-h-full md:w-1/2 lg:w-1/2 ${imageOrderClass}`}
+                        class={`h-56 w-full object-cover md:h-[36dvh] lg:h-auto lg:min-h-full lg:w-1/2 ${imageOrderClass}`}
                       />
                     ) : (
                       <div
-                        class={`flex h-56 w-full items-center justify-center bg-base-200 text-sm text-base-content/50 md:min-h-full md:w-1/2 lg:w-1/2 ${imageOrderClass}`}
+                        class={`flex h-56 w-full items-center justify-center bg-base-200 text-sm text-base-content/50 md:h-[36dvh] lg:h-auto lg:min-h-full lg:w-1/2 ${imageOrderClass}`}
                       >
                         Image non disponible
                       </div>
                     )}
 
                     <div
-                      class={`flex flex-1 flex-col gap-4 p-4 md:w-1/2 md:p-5 lg:w-1/2 lg:p-6 ${contentOrderClass}`}
+                      class={`flex flex-1 flex-col gap-4 p-4 md:gap-5 md:p-6 lg:w-1/2 ${contentOrderClass}`}
                     >
                       <div class="space-y-2">
                         <h3 class="text-xl font-bold leading-tight text-base-content md:text-2xl">
@@ -239,21 +232,21 @@ const lcpDesktop = await getImage({ src: HeroActions, format: "webp", width: 160
                         )}
                       </div>
 
-                      <div class="flex flex-wrap gap-2">
+                      <div class="flex flex-wrap gap-2 md:gap-2.5">
                         {action.typeActionSafe.slice(0, 3).map((type: unknown) => (
-                          <span class="badge badge-secondary badge-outline">
+                          <span class="badge badge-secondary badge-outline !text-xs md:!text-sm">
                             {String(type)}
                           </span>
                         ))}
                         {action.typeActionSafe.length === 0 && (
-                          <span class="badge badge-secondary badge-outline">
+                          <span class="badge badge-secondary badge-outline !text-xs md:!text-sm">
                             Action solidaire
                           </span>
                         )}
                       </div>
 
-                      <div class="mt-auto flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-                        <div class="space-y-1 text-sm text-base-content/65">
+                      <div class="mt-auto flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+                        <div class="space-y-1 text-sm text-base-content/65 md:text-base">
                           {action.dateLabel && <p>{action.dateLabel}</p>}
                           {action.beneficiaire && (
                             <p class="wrap-break-word">{action.beneficiaire}</p>
@@ -261,7 +254,7 @@ const lcpDesktop = await getImage({ src: HeroActions, format: "webp", width: 160
                         </div>
                         <a
                           href={`/actions/${action.id}-${action.slug}`}
-                          class="btn btn-accent btn-sm w-full rounded-full sm:w-auto md:btn-md"
+                          class="btn btn-accent btn-sm w-full rounded-full md:btn-md lg:w-auto"
                         >
                           Voir l'action
                         </a>

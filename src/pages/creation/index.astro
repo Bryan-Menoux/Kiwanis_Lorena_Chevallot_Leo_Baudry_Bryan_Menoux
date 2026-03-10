@@ -171,35 +171,35 @@ const allPages = db.pages;
     </div>
 
     <!-- Statistiques -->
-    <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-12">
-      <div class="card bg-base-100 col-span-2 md:col-span-1 shadow-md">
-        <div class="card-body text-center p-4">
-          <div class="text-4xl! font-bold text-base-content">{stats.total}</div>
-          <div class="text-sm text-base-content">Total</div>
+    <div class="mb-12 grid grid-cols-2 gap-3 md:grid-cols-2 md:gap-4 lg:grid-cols-5">
+      <div class="card col-span-2 border border-base-300 bg-base-100 shadow-sm lg:col-span-1">
+        <div class="card-body items-center justify-center gap-1 text-center p-3 sm:p-4 md:p-5">
+          <div class="text-3xl! sm:text-4xl! md:text-5xl! leading-none font-bold text-base-content">{stats.total}</div>
+          <div class="text-xs md:text-sm font-medium text-base-content/80">Total</div>
         </div>
       </div>
-      <div class="card bg-base-100 shadow-md">
-        <div class="card-body text-center p-4">
-          <div class="text-4xl! font-bold text-base-content">{stats.actions}</div>
-          <div class="text-sm text-base-content">Actions</div>
+      <div class="card border border-base-300 bg-base-100 shadow-sm">
+        <div class="card-body items-center justify-center gap-1 text-center p-3 sm:p-4 md:p-5">
+          <div class="text-3xl! sm:text-4xl! md:text-5xl! leading-none font-bold text-base-content">{stats.actions}</div>
+          <div class="text-xs md:text-sm font-medium text-base-content/80">Actions</div>
         </div>
       </div>
-      <div class="card bg-base-100 shadow-md">
-        <div class="card-body text-center p-4">
-          <div class="text-4xl! font-bold text-base-content">{stats.projets}</div>
-          <div class="text-sm text-base-content">Projets</div>
+      <div class="card border border-base-300 bg-base-100 shadow-sm">
+        <div class="card-body items-center justify-center gap-1 text-center p-3 sm:p-4 md:p-5">
+          <div class="text-3xl! sm:text-4xl! md:text-5xl! leading-none font-bold text-base-content">{stats.projets}</div>
+          <div class="text-xs md:text-sm font-medium text-base-content/80">Projets</div>
         </div>
       </div>
-      <div class="card bg-base-100 shadow-md">
-        <div class="card-body text-center p-4">
-          <div class="text-4xl! font-bold text-base-content">{stats.produits}</div>
-          <div class="text-sm text-base-content">Produits</div>
+      <div class="card border border-base-300 bg-base-100 shadow-sm">
+        <div class="card-body items-center justify-center gap-1 text-center p-3 sm:p-4 md:p-5">
+          <div class="text-3xl! sm:text-4xl! md:text-5xl! leading-none font-bold text-base-content">{stats.produits}</div>
+          <div class="text-xs md:text-sm font-medium text-base-content/80">Produits</div>
         </div>
       </div>
-      <div class="card bg-base-100 shadow-md">
-        <div class="card-body text-center p-4">
-          <div class="text-4xl! font-bold text-base-content">{stats.brouillons}</div>
-          <div class="text-sm text-base-content">Brouillons</div>
+      <div class="card border border-base-300 bg-base-100 shadow-sm">
+        <div class="card-body items-center justify-center gap-1 text-center p-3 sm:p-4 md:p-5">
+          <div class="text-3xl! sm:text-4xl! md:text-5xl! leading-none font-bold text-base-content">{stats.brouillons}</div>
+          <div class="text-xs md:text-sm font-medium text-base-content/80">Brouillons</div>
         </div>
       </div>
     </div>
@@ -296,8 +296,7 @@ const allPages = db.pages;
   let filteredPagesCache = pages.slice();
   // Au changement de page, on remonte en douceur vers le haut de la liste (et non en haut du document).
   const scrollTopOnPageChange = () => {
-    const globalScrollUtils =
-      typeof window !== "undefined" ? window.scrollUtils : null;
+    const globalScrollUtils = window.scrollUtils;
     if (globalScrollUtils && typeof globalScrollUtils.scrollToTarget === "function") {
       globalScrollUtils.scrollToTarget("#pages-container");
       return;

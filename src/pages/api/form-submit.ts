@@ -1,6 +1,12 @@
 import type { APIRoute } from 'astro';
 import { capitalizeName } from '../../utils/utilitaires.js';
 import { nowIso } from '../../utils/utilitaires.js';
+import {
+  Collections,
+  MembresRoleOptions,
+  UsersGenreOptions,
+  type MembresResponse,
+} from '../../pocketbase-types';
 
 export const POST: APIRoute = async ({ locals, request }) => {
   if (request.headers.get("content-type") !== "application/json") {
@@ -16,6 +22,50 @@ export const POST: APIRoute = async ({ locals, request }) => {
     return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
   }
 
+  const upsertMemberRecord = async (
+    memberUserId: string,
+    role: MembresRoleOptions,
+  ) => {
+    try {
+      const existing = await locals.pb
+        .collection(Collections.Membres)
+        .getFirstListItem<MembresResponse>(`nom = "${memberUserId}"`);
+
+      await locals.pb.collection(Collections.Membres).update(existing.id, {
+        nom: memberUserId,
+        role,
+      });
+      return;
+    } catch (error: any) {
+      if (error?.status !== 404) {
+        throw error;
+      }
+    }
+
+    await locals.pb.collection(Collections.Membres).create({
+      nom: memberUserId,
+      role,
+    });
+  };
+
+  const ensureMemberRecord = async (memberUserId: string) => {
+    await upsertMemberRecord(memberUserId, MembresRoleOptions.membre);
+  };
+
+  const removeMemberRecords = async (memberUserId: string) => {
+    const memberRows = await locals.pb
+      .collection(Collections.Membres)
+      .getFullList<MembresResponse>({
+        filter: `nom = "${memberUserId}"`,
+      });
+
+    await Promise.all(
+      memberRows.map((row) =>
+        locals.pb.collection(Collections.Membres).delete(row.id),
+      ),
+    );
+  };
+
   try {
     const data = await request.json();
     const { formType, ...formData } = data;
@@ -23,7 +73,15 @@ export const POST: APIRoute = async ({ locals, request }) => {
     switch (formType) {
       case 'profile':
         // Mise à jour du profil utilisateur
-        const { firstName = '', lastName = '', email = '', oldPassword, newPassword, newPasswordConfirm } = formData;
+        const {
+          firstName = '',
+          lastName = '',
+          email = '',
+          oldPassword,
+          newPassword,
+          newPasswordConfirm,
+          genre,
+        } = formData;
         
         const name = `${firstName} ${lastName}`.trim();
         const capitalizedName = capitalizeName(name);
@@ -53,6 +111,9 @@ export const POST: APIRoute = async ({ locals, request }) => {
           updateData.oldPassword = oldPassword;
           updateData.password = newPassword;
           updateData.passwordConfirm = newPasswordConfirm;
+        }
+        if (genre === UsersGenreOptions.homme || genre === UsersGenreOptions.femme) {
+          updateData.genre = genre;
         }
 
         if (Object.keys(updateData).length === 0) {
@@ -111,31 +172,38 @@ export const POST: APIRoute = async ({ locals, request }) => {
               rejectionDate: null,
               rejectedBy: null,
             });
+            await ensureMemberRecord(userId);
             break;
           case 'reject':
             const now = nowIso();
             await locals.pb.collection("users").update(userId, {
               verified: false,
+              administrateur: false,
               rejected: true,
               rejectionDate: now,
               rejectedBy: currentUser.id,
             });
+            await removeMemberRecords(userId);
             break;
           case 'unreject':
             await locals.pb.collection("users").update(userId, {
               verified: false,
+              administrateur: false,
               rejected: false,
               rejectionDate: null,
               rejectedBy: null,
             });
+            await removeMemberRecords(userId);
             break;
           case 'unverify':
             await locals.pb.collection("users").update(userId, {
               verified: false,
+              administrateur: false,
               rejected: false,
               rejectionDate: null,
               rejectedBy: null,
             });
+            await removeMemberRecords(userId);
             break;
           default:
             return new Response(
@@ -185,6 +253,84 @@ export const POST: APIRoute = async ({ locals, request }) => {
             email: modEmail,
             administrateur: modAdmin,
             message: 'Utilisateur modifié avec succès'
+          }),
+          { status: 200, headers: { 'Content-Type': 'application/json' } }
+        );
+
+      case 'handover':
+        // Transmission du rôle de directeur/directrice
+        const { targetUserId } = formData;
+        let currentRoleValue: unknown = (currentUser as any)?.role;
+        try {
+          const currentMember = await locals.pb
+            .collection(Collections.Membres)
+            .getFirstListItem<MembresResponse>(`nom = "${currentUser.id}"`);
+          currentRoleValue = currentMember?.role ?? currentRoleValue;
+        } catch {
+          // Aucun enregistrement membre lié : on conserve le rôle utilisateur.
+        }
+
+        const currentRole = String(currentRoleValue || "").trim().toLowerCase();
+        const isPresidentOrPresidente = [
+          "président",
+          "présidente",
+          "president",
+          "presidente",
+        ].includes(currentRole);
+
+        if (!isPresidentOrPresidente || !currentUser.administrateur) {
+          return new Response(
+            JSON.stringify({ success: false, error: 'Non autorisé' }),
+            { status: 403, headers: { 'Content-Type': 'application/json' } }
+          );
+        }
+
+        if (!targetUserId || typeof targetUserId !== 'string') {
+          return new Response(
+            JSON.stringify({ success: false, error: 'Utilisateur cible invalide' }),
+            { status: 400, headers: { 'Content-Type': 'application/json' } }
+          );
+        }
+
+        if (targetUserId === currentUser.id) {
+          return new Response(
+            JSON.stringify({ success: false, error: 'Vous êtes déjà directeur/directrice' }),
+            { status: 400, headers: { 'Content-Type': 'application/json' } }
+          );
+        }
+
+        const targetUser = await locals.pb.collection("users").getOne(targetUserId);
+
+        if (!targetUser || targetUser.verified !== true || targetUser.rejected === true) {
+          return new Response(
+            JSON.stringify({ success: false, error: 'La transmission est possible uniquement vers un membre vérifié et non rejeté' }),
+            { status: 400, headers: { 'Content-Type': 'application/json' } }
+          );
+        }
+
+        if (targetUser.administrateur !== true) {
+          await locals.pb.collection("users").update(targetUserId, {
+            administrateur: true,
+          });
+        }
+
+        const targetMemberRole =
+          targetUser.genre === UsersGenreOptions.femme
+            ? ("présidente" as MembresRoleOptions)
+            : ("président" as MembresRoleOptions);
+
+        // La personne visée devient président/présidente selon son genre.
+        await upsertMemberRecord(targetUserId, targetMemberRole);
+
+        // L'utilisateur qui transmet conserve les droits admin,
+        // mais repasse au rôle "membre" dans la collection membres.
+        await ensureMemberRecord(currentUser.id);
+
+        return new Response(
+          JSON.stringify({
+            success: true,
+            targetUserId,
+            message: 'Transmission de direction effectuée avec succès. Vous restez administrateur.',
           }),
           { status: 200, headers: { 'Content-Type': 'application/json' } }
         );
@@ -242,3 +388,4 @@ export const POST: APIRoute = async ({ locals, request }) => {
     );
   }
 };
+

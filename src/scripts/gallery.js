@@ -15,6 +15,7 @@
     if (!grid) return;
 
     const count = Math.max(0, parseInt(grid.dataset.photoCount || '0', 10) || 0);
+    const isTablet = window.innerWidth >= 768 && window.innerWidth < 1024;
     // Ne considérer que les enfants directs représentant des éléments de galerie (avec data-photo-url).
     const items = Array.from(grid.children).filter((c) => c instanceof HTMLElement && c.hasAttribute && c.hasAttribute('data-photo-url'));
     const imgs = Array.from(grid.querySelectorAll('img'));
@@ -99,8 +100,8 @@
       mapping[others[1]] = 'b';
       mapping[portraitIndex] = 'c';
       template = '"a c" "b c"';
-      grid.style.gridTemplateRows = '50dvh 50dvh';
-      // Les éléments doivent remplir leur cellule (portrait sur 2 lignes = 100dvh).
+      grid.style.gridTemplateRows = isTablet ? '30dvh 30dvh' : '50dvh 50dvh';
+      // Les éléments doivent remplir leur cellule (portrait sur 2 lignes).
       items.slice(0, 3).forEach((it) => {
         const img = it.querySelector('img');
         if (img) { img.style.height = '100%'; img.style.width = '100%'; }

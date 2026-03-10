@@ -1,0 +1,82 @@
+---
+import Layout from "../layouts/Layout.astro"
+import Hero from "../components/Hero.astro"
+import heroremerciments from "../assets/remerciments-page/hero-remerciments.webp"
+import partenaire1_encreservice from "../assets/partners/encre-service-logo.webp"
+import partenaire2_fondation_arc_en_ciel from "../assets/partners/fondation-arc-en-ciel-logo.webp"
+import partenaire3_mon_plaisir from "../assets/partners/mon-plaisir-logo.webp"
+import partenaire4_montbeliard_manifest from "../assets/partners/montbeliard-manifest-logo.webp"
+import partenaire5_pma from "../assets/partners/pma-logo.webp"
+
+---
+
+<Layout>
+    <Hero image={heroremerciments}
+        title="Remerciements"
+        subtitle="Nous tenons à exprimer notre profonde gratitude envers tous ceux qui ont contribué à la réussite de nos projets."
+    />
+
+<section class="max-w-[85dvw]! md:max-w-[80dvw]! mx-auto my-32">
+  <div class="mb-24">
+    <h2 class="text-3xl md:text-4xl font-bold mb-8">Nos Partenaires</h2>
+    <p class="text-sm md:text-base mb-12">Nous souhaitons remercier, du plus profond de notre cœur, nos partenaires qui nous accompagnent et nous font confianc.</p>
+    
+    <div class="grid grid-cols-2 md:grid-cols-5 gap-8 items-center">
+      <div class="group p-6 bg-white rounded-2xl ring-1 ring-gray-100 shadow-sm hover:shadow-md transition-shadow">
+        <img src={partenaire1_encreservice.src} alt="Encre Service" class="w-full h-20 object-contain" />
+      </div>
+      <div class="group p-6 bg-white rounded-2xl ring-1 ring-gray-100 shadow-sm hover:shadow-md transition-shadow">
+        <img src={partenaire2_fondation_arc_en_ciel.src} alt="Fondation Arc-en-Ciel" class="w-full h-20 object-contain" />
+      </div>
+      <div class="group p-6 bg-white rounded-2xl ring-1 ring-gray-100 shadow-sm hover:shadow-md transition-shadow">
+        <img src={partenaire3_mon_plaisir.src} alt="Mon Plaisir" class="w-full h-20 object-contain" />
+      </div>
+      <div class="group p-6 bg-white rounded-2xl ring-1 ring-gray-100 shadow-sm hover:shadow-md transition-shadow">
+        <img src={partenaire4_montbeliard_manifest.src} alt="Montbéliard Manifest" class="w-full h-20 object-contain" />
+      </div>
+      <div class="group p-6 bg-white rounded-2xl ring-1 ring-gray-100 shadow-sm hover:shadow-md transition-shadow">
+        <img src={partenaire5_pma.src} alt="PMA" class="w-full h-20 object-contain" />
+      </div>
+    </div>
+  </div>
+
+<div>
+    <h2 class="text-3xl md:text-4xl font-bold mb-12">Nos Contributeurs</h2>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div class="p-6 bg-white rounded-3xl ring-1 ring-gray-100 shadow-sm">
+            <h3 class="font-bold text-lg mb-1">Natalia Lacheray</h3>
+            <p class="text-[10px] md:text-xs text-gray-500">Boulangère - Don Et Soutien Solidaire</p>
+        </div>
+        <div class="p-6 bg-white rounded-3xl ring-1 ring-gray-100 shadow-sm">
+            <h3 class="font-bold text-lg mb-1">Christian Meyer</h3>
+            <p class="text-[10px] md:text-xs text-gray-500">Forain - Stand Vin Chaud, Marché De Noël</p>
+        </div>
+        <div class="p-6 bg-white rounded-3xl ring-1 ring-gray-100 shadow-sm">
+            <h3 class="font-bold text-lg mb-1">Olivier Prévôt-Carme</h3>
+            <p class="text-[10px] md:text-xs text-gray-500">Restaurateur - Soupe Offerte, Marché De Noël</p>
+        </div>
+        <div class="p-6 bg-white rounded-3xl ring-1 ring-gray-100 shadow-sm">
+            <h3 class="font-bold text-lg mb-1">Fabrice Piguet</h3>
+            <p class="text-[10px] md:text-xs text-gray-500">Formateur IFAC - Soutien Aux Actions Locales</p>
+        </div>
+        <div class="p-6 bg-white rounded-3xl ring-1 ring-gray-100 shadow-sm">
+            <h3 class="font-bold text-lg mb-1">Josiane Bonomi</h3>
+            <p class="text-[10px] md:text-xs text-gray-500">Organisatrice du Loto Solidaire</p>
+        </div>
+        <div class="p-6 bg-white rounded-3xl ring-1 ring-gray-100 shadow-sm">
+            <h3 class="font-bold text-lg mb-1">Monsieur Pillouds</h3>
+            <p class="text-[10px] md:text-xs text-gray-500">Restaurateur - Soupe Offerte, Marché De Noël</p>
+        </div>
+        <div class="p-6 bg-white rounded-3xl ring-1 ring-gray-100 shadow-sm">
+            <h3 class="font-bold text-lg mb-1">Anthony Boquestal</h3>
+            <p class="text-[10px] md:text-xs text-gray-500">Boulanger - Participation Aux Actions Solidaires</p>
+        </div>
+        <div class="p-6 bg-white rounded-3xl ring-1 ring-gray-100 shadow-sm">
+            <h3 class="font-bold text-lg mb-1">Christof Monnin</h3>
+            <p class="text-[10px] md:text-xs text-gray-500">Artiste Peintre - Don D'œuvre Pour notre Tombola</p>
+        </div>
+    </div>
+</div>
+</section>
+
+</Layout>

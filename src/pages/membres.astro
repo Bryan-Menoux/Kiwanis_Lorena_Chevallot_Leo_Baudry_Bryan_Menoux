@@ -1,19 +1,84 @@
----
+﻿---
 import Hero from "../components/Hero.astro";
 import Layout from "../layouts/Layout.astro";
 import { Image, getImage } from "astro:assets";
 import MembersGrid from "../components/Members-grid.astro";
 import DiagArrow from "../components/DiagArrow.astro";
-import kiwanisMembres from "../assets/members-page/kiwanis-membres-arbre.webp";
 import members1 from "../assets/members-page/members-1.webp";
 import members2 from "../assets/members-page/members-2.webp";
 import HeroMembres from "../assets/members-page/hero-member.webp";
 import HeroMembresMobile from "../assets/members-page/hero-member-mobile.webp";
 import HeroMembresTablet from "../assets/members-page/hero-member-tablette.webp";
+import {
+  Collections,
+  MembresRoleOptions,
+  type MembresResponse,
+  type UsersResponse,
+} from "../pocketbase-types";
 
 const lcpMobile = await getImage({ src: HeroMembresMobile, format: "webp", width: 440, quality: 80 });
 const lcpTablet = await getImage({ src: HeroMembresTablet, format: "webp", width: 1280, quality: 80 });
 const lcpDesktop = await getImage({ src: HeroMembres, format: "webp", width: 1600, quality: 80 });
+
+type PublicMember = {
+  id: string;
+  name: string;
+  status: string;
+  avatarUrl: string | null;
+};
+
+type MembreExpand = {
+  nom?: UsersResponse;
+};
+
+const roleLabels: Record<MembresRoleOptions, string> = {
+  [MembresRoleOptions.membre]: "Membre",
+  [MembresRoleOptions["président"]]: "Président",
+  [MembresRoleOptions["présidente"]]: "Présidente",
+};
+
+let members: PublicMember[] = [];
+
+try {
+  const membreRecords = await Astro.locals.pb
+    .collection(Collections.Membres)
+    .getFullList<MembresResponse<MembreExpand>>({
+      expand: "nom",
+      sort: "-created",
+    });
+
+  members = membreRecords.map((membreRecord) => {
+    const linkedUser = membreRecord.expand?.nom;
+    const avatarFile = typeof linkedUser?.avatar === "string" ? linkedUser.avatar : "";
+    const role = membreRecord.role as MembresRoleOptions;
+
+    return {
+      id: membreRecord.id,
+      name: linkedUser?.name?.trim() || linkedUser?.email || "Membre Kiwanis",
+      status: roleLabels[role] || "Membre",
+      avatarUrl:
+        avatarFile && linkedUser
+          ? Astro.locals.pb.files.getURL(linkedUser, avatarFile)
+          : null,
+    };
+  });
+} catch (error) {
+  console.error("Erreur lors du chargement des membres:", error);
+}
+
+const roleOrder = ["Présidente", "Président", "Membre"];
+
+members = members.sort((a, b) => {
+  const roleIndexA = roleOrder.indexOf(a.status);
+  const roleIndexB = roleOrder.indexOf(b.status);
+
+  if (roleIndexA !== roleIndexB) {
+    return (roleIndexA === -1 ? Number.MAX_SAFE_INTEGER : roleIndexA) -
+      (roleIndexB === -1 ? Number.MAX_SAFE_INTEGER : roleIndexB);
+  }
+
+  return a.name.localeCompare(b.name, "fr", { sensitivity: "base" });
+});
 ---
 
 <Layout>
@@ -29,12 +94,12 @@ const lcpDesktop = await getImage({ src: HeroMembres, format: "webp", width: 160
   />
   <div class="flex flex-col max-w-7xl mx-auto my-32 gap-4 px-8">
     <p>
-      Sur cette page, vous retrouverez les membres qui font vivre le Kiwanis féminin 
-      Pays de Montbéliard au quotidien. Ce sont elles que vous croisez lors des événements, 
+      Sur cette page, vous retrouverez les membres qui font vivre le Kiwanis féminin
+      Pays de Montbéliard au quotidien. Ce sont elles que vous croisez lors des événements,
       derrière les stands, à l’organisation des actions et des projets pour les enfants.
     </p>
   </div>
-  <MembersGrid />
+  <MembersGrid members={members} />
   <div class="flex flex-col max-w-7xl mx-auto my-32 gap-4 px-8">
     <h3 class="mx-auto self-center font-medium!">
       Car <b>ensemble</b> nous sommes plus <b>forts</b>, et nous conjugons nos <b
@@ -97,4 +162,3 @@ const lcpDesktop = await getImage({ src: HeroMembres, format: "webp", width: 160
       </div>
   </div>
 </Layout>
-

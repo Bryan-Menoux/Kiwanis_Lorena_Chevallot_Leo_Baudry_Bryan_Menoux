@@ -151,8 +151,10 @@ export const onRequest = defineMiddleware(
         const isVerified = userRecord?.verified === true;
 
         if (!isAuthenticated || !(isAdmin && isVerified)) {
-          const redirectUrl = new URL("/connexion", request.url).toString();
-          return Response.redirect(redirectUrl, 302);
+          // conserver la destination d'origine pour la renvoyer après login
+          const redirectUrl = new URL("/connexion", request.url);
+          redirectUrl.searchParams.set("redirect", url.pathname + url.search);
+          return Response.redirect(redirectUrl.toString(), 302);
         }
       }
     }

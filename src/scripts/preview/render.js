@@ -101,24 +101,9 @@ function syncLocationSectionLayout(sectionNode) {
   );
   if (!cards.length) return;
 
-  const visibleCards = cards.filter((card) => card.style.display !== 'none');
-
   cards.forEach((card) => {
     card.classList.remove('md:col-span-2', 'lg:col-span-1');
   });
-
-  // Tablette:
-  // - 1 carte -> pleine largeur
-  // - 2 cartes -> cote a cote (comportement grille standard)
-  // - 3 cartes -> 2 en haut + la 3e en pleine largeur en bas
-  if (visibleCards.length === 1) {
-    visibleCards[0].classList.add('md:col-span-2', 'lg:col-span-1');
-    return;
-  }
-
-  if (visibleCards.length === 3) {
-    visibleCards[2].classList.add('md:col-span-2', 'lg:col-span-1');
-  }
 }
 
 function syncLocationCardsVisibility() {
@@ -209,11 +194,11 @@ function renderField(prop) {
     if (prop === 'chiffre') {
       const num = Number(value);
       if (Number.isFinite(num)) {
-        element.textContent = new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 0 }).format(num) + ' EUR';
+        element.textContent = new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 0 }).format(num) + ' €';
       } else if (value && String(value).trim() !== '') {
-        element.textContent = String(value) + ' EUR';
+        element.textContent = String(value) + ' €';
       } else {
-        element.textContent = ' EUR';
+        element.textContent = ' €';
       }
     } else if (prop === 'type_de_chiffre') {
       // Si aucun type n'est choisi et que le chiffre est négatif, on affiche un libellé par défaut.

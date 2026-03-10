@@ -1,5 +1,5 @@
 /**
-* Ce fichier a été @generated avec pocketbase-typegen
+* This file was @generated using pocketbase-typegen
 */
 
 import type PocketBase from 'pocketbase'
@@ -13,12 +13,13 @@ export enum Collections {
 	Superusers = "_superusers",
 	Actions = "actions",
 	Brouillons = "brouillons",
+	Membres = "membres",
 	Produits = "produits",
 	Projets = "projets",
 	Users = "users",
 }
 
-// Alias de types pour une meilleure lisibilité
+// Alias types for improved usability
 export type IsoDateString = string
 export type IsoAutoDateString = string & { readonly autodate: unique symbol }
 export type RecordIdString = string
@@ -31,7 +32,7 @@ type ExpandType<T> = unknown extends T
 		: { expand: T }
 	: { expand: T }
 
-// Champs système
+// System fields
 export type BaseSystemFields<T = unknown> = {
 	id: RecordIdString
 	collectionId: string
@@ -45,7 +46,7 @@ export type AuthSystemFields<T = unknown> = {
 	verified: boolean
 } & BaseSystemFields<T>
 
-// Types d'enregistrements pour chaque collection
+// Record types for each collection
 
 export type AuthoriginsRecord = {
 	collectionRef: string
@@ -188,6 +189,19 @@ export type BrouillonsRecord = {
 	updated: IsoAutoDateString
 }
 
+export enum MembresRoleOptions {
+	"membre" = "membre",
+	"président" = "président",
+	"présidente" = "présidente",
+}
+export type MembresRecord = {
+	created: IsoAutoDateString
+	id: string
+	nom?: RecordIdString
+	role?: MembresRoleOptions
+	updated: IsoAutoDateString
+}
+
 export type ProduitsRecord = {
 	created: IsoAutoDateString
 	id: string
@@ -202,12 +216,17 @@ export type ProjetsRecord = {
 	updated: IsoAutoDateString
 }
 
+export enum UsersGenreOptions {
+	"homme" = "homme",
+	"femme" = "femme",
+}
 export type UsersRecord = {
 	administrateur?: boolean
 	avatar?: FileNameString
 	created: IsoAutoDateString
 	email: string
 	emailVisibility?: boolean
+	genre?: UsersGenreOptions
 	id: string
 	name?: string
 	password: string
@@ -219,7 +238,7 @@ export type UsersRecord = {
 	verified?: boolean
 }
 
-// Les types de réponse incluent les champs système et correspondent aux réponses de l'API PocketBase
+// Response types include system fields and match responses from the PocketBase API
 export type AuthoriginsResponse<Texpand = unknown> = Required<AuthoriginsRecord> & BaseSystemFields<Texpand>
 export type ExternalauthsResponse<Texpand = unknown> = Required<ExternalauthsRecord> & BaseSystemFields<Texpand>
 export type MfasResponse<Texpand = unknown> = Required<MfasRecord> & BaseSystemFields<Texpand>
@@ -227,11 +246,12 @@ export type OtpsResponse<Texpand = unknown> = Required<OtpsRecord> & BaseSystemF
 export type SuperusersResponse<Texpand = unknown> = Required<SuperusersRecord> & AuthSystemFields<Texpand>
 export type ActionsResponse<Texpand = unknown> = Required<ActionsRecord> & BaseSystemFields<Texpand>
 export type BrouillonsResponse<Texpand = unknown> = Required<BrouillonsRecord> & BaseSystemFields<Texpand>
+export type MembresResponse<Texpand = unknown> = Required<MembresRecord> & BaseSystemFields<Texpand>
 export type ProduitsResponse<Texpand = unknown> = Required<ProduitsRecord> & BaseSystemFields<Texpand>
 export type ProjetsResponse<Texpand = unknown> = Required<ProjetsRecord> & BaseSystemFields<Texpand>
 export type UsersResponse<Texpand = unknown> = Required<UsersRecord> & AuthSystemFields<Texpand>
 
-// Types contenant tous les enregistrements et toutes les réponses, utiles pour créer des fonctions d'aide de typage
+// Types containing all Records and Responses, useful for creating typing helper functions
 
 export type CollectionRecords = {
 	_authOrigins: AuthoriginsRecord
@@ -241,6 +261,7 @@ export type CollectionRecords = {
 	_superusers: SuperusersRecord
 	actions: ActionsRecord
 	brouillons: BrouillonsRecord
+	membres: MembresRecord
 	produits: ProduitsRecord
 	projets: ProjetsRecord
 	users: UsersRecord
@@ -254,17 +275,18 @@ export type CollectionResponses = {
 	_superusers: SuperusersResponse
 	actions: ActionsResponse
 	brouillons: BrouillonsResponse
+	membres: MembresResponse
 	produits: ProduitsResponse
 	projets: ProjetsResponse
 	users: UsersResponse
 }
 
-// Types utilitaires pour les opérations de création/mise à jour
+// Utility types for create/update operations
 
 type ProcessCreateAndUpdateFields<T> = Omit<{
-	// Exclure les champs AutoDate
+	// Omit AutoDate fields
 	[K in keyof T as Extract<T[K], IsoAutoDateString> extends never ? K : never]: 
-		// Convertir FileNameString en File
+		// Convert FileNameString to File
 		T[K] extends infer U ? 
 			U extends (FileNameString | FileNameString[]) ? 
 				U extends any[] ? File[] : File 
@@ -272,7 +294,7 @@ type ProcessCreateAndUpdateFields<T> = Omit<{
 		: never
 }, 'id'>
 
-// Type de création pour les collections Auth
+// Create type for Auth collections
 export type CreateAuth<T> = {
 	id?: RecordIdString
 	email: string
@@ -282,12 +304,12 @@ export type CreateAuth<T> = {
 	verified?: boolean
 } & ProcessCreateAndUpdateFields<T>
 
-// Type de création pour les collections de base
+// Create type for Base collections
 export type CreateBase<T> = {
 	id?: RecordIdString
 } & ProcessCreateAndUpdateFields<T>
 
-// Type de mise à jour pour les collections Auth
+// Update type for Auth collections
 export type UpdateAuth<T> = Partial<
 	Omit<ProcessCreateAndUpdateFields<T>, keyof AuthSystemFields>
 > & {
@@ -299,24 +321,24 @@ export type UpdateAuth<T> = Partial<
 	verified?: boolean
 }
 
-// Type de mise à jour pour les collections de base
+// Update type for Base collections
 export type UpdateBase<T> = Partial<
 	Omit<ProcessCreateAndUpdateFields<T>, keyof BaseSystemFields>
 >
 
-// Obtenir le type de création correct pour n'importe quelle collection
+// Get the correct create type for any collection
 export type Create<T extends keyof CollectionResponses> =
 	CollectionResponses[T] extends AuthSystemFields
 		? CreateAuth<CollectionRecords[T]>
 		: CreateBase<CollectionRecords[T]>
 
-// Obtenir le type de mise à jour correct pour n'importe quelle collection
+// Get the correct update type for any collection
 export type Update<T extends keyof CollectionResponses> =
 	CollectionResponses[T] extends AuthSystemFields
 		? UpdateAuth<CollectionRecords[T]>
 		: UpdateBase<CollectionRecords[T]>
 
-// Type à utiliser avec une instance PocketBase typée explicitement
+// Type for usage with type asserted PocketBase instance
 // https://github.com/pocketbase/js-sdk#specify-typescript-definitions
 
 export type TypedPocketBase = {
@@ -324,4 +346,3 @@ export type TypedPocketBase = {
 		idOrName: T
 	): RecordService<CollectionResponses[T]>
 } & PocketBase
-

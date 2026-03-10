@@ -72,11 +72,6 @@ const chiffreTypeLabel = hasTypeDeChiffreValue
   ? String(action?.type_de_chiffre)
   : (chiffreIsNegative ? "chiffre clé" : "");
 const hasBeneficiaireCard = hasNonEmptyText(action?.beneficiaire);
-const locationCardCount = [hasLieuCard, hasChiffreCard, hasBeneficiaireCard].filter(
-  Boolean,
-).length;
-const hasSingleLocationCard = locationCardCount === 1;
-const hasTripleLocationCards = locationCardCount === 3;
 const hasLocationSection = hasLieuCard || hasChiffreCard || hasBeneficiaireCard;
 const shouldRenderLocationSection =
   hasLocationSection || forcePreviewLocationSection;
@@ -133,7 +128,7 @@ const hasThanksSection = hasNonEmptyText(action?.description_remerciements);
           class="w-full min-h-[50dvh] max-h-[80dvh] object-cover object-center rounded-lg"
         />
         {action.description_hero && (
-          <p data-field="description_hero" class="text-sm md:text-base mt-4">
+          <p data-field="description_hero" class="mt-4">
             {action.description_hero}
           </p>
         )}
@@ -152,7 +147,7 @@ const hasThanksSection = hasNonEmptyText(action?.description_remerciements);
         {Object.prototype.hasOwnProperty.call(action, "titre_partie_1") && (
           <h2
             data-field="titre_partie_1"
-            class="uppercase font-light! text-2xl md:text-3xl"
+            class="uppercase text-2xl md:text-3xl"
           >
             {action.titre_partie_1}
           </h2>
@@ -205,16 +200,13 @@ const hasThanksSection = hasNonEmptyText(action?.description_remerciements);
         data-location-section
         data-kc="compact"
         style={hasLocationSection ? "" : "display:none;"}
-        class="grid w-full h-auto grid-cols-1 items-stretch gap-6 mx-auto my-16 px-4 md:grid-cols-2 md:my-32 md:px-0 lg:grid-cols-3 lg:gap-8"
+        class="grid w-full h-auto grid-cols-1 items-stretch gap-6 mx-auto my-16 px-4 md:grid-cols-1 md:my-32 md:px-0 lg:grid-cols-3 lg:gap-8"
       >
         {(hasLieuCard || forcePreviewLocationSection) ? (
           <div
             data-location-card="lieu"
             style={hasLieuCard ? "" : "display:none;"}
-            class:list={[
-              "bg-accent text-base-100 w-full h-full rounded-2xl px-6 md:px-8 py-4 md:py-6 flex flex-col gap-4 justify-between min-h-30 md:min-h-48",
-              hasSingleLocationCard ? "md:col-span-2 lg:col-span-1" : "",
-            ]}
+            class="bg-accent text-base-100 w-full h-full rounded-2xl px-6 md:px-8 py-4 md:py-6 flex flex-col gap-4 justify-between min-h-30 md:min-h-48"
           >
             <div class="flex flex-col gap-2 min-w-fit max-w-fit">
               <h2
@@ -251,10 +243,7 @@ const hasThanksSection = hasNonEmptyText(action?.description_remerciements);
           <div
             data-location-card="chiffre"
             style={hasChiffreCard ? "" : "display:none;"}
-            class:list={[
-              "bg-accent text-base-100 w-full h-full max-w-full rounded-2xl px-6 md:px-8 py-4 md:py-6 flex flex-col justify-between min-h-30 md:min-h-48",
-              hasSingleLocationCard ? "md:col-span-2 lg:col-span-1" : "",
-            ]}
+            class="bg-accent text-base-100 w-full h-full max-w-full rounded-2xl px-6 md:px-8 py-4 md:py-6 flex flex-col justify-between min-h-30 md:min-h-48"
           >
             <h2 data-field="chiffre" class="text-5xl! md:text-7xl!">
               {action.chiffre} €
@@ -273,12 +262,7 @@ const hasThanksSection = hasNonEmptyText(action?.description_remerciements);
           <div
             data-location-card="beneficiaire"
             style={hasBeneficiaireCard ? "" : "display:none;"}
-            class:list={[
-              "bg-accent text-base-100 rounded-2xl px-6 md:px-8 py-4 md:py-6 flex flex-col justify-between min-h-30 md:min-h-48 w-full h-full",
-              hasSingleLocationCard || hasTripleLocationCards
-                ? "md:col-span-2 lg:col-span-1"
-                : "",
-            ]}
+            class="bg-accent text-base-100 rounded-2xl px-6 md:px-8 py-4 md:py-6 flex flex-col justify-between min-h-30 md:min-h-48 w-full h-full"
           >
             <h2
               data-field="beneficiaire"
@@ -309,7 +293,7 @@ const hasThanksSection = hasNonEmptyText(action?.description_remerciements);
           {Object.prototype.hasOwnProperty.call(action, "titre_partie_2") && (
             <h2
               data-field="titre_partie_2"
-              class="uppercase font-light! text-2xl md:text-3xl"
+              class="uppercase text-2xl md:text-3xl"
             >
               {action.titre_partie_2}
             </h2>
@@ -391,7 +375,7 @@ const hasThanksSection = hasNonEmptyText(action?.description_remerciements);
           {Object.prototype.hasOwnProperty.call(action, "titre_partie_3") && (
             <h2
               data-field="titre_partie_3"
-              class="uppercase font-light! text-2xl md:text-3xl"
+              class="uppercase text-2xl md:text-3xl"
             >
               {action.titre_partie_3}
             </h2>
@@ -422,7 +406,7 @@ const hasThanksSection = hasNonEmptyText(action?.description_remerciements);
         {action.titre_remerciements && (
           <h2
             data-field="titre_remerciements"
-            class="uppercase font-light! text-2xl md:text-3xl"
+            class="uppercase text-2xl md:text-3xl"
           >
             {action.titre_remerciements}
           </h2>

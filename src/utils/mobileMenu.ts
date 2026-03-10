@@ -67,6 +67,7 @@ export function initMobileMenu({
   toggle.dataset.menuBound = "true";
 
   const items = Array.from(dropdown.querySelectorAll<HTMLElement>(itemSelector));
+  const headerContainer = toggle.closest("header");
   const hamTop = document.getElementById("ham-top");
   const hamBottom = document.getElementById("ham-bottom");
   let gsap: GsapInstance | null = null;
@@ -163,6 +164,19 @@ export function initMobileMenu({
       return;
     }
     openMenu();
+  });
+
+  document.addEventListener("click", (event) => {
+    if (!isOpen) return;
+    if (!(event.target instanceof Node)) return;
+
+    const clickedOutsideHeader = headerContainer
+      ? !headerContainer.contains(event.target)
+      : !toggle.contains(event.target) && !dropdown.contains(event.target);
+
+    if (clickedOutsideHeader) {
+      closeMenu();
+    }
   });
 
   window.addEventListener("resize", () => {

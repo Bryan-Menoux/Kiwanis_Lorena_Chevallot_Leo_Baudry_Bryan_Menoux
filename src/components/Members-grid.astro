@@ -1,36 +1,52 @@
 ---
-import { Image } from 'astro:assets';
-import type { ImageMetadata } from 'astro';
-import membersData from '../data/list_members.json';
+type Member = {
+  id: string;
+  name: string;
+  status: string;
+  avatarUrl: string | null;
+};
 
-const imageModules = import.meta.glob<{ default: ImageMetadata }>('/src/assets/members/*.webp', { eager: true });
+interface Props {
+  members?: Member[];
+}
 
-const members = Object.keys(membersData).map((filename) => {
-  const imagePath = `/src/assets/members/${filename}.webp`;
-  const module = imageModules[imagePath];
-  const data = membersData[filename as keyof typeof membersData];
-  
-  return {
-    image: module?.default,
-    name: data?.name || filename,
-    status: data?.status || ''
-  };
-}).filter(member => member.image);
+const { members = [] } = Astro.props as Props;
 ---
 
-<div class="members-grid grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 max-w-7xl mx-auto px-8 my-12 ">
-  {members.map((member) => (
-    <div class="relative">
-      <Image 
-        src={member.image} 
-        alt={member.name}
-        quality={80}
-        class="w-full rounded-box mb-2 md:mb-4"
-      />
-      <div class="md:absolute md:bottom-6 md:left-4 md:text-white md:bg-black/40 md:px-3 md:py-1 md:rounded-box">
-        <h4>{member.name}</h4>
-        <p>{member.status}</p>
-      </div>
+{
+  members.length > 0 ? (
+    <div class="members-grid grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 max-w-7xl mx-auto px-8 my-12">
+      {members.map((member) => (
+        <div class="relative">
+          {
+            member.avatarUrl ? (
+              <img
+                src={member.avatarUrl}
+                alt={member.name}
+                loading="lazy"
+                decoding="async"
+                class="w-full aspect-[3/4] object-cover rounded-box mb-2 md:mb-4"
+              />
+            ) : (
+              <div class="w-full aspect-[3/4] rounded-box mb-2 md:mb-4 bg-base-200 flex items-center justify-center">
+                <span class="text-5xl font-bold text-base-content/35">
+                  {(member.name.trim().charAt(0) || "?").toUpperCase()}
+                </span>
+              </div>
+            )
+          }
+          <div class="md:absolute md:bottom-6 md:left-4 md:text-white md:bg-black/40 md:px-3 md:py-1 md:rounded-box">
+            <h4>{member.name}</h4>
+            <p>{member.status}</p>
+          </div>
+        </div>
+      ))}
     </div>
-  ))}
-</div>
+  ) : (
+    <div class="max-w-7xl mx-auto px-8 my-12">
+      <p class="text-center text-base-content/70 py-12">
+        Aucun membre à afficher pour le moment.
+      </p>
+    </div>
+  )
+}
