@@ -60,20 +60,7 @@ const actionsWithUrls = actions.map((action) => {
   };
 });
 
-const stripCombiningMarks = (value: string) =>
-  Array.from(value)
-    .filter((char) => {
-      const code = char.codePointAt(0);
-      return code === undefined || code < 768 || code > 879;
-    })
-    .join("");
-
-const normalizeRole = (value: unknown) =>
-  stripCombiningMarks(
-    String(value || "")
-      .toLowerCase()
-      .normalize("NFD"),
-  );
+const roleTexte = (value: unknown) => String(value || "").trim().toLowerCase();
 
 let users: any[] = [];
 try {
@@ -83,8 +70,14 @@ try {
 }
 
 const membres = users.filter((user) => {
-  const role = normalizeRole(user.role);
-  return role === "membre" || role === "president" || role === "presidente";
+  const role = roleTexte(user.role);
+  return (
+    role === "membre" ||
+    role === "président" ||
+    role === "présidente" ||
+    role === "president" ||
+    role === "presidente"
+  );
 });
 
 const date = new Date().getFullYear();

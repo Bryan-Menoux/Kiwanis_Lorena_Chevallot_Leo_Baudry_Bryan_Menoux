@@ -518,7 +518,7 @@ function applySearchFilter(listId) {
   allCards.forEach(card => {
     const text = card.textContent?.toLowerCase() || "";
     if (text.includes(state.query.toLowerCase())) {
-      card.style.display = "block";
+      card.style.display = "";
     } else {
       card.style.display = "none";
     }
@@ -581,7 +581,7 @@ function setupSearch(searchInputId, listId) {
       // Appliquer la visibilité sur les cartes originales
       allCards.forEach(card => {
         const text = card.textContent?.toLowerCase() || "";
-        card.style.display = text.includes(query) ? "block" : "none";
+        card.style.display = text.includes(query) ? "" : "none";
       });
 
       // Recréer la pagination avec les cartes filtrées si nécessaire
