@@ -1,18 +1,43 @@
 ---
-import Logo from "../assets/logo-kiwanis-full.svg";
-import userIcon from "../assets/user.svg";
-import userWhite from "../assets/user-white.svg";
+import LogoRaw from "../assets/logo-kiwanis-full.svg?raw";
+import UserRaw from "../assets/user.svg?raw";
+import UserWhiteRaw from "../assets/user-white.svg?raw";
+import ArrowNextRaw from "../assets/arrow-next-small.svg?raw";
 
+const logoSvg = LogoRaw.replace(/\s+width="[^"]*"/, ' width="100%"').replace(
+  /\s+height="[^"]*"/,
+  ' height="100%"',
+);
+const userWhiteSvg = UserWhiteRaw.replace(
+  /\s+width="[^"]*"/,
+  ' width="100%"',
+).replace(/\s+height="[^"]*"/, ' height="100%"');
+const userSvg = UserRaw.replace(/\s+width="[^"]*"/, ' width="100%"').replace(
+  /\s+height="[^"]*"/,
+  ' height="100%"',
+);
+// Arrow next : supprime le préambule XML/commentaire, passe en blanc, taille 100%
+const arrowNextSvg = ArrowNextRaw.replace(/<\?xml[^?]*\?>\s*/g, "")
+  .replace(/<!--[\s\S]*?-->\s*/g, "")
+  .replace(/\s+width="[^"]*"/, ' width="100%"')
+  .replace(/\s+height="[^"]*"/, ' height="100%"')
+  .replace(/fill="#0F0F0F"/g, 'fill="white"')
+  .trim();
 
 const currentUser = Astro.locals.pb.authStore.record;
 
 import DiagArrow from "./DiagArrow.astro";
 ---
 
-<header class="fixed top-0 left-0 right-0 z-50">
+<header id="creation-header" class="fixed top-0 left-0 right-0 z-50 font-sans">
   <div class="hidden lg:flex items-center justify-center gap-8 py-6">
-    <a href="/">
-      <img src={Logo.src} alt="Kiwanis Logo" loading="eager" class="w-14 h-14 object-fit"  decoding="async" />
+    <a href="/" class="flex items-center-safe">
+      <span
+        class="inline-block w-14 h-14"
+        role="img"
+        aria-label="Kiwanis Logo"
+        set:html={logoSvg}
+      />
     </a>
     <div
       class="w-full h-14 max-w-[80dvw] flex items-center justify-between gap-4 bg-accent rounded-xl px-4"
@@ -20,9 +45,9 @@ import DiagArrow from "./DiagArrow.astro";
       <div class="flex items-center gap-4 text-white">
         <div class="relative w-fit text-white group">
           <summary
-            class="flex w-full items-center justify-between gap-4 h-12 px-6 rounded-lg text-sm text-white cursor-pointer list-none transition hover:bg-white/10"
+            class="flex w-full items-center justify-between gap-4 h-12 px-6 rounded-lg text-xs! md:text-sm! text-white cursor-pointer list-none transition hover:bg-white/10"
           >
-            <span>Ajouter du contenu</span>
+            <span class="text-md!">Ajouter du contenu</span>
             <svg
               class="w-4 h-4 text-slate-500 transition-transform duration-200 group-hover:-rotate-180"
               viewBox="0 0 20 20"
@@ -42,7 +67,7 @@ import DiagArrow from "./DiagArrow.astro";
           >
             <li>
               <a
-                class="block px-6 py-2 text-sm text-slate-700 hover:bg-slate-100 rounded-lg"
+                class="block px-6 py-2 text-xs! md:text-sm! text-slate-700 hover:bg-slate-100 rounded-lg"
                 href="/creation/actions/nouveau"
               >
                 Actions
@@ -50,7 +75,7 @@ import DiagArrow from "./DiagArrow.astro";
             </li>
             <li>
               <a
-                class="block px-6 py-2 text-sm text-slate-700 hover:bg-slate-100 rounded-lg"
+                class="block px-6 py-2 text-xs! md:text-sm! text-slate-700 hover:bg-slate-100 rounded-lg"
                 href="/creation/projets/nouveau"
               >
                 Projets
@@ -58,7 +83,7 @@ import DiagArrow from "./DiagArrow.astro";
             </li>
             <li>
               <a
-                class="block px-6 py-2 text-sm text-slate-700 hover:bg-slate-100 rounded-lg"
+                class="block px-6 py-2 text-xs! md:text-sm! text-slate-700 hover:bg-slate-100 rounded-lg"
                 href="/creation/produits/nouveau"
               >
                 Produits
@@ -69,9 +94,9 @@ import DiagArrow from "./DiagArrow.astro";
         <span>|</span>
         <div class="relative w-fit text-white group">
           <div
-            class="flex w-full items-center justify-between gap-4 h-12 px-6 rounded-lg text-sm text-white cursor-pointer transition hover:bg-white/10"
+            class="flex w-full items-center justify-between gap-4 h-12 px-6 rounded-lg text-xs! md:text-sm! text-white cursor-pointer transition hover:bg-white/10"
           >
-            <span>Supprimer du contenu</span>
+            <span class="text-md!">Supprimer du contenu</span>
             <svg
               class="w-4 h-4 text-slate-500 transition-transform duration-200 group-hover:-rotate-180"
               viewBox="0 0 20 20"
@@ -91,7 +116,7 @@ import DiagArrow from "./DiagArrow.astro";
           >
             <li>
               <a
-                class="block px-6 py-2 text-sm text-slate-700 hover:bg-slate-100 rounded-lg"
+                class="block px-6 py-2 text-xs! md:text-sm! text-slate-700 hover:bg-slate-100 rounded-lg"
                 href="/creation/actions/delete"
               >
                 Actions
@@ -99,7 +124,7 @@ import DiagArrow from "./DiagArrow.astro";
             </li>
             <li>
               <a
-                class="block px-6 py-2 text-sm text-slate-700 hover:bg-slate-100 rounded-lg"
+                class="block px-6 py-2 text-xs! md:text-sm! text-slate-700 hover:bg-slate-100 rounded-lg"
                 href="/creation/projets/delete"
               >
                 Projets
@@ -107,7 +132,7 @@ import DiagArrow from "./DiagArrow.astro";
             </li>
             <li>
               <a
-                class="block px-6 py-2 text-sm text-slate-700 hover:bg-slate-100 rounded-lg"
+                class="block px-6 py-2 text-xs! md:text-sm! text-slate-700 hover:bg-slate-100 rounded-lg"
                 href="/creation/produits/delete"
               >
                 Produits
@@ -118,9 +143,9 @@ import DiagArrow from "./DiagArrow.astro";
         <span>|</span>
         <div class="relative w-fit text-white group">
           <div
-            class="flex w-full items-center justify-between gap-4 h-12 px-6 rounded-lg text-sm text-white cursor-pointer transition hover:bg-white/10"
+            class="flex w-full items-center justify-between gap-4 h-12 px-6 rounded-lg text-xs! md:text-sm! text-white cursor-pointer transition hover:bg-white/10"
           >
-            <span>Modifier du contenu</span>
+            <span class="text-md!">Modifier du contenu</span>
             <svg
               class="w-4 h-4 text-slate-500 transition-transform duration-200 group-hover:-rotate-180"
               viewBox="0 0 20 20"
@@ -140,7 +165,7 @@ import DiagArrow from "./DiagArrow.astro";
           >
             <li>
               <a
-                class="block px-6 py-2 text-sm text-slate-700 hover:bg-slate-100 rounded-lg"
+                class="block px-6 py-2 text-xs! md:text-sm! text-slate-700 hover:bg-slate-100 rounded-lg"
                 href="/creation/actions"
               >
                 Actions
@@ -148,7 +173,7 @@ import DiagArrow from "./DiagArrow.astro";
             </li>
             <li>
               <a
-                class="block px-6 py-2 text-sm text-slate-700 hover:bg-slate-100 rounded-lg"
+                class="block px-6 py-2 text-xs! md:text-sm! text-slate-700 hover:bg-slate-100 rounded-lg"
                 href="/creation/projets"
               >
                 Projets
@@ -156,7 +181,7 @@ import DiagArrow from "./DiagArrow.astro";
             </li>
             <li>
               <a
-                class="block px-6 py-2 text-sm text-slate-700 hover:bg-slate-100 rounded-lg"
+                class="block px-6 py-2 text-xs! md:text-sm! text-slate-700 hover:bg-slate-100 rounded-lg"
                 href="/creation/produits"
               >
                 Produits
@@ -166,151 +191,214 @@ import DiagArrow from "./DiagArrow.astro";
         </div>
 
         <span>|</span>
-        <a href="/creation" class="text-lg!">Espace création</a>
+        <a href="/creation">Espace création</a>
       </div>
       <a href="/mon-compte" class="flex items-center gap-4">
-        <span class="text-sm text-white">Mon compte</span>
-        <img
-          src={userIcon.src}
-          alt=""
+        <span class="text-sm! md:text-md! text-white">Mon compte</span>
+        <span
+          class="inline-block w-8 h-8 rounded-full invert"
           aria-hidden="true"
-          class="w-8 h-8 rounded-full invert"
-         loading="lazy"  decoding="async" />
+          set:html={userSvg}
+        />
       </a>
     </div>
   </div>
 
-  <div class="lg:hidden flex flex-col items-center p-4 gap-3 w-full">
-    <div class="w-full flex items-center justify-between gap-4 max-w-[90dvw]">
-      <a href="/" class="shrink-0">
-        <img src={Logo.src} alt="Kiwanis Logo" loading="eager" class="h-12 w-auto"  decoding="async" />
+  <div
+    class="lg:hidden flex flex-col items-center max-[359px]:p-2 p-4 max-[359px]:gap-2 gap-3 w-full"
+  >
+    <div
+      class="w-full flex items-center justify-between max-[359px]:gap-2 gap-4 max-w-[90dvw]"
+    >
+      <a href="/" class="shrink-0 flex items-center">
+        <span
+          class="inline-block max-[359px]:h-9 max-[359px]:w-9 h-12 w-12 shrink-0"
+          role="img"
+          aria-label="Logo Kiwanis Pays de Montbéliard"
+          set:html={logoSvg}
+        />
       </a>
 
       <button
         id="menu-toggle"
-        class="flex-1 flex items-center justify-between px-5 py-3 rounded-xl text-white bg-accent"
+        class="flex-1 flex items-center justify-between max-[359px]:px-3 max-[359px]:py-2 px-5 py-3 rounded-xl text-white bg-accent"
         aria-expanded="false"
         aria-controls="mobile-dropdown"
         aria-label="Ouvrir le menu"
       >
-        <span class="text-base font-medium">Menu</span>
-        <div class="relative w-6 h-6 flex flex-col justify-center items-center gap-1.25 pointer-events-none">
-          <span id="ham-top" class="block w-full h-0.5 bg-white rounded-full" style="transition: transform 0.2s ease;"></span>
-          <span id="ham-bottom" class="block w-full h-0.5 bg-white rounded-full" style="transition: transform 0.2s ease;"></span>
+        <span class="max-[359px]:text-sm text-base font-medium">Menu</span>
+        <div
+          class="relative max-[359px]:w-5 max-[359px]:h-5 w-6 h-6 flex flex-col justify-center items-center gap-1.25 pointer-events-none"
+        >
+          <span
+            id="ham-top"
+            class="block w-full h-0.5 bg-white rounded-full"
+            style="transition: transform 0.2s ease;"></span>
+          <span
+            id="ham-bottom"
+            class="block w-full h-0.5 bg-white rounded-full"
+            style="transition: transform 0.2s ease;"></span>
         </div>
       </button>
     </div>
 
     <div
       id="mobile-dropdown"
-      class="w-full max-w-[90dvw] rounded-2xl p-7 text-white shadow-2xl bg-accent"
+      class="w-full max-w-[90dvw] rounded-2xl [@media(max-height:700px)]:p-4 p-7 text-white shadow-2xl bg-accent"
       style="display: none;"
       role="menu"
       aria-hidden="true"
     >
-      <h2 class="text-xs font-bold tracking-widest mb-6 opacity-90 uppercase">
+      <h2
+        class="text-xs font-bold tracking-widest [@media(max-height:700px)]:mb-3 mb-6 opacity-90 uppercase"
+      >
         Espace création
       </h2>
 
-      <nav class="flex flex-col select-none gap-3" role="navigation">
+      <nav
+        class="flex flex-col select-none [@media(max-height:700px)]:gap-1.5 gap-3"
+        role="navigation"
+      >
         <details class="mob-link rounded-xl border border-white/20 bg-white/5">
-          <summary class="flex items-center justify-between px-4 py-3 cursor-pointer list-none">
-            <span class="text-sm uppercase tracking-wide">Ajouter du contenu</span>
-            <span class="submenu-arrow text-base opacity-70" aria-hidden="true">></span>
+          <summary
+            class="flex items-center justify-between px-4 [@media(max-height:700px)]:py-2 py-3 cursor-pointer list-none"
+          >
+            <span class="uppercase text-sm! tracking-wide"
+              >Ajouter du contenu</span
+            >
+            <span
+              class="submenu-arrow inline-flex w-4 h-4 opacity-70 transition-transform duration-200"
+              aria-hidden="true"
+              set:html={arrowNextSvg}
+            />
           </summary>
           <div class="flex flex-col px-4 pb-3 pl-8">
             <a
               href="/creation/actions/nouveau"
-              class="py-2 flex justify-between items-center text-base"
+              class="[@media(max-height:700px)]:py-1 py-2 flex justify-between items-center text-base"
               role="menuitem"
             >
-              Actions <span class="opacity-40" aria-hidden="true"><DiagArrow class="h-3 w-auto" /> </span>
+              Actions <span class="opacity-40" aria-hidden="true"
+                ><DiagArrow class="h-3 w-auto" />
+              </span>
             </a>
             <a
               href="/creation/projets/nouveau"
-              class="py-2 flex justify-between items-center text-base"
+              class="[@media(max-height:700px)]:py-1 py-2 flex justify-between items-center text-base"
               role="menuitem"
             >
-              Projets <span class="opacity-40" aria-hidden="true"><DiagArrow class="h-3 w-auto" /> </span>
+              Projets <span class="opacity-40" aria-hidden="true"
+                ><DiagArrow class="h-3 w-auto" />
+              </span>
             </a>
             <a
               href="/creation/produits/nouveau"
-              class="py-2 flex justify-between items-center text-base"
+              class="[@media(max-height:700px)]:py-1 py-2 flex justify-between items-center text-base"
               role="menuitem"
             >
-              Produits <span class="opacity-40" aria-hidden="true"><DiagArrow class="h-3 w-auto" /> </span>
+              Produits <span class="opacity-40" aria-hidden="true"
+                ><DiagArrow class="h-3 w-auto" />
+              </span>
             </a>
           </div>
         </details>
 
         <details class="mob-link rounded-xl border border-white/20 bg-white/5">
-          <summary class="flex items-center justify-between px-4 py-3 cursor-pointer list-none">
-            <span class="text-sm uppercase tracking-wide">Supprimer du contenu</span>
-            <span class="submenu-arrow text-base opacity-70" aria-hidden="true">></span>
+          <summary
+            class="flex items-center justify-between px-4 [@media(max-height:700px)]:py-2 py-3 cursor-pointer list-none"
+          >
+            <span class="text-sm! uppercase tracking-wide"
+              >Supprimer du contenu</span
+            >
+            <span
+              class="submenu-arrow inline-flex w-4 h-4 opacity-70 transition-transform duration-200"
+              aria-hidden="true"
+              set:html={arrowNextSvg}
+            />
           </summary>
           <div class="flex flex-col px-4 pb-3 pl-8">
             <a
               href="/creation/actions/delete"
-              class="py-2 flex justify-between items-center text-base"
+              class="[@media(max-height:700px)]:py-1 py-2 flex justify-between items-center text-base"
               role="menuitem"
             >
-              Actions <span class="opacity-40" aria-hidden="true"><DiagArrow class="h-3 w-auto" /> </span>
+              Actions <span class="opacity-40" aria-hidden="true"
+                ><DiagArrow class="h-3 w-auto" />
+              </span>
             </a>
             <a
               href="/creation/projets/delete"
-              class="py-2 flex justify-between items-center text-base"
+              class="[@media(max-height:700px)]:py-1 py-2 flex justify-between items-center text-base"
               role="menuitem"
             >
-              Projets <span class="opacity-40" aria-hidden="true"><DiagArrow class="h-3 w-auto" /> </span>
+              Projets <span class="opacity-40" aria-hidden="true"
+                ><DiagArrow class="h-3 w-auto" />
+              </span>
             </a>
             <a
               href="/creation/produits/delete"
-              class="py-2 flex justify-between items-center text-base"
+              class="[@media(max-height:700px)]:py-1 py-2 flex justify-between items-center text-base"
               role="menuitem"
             >
-              Produits <span class="opacity-40" aria-hidden="true"><DiagArrow class="h-3 w-auto" /> </span>
+              Produits <span class="opacity-40" aria-hidden="true"
+                ><DiagArrow class="h-3 w-auto" />
+              </span>
             </a>
           </div>
         </details>
 
         <details class="mob-link rounded-xl border border-white/20 bg-white/5">
-          <summary class="flex items-center justify-between px-4 py-3 cursor-pointer list-none">
-            <span class="text-sm uppercase tracking-wide">Modifier du contenu</span>
-            <span class="submenu-arrow text-base opacity-70" aria-hidden="true">></span>
+          <summary
+            class="flex items-center justify-between px-4 [@media(max-height:700px)]:py-2 py-3 cursor-pointer list-none"
+          >
+            <span class="text-sm! uppercase tracking-wide"
+              >Modifier du contenu</span
+            >
+            <span
+              class="submenu-arrow inline-flex w-4 h-4 opacity-70 transition-transform duration-200"
+              aria-hidden="true"
+              set:html={arrowNextSvg}
+            />
           </summary>
           <div class="flex flex-col px-4 pb-3 pl-8">
             <a
               href="/creation/actions"
-              class="py-2 flex justify-between items-center text-base"
+              class="[@media(max-height:700px)]:py-1 py-2 flex justify-between items-center text-base"
               role="menuitem"
             >
-              Actions <span class="opacity-40" aria-hidden="true"><DiagArrow class="h-3 w-auto" /> </span>
+              Actions <span class="opacity-40" aria-hidden="true"
+                ><DiagArrow class="h-3 w-auto" />
+              </span>
             </a>
             <a
               href="/creation/projets"
-              class="py-2 flex justify-between items-center text-base"
+              class="[@media(max-height:700px)]:py-1 py-2 flex justify-between items-center text-base"
               role="menuitem"
             >
-              Projets <span class="opacity-40" aria-hidden="true"><DiagArrow class="h-3 w-auto" /> </span>
+              Projets <span class="opacity-40" aria-hidden="true"
+                ><DiagArrow class="h-3 w-auto" />
+              </span>
             </a>
             <a
               href="/creation/produits"
-              class="py-2 flex justify-between items-center text-base"
+              class="[@media(max-height:700px)]:py-1 py-2 flex justify-between items-center text-base"
               role="menuitem"
             >
-              Produits <span class="opacity-40" aria-hidden="true"><DiagArrow class="h-3 w-auto" /> </span>
+              Produits <span class="opacity-40" aria-hidden="true"
+                ><DiagArrow class="h-3 w-auto" />
+              </span>
             </a>
           </div>
         </details>
 
         <div
-          class="mob-link h-px w-full bg-white/20 my-2"
+          class="mob-link h-px w-full bg-white/20 [@media(max-height:700px)]:my-1 my-2"
           role="separator"
           aria-hidden="true"
         >
         </div>
 
-        <div class="flex flex-col gap-4">
+        <div class="flex flex-col [@media(max-height:700px)]:gap-2 gap-4">
           {
             currentUser ? (
               <>
@@ -324,7 +412,6 @@ import DiagArrow from "./DiagArrow.astro";
                       Espace création
                     </a>
                   )}
-
                 <div class="flex items-center gap-3 w-full md:col-span-2">
                   <a
                     id="mobile-account-link"
@@ -334,12 +421,15 @@ import DiagArrow from "./DiagArrow.astro";
                   >
                     <div class="avatar">
                       <div class="w-10 rounded-full ring ring-offset-base-100 ring-white/30 overflow-hidden">
-                        <img src={userWhite.src} alt="" aria-hidden="true" loading="eager"  decoding="async" />
+                        <span
+                          class="inline-block w-full h-full"
+                          aria-hidden="true"
+                          set:html={userWhiteSvg}
+                        />
                       </div>
                     </div>
                     <span class="text-sm font-semibold">Mon compte</span>
                   </a>
-
                   <button
                     id="mobile-logout-btn"
                     type="button"
@@ -367,6 +457,13 @@ import DiagArrow from "./DiagArrow.astro";
   </div>
 </header>
 
+<style is:global>
+  #creation-header a,
+  #creation-header .nav-item {
+    font-family: "Poppins", var(--font-sans-fallback);
+  }
+</style>
+
 <style>
   #mobile-dropdown details > summary::-webkit-details-marker {
     display: none;
@@ -385,9 +482,11 @@ import DiagArrow from "./DiagArrow.astro";
   import { initMobileMenu } from "../utils/mobileMenu";
 
   function resetSubMenus() {
-    document.querySelectorAll<HTMLDetailsElement>("#mobile-dropdown details").forEach((menu) => {
-      menu.removeAttribute("open");
-    });
+    document
+      .querySelectorAll<HTMLDetailsElement>("#mobile-dropdown details")
+      .forEach((menu) => {
+        menu.removeAttribute("open");
+      });
   }
 
   document.addEventListener("DOMContentLoaded", () => {
@@ -420,11 +519,11 @@ import DiagArrow from "./DiagArrow.astro";
       const current = window.location.pathname + window.location.search;
       if (current.startsWith("/connexion")) return;
       const enc = encodeURIComponent(current);
-      const mobile = document.getElementById("mobile-connexion-link") as HTMLAnchorElement | null;
+      const mobile = document.getElementById(
+        "mobile-connexion-link",
+      ) as HTMLAnchorElement | null;
       if (mobile) mobile.setAttribute("href", "/connexion?redirect=" + enc);
     };
     updateLoginLinks();
   });
 </script>
-
-

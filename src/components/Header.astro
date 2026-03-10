@@ -46,12 +46,51 @@ const currentUser = Astro.locals.pb.authStore.record;
     <nav
       class="flex items-center gap-3 xl:gap-8 select-none text-[11px] xl:text-sm font-semibold text-base-content tracking-tight xl:tracking-normal"
     >
+      <!-- Le club: Nos membres + Recrutement regroupés (lg uniquement) -->
+      <div class="relative cursor-pointer py-2 [@media(min-width:1400px)]:hidden">
+        <div
+          id="leclub-toggle"
+          class="nav-item hover:text-accent transition-colors uppercase flex items-center gap-2"
+          role="button"
+          aria-expanded="false"
+          aria-controls="leclub-dropdown"
+          tabindex="0"
+        >
+          <span class="whitespace-nowrap">Le club</span>
+          <span
+            id="leclub-arrow"
+            class="inline-flex transition-transform duration-300"
+            aria-hidden="true"
+          >
+            <span class="inline-flex h-6 w-6 rotate-180" aria-hidden="true" set:html={arrowSvg} />
+          </span>
+        </div>
+        <div
+          id="leclub-dropdown"
+          class="absolute left-0 mt-2 w-44 bg-base-100 border border-base-100 shadow-xl rounded-lg overflow-hidden opacity-0 invisible transition-all duration-300 translate-y-2 pointer-events-none"
+          role="menu"
+          aria-hidden="true"
+        >
+          <a
+            href="/membres"
+            class="block px-4 py-3 text-base-content hover:bg-base-content/20 hover:text-accent border-b border-base-100 transition-colors uppercase text-[10px] font-bold"
+            role="menuitem">Nos membres</a
+          >
+          <a
+            href="/recrutement"
+            class="block px-4 py-3 text-base-content hover:bg-base-content/20 hover:text-accent transition-colors uppercase text-[10px] font-bold"
+            role="menuitem">Recrutement</a
+          >
+        </div>
+      </div>
+      <div class="h-4 w-px bg-base-content/20 [@media(min-width:1400px)]:hidden"></div>
+
       <a
         href="/membres"
-        class="hover:text-accent transition-colors uppercase whitespace-nowrap"
+        class="hidden [@media(min-width:1400px)]:block hover:text-accent transition-colors uppercase whitespace-nowrap"
         >Nos membres</a
       >
-      <div class="h-4 xl:h-6 w-px bg-base-content/20"></div>
+      <div class="hidden [@media(min-width:1400px)]:block h-6 w-px bg-base-content/20"></div>
 
       <div class="relative cursor-pointer py-2">
         <div
@@ -102,11 +141,11 @@ const currentUser = Astro.locals.pb.authStore.record;
         class="hover:text-accent transition-colors uppercase whitespace-nowrap"
         >Remerciements</a
       >
-      <div class="h-4 xl:h-6 w-px bg-base-content/20"></div>
+      <div class="hidden [@media(min-width:1400px)]:block h-6 w-px bg-base-content/20"></div>
 
       <a
         href="/recrutement"
-        class="hover:text-accent transition-colors uppercase whitespace-nowrap"
+        class="hidden [@media(min-width:1400px)]:block hover:text-accent transition-colors uppercase whitespace-nowrap"
         >Recrutement</a
       >
 
@@ -158,21 +197,21 @@ const currentUser = Astro.locals.pb.authStore.record;
     </div>
   </div>
 
-  <div class="lg:hidden flex flex-col items-center p-4 gap-3 w-full">
-    <div class="w-full flex items-center justify-between gap-4 max-w-[90dvw]">
+  <div class="lg:hidden flex flex-col items-center max-[359px]:p-2 p-4 max-[359px]:gap-2 gap-3 w-full">
+    <div class="w-full flex items-center justify-between max-[359px]:gap-2 gap-4 max-w-[90dvw]">
       <a href="/" class="shrink-0">
-        <span class="inline-block h-12 w-12 shrink-0" role="img" aria-label="Logo Kiwanis Pays de Montbéliard" set:html={logoSvg} />
+        <span class="inline-block max-[359px]:h-9 max-[359px]:w-9 h-12 w-12 shrink-0" role="img" aria-label="Logo Kiwanis Pays de Montbéliard" set:html={logoSvg} />
       </a>
 
       <button
         id="menu-toggle"
-        class="flex-1 flex items-center justify-between px-5 py-3 rounded-xl text-white bg-accent"
+        class="flex-1 flex items-center justify-between max-[359px]:px-3 max-[359px]:py-2 px-5 py-3 rounded-xl text-white bg-accent"
         aria-expanded="false"
         aria-controls="mobile-dropdown"
         aria-label="Ouvrir le menu"
       >
-        <span class="text-base font-medium">Menu</span>
-        <div class="relative w-6 h-6 flex flex-col justify-center items-center gap-1.25 pointer-events-none">
+        <span class="max-[359px]:text-sm text-base font-medium">Menu</span>
+        <div class="relative max-[359px]:w-5 max-[359px]:h-5 w-6 h-6 flex flex-col justify-center items-center gap-1.25 pointer-events-none">
           <span id="ham-top" class="block w-full h-0.5 bg-white rounded-full" style="transition: transform 0.2s ease;"></span>
           <span id="ham-bottom" class="block w-full h-0.5 bg-white rounded-full" style="transition: transform 0.2s ease;"></span>
         </div>
@@ -181,19 +220,19 @@ const currentUser = Astro.locals.pb.authStore.record;
 
     <div
       id="mobile-dropdown"
-      class="w-full max-w-[90dvw] rounded-2xl p-7 text-white shadow-2xl bg-accent"
+      class="w-full max-w-[90dvw] rounded-2xl [@media(max-height:700px)]:p-4 p-7 text-white shadow-2xl bg-accent"
       style="display: none;"
       role="menu"
       aria-hidden="true"
     >
-      <h2 class="text-xs font-bold tracking-widest mb-6 opacity-90 uppercase">
+      <h2 class="text-xs font-bold tracking-widest [@media(max-height:700px)]:mb-3 mb-6 opacity-90 uppercase">
         KIWANIS PAYS DE MONTBÉLIARD
       </h2>
 
       <nav class="flex flex-col select-none" role="navigation">
         <a
           href="/membres"
-          class="mob-link flex justify-between items-center py-2 text-base"
+          class="mob-link flex justify-between items-center [@media(max-height:700px)]:py-1 py-2 text-base"
           role="menuitem"
         >
           Nos membres <span class="opacity-40" aria-hidden="true"
@@ -202,7 +241,7 @@ const currentUser = Astro.locals.pb.authStore.record;
         </a>
         <a
           href="/remerciments"
-          class="mob-link flex justify-between items-center py-2 text-base"
+          class="mob-link flex justify-between items-center [@media(max-height:700px)]:py-1 py-2 text-base"
           role="menuitem"
         >
           Remerciements <span class="opacity-40" aria-hidden="true"
@@ -211,7 +250,7 @@ const currentUser = Astro.locals.pb.authStore.record;
         </a>
         <a
           href="/recrutement"
-          class="mob-link flex justify-between items-center py-2 text-base"
+          class="mob-link flex justify-between items-center [@media(max-height:700px)]:py-1 py-2 text-base"
           role="menuitem"
         >
           Recrutement <span class="opacity-40" aria-hidden="true"
@@ -220,7 +259,7 @@ const currentUser = Astro.locals.pb.authStore.record;
         </a>
 
         <div
-          class="mob-link h-px w-full bg-white/20 my-4"
+          class="mob-link h-px w-full bg-white/20 [@media(max-height:700px)]:my-2 my-4"
           role="separator"
           aria-hidden="true"
         >
@@ -228,7 +267,7 @@ const currentUser = Astro.locals.pb.authStore.record;
 
         <a
           href="/actions"
-          class="mob-link flex justify-between items-center py-2 text-base"
+          class="mob-link flex justify-between items-center [@media(max-height:700px)]:py-1 py-2 text-base"
           role="menuitem"
         >
           Nos actions <span class="opacity-40" aria-hidden="true"
@@ -237,7 +276,7 @@ const currentUser = Astro.locals.pb.authStore.record;
         </a>
         <a
           href="/projets"
-          class="mob-link flex justify-between items-center py-2 text-base"
+          class="mob-link flex justify-between items-center [@media(max-height:700px)]:py-1 py-2 text-base"
           role="menuitem"
         >
           Nos projets <span class="opacity-40" aria-hidden="true"
@@ -246,7 +285,7 @@ const currentUser = Astro.locals.pb.authStore.record;
         </a>
         <a
           href="/produits"
-          class="mob-link flex justify-between items-center py-2 text-base"
+          class="mob-link flex justify-between items-center [@media(max-height:700px)]:py-1 py-2 text-base"
           role="menuitem"
         >
           Nos produits <span class="opacity-40" aria-hidden="true"
@@ -255,13 +294,13 @@ const currentUser = Astro.locals.pb.authStore.record;
         </a>
 
         <div
-          class="mob-link h-px w-full bg-white/20 my-4"
+          class="mob-link h-px w-full bg-white/20 [@media(max-height:700px)]:my-2 my-4"
           role="separator"
           aria-hidden="true"
         >
         </div>
 
-        <div class="mob-actions mt-4 grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div class="mob-actions [@media(max-height:700px)]:mt-2 mt-4 grid grid-cols-1 md:grid-cols-2 gap-3">
           <a
             href="/contact"
             class="btn btn-ghost border-base-100 rounded-lg! w-full"
@@ -357,10 +396,33 @@ const currentUser = Astro.locals.pb.authStore.record;
   #discover-arrow.is-open {
     transform: rotate(90deg);
   }
+
+  #leclub-dropdown {
+    transition:
+      opacity 0.15s ease,
+      transform 0.15s ease,
+      visibility 0.15s ease;
+  }
+
+  #leclub-dropdown.is-open {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+    pointer-events: auto;
+  }
+
+  #leclub-arrow {
+    transition: transform 0.15s ease;
+  }
+
+  #leclub-arrow.is-open {
+    transform: rotate(90deg);
+  }
 </style>
 
 <script>
   let discoverIsOpen = false;
+  let leclubIsOpen = false;
   let globalClickHandler: ((e: Event) => void) | null = null;
   let mobileMenuInitialized = false;
 
@@ -392,6 +454,52 @@ const currentUser = Astro.locals.pb.authStore.record;
     setDiscoverState(false);
   }
 
+  function setLeclubState(isOpen: boolean) {
+    const dropdown = document.getElementById("leclub-dropdown") as HTMLElement | null;
+    const arrow = document.getElementById("leclub-arrow") as HTMLElement | null;
+    const toggle = document.getElementById("leclub-toggle") as HTMLElement | null;
+    if (!dropdown || !arrow || !toggle) return;
+    leclubIsOpen = isOpen;
+    toggle.setAttribute("aria-expanded", isOpen.toString());
+    dropdown.setAttribute("aria-hidden", (!isOpen).toString());
+    dropdown.classList.toggle("is-open", isOpen);
+    arrow.classList.toggle("is-open", isOpen);
+  }
+
+  function initLeclubDropdown() {
+    const toggle = document.getElementById("leclub-toggle") as HTMLElement | null;
+    const dropdown = document.getElementById("leclub-dropdown") as HTMLElement | null;
+    if (!toggle || !dropdown) return;
+    if (toggle.dataset.leclubBound === "true") return;
+    toggle.dataset.leclubBound = "true";
+
+    const toggleDropdown = (e?: Event) => {
+      e?.stopPropagation();
+      if (discoverIsOpen) setDiscoverState(false);
+      setLeclubState(!leclubIsOpen);
+    };
+
+    toggle.addEventListener("click", toggleDropdown);
+    toggle.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        toggleDropdown();
+      } else if (e.key === "Escape" && leclubIsOpen) {
+        setLeclubState(false);
+      }
+    });
+
+    document.addEventListener("click", (e: Event) => {
+      if (
+        leclubIsOpen &&
+        !toggle.contains(e.target as Node) &&
+        !dropdown.contains(e.target as Node)
+      ) {
+        setLeclubState(false);
+      }
+    });
+  }
+
   function initDiscoverDropdown() {
     const discoverToggle = document.getElementById(
       "discover-toggle",
@@ -410,6 +518,7 @@ const currentUser = Astro.locals.pb.authStore.record;
 
     const toggleDropdown = (e?: Event) => {
       e?.stopPropagation();
+      if (leclubIsOpen) setLeclubState(false);
       setDiscoverState(!discoverIsOpen);
     };
 
@@ -485,5 +594,6 @@ const currentUser = Astro.locals.pb.authStore.record;
 
     initMenu();
     initDiscoverDropdown();
+    initLeclubDropdown();
   });
 </script>
