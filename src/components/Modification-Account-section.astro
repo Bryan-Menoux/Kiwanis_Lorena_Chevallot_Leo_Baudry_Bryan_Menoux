@@ -13,10 +13,17 @@ const isAdmin = user?.administrateur;
 
 let effectiveRole: unknown = (user as any)?.role;
 try {
-  const currentMember = await Astro.locals.pb
-    .collection(Collections.Membres)
-    .getFirstListItem<MembresResponse>(`nom = "${user?.id}"`);
-  effectiveRole = currentMember?.role ?? effectiveRole;
+  try {
+    const currentMember = await Astro.locals.pb
+      .collection(Collections.Membres)
+      .getFirstListItem<MembresResponse>(`utilisateur = "${user?.id}"`);
+    effectiveRole = currentMember?.role ?? effectiveRole;
+  } catch {
+    const legacyMember = await Astro.locals.pb
+      .collection(Collections.Membres)
+      .getFirstListItem<MembresResponse>(`nom = "${user?.id}"`);
+    effectiveRole = legacyMember?.role ?? effectiveRole;
+  }
 } catch {
   // Aucun enregistrement membre lié : on conserve le rôle utilisateur.
 }
