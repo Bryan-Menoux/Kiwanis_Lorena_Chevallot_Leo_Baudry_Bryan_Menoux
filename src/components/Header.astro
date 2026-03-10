@@ -149,7 +149,6 @@ const currentUser = Astro.locals.pb.authStore.record;
         >Recrutement</a
       >
 
-
       {
         Astro.locals.pb.authStore.isValid &&
           currentUser?.verified &&
@@ -171,19 +170,17 @@ const currentUser = Astro.locals.pb.authStore.record;
     <div class="flex items-center gap-3">
       {
         currentUser ? (
-          <>
             <a
               id="account-link"
               href="/mon-compte"
               class="flex items-center gap-4"
             >
-              <span class="text-sm font-semibold">Mon compte</span>
+              <span class="text-sm font-semibold whitespace-nowrap hidden [@media(min-width:1400px)]:inline">Mon compte</span>
               <div
                 class="w-10 h-10 icon-accent"
                 style={`--icon-url: url("${userDataUri}")`}
               />
             </a>
-          </>
         ) : (
           <a
             id="connexion-link"
@@ -375,28 +372,7 @@ const currentUser = Astro.locals.pb.authStore.record;
     transform: translateY(-110%);
   }
 
-  #discover-dropdown {
-    transition:
-      opacity 0.15s ease,
-      transform 0.15s ease,
-      visibility 0.15s ease;
-  }
-
-  #discover-dropdown.is-open {
-    opacity: 1;
-    visibility: visible;
-    transform: translateY(0);
-    pointer-events: auto;
-  }
-
-  #discover-arrow {
-    transition: transform 0.15s ease;
-  }
-
-  #discover-arrow.is-open {
-    transform: rotate(90deg);
-  }
-
+  #discover-dropdown,
   #leclub-dropdown {
     transition:
       opacity 0.15s ease,
@@ -404,6 +380,7 @@ const currentUser = Astro.locals.pb.authStore.record;
       visibility 0.15s ease;
   }
 
+  #discover-dropdown.is-open,
   #leclub-dropdown.is-open {
     opacity: 1;
     visibility: visible;
@@ -411,145 +388,76 @@ const currentUser = Astro.locals.pb.authStore.record;
     pointer-events: auto;
   }
 
+  #discover-arrow,
   #leclub-arrow {
     transition: transform 0.15s ease;
   }
 
+  #discover-arrow.is-open,
   #leclub-arrow.is-open {
     transform: rotate(90deg);
   }
 </style>
 
 <script>
-  let discoverIsOpen = false;
-  let leclubIsOpen = false;
-  let globalClickHandler: ((e: Event) => void) | null = null;
+  const DROPDOWN_IDS = ["leclub", "discover"] as const;
+  type DropdownId = typeof DROPDOWN_IDS[number];
+
+  const openState: Record<DropdownId, boolean> = { leclub: false, discover: false };
   let mobileMenuInitialized = false;
 
-  function initMenu() {
-    initMobileMenuWhenNeeded();
-  }
-
-  function setDiscoverState(isOpen: boolean) {
-    const discoverDropdown = document.getElementById(
-      "discover-dropdown",
-    ) as HTMLElement | null;
-    const discoverArrow = document.getElementById(
-      "discover-arrow",
-    ) as HTMLElement | null;
-    const discoverToggle = document.getElementById(
-      "discover-toggle",
-    ) as HTMLElement | null;
-
-    if (!discoverDropdown || !discoverArrow || !discoverToggle) return;
-
-    discoverIsOpen = isOpen;
-    discoverToggle.setAttribute("aria-expanded", isOpen.toString());
-    discoverDropdown.setAttribute("aria-hidden", (!isOpen).toString());
-    discoverDropdown.classList.toggle("is-open", isOpen);
-    discoverArrow.classList.toggle("is-open", isOpen);
-  }
-
-  function closeDiscoverDropdown() {
-    setDiscoverState(false);
-  }
-
-  function setLeclubState(isOpen: boolean) {
-    const dropdown = document.getElementById("leclub-dropdown") as HTMLElement | null;
-    const arrow = document.getElementById("leclub-arrow") as HTMLElement | null;
-    const toggle = document.getElementById("leclub-toggle") as HTMLElement | null;
-    if (!dropdown || !arrow || !toggle) return;
-    leclubIsOpen = isOpen;
-    toggle.setAttribute("aria-expanded", isOpen.toString());
-    dropdown.setAttribute("aria-hidden", (!isOpen).toString());
+  function setState(id: DropdownId, isOpen: boolean) {
+    const toggle = document.getElementById(`${id}-toggle`);
+    const dropdown = document.getElementById(`${id}-dropdown`);
+    const arrow = document.getElementById(`${id}-arrow`);
+    if (!toggle || !dropdown || !arrow) return;
+    openState[id] = isOpen;
+    toggle.setAttribute("aria-expanded", String(isOpen));
+    dropdown.setAttribute("aria-hidden", String(!isOpen));
     dropdown.classList.toggle("is-open", isOpen);
     arrow.classList.toggle("is-open", isOpen);
   }
 
-  function initLeclubDropdown() {
-    const toggle = document.getElementById("leclub-toggle") as HTMLElement | null;
-    const dropdown = document.getElementById("leclub-dropdown") as HTMLElement | null;
-    if (!toggle || !dropdown) return;
-    if (toggle.dataset.leclubBound === "true") return;
-    toggle.dataset.leclubBound = "true";
+  function initDropdown(id: DropdownId) {
+    const toggle = document.getElementById(`${id}-toggle`);
+    const dropdown = document.getElementById(`${id}-dropdown`);
+    if (!toggle || !dropdown || toggle.dataset.bound === "true") return;
+    toggle.dataset.bound = "true";
 
-    const toggleDropdown = (e?: Event) => {
-      e?.stopPropagation();
-      if (discoverIsOpen) setDiscoverState(false);
-      setLeclubState(!leclubIsOpen);
-    };
-
-    toggle.addEventListener("click", toggleDropdown);
-    toggle.addEventListener("keydown", (e) => {
-      if (e.key === "Enter" || e.key === " ") {
-        e.preventDefault();
-        toggleDropdown();
-      } else if (e.key === "Escape" && leclubIsOpen) {
-        setLeclubState(false);
-      }
+    toggle.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const other = DROPDOWN_IDS.find((d) => d !== id)!;
+      if (openState[other]) setState(other, false);
+      setState(id, !openState[id]);
     });
 
-    document.addEventListener("click", (e: Event) => {
-      if (
-        leclubIsOpen &&
-        !toggle.contains(e.target as Node) &&
-        !dropdown.contains(e.target as Node)
-      ) {
-        setLeclubState(false);
+    toggle.addEventListener("keydown", (e: KeyboardEvent) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        toggle.click();
+      } else if (e.key === "Escape" && openState[id]) {
+        setState(id, false);
       }
     });
   }
 
-  function initDiscoverDropdown() {
-    const discoverToggle = document.getElementById(
-      "discover-toggle",
-    ) as HTMLElement;
-    const discoverDropdown = document.getElementById(
-      "discover-dropdown",
-    ) as HTMLElement;
-
-    if (!discoverToggle || !discoverDropdown) return;
-    if (discoverToggle.dataset.discoverBound === "true") return;
-    discoverToggle.dataset.discoverBound = "true";
-
-    if (globalClickHandler) {
-      document.removeEventListener("click", globalClickHandler);
+  // Handler global unique pour fermer tous les dropdowns au clic extérieur
+  document.addEventListener("click", (e) => {
+    for (const id of DROPDOWN_IDS) {
+      if (!openState[id]) continue;
+      const toggle = document.getElementById(`${id}-toggle`);
+      const dropdown = document.getElementById(`${id}-dropdown`);
+      if (
+        !toggle?.contains(e.target as Node) &&
+        !dropdown?.contains(e.target as Node)
+      ) {
+        setState(id, false);
+      }
     }
-
-    const toggleDropdown = (e?: Event) => {
-      e?.stopPropagation();
-      if (leclubIsOpen) setLeclubState(false);
-      setDiscoverState(!discoverIsOpen);
-    };
-
-    discoverToggle.addEventListener("click", toggleDropdown);
-
-    discoverToggle.addEventListener("keydown", (e) => {
-      if (e.key === "Enter" || e.key === " ") {
-        e.preventDefault();
-        toggleDropdown();
-      } else if (e.key === "Escape" && discoverIsOpen) {
-        closeDiscoverDropdown();
-      }
-    });
-
-    // Ajouter le handler global une seule fois
-    globalClickHandler = (e: Event) => {
-      if (
-        discoverIsOpen &&
-        !discoverToggle.contains(e.target as Node) &&
-        !discoverDropdown.contains(e.target as Node)
-      ) {
-        closeDiscoverDropdown();
-      }
-    };
-    document.addEventListener("click", globalClickHandler);
-  }
+  });
 
   function initMobileMenuWhenNeeded() {
-    if (mobileMenuInitialized) return;
-    if (!window.matchMedia("(max-width: 1023px)").matches) return;
-
+    if (mobileMenuInitialized || !window.matchMedia("(max-width: 1023px)").matches) return;
     mobileMenuInitialized = true;
     void import("../utils/mobileMenu")
       .then(({ initMobileMenu }) => {
@@ -562,38 +470,29 @@ const currentUser = Astro.locals.pb.authStore.record;
       .catch(() => {});
   }
 
+  window.addEventListener("resize", initMobileMenuWhenNeeded, { passive: true });
+
   document.addEventListener("DOMContentLoaded", () => {
-    const mobileLogoutBtn = document.getElementById(
-      "mobile-logout-btn",
-    ) as HTMLButtonElement | null;
-    if (mobileLogoutBtn) {
-      mobileLogoutBtn.addEventListener("click", async () => {
-        try {
-          const response = await fetch("/api/logout", { method: "POST" });
-          if (response.ok) {
-            window.location.href = "/connexion";
-          }
-        } catch (error) {
-          console.error("Erreur lors de la déconnexion:", error);
-        }
-      });
+    document.getElementById("mobile-logout-btn")?.addEventListener("click", async () => {
+      try {
+        const res = await fetch("/api/logout", { method: "POST" });
+        if (res.ok) window.location.href = "/connexion";
+      } catch (e) {
+        console.error("Erreur lors de la déconnexion:", e);
+      }
+    });
+
+    const current = window.location.pathname + window.location.search;
+    if (!current.startsWith("/connexion")) {
+      const enc = encodeURIComponent(current);
+      (document.getElementById("connexion-link") as HTMLAnchorElement | null)
+        ?.setAttribute("href", "/connexion?redirect=" + enc);
+      (document.getElementById("mobile-connexion-link") as HTMLAnchorElement | null)
+        ?.setAttribute("href", "/connexion?redirect=" + enc);
     }
 
-    // si l'utilisateur clique sur un lien de connexion, on ajoute le param
-    // redirect avec la page courante (sauf si on est déjà sur la page de connexion)
-    const updateLoginLinks = () => {
-      const current = window.location.pathname + window.location.search;
-      if (current.startsWith("/connexion")) return;
-      const enc = encodeURIComponent(current);
-      const desktop = document.getElementById("connexion-link") as HTMLAnchorElement | null;
-      const mobile = document.getElementById("mobile-connexion-link") as HTMLAnchorElement | null;
-      if (desktop) desktop.setAttribute("href", "/connexion?redirect=" + enc);
-      if (mobile) mobile.setAttribute("href", "/connexion?redirect=" + enc);
-    };
-    updateLoginLinks();
-
-    initMenu();
-    initDiscoverDropdown();
-    initLeclubDropdown();
+    initMobileMenuWhenNeeded();
+    initDropdown("leclub");
+    initDropdown("discover");
   });
 </script>
