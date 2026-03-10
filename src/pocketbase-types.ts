@@ -211,11 +211,24 @@ export type ProduitsRecord = {
 	updated: IsoAutoDateString
 }
 
+export enum ProjetsTypeActionOptions {
+	"Événement solidaire" = "Événement solidaire",
+	"Intervention en milieu scolaire" = "Intervention en milieu scolaire",
+	"Soutien médical" = "Soutien médical",
+	"Action ponctuelle" = "Action ponctuelle",
+	"Atelier éducatif et culturel" = "Atelier éducatif et culturel",
+	"Animations" = "Animations",
+	"Rencontre intergénération" = "Rencontre intergénération",
+}
 export type ProjetsRecord = {
 	created: IsoAutoDateString
+	date?: IsoDateString
 	id: string
+	nom_adresse?: string
 	titre?: string
+	type_action?: ProjetsTypeActionOptions
 	updated: IsoAutoDateString
+	url_adresse?: string
 }
 
 export enum UsersGenreOptions {
