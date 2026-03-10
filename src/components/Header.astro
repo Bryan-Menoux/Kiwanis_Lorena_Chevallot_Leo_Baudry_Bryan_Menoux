@@ -1,14 +1,28 @@
 ---
 // src/components/Header.astro
-import Logo from "../assets/logo-kiwanis-full.svg";
-import arrowPreviousSmall from "../assets/arrow-previous-small.svg";
-import user from "../assets/user.svg";
-import userWhite from "../assets/user-white.svg";
+import LogoRaw from "../assets/logo-kiwanis-full.svg?raw";
+import ArrowRaw from "../assets/arrow-previous-small.svg?raw";
+import UserRaw from "../assets/user.svg?raw";
+import UserWhiteRaw from "../assets/user-white.svg?raw";
+import DiagArrow from "./DiagArrow.astro";
 
+// Inline SVGs : supprime les dimensions codées en dur → remplit le conteneur
+const logoSvg = LogoRaw
+  .replace(/\s+width="[^"]*"/, ' width="100%"')
+  .replace(/\s+height="[^"]*"/, ' height="100%"');
+const arrowSvg = ArrowRaw
+  .replace(/<\?xml[^?]*\?>\s*/g, '')
+  .replace(/<!--[\s\S]*?-->\s*/g, '')
+  .replace(/\s+width="[^"]*"/, ' width="100%"')
+  .replace(/\s+height="[^"]*"/, ' height="100%"')
+  .trim();
+const userWhiteSvg = UserWhiteRaw
+  .replace(/\s+width="[^"]*"/, ' width="100%"')
+  .replace(/\s+height="[^"]*"/, ' height="100%"');
+// Masque CSS : data URI (utilisé seulement si l'utilisateur est connecté)
+const userDataUri = `data:image/svg+xml,${encodeURIComponent(UserRaw)}`;
 
 const currentUser = Astro.locals.pb.authStore.record;
-import DiagArrow from "./DiagArrow.astro";
-const mobileLogoSrc = "/favicon-96.png";
 ---
 
 <header
@@ -17,13 +31,7 @@ const mobileLogoSrc = "/favicon-96.png";
 >
   <div class="hidden lg:flex py-4 px-12 items-center justify-between">
     <a href="/" class="flex items-center gap-4">
-      <img
-        src={Logo.src}
-        alt="Logo"
-        loading="eager"
-        class="h-14 w-auto"
-        draggable="false"
-       decoding="async" />
+      <span class="inline-block h-14 w-14 shrink-0" role="img" aria-label="Logo Kiwanis Pays de Montbéliard" set:html={logoSvg} />
       <div class="flex flex-col text-gray-900 leading-tight">
         <span class="text-xl font-bold tracking-tighter font-merriweather"
           >KIWANIS</span
@@ -60,13 +68,7 @@ const mobileLogoSrc = "/favicon-96.png";
             class="inline-flex transition-transform duration-300"
             aria-hidden="true"
           >
-            <img
-              src={arrowPreviousSmall.src}
-              alt=""
-              aria-hidden="true"
-              loading="eager"
-              class="h-6 w-6 rotate-180"
-             decoding="async" />
+            <span class="inline-flex h-6 w-6 rotate-180" aria-hidden="true" set:html={arrowSvg} />
           </span
           >
         </div>
@@ -139,7 +141,7 @@ const mobileLogoSrc = "/favicon-96.png";
               <span class="text-sm font-semibold">Mon compte</span>
               <div
                 class="w-10 h-10 icon-accent"
-                style={`--icon-url: url(${user.src})`}
+                style={`--icon-url: url("${userDataUri}")`}
               />
             </a>
           </>
@@ -159,12 +161,7 @@ const mobileLogoSrc = "/favicon-96.png";
   <div class="lg:hidden flex flex-col items-center p-4 gap-3 w-full">
     <div class="w-full flex items-center justify-between gap-4 max-w-[90dvw]">
       <a href="/" class="shrink-0">
-        <img
-          src={Logo.src}
-          alt="Logo"
-          loading="eager"
-          class="h-12 w-auto"
-         decoding="async" />
+        <span class="inline-block h-12 w-12 shrink-0" role="img" aria-label="Logo Kiwanis Pays de Montbéliard" set:html={logoSvg} />
       </a>
 
       <button
@@ -296,12 +293,7 @@ const mobileLogoSrc = "/favicon-96.png";
                   >
                     <div class="avatar">
                       <div class="w-10 rounded-full ring ring-offset-base-100 ring-white/30 overflow-hidden">
-                        <img
-                          src={userWhite.src}
-                          alt=""
-                          aria-hidden="true"
-                          loading="eager"
-                         decoding="async" />
+                        <span class="inline-block w-full h-full" aria-hidden="true" set:html={userWhiteSvg} />
                       </div>
                     </div>
                     <span class="text-sm font-semibold">Mon compte</span>

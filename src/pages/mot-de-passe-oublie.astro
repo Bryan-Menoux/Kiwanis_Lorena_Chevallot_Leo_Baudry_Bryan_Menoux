@@ -3,7 +3,10 @@ import Layout from "../layouts/Layout-login.astro";
 
 import shapesLeft from "../assets/login-page/shapes-left.svg";
 import shapesRight from "../assets/login-page/shapes-right.svg";
-import logo from "../assets/logo-kiwanis-full.svg";
+import logoRaw from "../assets/logo-kiwanis-full.svg?raw";
+const logoSvg = logoRaw
+  .replace(/\s+width="[^"]*"/, ' width="100%"')
+  .replace(/\s+height="[^"]*"/, ' height="100%"');
 import backArrow from "../assets/back-arrow.svg";
 import userIcon from "../assets/login-page/user.svg";
 import lockIcon from "../assets/login-page/lock.svg";
@@ -69,12 +72,7 @@ if (isPostForm) {
   <div
     class="absolute -translate-x-1/2 -translate-y-1/2 left-1/2 top-1/2 flex flex-col lg:flex-row gap-4 md:gap-16 justify-center items-center z-10"
   >
-    <img
-      src={logo.src}
-      alt="Logo Kiwanis Pays de Montbéliard"
-      loading="lazy"
-      class="md:w-[30dvw] lg:w-[15dvw]"
-     decoding="async" />
+    <span class="block md:w-[30dvw] lg:w-[15dvw] aspect-square" role="img" aria-label="Logo Kiwanis Pays de Montbéliard" set:html={logoSvg} />
     <div class="w-fit min-w-[70dvw] md:min-w-[60dvw] lg:min-w-[20dvw] lg:max-w-[60dvw]">
       <div
         id="auth-flags"

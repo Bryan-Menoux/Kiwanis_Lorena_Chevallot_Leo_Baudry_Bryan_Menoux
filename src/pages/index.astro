@@ -203,6 +203,16 @@ const mapAddress = "76 bis faubourg de Besançon, 25200 Montbéliard";
         class="hidden w-full h-full"
         style="min-height:24rem;"
       ></div>
+      <!-- Bouton overlay affiché une fois la carte chargée -->
+      <a
+        data-map-gmaps-btn
+        href={mapGoogleUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        class="hidden absolute bottom-3 right-3 btn btn-accent px-8 py-6 shadow-md z-[1000]"
+      >
+        Voir sur Google Maps ↗
+      </a>
     </div>
   </div>
 
@@ -353,6 +363,7 @@ const mapAddress = "76 bis faubourg de Besançon, 25200 Montbéliard";
     if (root) {
       const target = root.querySelector<HTMLElement>("[data-map-target]");
       const placeholder = root.querySelector<HTMLElement>("[data-map-placeholder]");
+      const gmapsBtn = root.querySelector<HTMLElement>("[data-map-gmaps-btn]");
       let loaded = false;
 
       const loadMap = () => {
@@ -385,11 +396,11 @@ const mapAddress = "76 bis faubourg de Besançon, 25200 Montbéliard";
           const map = L.map(target, { scrollWheelZoom: false })
             .setView([47.5098546, 6.781242], 16);
           L.tileLayer(
-            "https://tiles.stadiamaps.com/tiles/osm_bright/{z}/{x}/{y}{r}.png",
+            "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
             {
-              maxZoom: 20,
+              maxZoom: 19,
               attribution:
-                '&copy; <a href="https://stadiamaps.com/">Stadia Maps</a> &copy; <a href="https://openmaptiles.org/">OpenMapTiles</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+                '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
             }
           ).addTo(map);
           L.marker([47.5098546, 6.781242])
@@ -397,6 +408,7 @@ const mapAddress = "76 bis faubourg de Besançon, 25200 Montbéliard";
             .bindPopup("<b>Kiwanis Pays de Montbéliard</b><br>76 bis faubourg de Besançon, 25200 Montbéliard")
             .openPopup();
           setTimeout(() => map.invalidateSize(), 50);
+          gmapsBtn?.classList.remove("hidden");
         };
         document.head.appendChild(s);
       };

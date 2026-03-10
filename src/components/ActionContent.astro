@@ -1,7 +1,13 @@
 ---
 import DiagArrow from "./DiagArrow.astro";
 import imageIcon from "../assets/image-icon.svg";
-import backArrow from "../assets/arrow-previous-small.svg";
+import backArrowRaw from "../assets/arrow-previous-small.svg?raw";
+const backArrowSvg = backArrowRaw
+  .replace(/<\?xml[^?]*\?>\s*/g, '')
+  .replace(/<!--[\s\S]*?-->\s*/g, '')
+  .replace(/\s+width="[^"]*"/, ' width="100%"')
+  .replace(/\s+height="[^"]*"/, ' height="100%"')
+  .trim();
 import crossCircle from "../assets/cross-circle.svg";
 import galleryUrl from "../scripts/gallery.js?url";
 import galleryDisplayUrl from "../scripts/gallery-display.js?url";
@@ -485,22 +491,14 @@ const hasThanksSection = hasNonEmptyText(action?.description_remerciements);
             type="button"
             class="absolute left-4 lg:left-48 top-1/2 -translate-y-1/2 bg-base-100 bg-opacity-80 rounded-full h-12 w-12 flex items-center justify-center gap-2 z-110 cursor-pointer"
           >
-            <img
-              src={backArrow.src}
-              alt=""
-              class="w-6 h-6 md:w-5 md:h-5"
-            />
+            <span class="inline-flex w-6 h-6 md:w-5 md:h-5" aria-hidden="true" set:html={backArrowSvg} />
           </button>
           <button
             id="nextButton"
             type="button"
             class="absolute right-4 lg:right-48 top-1/2 -translate-y-1/2 bg-base-100 bg-opacity-80 rounded-full h-12 w-12 flex items-center justify-center gap-2 z-110 cursor-pointer"
           >
-            <img
-              src={backArrow.src}
-              alt=""
-              class="w-6 h-6 md:w-5 md:h-5 rotate-180"
-            />
+            <span class="inline-flex w-6 h-6 md:w-5 md:h-5 rotate-180" aria-hidden="true" set:html={backArrowSvg} />
           </button>
           <div class="relative p-2 md:p-4">
             <img loading="lazy"
