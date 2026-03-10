@@ -227,7 +227,7 @@ const { firstName, lastName } = splitUserName(user!.name);
   const loadingSpinner = document.getElementById("loadingSpinner");
 
   function showSuccess(
-    message = "OK Vos modifications ont bien été enregistrées.",
+    message = "Vos informations de compte ont bien été enregistrées.",
   ) {
     showAlert({
       message,
@@ -272,7 +272,7 @@ const { firstName, lastName } = splitUserName(user!.name);
 
         // Validation simple
         if (!firstName.trim()) {
-          showError("Le prénom est requis");
+          showError("Le prénom est obligatoire.");
           return;
         }
 
@@ -347,7 +347,7 @@ const { firstName, lastName } = splitUserName(user!.name);
             // Si déconnexion requise (changement d'email ou mot de passe), rediriger vers connexion
             if (result.logout) {
               showSuccess(
-                "OK Profil mis à jour. Veuillez vous reconnecter avec vos nouvelles informations.",
+                "Votre profil a été mis à jour. Veuillez vous reconnecter avec vos nouvelles informations.",
               );
               setTimeout(() => {
                 window.location.href = "/connexion";
@@ -355,7 +355,7 @@ const { firstName, lastName } = splitUserName(user!.name);
             } else {
               showSuccess(
                 result.message ||
-                  "OK Vos modifications ont bien été enregistrées.",
+                  "Vos informations de compte ont bien été enregistrées.",
               );
             }
           } else {
@@ -366,7 +366,7 @@ const { firstName, lastName } = splitUserName(user!.name);
             if (displayGenre) displayGenre.value = oldGenre!;
 
             showError(
-              result.error || "Erreur lors de la mise à jour",
+              result.error || "La mise à jour du compte a échoué.",
             );
           }
         } catch (error) {
@@ -376,7 +376,9 @@ const { firstName, lastName } = splitUserName(user!.name);
           if (displayEmail) displayEmail.value = oldEmail!;
           if (displayGenre) displayGenre.value = oldGenre!;
 
-          showError("Erreur de connexion au serveur");
+          showError(
+            "Impossible d'enregistrer vos modifications. Vérifiez votre connexion puis réessayez.",
+          );
         } finally {
           submitBtn.disabled = false;
           submitText.textContent = "Enregistrer";

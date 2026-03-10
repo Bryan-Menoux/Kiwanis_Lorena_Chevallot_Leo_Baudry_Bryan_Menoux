@@ -47,7 +47,7 @@ export async function submitFormAJAX(
       if (showNotification) {
         showToast({
           type: "success",
-          message: result.message || "Opération effectuée avec succès",
+          message: result.message || "L'opération a été réalisée avec succès.",
         });
       }
       onSuccess?.(result);
@@ -55,7 +55,7 @@ export async function submitFormAJAX(
       if (showNotification) {
         showToast({
           type: "error",
-          message: result.error || "Une erreur est survenue",
+          message: result.error || "L'opération a échoué. Veuillez réessayer.",
         });
       }
       onError?.(result);
@@ -66,7 +66,8 @@ export async function submitFormAJAX(
     if (showNotification) {
       showToast({
         type: "error",
-        message: "Erreur de connexion au serveur",
+        message:
+          "Impossible de joindre le serveur. Vérifiez votre connexion puis réessayez.",
       });
     }
     onError?.(error);

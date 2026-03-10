@@ -1,4 +1,4 @@
-import type { APIRoute } from 'astro';
+﻿import type { APIRoute } from 'astro';
 import { capitalizeName } from '../../utils/utilitaires.js';
 import { nowIso } from '../../utils/utilitaires.js';
 import {
@@ -317,15 +317,25 @@ export const POST: APIRoute = async ({ locals, request }) => {
             );
         }
 
+        const actionMessageMap: Record<string, string> = {
+          approve: "Personne approuvée avec succès.",
+          reject: "Personne rejetée avec succès.",
+          unreject: "Personne remise en attente avec succès.",
+          unverify: "Personne retirée de la liste des comptes vérifiés avec succès.",
+        };
+
         return new Response(
-          JSON.stringify({ 
-            success: true, 
+          JSON.stringify({
+            success: true,
             action,
             userId,
-            message: `Action ${action} effectuée avec succès`
+            message:
+              actionMessageMap[action] ||
+              "Action de vérification effectuée avec succès.",
           }),
           { status: 200, headers: { 'Content-Type': 'application/json' } }
         );
+
 
       case 'modification':
         // Modification des infos d'un autre utilisateur

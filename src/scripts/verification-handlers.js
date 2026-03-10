@@ -27,6 +27,49 @@ function getTargetList(action, fromList = null) {
   }
 }
 
+function getVerificationActionLabel(action) {
+  switch (action) {
+    case "approve":
+      return "approuver l'utilisateur";
+    case "reject":
+      return "refuser l'utilisateur";
+    case "unreject":
+      return "remettre l'utilisateur en attente";
+    case "unverify":
+      return "retirer l'utilisateur des comptes vérifiés";
+    default:
+      return "mettre à jour le statut de l'utilisateur";
+  }
+}
+
+function getVerificationSuccessMessage(action) {
+  switch (action) {
+    case "approve":
+      return "L'utilisateur a été approuvé et ajouté aux comptes vérifiés.";
+    case "reject":
+      return "L'utilisateur a été refusé.";
+    case "unreject":
+      return "L'utilisateur a été remis en attente de vérification.";
+    case "unverify":
+      return "L'utilisateur a été retiré de la liste des comptes vérifiés.";
+    default:
+      return "Le statut de l'utilisateur a été mis à jour avec succès.";
+  }
+}
+
+function normalizeVerificationError(errorMessage) {
+  if (!errorMessage) return "Erreur inconnue";
+  const detail = String(errorMessage).trim();
+  if (detail.length === 0) return "Erreur inconnue";
+  if (detail.startsWith("HTTP ")) {
+    return `le serveur a répondu ${detail}`;
+  }
+  if (detail.toLowerCase().includes("réseau")) {
+    return "problème de connexion réseau";
+  }
+  return detail;
+}
+
 // Gestion de l'état de chargement des éléments interactifs
 function setElementLoading(element, loading, originalHTML = null) {
   if (loading) {
@@ -237,19 +280,19 @@ async function handleButtonClick(e) {
         }
         showAlert({
           type: "success",
-          message: result.message || "Action effectuée avec succès",
+          message: result.message || getVerificationSuccessMessage(action),
         });
       } else {
         // Gestion des erreurs côté serveur
-        handleError(result.error, button, originalHTML);
+        handleError(result.error, button, originalHTML, action);
       }
     } else {
       // Gestion des erreurs HTTP
-      handleError(`HTTP ${response.status}`, button, originalHTML);
+      handleError(`HTTP ${response.status}`, button, originalHTML, action);
     }
   } catch (error) {
     // Gestion des erreurs réseau
-    handleError("Erreur réseau", button, originalHTML);
+    handleError("Erreur réseau", button, originalHTML, action);
   }
 }
 
@@ -261,6 +304,8 @@ async function handleFormSubmit(e) {
   const form = e.target;
   const submitButton = form.querySelector('button[type="submit"]');
   const originalHTML = submitButton?.innerHTML;
+  const actionInput = form.querySelector('input[name="action"]');
+  const action = actionInput?.value || "";
 
   // Activation de l'état de chargement du bouton de soumission
   if (submitButton) {
@@ -287,34 +332,33 @@ async function handleFormSubmit(e) {
         const userCard = form.closest("[data-user-id]");
 
         if (userCard) {
-          const actionInput = form.querySelector('input[name="action"]');
-          const action = actionInput?.value;
-
           // Application de l'action sur la carte
           await processUserAction(userCard, action);
         }
         showAlert({
           type: "success",
-          message: result.message || "Action effectuée avec succès",
+          message: result.message || getVerificationSuccessMessage(action),
         });
       } else {
         // Gestion des erreurs
-        handleError(result.error, submitButton, originalHTML);
+        handleError(result.error, submitButton, originalHTML, action);
       }
     } else {
-        handleError(`HTTP ${response.status}`, submitButton, originalHTML);
+        handleError(`HTTP ${response.status}`, submitButton, originalHTML, action);
     }
   } catch (error) {
-    handleError("Erreur réseau", submitButton, originalHTML);
+    handleError("Erreur réseau", submitButton, originalHTML, action);
   }
 }
 
 // Gestion des erreurs
 // Affiche un message d'erreur et restaure l'état de l'élément
-function handleError(errorMessage, element, originalHTML) {
+function handleError(errorMessage, element, originalHTML, action = "") {
+  const actionLabel = getVerificationActionLabel(action);
+  const detail = normalizeVerificationError(errorMessage);
   showAlert({
     type: "error",
-    message: `Une erreur est survenue: ${errorMessage}`,
+    message: `Impossible de ${actionLabel} : ${detail}.`,
   });
 
   if (element && originalHTML) {

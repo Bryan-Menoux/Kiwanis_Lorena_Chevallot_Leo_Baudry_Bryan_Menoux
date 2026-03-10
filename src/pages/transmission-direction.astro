@@ -251,7 +251,7 @@ try {
                   <button
                     type="button"
                     id="handover-btn"
-                    class="btn btn-warning flex-1"
+                    class="btn btn-warning flex-1 min-h-12 md:min-h-full"
                   >
                     Confirmer la transmission
                   </button>
@@ -385,7 +385,7 @@ try {
       if (!targetUserId) {
         showAlert({
           type: "error",
-          message: "Sélectionnez un membre avant de confirmer la transmission.",
+          message: "Sélectionnez un membre avant de lancer la transmission de direction.",
         });
         return;
       }
@@ -394,7 +394,7 @@ try {
 
       const confirmed = await showConfirm({
         title: "Confirmer la transmission",
-        message: `Confirmez la transmission du rôle de directeur/directrice à ${selectedLabel}.`,
+        message: `Confirmez la transmission du rôle de président ou présidente à ${selectedLabel}.`,
         type: "warning",
         confirmLabel: "Transmettre",
         cancelLabel: "Annuler",
@@ -426,7 +426,9 @@ try {
         if (response.ok && result.success) {
           showAlert({
             type: "success",
-            message: result.message || "Transmission de direction effectuée avec succès",
+            message:
+              result.message ||
+              "La transmission de direction a bien été effectuée.",
           });
           setTimeout(() => {
             window.location.href = "/mon-compte";
@@ -436,12 +438,15 @@ try {
 
         showAlert({
           type: "error",
-          message: result.error || "Erreur lors de la transmission de direction",
+          message:
+            result.error ||
+            "La transmission de direction n'a pas pu être effectuée.",
         });
       } catch (error) {
         showAlert({
           type: "error",
-          message: "Erreur réseau",
+          message:
+            "Impossible de transmettre la direction pour le moment. Vérifiez votre connexion puis réessayez.",
         });
       } finally {
         handoverButton.disabled = false;

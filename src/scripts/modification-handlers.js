@@ -175,12 +175,16 @@ export function initModifications() {
 
           showAlert({
             type: "success",
-            message: data.message || "Utilisateur modifié avec succès",
+            message:
+              data.message ||
+              "Les informations de l'utilisateur ont été mises à jour avec succès.",
           });
         } else {
           showAlert({
             type: "error",
-            message: `Erreur : ${data.error || "Erreur inconnue"}`,
+            message:
+              data.error ||
+              "La modification de cet utilisateur n'a pas pu être enregistrée.",
           });
 
           if (submitBtn instanceof HTMLButtonElement && originalHTML) {
@@ -191,7 +195,8 @@ export function initModifications() {
       } catch {
         showAlert({
           type: "error",
-          message: "Erreur réseau",
+          message:
+            "Impossible d'enregistrer la modification pour le moment. Vérifiez votre connexion puis réessayez.",
         });
 
         if (submitBtn instanceof HTMLButtonElement && originalHTML) {
@@ -220,9 +225,12 @@ export function initModifications() {
     deleteBtn.addEventListener("click", async () => {
       if (!editingCard) return;
       const confirmed = await showConfirm({
-        message: "Êtes-vous sûr de vouloir supprimer cet utilisateur ?",
         title: "Supprimer l'utilisateur",
+        message:
+          "Confirmez-vous la suppression définitive de cet utilisateur ? Cette action est irréversible.",
         type: "warning",
+        confirmLabel: "Supprimer",
+        cancelLabel: "Annuler",
       });
       if (!confirmed) return;
 
@@ -251,18 +259,21 @@ export function initModifications() {
 
           showAlert({
             type: "success",
-            message: data.message || "Utilisateur supprimé avec succès",
+            message: data.message || "L'utilisateur a été supprimé avec succès.",
           });
         } else {
           showAlert({
             type: "error",
-            message: `Erreur : ${data.error || "Erreur inconnue"}`,
+            message:
+              data.error ||
+              "La suppression de cet utilisateur n'a pas pu être effectuée.",
           });
         }
       } catch {
         showAlert({
           type: "error",
-          message: "Erreur réseau",
+          message:
+            "Impossible de supprimer cet utilisateur pour le moment. Vérifiez votre connexion puis réessayez.",
         });
       }
     });

@@ -32,10 +32,12 @@ if (isPostForm) {
     await Astro.locals.pb.collection('users').requestPasswordReset(email);
 
     resetRequested = true;
-    serverMessage = "Si ce compte existe, un e-mail de réinitialisation a été envoyé.";
+    serverMessage =
+      "Si ce compte existe, un e-mail de réinitialisation vient d'être envoyé.";
   } catch (error) {
     resetRequested = false;
-    serverMessage = "Une erreur est survenue lors de la demande de réinitialisation.";
+    serverMessage =
+      "La demande de réinitialisation n'a pas pu être traitée. Veuillez réessayer.";
   }
 }
 ---
@@ -136,12 +138,15 @@ if (isPostForm) {
     const message = flags.dataset.message || "";
 
     if (resetRequested) {
-      showError(message || "Si ce compte existe, un e-mail a été envoyé.", "success");
+      showError(
+        message || "Si ce compte existe, un e-mail de réinitialisation a été envoyé.",
+        "success",
+      );
     } else if (message) {
       showError(message, "error");
     }
   } else {
-    showError("Une erreur est survenue. Veuillez réessayer plus tard.");
+    showError("Une erreur est survenue lors du chargement de la page.");
   }
 
   // Bonus : journalise les événements du formulaire

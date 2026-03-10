@@ -258,7 +258,7 @@ import { ActionsTypeDeChiffreOptions } from '../pocketbase-types';
           if (remaining <= 0) {
             showAlert({
               type: "warning",
-              message: "Vous ne pouvez pas ajouter plus de 8 images.",
+              message: "Vous avez déjà atteint la limite de 8 images pour la galerie.",
             });
             return;
           }
@@ -266,7 +266,7 @@ import { ActionsTypeDeChiffreOptions } from '../pocketbase-types';
             files = files.slice(0, remaining);
             showAlert({
               type: "warning",
-              message: `Seules ${remaining} image(s) seront ajoutée(s) (maximum ${MAX_IMAGES}).`,
+              message: `Seules ${remaining} image(s) ont été ajoutées. La galerie est limitée à ${MAX_IMAGES} images au total.`,
             });
           }
 

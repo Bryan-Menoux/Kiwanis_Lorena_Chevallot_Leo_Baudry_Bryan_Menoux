@@ -134,7 +134,7 @@ function getMissingHeaderFields(form) {
 
 function buildStepOneRequiredMessage(missingHeaderFields) {
   if (!missingHeaderFields.length) return "";
-  return `Complétez l'étape 1 : ${missingHeaderFields.join(", ")}.`;
+  return `Complétez l'étape 1 en renseignant : ${missingHeaderFields.join(", ")}.`;
 }
 
 
@@ -183,7 +183,10 @@ function validateStep(form, step) {
 
   if (invalidElement instanceof HTMLElement) {
     invalidElement.reportValidity?.();
-    setError(form, "Certains champs de cette étape sont invalides.");
+    setError(
+      form,
+      "Certains champs de cette étape ne sont pas valides. Corrigez-les puis réessayez.",
+    );
     return false;
   }
 

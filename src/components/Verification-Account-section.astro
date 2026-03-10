@@ -280,14 +280,14 @@ const verifiedUsers = users.filter((u: User) => u.verified === true);
     if (userIds.length === 0) {
       showAlert({
         type: 'warning',
-        message: 'Aucun utilisateur sélectionné',
+        message: "Sélectionnez au moins un utilisateur avant de lancer la suppression.",
       });
       return;
     }
 
     const confirmed = await showConfirm({
-      title: "Supprimer les utilisateurs",
-      message: `Êtes-vous sûr de vouloir supprimer ${userIds.length} utilisateur(s) ?`,
+      title: "Confirmer la suppression",
+      message: `Confirmez-vous la suppression définitive de ${userIds.length} utilisateur(s) ? Cette action est irréversible.`,
       type: "warning",
       confirmLabel: "Supprimer",
       cancelLabel: "Annuler",
@@ -321,18 +321,19 @@ const verifiedUsers = users.filter((u: User) => u.verified === true);
         await reloadUserLists();
         showAlert({
           type: 'success',
-          message: `${userIds.length} utilisateur(s) supprimé(s) avec succès`,
+          message: `${userIds.length} utilisateur(s) ont été supprimé(s) avec succès.`,
         });
       } else {
         showAlert({
           type: 'error',
-          message: 'Erreur lors de la suppression de certains utilisateurs',
+          message: "La suppression n'a pas pu être finalisée pour tous les utilisateurs sélectionnés.",
         });
       }
     } catch (error) {
       showAlert({
         type: 'error',
-        message: 'Erreur réseau : ' + ((error as Error).message),
+        message:
+          "Impossible de supprimer les utilisateurs sélectionnés pour le moment. Vérifiez votre connexion puis réessayez.",
       });
     }
   });
