@@ -1,7 +1,6 @@
 ---
 import Layout from "../../layouts/Layout.astro";
 import Hero from "../../components/Hero.astro";
-import SearchActions from "../../components/SearchActions.astro";
 import slugify from "slugify";
 import { formatDateShort } from "../../utils/utilitaires.js";
 import HeroActions from "../../assets/projects-page/hero-project-page.png";
@@ -9,95 +8,14 @@ import HeroActionsMobile from "../../assets/projects-page/hero-project-page.png"
 import HeroActionsTablet from "../../assets/projects-page/hero-project-page.png";
 import { getImage } from "astro:assets";
 
-let actionsRaw: any[] = [];
-try {
-  actionsRaw = await Astro.locals.pb.collection("actions").getFullList();
-} catch (error) {
-  actionsRaw = [];
-}
+const lcpMobile = await getImage({ src: HeroActionsMobile, format: "png", width: 440, quality: 80 });
+const lcpTablet = await getImage({ src: HeroActionsTablet, format: "png", width: 1280, quality: 80 });
+const lcpDesktop = await getImage({ src: HeroActions, format: "png", width: 1600, quality: 80 });
 
-const actions = [...actionsRaw].sort(
-  (a, b) =>
-    new Date(b.updated || 0).getTime() - new Date(a.updated || 0).getTime(),
-);
+const projects = await Astro.locals.pb.collection("projets").getFullList();
+console.log(projects);
 
-const formatActionDate = (
-  dateDebut: string | null | undefined,
-  dateFin: string | null | undefined,
-  updated: string | null | undefined,
-) => {
-  if (dateDebut && dateFin) {
-    return `${formatDateShort(dateDebut)} au ${formatDateShort(dateFin)}`;
-  }
-  if (dateDebut) {
-    return formatDateShort(dateDebut);
-  }
-  if (updated) {
-    return `Mise à jour le ${formatDateShort(updated)}`;
-  }
-  return "";
-};
-
-const actionsWithUrls = actions.map((action) => {
-  const safeTypes = Array.isArray(action.type_action) ? action.type_action : [];
-  const selectedDate = action.date_debut || action.date_fin;
-
-  return {
-    ...action,
-    slug: slugify(action.titre || "action", { lower: true, strict: true }),
-    heroUrl: action.hero
-      ? Astro.locals.pb.files.getURL(action, action.hero)
-      : null,
-    dateLabel: formatActionDate(
-      action.date_debut,
-      action.date_fin,
-      action.updated,
-    ),
-    year: selectedDate ? new Date(selectedDate).getFullYear().toString() : "",
-    typeActionSafe: safeTypes,
-    typeActionNormalized: safeTypes.map((type: unknown) => String(type).toLowerCase()),
-  };
-});
-
-const roleTexte = (value: unknown) => String(value || "").trim().toLowerCase();
-
-let users: any[] = [];
-try {
-  users = await Astro.locals.pb.collection("users").getFullList();
-} catch (error) {
-  users = [];
-}
-
-const membres = users.filter((user) => {
-  const role = roleTexte(user.role);
-  return (
-    role === "membre" ||
-    role === "président" ||
-    role === "présidente" ||
-    role === "president" ||
-    role === "presidente"
-  );
-});
-
-const date = new Date().getFullYear();
-const dureeEngagement = Math.max(0, date - 2019);
-
-const yearOptions = Array.from(
-  new Set(
-    actions
-      .map((action) => {
-        const selectedDate = action.date_debut || action.date_fin;
-        if (!selectedDate) return null;
-        return new Date(selectedDate).getFullYear().toString();
-      })
-      .filter((v): v is string => Boolean(v)),
-  ),
-).sort((a, b) => b.localeCompare(a));
-
-
-const lcpMobile = await getImage({ src: HeroActionsMobile, format: "png ", width: 440, quality: 80 });
-const lcpTablet = await getImage({ src: HeroActionsTablet, format: "png ", width: 1280, quality: 80 });
-const lcpDesktop = await getImage({ src: HeroActions, format: "png ", width: 1600, quality: 80 });
+import DiagArrow from "../../components/DiagArrow.astro";
 ---
 
 <Layout>
@@ -112,327 +30,25 @@ const lcpDesktop = await getImage({ src: HeroActions, format: "png ", width: 160
     subtitle="Servir les enfants du monde, au cœur de notre territoire"
   />
 
-  <section
-    class="mx-auto mt-12 w-full max-w-7xl px-4 md:mt-16 md:px-6 lg:mt-20 lg:px-8"
-  >
-    <div
-      class="grid grid-cols-1 gap-3 md:grid-cols-2 md:gap-4 lg:grid-cols-4 lg:gap-5"
-    >
-      <div class="rounded-2xl bg-accent flex flex-col items-center p-4 text-base-100 md:p-5 lg:p-6">
-        <p class="text-3xl! font-bold md:text-4xl!">{actions.length}</p>
-        <p class="mt-2 whitespace-nowrap">Actions réalisées</p>
+  <section class="min-h-[80dvh] h-[520dvh] bg-red-600 w-full mt-64 flex">
+    <div class="w-1/2 min-h-[80dvh] rounded-tr-box rounded-br-box bg-accent flex flex-col justify-between items-center px-8 py-16 text-base-100 sticky top-[15dvh] self-start">
+      <div class="flex flex-col gap-8">
+        <p class="text-sm font-bold" >Prochaines actions</p>
+      <h2 class="text-5xl!">Découvrez nos projets futurs !</h2>
+      <p>Découvrez les initiatives que nous préparons avec nos partenaires pour répondre à des besoins concrets sur le territoire. Chaque projet est pensé pour créer du lien, soutenir des publics fragilisés et renforcer la solidarité locale, avec des actions claires, des objectifs simples et un impact réel.</p>
       </div>
-      <div class="rounded-2xl bg-accent flex flex-col items-center p-4 text-base-100 md:p-5 lg:p-6">
-        <p class="text-3xl! font-bold md:text-4xl!">+150</p>
-        <p class="mt-2 whitespace-nowrap">Enfants aidés</p>
-      </div>
-      <div class="rounded-2xl bg-accent flex flex-col items-center p-4 text-base-100 md:p-5 lg:p-6">
-        <p class="text-3xl! font-bold md:text-4xl!">{membres.length}</p>
-        <p class="mt-2 whitespace-nowrap">Bénévoles engagés</p>
-      </div>
-      <div class="rounded-2xl bg-accent flex flex-col items-center p-4 text-base-100 md:p-5 lg:p-6">
-        <p class="text-3xl! font-bold md:text-4xl!">{dureeEngagement}</p>
-        <p class="mt-2 whitespace-nowrap">Années d'engagement</p>
-      </div>
+      <a href="/actions" class="btn btn-block flex items-center gap-2 uppercase w-fit self-end" >Découvrez nos actions passées <DiagArrow class="h-3 w-auto invert" /></a>
     </div>
-  </section>
-
-  <section
-    class="mx-auto mt-10 w-full max-w-7xl px-4 md:mt-12 md:px-6 lg:mt-14 lg:px-8"
-  >
-    <div
-      class="rounded-2xl border border-base-300 bg-base-100 p-4 shadow-sm md:p-6 lg:p-8"
-    >
-      <div class="mb-5 space-y-3 md:mb-6">
-        <h2 class="text-2xl font-bold text-accent md:text-3xl lg:text-4xl">
-          Nos actions sur le terrain
-        </h2>
-        <p class="text-sm leading-relaxed text-base-content/75 md:text-base">
-          Découvrez les actions menées par le club Kiwanis Pays de Montbéliard
-          pour soutenir les enfants et les familles du territoire.
-        </p>
-      </div>
-      <SearchActions yearOptions={yearOptions} />
+    <div class="w-1/2 min-h-fit bg-blue-600 flex flex-col gap-16 px-16 py-32">
+      <div class="w-full h-[50dvh] bg-base-100 shadow-2xl rounded-box px-16 py-8"><h2>test</h2></div>
+      <div class="w-full h-[50dvh] bg-base-100 shadow-2xl rounded-box px-16 py-8"><h2>test</h2></div>
+      <div class="w-full h-[50dvh] bg-base-100 shadow-2xl rounded-box px-16 py-8"><h2>test</h2></div>
+      <div class="w-full h-[50dvh] bg-base-100 shadow-2xl rounded-box px-16 py-8"><h2>test</h2></div>
+      <div class="w-full h-[50dvh] bg-base-100 shadow-2xl rounded-box px-16 py-8"><h2>test</h2></div>
+      <div class="w-full h-[50dvh] bg-base-100 shadow-2xl rounded-box px-16 py-8"><h2>test</h2></div>
+      <div class="w-full h-[50dvh] bg-base-100 shadow-2xl rounded-box px-16 py-8"><h2>test</h2></div>
+      <div class="w-full h-[50dvh] bg-base-100 shadow-2xl rounded-box px-16 py-8"><h2>test</h2></div>
     </div>
-  </section>
 
-  <section
-    class="mx-auto mb-20 mt-10 w-full max-w-7xl px-4 md:mt-12 md:px-6 lg:mt-14 lg:px-8"
-  >
-    {
-      actionsWithUrls.length === 0 ? (
-        <div class="rounded-2xl border border-base-300 bg-base-100 px-6 py-12 text-center shadow-sm">
-          <p class="text-base text-base-content/70 md:text-lg">
-            Aucune action disponible pour le moment.
-          </p>
-        </div>
-      ) : (
-        <div class="space-y-6">
-          <div
-            id="actions-empty"
-            class="hidden rounded-2xl border border-base-300 bg-base-100 px-6 py-12 text-center shadow-sm"
-          >
-            <p class="text-base text-base-content/70 md:text-lg">
-              Aucune action ne correspond à votre recherche.
-            </p>
-          </div>
-
-          <div
-            id="actions-grid"
-            class="grid grid-cols-1 gap-5 md:gap-6 lg:gap-7"
-          >
-            {actionsWithUrls.map((action, index) => {
-              const imageOrderClass =
-                index % 2 === 0 ? "lg:order-1" : "lg:order-2";
-              const contentOrderClass =
-                index % 2 === 0 ? "lg:order-2" : "lg:order-1";
-
-              return (
-                <article
-                  data-action-card
-                  data-title={action.titre || ""}
-                  data-subtitle={action.sous_titre || ""}
-                  data-beneficiary={action.beneficiaire || ""}
-                  data-year={action.year}
-                  data-types={action.typeActionNormalized.join("||")}
-                  class="overflow-hidden rounded-2xl border border-base-300 bg-base-100 shadow-sm min-h-[55dvh]"
-                >
-                  <div class="flex h-full flex-col lg:flex-row">
-                    {action.heroUrl ? (
-                      <img loading="lazy"
-                        src={action.heroUrl}
-                        alt={
-                          action.description_hero ||
-                          `Illustration de ${action.titre}`
-                        }
-                        loading="lazy"
-                        decoding="async"
-                        class={`h-56 w-full object-cover md:h-[36dvh] lg:h-auto lg:min-h-full lg:w-1/2 ${imageOrderClass}`}
-                      />
-                    ) : (
-                      <div
-                        class={`flex h-56 w-full items-center justify-center bg-base-200 text-sm text-base-content/50 md:h-[36dvh] lg:h-auto lg:min-h-full lg:w-1/2 ${imageOrderClass}`}
-                      >
-                        Image non disponible
-                      </div>
-                    )}
-
-                    <div
-                      class={`flex flex-1 flex-col gap-4 p-4 md:gap-5 md:p-6 lg:w-1/2 ${contentOrderClass}`}
-                    >
-                      <div class="space-y-2">
-                        <h3 class="text-xl font-bold leading-tight text-base-content md:text-2xl">
-                          {action.titre}
-                        </h3>
-                        {action.sous_titre && (
-                          <p class="text-sm leading-relaxed text-base-content/75 md:text-base">
-                            {action.sous_titre}
-                          </p>
-                        )}
-                      </div>
-
-                      <div class="flex flex-wrap gap-2 md:gap-2.5">
-                        {action.typeActionSafe.slice(0, 3).map((type: unknown) => (
-                          <span class="badge badge-secondary badge-outline text-xs! md:text-sm!">
-                            {String(type)}
-                          </span>
-                        ))}
-                        {action.typeActionSafe.length === 0 && (
-                          <span class="badge badge-secondary badge-outline text-xs! md:text-sm!">
-                            Action solidaire
-                          </span>
-                        )}
-                      </div>
-
-                      <div class="mt-auto flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
-                        <div class="space-y-1 text-sm text-base-content/65 md:text-base">
-                          {action.dateLabel && <p>{action.dateLabel}</p>}
-                          {action.beneficiaire && (
-                            <p class="wrap-break-word">{action.beneficiaire}</p>
-                          )}
-                        </div>
-                        <a
-                          href={`/actions/${action.id}-${action.slug}`}
-                          class="btn btn-accent btn-sm w-full rounded-full md:btn-md lg:w-auto"
-                        >
-                          Voir l'action
-                        </a>
-                      </div>
-                    </div>
-                  </div>
-                </article>
-              );
-            })}
-          </div>
-
-          <div
-            id="actions-pagination"
-            class="mt-6 flex flex-wrap items-center justify-center gap-2"
-          />
-        </div>
-      )
-    }
   </section>
 </Layout>
-
-<script>
-  import { scrollToTarget } from "../../utils/scroll.js";
-
-  (() => {
-    const PAGE_SIZE = 9;
-
-    const byId = (id: string): HTMLElement | null => document.getElementById(id);
-    const normalize = (value: unknown): string =>
-      String(value || "")
-        .toLowerCase()
-        .trim();
-
-    function renderPagination(container: HTMLElement | null, totalPages: number, currentPage: number) {
-      if (!(container instanceof HTMLElement) || totalPages <= 1) {
-        if (container instanceof HTMLElement) container.innerHTML = "";
-        return;
-      }
-
-      const pageButtons = Array.from({ length: totalPages }, (_, index) => {
-        const pageNumber = index + 1;
-        const activeClass =
-          pageNumber === currentPage ? "btn-accent" : "btn-ghost";
-        return `<button type="button" class="btn btn-sm ${activeClass}" data-page-action="go" data-page="${pageNumber}">${pageNumber}</button>`;
-      }).join("");
-
-      container.innerHTML = `
-        <button type="button" class="btn btn-sm btn-ghost" data-page-action="prev" ${currentPage === 1 ? "disabled" : ""}>Précédent</button>
-        ${pageButtons}
-        <button type="button" class="btn btn-sm btn-ghost" data-page-action="next" ${currentPage === totalPages ? "disabled" : ""}>Suivant</button>
-      `;
-    }
-
-    function init() {
-      const grid = byId("actions-grid");
-      const pagination = byId("actions-pagination");
-      const emptyState = byId("actions-empty");
-      if (!(grid instanceof HTMLElement)) return;
-
-      const cards = Array.from(grid.querySelectorAll("[data-action-card]"));
-      if (cards.length === 0) return;
-
-      let currentPage = 1;
-      let currentSearch = "";
-      let currentYear = "";
-      let currentType = "";
-      let filteredCards = cards.slice();
-
-      const applyFilters = () => {
-        const searchToken = normalize(currentSearch);
-        const typeToken = normalize(currentType);
-
-        filteredCards = cards.filter((card) => {
-          if (!(card instanceof HTMLElement)) return false;
-          const title = normalize(card.dataset.title);
-          const subtitle = normalize(card.dataset.subtitle);
-          const beneficiary = normalize(card.dataset.beneficiary);
-          const year = card.dataset.year || "";
-          const types = String(card.dataset.types || "")
-            .split("||")
-            .map((value) => normalize(value))
-            .filter(Boolean);
-
-          const matchSearch =
-            searchToken === "" ||
-            title.includes(searchToken) ||
-            subtitle.includes(searchToken) ||
-            beneficiary.includes(searchToken);
-          const matchYear = currentYear === "" || year === currentYear;
-          const matchType = typeToken === "" || types.includes(typeToken);
-
-          return matchSearch && matchYear && matchType;
-        });
-
-        const totalPages = Math.max(
-          1,
-          Math.ceil(filteredCards.length / PAGE_SIZE),
-        );
-        if (currentPage > totalPages) currentPage = totalPages;
-        if (currentPage < 1) currentPage = 1;
-
-        const start = (currentPage - 1) * PAGE_SIZE;
-        const end = start + PAGE_SIZE;
-        const pageCards = filteredCards.slice(start, end);
-        const pageSet = new Set(pageCards);
-
-        cards.forEach((card) => {
-          if (!(card instanceof HTMLElement)) return;
-          const shouldShow = pageSet.has(card);
-          card.classList.toggle("hidden", !shouldShow);
-        });
-
-        if (emptyState instanceof HTMLElement) {
-          emptyState.classList.toggle("hidden", filteredCards.length !== 0);
-        }
-        grid.classList.toggle("hidden", filteredCards.length === 0);
-
-        renderPagination(pagination, totalPages, currentPage);
-      };
-
-      if (pagination instanceof HTMLElement) {
-        pagination.addEventListener("click", (event: Event) => {
-          const target =
-            event.target instanceof HTMLElement
-              ? event.target.closest("[data-page-action]")
-              : null;
-          if (!(target instanceof HTMLElement)) return;
-
-          const totalPages = Math.max(
-            1,
-            Math.ceil(filteredCards.length / PAGE_SIZE),
-          );
-          const action = target.getAttribute("data-page-action");
-          const previousPage = currentPage;
-
-          if (action === "prev") {
-            currentPage = Math.max(1, currentPage - 1);
-          } else if (action === "next") {
-            currentPage = Math.min(totalPages, currentPage + 1);
-          } else if (action === "go") {
-            const nextPage = Number(target.getAttribute("data-page") || "1");
-            if (!Number.isNaN(nextPage)) {
-              currentPage = Math.min(totalPages, Math.max(1, nextPage));
-            }
-          } else {
-            return;
-          }
-
-          if (currentPage !== previousPage) {
-            // Remonte légèrement au-dessus de la liste pour conserver un contexte visuel (10% de viewport).
-            scrollToTarget("#actions-grid", {
-              offset: -window.innerHeight * 0.1,
-            });
-          }
-          applyFilters();
-        });
-      }
-
-      document.addEventListener("search-actions-change", (event: Event) => {
-        const custom = event as CustomEvent | Event;
-        const detail = (custom && "detail" in custom ? (custom as CustomEvent).detail : {}) as {
-          search?: string;
-          year?: string;
-          type?: string;
-        };
-        currentSearch = detail?.search || "";
-        currentYear = detail?.year || "";
-        currentType = detail?.type || "";
-        currentPage = 1;
-        applyFilters();
-      });
-
-      applyFilters();
-    }
-
-    if (document.readyState === "loading") {
-      document.addEventListener("DOMContentLoaded", init, { once: true });
-    } else {
-      init();
-    }
-  })();
-</script>
