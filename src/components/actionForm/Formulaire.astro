@@ -86,19 +86,7 @@ const formTitle =
           <p class="text-sm text-base-100!">Progression</p>
           <p data-mobile-step-label class="text-sm text-base-100!">Étape 1/7</p>
         </div>
-        <div class="grid grid-cols-7 gap-1">
-          {
-            Array.from({ length: 7 }, (_, i) => i + 1).map((step) => (
-              <button
-                type="button"
-                data-mobile-go-step={String(step)}
-                class="btn btn-xs rounded-full border border-base-100 bg-transparent text-base-100! hover:bg-base-100/10"
-              >
-                {step}
-              </button>
-            ))
-          }
-        </div>
+        <div data-mobile-step-nav class="grid grid-cols-7 gap-1"></div>
         <p
           data-mobile-step-error
           class="hidden text-sm text-error bg-base-100 rounded-md px-3 py-2"

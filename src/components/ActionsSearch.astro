@@ -24,7 +24,7 @@ const {
   <div class="flex w-full flex-col gap-3">
     <div class="grid w-full grid-cols-1 gap-3 lg:grid-cols-2">
       <label class="form-control w-full gap-1">
-        <span class="text-xs font-medium tracking-wide text-base-content/60">Titre</span>
+        <span class="text-sm! font-medium tracking-wide text-base-content">Titre</span>
         <input
           id="search-input"
           class="input input-bordered w-full"
@@ -33,7 +33,7 @@ const {
         />
       </label>
       <label class="form-control w-full gap-1">
-        <span class="text-xs font-medium tracking-wide text-base-content/60">Bénéficiaire</span>
+        <span class="text-sm! font-medium tracking-wide text-base-content">Bénéficiaire</span>
         <input
           id="beneficiary-input"
           class="input input-bordered w-full"
@@ -48,7 +48,7 @@ const {
         {yearOptions.length > 0 && (
           <div class="w-full lg:w-1/3 lg:pr-3">
             <label class="form-control w-full gap-1">
-              <span class="text-xs font-medium tracking-wide text-base-content/60">Année</span>
+              <span class="text-sm! font-medium tracking-wide text-base-content">Année</span>
               <select id="year-select" class="select select-bordered w-full">
                 <option value="">Toutes les années</option>
                 {yearOptions.map((y: string) => <option value={y}>{y}</option>)}
@@ -59,7 +59,7 @@ const {
         {typeOptions.length > 0 && (
           <div class="w-full lg:w-1/3 lg:pr-3">
             <label class="form-control w-full gap-1">
-              <span class="text-xs font-medium tracking-wide text-base-content/60">Type</span>
+              <span class="text-sm! font-medium tracking-wide text-base-content">Type</span>
               <select id="type-select" class="select select-bordered w-full">
                 <option value="">Tous les types</option>
                 {typeOptions.map((t: string) => <option value={t}>{t}</option>)}
@@ -70,7 +70,7 @@ const {
         {showStatus && (
           <div class="w-full lg:w-1/3 lg:pr-3">
             <label class="form-control w-full gap-1">
-              <span class="text-xs font-medium tracking-wide text-base-content/60">Statut</span>
+              <span class="text-sm! font-medium tracking-wide text-base-content">Statut</span>
               <select id="status-select" class="select select-bordered w-full">
                 {statusOptions.map((s: string) => <option value={s}>{s}</option>)}
               </select>

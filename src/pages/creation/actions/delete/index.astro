@@ -107,7 +107,7 @@ try {
                 <p class="mb-2 text-sm font-medium text-base-content">Filtres</p>
                 <ActionsSearch embedded={true}>
                   <label slot="secondary-extra" class="form-control w-full gap-1" for="sort-select">
-                    <span class="text-xs font-medium uppercase tracking-wide text-base-content">Trier par date</span>
+                    <span class="text-sm! font-medium uppercase tracking-wide text-base-content">Trier par date</span>
                     <select id="sort-select" class="select select-bordered w-full">
                       <option value="updated_desc">Recent -> Ancien</option>
                       <option value="updated_asc">Ancien -> Recent</option>
@@ -194,6 +194,7 @@ try {
   <script>
     import { showAlert, showConfirm } from "../../../../utils/alerts";
     import { scrollToTarget } from "../../../../utils/scroll.js";
+    import { renderPagination } from "../../../../utils/renderPagination";
 
     // Recherche, filtres et tri côté client + sélection globale + suppression par carte.
     document.addEventListener("DOMContentLoaded", () => {
@@ -284,25 +285,9 @@ try {
       let currentPage = 1;
       const pagination = document.getElementById("cards-pagination");
 
-      function renderPagination(totalPages: number) {
+      function updatePaginationEl(totalPages: number) {
         if (!(pagination instanceof HTMLElement)) return;
-        if (totalPages <= 1) {
-          pagination.innerHTML = "";
-          return;
-        }
-        const pageButtons = Array.from({ length: totalPages }, (_, index) => {
-          const pageNumber = index + 1;
-          const activeClass = pageNumber === currentPage ? "btn-accent" : "btn-ghost";
-          return `<button type="button" class="btn btn-sm ${activeClass}" data-page-action="go" data-page="${pageNumber}">${pageNumber}</button>`;
-        }).join("");
-
-        pagination.innerHTML = `
-          <div class="flex flex-wrap items-center justify-center gap-2">
-            <button type="button" class="btn btn-sm btn-ghost" data-page-action="prev" ${currentPage === 1 ? "disabled" : ""}>Precedent</button>
-            ${pageButtons}
-            <button type="button" class="btn btn-sm btn-ghost" data-page-action="next" ${currentPage === totalPages ? "disabled" : ""}>Suivant</button>
-          </div>
-        `;
+        pagination.innerHTML = renderPagination(totalPages, currentPage);
       }
 
       /** Retourne toutes les cartes correspondant aux filtres actifs, toutes pages. */
@@ -405,7 +390,7 @@ try {
         // Vider puis réinsérer les cartes visibles dans l'ordre.
         g.innerHTML = "";
         pageItems.forEach((c) => g.appendChild(c));
-        renderPagination(totalPages);
+        updatePaginationEl(totalPages);
         syncCheckboxes();
       }
 

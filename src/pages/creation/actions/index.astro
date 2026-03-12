@@ -173,7 +173,7 @@ const allActions = actions;
                 for="sort-select"
               >
                 <span
-                  class="text-xs font-medium uppercase tracking-wide text-base-content/60"
+                  class="text-sm! font-medium uppercase tracking-wide text-base-content/60"
                   >Trier par date</span
                 >
                 <select id="sort-select" class="select select-bordered w-full">
@@ -283,6 +283,8 @@ const allActions = actions;
   import "../../../utils/utilitaires.js";
   import "../../../utils/scroll.js";
   import { showAlert, showConfirm } from "../../../utils/alerts";
+  import { renderPagination } from "../../../utils/renderPagination";
+  (window as any).renderPagination = renderPagination;
 
   // Attribut HTML temporaire utilise pour eviter une boucle
   // (submit -> confirm -> requestSubmit -> submit -> confirm ...).
@@ -427,24 +429,6 @@ const allActions = actions;
     return `/creation/actions/edit/${id}-${slug}`;
   }
 
-  // Construit le HTML de pagination.
-  function renderPagination(totalPages, page) {
-    if (totalPages <= 1) return "";
-    const pageButtons = Array.from({ length: totalPages }, (_, index) => {
-      const pageNumber = index + 1;
-      const activeClass = pageNumber === page ? "btn-accent" : "btn-ghost";
-      return `<button type="button" class="btn btn-sm ${activeClass}" data-page-action="go" data-page="${pageNumber}">${pageNumber}</button>`;
-    }).join("");
-
-    return `
-      <div class="mt-6 flex flex-wrap items-center justify-center gap-2">
-        <button type="button" class="btn btn-sm btn-ghost" data-page-action="prev" ${page === 1 ? "disabled" : ""}>Precedent</button>
-        ${pageButtons}
-        <button type="button" class="btn btn-sm btn-ghost" data-page-action="next" ${page === totalPages ? "disabled" : ""}>Suivant</button>
-      </div>
-    `;
-  }
-
   function filterActions(search, beneficiary, year, type) {
     // On part toujours de la liste complete, puis on applique des filtres cumulables.
     let filtered = actions.slice();
@@ -536,7 +520,7 @@ const allActions = actions;
             )
             .join("")}
       </div>
-      ${renderPagination(totalPages, currentPage)}
+      ${(window.renderPagination || function() { return ''; })(totalPages, currentPage)}
     `;
 
     // Injection DOM finale.

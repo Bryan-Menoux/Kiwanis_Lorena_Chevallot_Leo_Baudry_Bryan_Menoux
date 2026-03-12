@@ -228,20 +228,7 @@ try {
                     Aucun membre ne correspond à votre recherche.
                   </p>
 
-                  <div
-                    id="handover-pagination"
-                    class="mt-4 flex items-center justify-center gap-4"
-                  >
-                    <button id="handover-prev" type="button" class="btn btn-sm">
-                      Précédent
-                    </button>
-                    <span id="handover-page-indicator" class="text-sm text-base-content/70">
-                      Page 1 sur 1
-                    </span>
-                    <button id="handover-next" type="button" class="btn btn-sm">
-                      Suivant
-                    </button>
-                  </div>
+                  <div id="handover-pagination" class="mt-4"></div>
                 </div>
 
                 <div class="flex flex-col md:flex-row gap-4 pt-2">
@@ -276,14 +263,12 @@ try {
 
 <script>
   import { showAlert, showConfirm } from "../utils/alerts";
+  import { renderPagination } from "../utils/renderPagination";
 
   const handoverButton = document.getElementById("handover-btn") as HTMLButtonElement | null;
   const handoverSearch = document.getElementById("handover-search") as HTMLInputElement | null;
   const handoverSearchEmpty = document.getElementById("handover-search-empty") as HTMLElement | null;
   const handoverPagination = document.getElementById("handover-pagination") as HTMLElement | null;
-  const handoverPrev = document.getElementById("handover-prev") as HTMLButtonElement | null;
-  const handoverNext = document.getElementById("handover-next") as HTMLButtonElement | null;
-  const handoverPageIndicator = document.getElementById("handover-page-indicator") as HTMLElement | null;
   const candidateCards = Array.from(
     document.querySelectorAll<HTMLElement>("[data-candidate-card]"),
   );
@@ -294,7 +279,7 @@ try {
 
   const PAGE_SIZE = 6;
   let filteredCards = [...candidateCards];
-  let currentPage = 0;
+  let currentPage = 1;
 
   function getCheckedRadio() {
     return document.querySelector(
@@ -304,9 +289,10 @@ try {
 
   function updatePagination() {
     const totalPages = Math.max(1, Math.ceil(filteredCards.length / PAGE_SIZE));
-    if (currentPage >= totalPages) currentPage = totalPages - 1;
+    if (currentPage > totalPages) currentPage = totalPages;
+    if (currentPage < 1) currentPage = 1;
 
-    const start = currentPage * PAGE_SIZE;
+    const start = (currentPage - 1) * PAGE_SIZE;
     const end = start + PAGE_SIZE;
 
     candidateCards.forEach((card) => card.classList.add("hidden"));
@@ -325,17 +311,7 @@ try {
     }
 
     if (handoverPagination) {
-      handoverPagination.classList.toggle("hidden", filteredCards.length <= PAGE_SIZE);
-    }
-
-    if (handoverPrev) handoverPrev.disabled = currentPage === 0 || filteredCards.length === 0;
-    if (handoverNext) handoverNext.disabled = currentPage >= totalPages - 1 || filteredCards.length === 0;
-
-    if (handoverPageIndicator) {
-      handoverPageIndicator.textContent =
-        filteredCards.length === 0
-          ? "Page 0 sur 0"
-          : `Page ${currentPage + 1} sur ${totalPages}`;
+      handoverPagination.innerHTML = renderPagination(totalPages, currentPage);
     }
   }
 
@@ -346,7 +322,7 @@ try {
       const email = toSearchTerm(card.dataset.candidateEmail || "");
       return query === "" || name.includes(query) || email.includes(query);
     });
-    currentPage = 0;
+    currentPage = 1;
     updatePagination();
   }
 
@@ -358,22 +334,20 @@ try {
     handoverSearch.addEventListener("input", applyFilter);
   }
 
-  if (handoverPrev) {
-    handoverPrev.addEventListener("click", () => {
-      if (currentPage > 0) {
-        currentPage -= 1;
-        updatePagination();
-      }
-    });
-  }
-
-  if (handoverNext) {
-    handoverNext.addEventListener("click", () => {
+  if (handoverPagination) {
+    handoverPagination.addEventListener("click", (e) => {
+      const btn =
+        e.target instanceof HTMLElement
+          ? e.target.closest("[data-page-action]")
+          : null;
+      if (!(btn instanceof HTMLElement)) return;
+      const action = btn.getAttribute("data-page-action");
       const totalPages = Math.max(1, Math.ceil(filteredCards.length / PAGE_SIZE));
-      if (currentPage < totalPages - 1) {
-        currentPage += 1;
-        updatePagination();
-      }
+      const prev = currentPage;
+      if (action === "prev") currentPage = Math.max(1, currentPage - 1);
+      else if (action === "next") currentPage = Math.min(totalPages, currentPage + 1);
+      else if (action === "go") currentPage = Math.min(totalPages, Math.max(1, Number(btn.dataset.page)));
+      if (currentPage !== prev) updatePagination();
     });
   }
 

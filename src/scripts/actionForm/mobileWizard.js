@@ -1,5 +1,6 @@
 import { showAlert } from "../../utils/alerts";
 import { scrollToTarget } from "../../utils/scroll.js";
+import { renderPagination } from "../../utils/renderPagination";
 const MOBILE_QUERY = "(max-width: 1023px)";
 const TOTAL_STEPS = 7;
 const INIT_FLAG_ATTR = "data-mobile-wizard-init";
@@ -56,18 +57,15 @@ function setNavState(form, step) {
     submitButton.classList.toggle("hidden", step !== TOTAL_STEPS);
   }
 
-  const quickStepButtons = Array.from(
-    form.querySelectorAll("[data-mobile-go-step]"),
-  );
-  // Le style de chaque pastille reflète l'étape active.
-  quickStepButtons.forEach((button) => {
-    const targetStep = parseStep(button.getAttribute("data-mobile-go-step"), 1);
-    const isActive = targetStep === step;
-    button.classList.toggle("bg-base-100", isActive);
-    button.classList.toggle("text-accent", isActive);
-    button.classList.toggle("border-base-100/30", !isActive);
-    button.classList.toggle("text-base-100/60", !isActive);
-  });
+  // Génère les pastilles de navigation via renderPagination.
+  const stepNav = form.querySelector("[data-mobile-step-nav]");
+  if (stepNav instanceof HTMLElement) {
+    stepNav.innerHTML = renderPagination(TOTAL_STEPS, step, {
+      noWrapper: true,
+      buttonClass: "btn btn-xs rounded-full border border-base-100/30 bg-transparent text-base-100/60",
+      activeButtonClass: "btn btn-xs rounded-full bg-base-100 text-accent",
+    });
+  }
 }
 
 function setError(form, message) {
@@ -349,19 +347,17 @@ function initMobileWizard() {
     nextButton.addEventListener("click", nextHandler);
   }
 
-  const quickStepButtons = Array.from(
-    form.querySelectorAll("[data-mobile-go-step]"),
-  );
-  const quickStepHandlers = new Map();
-  quickStepButtons.forEach((button) => {
-    const handler = () => {
-      const target = parseStep(button.getAttribute("data-mobile-go-step"), 1);
-      const isForward = target > currentStep;
-      goToStep(target, isForward);
-    };
-    quickStepHandlers.set(button, handler);
-    button.addEventListener("click", handler);
-  });
+  // Délégation d'événement sur le conteneur de pastilles (les boutons sont re-rendus à chaque changement d'étape).
+  const stepNav = form.querySelector("[data-mobile-step-nav]");
+  const stepNavHandler = (e) => {
+    const btn = e.target instanceof HTMLElement ? e.target.closest("[data-page-action='go']") : null;
+    if (!(btn instanceof HTMLElement)) return;
+    const target = parseStep(btn.getAttribute("data-page"), 1);
+    goToStep(target, target > currentStep);
+  };
+  if (stepNav instanceof HTMLElement) {
+    stepNav.addEventListener("click", stepNavHandler);
+  }
 
   const submitHandler = (event) => {
     if (!mediaQuery.matches) return;
@@ -412,11 +408,9 @@ function initMobileWizard() {
     if (nextButton instanceof HTMLButtonElement) {
       nextButton.removeEventListener("click", nextHandler);
     }
-    quickStepButtons.forEach((button) => {
-      const handler = quickStepHandlers.get(button);
-      if (!handler) return;
-      button.removeEventListener("click", handler);
-    });
+    if (stepNav instanceof HTMLElement) {
+      stepNav.removeEventListener("click", stepNavHandler);
+    }
     form.removeEventListener("submit", submitHandler);
     mediaQuery.removeEventListener("change", mediaChangeHandler);
     window.removeEventListener("pageshow", pageShowHandler);

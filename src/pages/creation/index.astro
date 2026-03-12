@@ -282,6 +282,8 @@ const allPages = db.pages;
 <script>
   import "../../utils/utilitaires.js";
   import "../../utils/scroll.js";
+  import { renderPagination } from "../../utils/renderPagination";
+  (window as any).renderPagination = renderPagination;
 </script>
 <script define:vars={{ allPages, q, status }}>
   // Données et fonctions utilitaires
@@ -387,23 +389,6 @@ const allPages = db.pages;
     return filtered;
   }
 
-  function renderPagination(totalPages, page) {
-    if (totalPages <= 1) return '';
-    const pageButtons = Array.from({ length: totalPages }, (_, index) => {
-      const pageNumber = index + 1;
-      const activeClass = pageNumber === page ? 'btn-accent' : 'btn-ghost';
-      return `<button type="button" class="btn btn-sm ${activeClass}" data-page-action="go" data-page="${pageNumber}">${pageNumber}</button>`;
-    }).join('');
-
-    return `
-      <div class="mt-6 flex flex-wrap items-center justify-center gap-2">
-        <button type="button" class="btn btn-sm btn-ghost" data-page-action="prev" ${page === 1 ? 'disabled' : ''}>Precedent</button>
-        ${pageButtons}
-        <button type="button" class="btn btn-sm btn-ghost" data-page-action="next" ${page === totalPages ? 'disabled' : ''}>Suivant</button>
-      </div>
-    `;
-  }
-
   function updateActiveFilters(search, statusFilter) {
     const activeFiltersEl = document.getElementById('active-filters');
     const filterBadgesEl = document.getElementById('filter-badges');
@@ -496,7 +481,7 @@ const allPages = db.pages;
             `;
           }).join('')}
         </div>
-        ${renderPagination(totalPages, currentPage)}
+        ${(window.renderPagination || function() { return ''; })(totalPages, currentPage)}
       `;
       container.innerHTML = pagesHtml;
     }
