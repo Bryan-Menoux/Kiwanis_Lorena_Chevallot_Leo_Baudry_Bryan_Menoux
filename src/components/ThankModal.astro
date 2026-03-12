@@ -1,0 +1,226 @@
+---
+interface Props {
+  id: string;
+  title: string;
+  subtitle?: string;
+  formId?: string;
+  formMethod?: "GET" | "POST";
+  formAction?: string;
+  formEnctype?: string;
+  formClass?: string;
+  submitLabel?: string;
+  closeLabel?: string;
+  boxClass?: string;
+  unsavedConfirmMessage?: string;
+}
+
+const {
+  id,
+  title,
+  subtitle = "",
+  formId,
+  formMethod = "POST",
+  formAction,
+  formEnctype,
+  formClass = "mt-4 space-y-4",
+  submitLabel,
+  closeLabel = "Fermer",
+  boxClass = "max-w-xl",
+  unsavedConfirmMessage = "Des modifications n'ont pas été enregistrées. Fermer quand même ?",
+} = Astro.props as Props;
+
+const showSubmitAction = Boolean(formId && submitLabel);
+const showInlineForm = Boolean(formId);
+---
+
+<dialog id={id} class="modal">
+  <div class={`modal-box ${boxClass}`}>
+    <h3 class="text-xl font-bold">{title}</h3>
+    {
+      subtitle && (
+        <p class="mt-1 text-sm text-base-content/60">
+          {subtitle}
+        </p>
+      )
+    }
+
+    {
+      showInlineForm ? (
+        <form
+          id={formId}
+          method={formMethod}
+          action={formAction}
+          enctype={formEnctype}
+          class={formClass}
+        >
+          <slot />
+
+          <div class="mt-8 flex items-center justify-end gap-2">
+            <button
+              type="button"
+              class="btn btn-ghost rounded-full"
+              data-thank-modal-close={id}
+            >
+              {closeLabel}
+            </button>
+            {
+              showSubmitAction && (
+                <button type="submit" class="btn btn-accent rounded-full">
+                  {submitLabel}
+                </button>
+              )
+            }
+          </div>
+        </form>
+      ) : (
+        <>
+          <slot />
+
+          <div class="mt-8 flex items-center justify-end gap-2">
+            <button
+              type="button"
+              class="btn btn-ghost rounded-full"
+              data-thank-modal-close={id}
+            >
+              {closeLabel}
+            </button>
+          </div>
+        </>
+      )
+    }
+  </div>
+  <form class="modal-backdrop">
+    <button type="button" data-thank-modal-close={id}>Fermer</button>
+  </form>
+</dialog>
+
+<script>
+  // Ouvre un <dialog> dont l'id est spécifié via data-modal-open="<id>".
+  // Ce bloc est bundlé et dédupliqué par Astro : une seule instance par page.
+  document.addEventListener("click", (event) => {
+    const target = event.target instanceof HTMLElement ? event.target : null;
+    if (!target) return;
+
+    const trigger = target.closest("[data-modal-open]");
+    if (!(trigger instanceof HTMLElement)) return;
+
+    const modalId = trigger.getAttribute("data-modal-open");
+    if (!modalId) return;
+
+    const modal = document.getElementById(modalId);
+    if (modal instanceof HTMLDialogElement) modal.showModal();
+  });
+</script>
+
+<script define:vars={{ id, formId, unsavedConfirmMessage }}>
+  const modal = document.getElementById(id);
+  if (!(modal instanceof HTMLDialogElement)) {
+    // Modal introuvable.
+  } else {
+    const form =
+      typeof formId === "string" && formId
+        ? document.getElementById(formId)
+        : null;
+    const boundForm = form instanceof HTMLFormElement ? form : null;
+
+    const serializeForm = (targetForm) => {
+      const formData = new FormData(targetForm);
+      const entries = [];
+      for (const [key, value] of formData.entries()) {
+        if (value instanceof File) {
+          entries.push(`${key}::file:${value.name}:${value.size}`);
+          continue;
+        }
+        entries.push(`${key}::${value}`);
+      }
+      entries.sort();
+      return entries.join("||");
+    };
+
+    let initialSnapshot = boundForm ? serializeForm(boundForm) : "";
+
+    const updateSnapshotIfOpen = () => {
+      if (!boundForm || !modal.open) return;
+      initialSnapshot = serializeForm(boundForm);
+    };
+
+    let preserveSnapshotOnNextOpen = false;
+    let closeFlowInProgress = false;
+
+    const observer = new MutationObserver(() => {
+      if (!modal.open) return;
+      if (preserveSnapshotOnNextOpen) {
+        preserveSnapshotOnNextOpen = false;
+        return;
+      }
+      updateSnapshotIfOpen();
+    });
+    observer.observe(modal, {
+      attributes: true,
+      attributeFilter: ["open"],
+    });
+
+    const requestClose = async () => {
+      if (closeFlowInProgress) return;
+
+      if (!boundForm || !modal.open) {
+        modal.close();
+        return;
+      }
+
+      const isDirty = serializeForm(boundForm) !== initialSnapshot;
+      if (!isDirty) {
+        modal.close();
+        return;
+      }
+
+      closeFlowInProgress = true;
+      // Important: le <dialog> natif est en "top layer".
+      // On le ferme temporairement pour que la confirmation globale soit visible au-dessus.
+      modal.close();
+
+      try {
+        const shouldClose =
+          window.KiwanisAlert &&
+          typeof window.KiwanisAlert.confirm === "function"
+            ? await window.KiwanisAlert.confirm({
+                title: "Modifications non enregistrées",
+                message: unsavedConfirmMessage,
+                confirmLabel: "Fermer",
+                cancelLabel: "Continuer",
+                type: "warning",
+              })
+            : window.confirm(unsavedConfirmMessage);
+
+        if (shouldClose) {
+          // Revient à l'état initial du formulaire pour la prochaine ouverture.
+          boundForm.reset();
+          initialSnapshot = serializeForm(boundForm);
+          return;
+        }
+
+        // L'utilisateur annule la fermeture : on rouvre en conservant la photo instantanée
+        // précédente pour continuer à détecter les modifications non enregistrées.
+        preserveSnapshotOnNextOpen = true;
+        modal.showModal();
+      } finally {
+        closeFlowInProgress = false;
+      }
+    };
+
+    modal.addEventListener("cancel", (event) => {
+      event.preventDefault();
+      void requestClose();
+    });
+
+    modal.addEventListener("click", (event) => {
+      const target =
+        event.target instanceof HTMLElement
+          ? event.target.closest("[data-thank-modal-close]")
+          : null;
+      if (!(target instanceof HTMLElement)) return;
+      event.preventDefault();
+      void requestClose();
+    });
+  }
+</script>

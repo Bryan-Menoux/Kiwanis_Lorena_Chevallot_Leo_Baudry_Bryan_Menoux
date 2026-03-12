@@ -1,0 +1,536 @@
+---
+import Layout from "../../../layouts/Layout-back-office.astro";
+import { formatDateShort } from "../../../utils/utilitaires.js";
+import ThankModal from "../../../components/ThankModal.astro";
+
+interface PartenaireItem {
+  id: string;
+  logo?: string;
+  logoUrl?: string;
+  updated?: string;
+}
+
+interface ContributeurItem {
+  id: string;
+  nom: string;
+  metier?: string;
+  description?: string;
+  updated?: string;
+}
+
+const asText = (value: FormDataEntryValue | null): string =>
+  typeof value === "string" ? value.trim() : "";
+
+const redirectWith = (type: "success" | "error", message: string) =>
+  Astro.redirect(
+    `/creation/remerciements?${type}=${encodeURIComponent(message)}`,
+  );
+
+if (Astro.request.method === "POST") {
+  try {
+    const formData = await Astro.request.formData();
+    const entity = asText(formData.get("entity"));
+    const intent = asText(formData.get("intent"));
+    const id = asText(formData.get("id"));
+
+    if (entity === "partenaire") {
+      if (intent === "create") {
+        const logo = formData.get("logo");
+        if (!(logo instanceof File) || logo.size === 0) {
+          throw new Error("Le logo du partenaire est obligatoire.");
+        }
+
+        await Astro.locals.pb.collection("partenaires").create({
+          logo,
+        });
+        return redirectWith("success", "Partenaire ajouté avec succès.");
+      }
+
+      if (intent === "update") {
+        if (!id) {
+          throw new Error("Partenaire introuvable.");
+        }
+
+        const logo = formData.get("logo");
+        if (!(logo instanceof File) || logo.size === 0) {
+          throw new Error("Sélectionnez un nouveau logo pour la mise à jour.");
+        }
+
+        await Astro.locals.pb.collection("partenaires").update(id, {
+          logo,
+        });
+        return redirectWith("success", "Partenaire modifié avec succès.");
+      }
+
+      if (intent === "delete") {
+        if (!id) {
+          throw new Error("Partenaire introuvable.");
+        }
+
+        await Astro.locals.pb.collection("partenaires").delete(id);
+        return redirectWith("success", "Partenaire supprimé avec succès.");
+      }
+
+      throw new Error("Action partenaire inconnue.");
+    }
+
+    if (entity === "contributeur") {
+      if (intent === "create") {
+        const nom = asText(formData.get("nom"));
+        const metier = asText(formData.get("metier"));
+        const description = asText(formData.get("description"));
+
+        if (!nom) {
+          throw new Error("Le nom du contributeur est obligatoire.");
+        }
+
+        await Astro.locals.pb.collection("contributeurs").create({
+          nom,
+          metier,
+          description,
+        });
+        return redirectWith("success", "Contributeur ajouté avec succès.");
+      }
+
+      if (intent === "update") {
+        if (!id) {
+          throw new Error("Contributeur introuvable.");
+        }
+
+        const nom = asText(formData.get("nom"));
+        const metier = asText(formData.get("metier"));
+        const description = asText(formData.get("description"));
+
+        if (!nom) {
+          throw new Error("Le nom du contributeur est obligatoire.");
+        }
+
+        await Astro.locals.pb.collection("contributeurs").update(id, {
+          nom,
+          metier,
+          description,
+        });
+        return redirectWith("success", "Contributeur modifié avec succès.");
+      }
+
+      if (intent === "delete") {
+        if (!id) {
+          throw new Error("Contributeur introuvable.");
+        }
+
+        await Astro.locals.pb.collection("contributeurs").delete(id);
+        return redirectWith("success", "Contributeur supprimé avec succès.");
+      }
+
+      throw new Error("Action contributeur inconnue.");
+    }
+
+    throw new Error("Type d'élément inconnu.");
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "Une erreur est survenue.";
+    return redirectWith("error", message);
+  }
+}
+
+const partenairesRaw: any[] = await Astro.locals.pb
+  .collection("partenaires")
+  .getFullList(200, { sort: "-updated" });
+const contributeursRaw: any[] = await Astro.locals.pb
+  .collection("contributeurs")
+  .getFullList(200, { sort: "-updated" });
+
+const partenaires: PartenaireItem[] = partenairesRaw.map((partenaire) => ({
+  id: partenaire.id,
+  logo: partenaire.logo,
+  logoUrl: partenaire.logo
+    ? Astro.locals.pb.files.getURL(partenaire, partenaire.logo)
+    : "",
+  updated: partenaire.updated,
+}));
+
+const contributeurs: ContributeurItem[] = contributeursRaw.map(
+  (contributeur) => ({
+    id: contributeur.id,
+    nom: contributeur.nom || "Sans nom",
+    metier: contributeur.metier || "",
+    description: contributeur.description || "",
+    updated: contributeur.updated,
+  }),
+);
+
+const stats = {
+  total: partenaires.length + contributeurs.length,
+  partenaires: partenaires.length,
+  contributeurs: contributeurs.length,
+};
+
+const success = (Astro.url.searchParams.get("success") || "").trim();
+const error = (Astro.url.searchParams.get("error") || "").trim();
+---
+
+<Layout>
+  <div class="container mx-auto px-4 py-8 my-16 md:my-32">
+    <div
+      class="mb-10 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between"
+    >
+      <div class="mb-0">
+        <h1
+          class="mb-3 text-3xl font-bold text-accent font-poppins md:text-4xl"
+        >
+          Remerciements
+        </h1>
+        <p class="text-base text-base-content/70 md:text-lg">
+          Gérez les partenaires et les contributeurs depuis une seule page.
+        </p>
+      </div>
+      <div class="flex flex-wrap items-center gap-3 lg:justify-end">
+        <a
+          href="/remerciments"
+          class="btn btn-border btn-sm rounded-full md:btn-md"
+        >
+          Voir le site
+        </a>
+      </div>
+    </div>
+
+    {success && <div id="remerciements-success-flag" data-message={success} class="hidden" />}
+    {error && <div id="remerciements-error-flag" data-message={error} class="hidden" />}
+
+    <div class="grid grid-cols-1 gap-4 mb-12 md:grid-cols-3">
+      <div class="card bg-base-100 shadow-md">
+        <div class="card-body text-center p-4">
+          <div class="text-4xl! font-bold text-base-content">{stats.total}</div>
+          <div class="text-base-content">Éléments</div>
+        </div>
+      </div>
+      <div class="card bg-base-100 shadow-md">
+        <div class="card-body text-center p-4">
+          <div class="text-4xl! font-bold text-base-content">
+            {stats.partenaires}
+          </div>
+          <div class="text-base-content">Partenaires</div>
+        </div>
+      </div>
+      <div class="card bg-base-100 shadow-md">
+        <div class="card-body text-center p-4">
+          <div class="text-4xl! font-bold text-base-content">
+            {stats.contributeurs}
+          </div>
+          <div class="text-base-content">Contributeurs</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="mb-12 flex flex-wrap gap-3">
+      <button
+        type="button"
+        class="btn btn-accent rounded-full"
+        data-modal-open="create-partenaire-modal"
+      >
+        Ajouter un partenaire
+      </button>
+      <button
+        type="button"
+        class="btn btn-accent rounded-full"
+        data-modal-open="create-contributeur-modal"
+      >
+        Ajouter un contributeur
+      </button>
+    </div>
+
+    <ThankModal
+      id="create-partenaire-modal"
+      title="Nouveau partenaire"
+      subtitle="Formulaire dédié aux partenaires."
+      formId="form-create-partenaire"
+      formEnctype="multipart/form-data"
+      submitLabel="Créer le partenaire"
+    >
+      <input type="hidden" name="entity" value="partenaire" />
+      <input type="hidden" name="intent" value="create" />
+
+      <label class="form-control w-full gap-2">
+        <span class="label-text font-medium">Logo partenaire</span>
+        <input
+          type="file"
+          name="logo"
+          accept="image/*"
+          class="file-input file-input-bordered w-full"
+          required
+        />
+      </label>
+    </ThankModal>
+
+    <ThankModal
+      id="create-contributeur-modal"
+      title="Nouveau contributeur"
+      subtitle="Formulaire dédié aux contributeurs."
+      formId="form-create-contributeur"
+      submitLabel="Créer le contributeur"
+    >
+      <input type="hidden" name="entity" value="contributeur" />
+      <input type="hidden" name="intent" value="create" />
+
+      <label class="form-control w-full gap-2">
+        <span class="label-text font-medium">Nom</span>
+        <input
+          type="text"
+          name="nom"
+          class="input input-bordered w-full"
+          placeholder="Ex : Jean Dupont"
+          required
+        />
+      </label>
+
+      <label class="form-control w-full gap-2">
+        <span class="label-text font-medium">Métier</span>
+        <input type="text" name="metier" class="input input-bordered w-full" placeholder="Ex : Photographe" />
+      </label>
+
+      <label class="form-control w-full gap-2">
+        <span class="label-text font-medium">Description</span>
+        <textarea
+          name="description"
+          class="textarea textarea-bordered w-full"
+          rows="3"
+          placeholder="Quelques mots sur la contribution..."
+        ></textarea>
+      </label>
+    </ThankModal>
+
+    <section class="mb-12">
+      <div class="mb-6 flex items-center justify-between gap-4">
+        <h2 class="text-2xl font-bold">Partenaires</h2>
+      </div>
+
+      {
+        partenaires.length === 0 ? (
+          <div class="rounded-xl border border-base-300 bg-base-100 p-6 text-base-content/60">
+            Aucun partenaire pour le moment.
+          </div>
+        ) : (
+          <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            {partenaires.map((partenaire) => (
+              <div class="rounded-2xl border border-base-300 bg-base-100 p-4 shadow-sm transition-all hover:shadow-md md:p-5">
+                <div class="mb-4 rounded-xl border border-base-300/60 bg-base-200/60">
+                  {partenaire.logoUrl ? (
+                    <img
+                      src={partenaire.logoUrl}
+                      alt="Logo partenaire"
+                      class="min-w-full object-contain object-center h-24 md:h-48"
+                    />
+                  ) : (
+                    <div class="h-20 w-full flex items-center justify-center text-sm text-base-content/60">
+                      Aucun logo
+                    </div>
+                  )}
+                </div>
+                <p class="text-sm! font-medium text-base-content/60">
+                  Mis à jour: {formatDateShort(partenaire.updated)}
+                </p>
+
+                <div class="mt-4 flex items-center justify-end gap-4">
+                  <form
+                    method="POST"
+                    class="m-0"
+                    data-delete-form
+                    data-confirm-message="Supprimer ce partenaire ?"
+                  >
+                    <input type="hidden" name="entity" value="partenaire" />
+                    <input type="hidden" name="intent" value="delete" />
+                    <input type="hidden" name="id" value={partenaire.id} />
+
+                    <button type="submit" class="btn btn-error rounded-full">
+                      Supprimer
+                    </button>
+                  </form>
+                  <button
+                    type="button"
+                    class="btn btn-accent rounded-full"
+                    data-modal-open={`edit-partenaire-${partenaire.id}`}
+                  >
+                    Modifier
+                  </button>
+                </div>
+
+                <ThankModal
+                  id={`edit-partenaire-${partenaire.id}`}
+                  title="Modifier le partenaire"
+                  formId={`form-edit-partenaire-${partenaire.id}`}
+                  formEnctype="multipart/form-data"
+                  submitLabel="Enregistrer"
+                >
+                  <input type="hidden" name="entity" value="partenaire" />
+                  <input type="hidden" name="intent" value="update" />
+                  <input type="hidden" name="id" value={partenaire.id} />
+
+                  <label class="form-control w-full gap-2">
+                    <span class="label-text font-medium">Nouveau logo</span>
+                    <input
+                      type="file"
+                      name="logo"
+                      accept="image/*"
+                      class="file-input file-input-bordered w-full"
+                      required
+                    />
+                  </label>
+                </ThankModal>
+              </div>
+            ))}
+          </div>
+        )
+      }
+    </section>
+
+    <section>
+      <div class="mb-6 flex items-center justify-between gap-4">
+        <h2 class="text-2xl font-bold">Contributeurs</h2>
+      </div>
+
+      {
+        contributeurs.length === 0 ? (
+          <div class="rounded-xl border border-base-300 bg-base-100 p-6 text-base-content/60">
+            Aucun contributeur pour le moment.
+          </div>
+        ) : (
+          <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
+            {contributeurs.map((contributeur) => (
+              <div class="rounded-2xl border border-base-300 bg-base-100 p-4 shadow-sm transition-all hover:shadow-md md:p-5">
+                <h3 class="text-xl font-bold leading-tight capitalize">{contributeur.nom}</h3>
+                {contributeur.metier && (
+                  <p class="mt-1 text-sm text-base-content/75 capitalize">{contributeur.metier}</p>
+                )}
+                {contributeur.description && (
+                  <p class="mt-4 text-sm text-base-content/70 capitalize">
+                    {contributeur.description}
+                  </p>
+                )}
+                <p class="mt-6 text-sm! font-medium text-base-content/60">
+                  Mis à jour: {formatDateShort(contributeur.updated)}
+                </p>
+
+                <div class="mt-4 flex items-center justify-end gap-4">
+                  <form
+                    method="POST"
+                    class="m-0"
+                    data-delete-form
+                    data-confirm-message="Supprimer ce contributeur ?"
+                  >
+                    <input type="hidden" name="entity" value="contributeur" />
+                    <input type="hidden" name="intent" value="delete" />
+                    <input type="hidden" name="id" value={contributeur.id} />
+
+                    <button type="submit" class="btn btn-error rounded-full">
+                      Supprimer
+                    </button>
+                  </form>
+                  <button
+                    type="button"
+                    class="btn btn-accent rounded-full"
+                    data-modal-open={`edit-contributeur-${contributeur.id}`}
+                  >
+                    Modifier
+                  </button>
+                </div>
+
+                <ThankModal
+                  id={`edit-contributeur-${contributeur.id}`}
+                  title="Modifier le contributeur"
+                  formId={`form-edit-contributeur-${contributeur.id}`}
+                  submitLabel="Enregistrer"
+                >
+                  <input type="hidden" name="entity" value="contributeur" />
+                  <input type="hidden" name="intent" value="update" />
+                  <input type="hidden" name="id" value={contributeur.id} />
+
+                  <label class="form-control w-full gap-2">
+                    <span class="label-text font-medium">Nom</span>
+                    <input
+                      type="text"
+                      name="nom"
+                      value={contributeur.nom}
+                      class="input input-bordered w-full"
+                      placeholder="Ex : Jean Dupont"
+                      required
+                    />
+                  </label>
+                  <label class="form-control w-full gap-2">
+                    <span class="label-text font-medium">Métier</span>
+                    <input
+                      type="text"
+                      name="metier"
+                      value={contributeur.metier}
+                      class="input input-bordered w-full"
+                      placeholder="Ex : Photographe"
+                    />
+                  </label>
+                  <label class="form-control w-full gap-2">
+                    <span class="label-text font-medium">Description</span>
+                    <textarea
+                      name="description"
+                      class="textarea textarea-bordered w-full"
+                      rows="3"
+                      placeholder="Quelques mots sur la contribution..."
+                    >{contributeur.description}</textarea>
+                  </label>
+                </ThankModal>
+              </div>
+            ))}
+          </div>
+        )
+      }
+    </section>
+  </div>
+</Layout>
+
+<script>
+  import { initLogoOptimization } from "../../../scripts/logoOptimization.js";
+  import { showAlert, showConfirm } from "../../../utils/alerts";
+
+  initLogoOptimization();
+
+  document.addEventListener("submit", (event) => {
+    const form = event.target;
+    if (!(form instanceof HTMLFormElement)) return;
+    if (!form.hasAttribute("data-delete-form")) return;
+
+    event.preventDefault();
+    const message = form.dataset.confirmMessage || "Confirmer la suppression ?";
+
+    void showConfirm({
+      title: "Supprimer",
+      message,
+      confirmLabel: "Supprimer",
+      cancelLabel: "Annuler",
+      type: "warning",
+    }).then((confirmed) => {
+      if (!confirmed) return;
+      HTMLFormElement.prototype.submit.call(form);
+    });
+  });
+  initLogoOptimization();
+
+  const successFlag = document.getElementById("remerciements-success-flag");
+  const errorFlag = document.getElementById("remerciements-error-flag");
+
+  if (successFlag instanceof HTMLElement) {
+    const message = (successFlag.dataset.message || "").trim();
+    if (message) {
+      showAlert({ type: "success", message });
+      const url = new URL(window.location.href);
+      url.searchParams.delete("success");
+      window.history.replaceState({}, "", url.toString());
+    }
+  }
+
+  if (errorFlag instanceof HTMLElement) {
+    const message = (errorFlag.dataset.message || "").trim();
+    if (message) {
+      showAlert({ type: "error", message });
+      const url = new URL(window.location.href);
+      url.searchParams.delete("error");
+      window.history.replaceState({}, "", url.toString());
+    }
+  }
+</script>

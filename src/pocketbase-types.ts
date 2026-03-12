@@ -13,7 +13,9 @@ export enum Collections {
 	Superusers = "_superusers",
 	Actions = "actions",
 	Brouillons = "brouillons",
+	Contributeurs = "contributeurs",
 	Membres = "membres",
+	Partenaires = "partenaires",
 	Produits = "produits",
 	Projets = "projets",
 	Users = "users",
@@ -189,6 +191,15 @@ export type BrouillonsRecord = {
 	updated: IsoAutoDateString
 }
 
+export type ContributeursRecord = {
+	created: IsoAutoDateString
+	description?: string
+	id: string
+	metier?: string
+	nom?: string
+	updated: IsoAutoDateString
+}
+
 export enum MembresRoleOptions {
 	"membre" = "membre",
 	"président" = "président",
@@ -202,6 +213,13 @@ export type MembresRecord = {
 	role?: MembresRoleOptions
 	updated: IsoAutoDateString
 	utilisateur?: RecordIdString
+}
+
+export type PartenairesRecord = {
+	created: IsoAutoDateString
+	id: string
+	logo?: FileNameString
+	updated: IsoAutoDateString
 }
 
 export type ProduitsRecord = {
@@ -261,7 +279,9 @@ export type OtpsResponse<Texpand = unknown> = Required<OtpsRecord> & BaseSystemF
 export type SuperusersResponse<Texpand = unknown> = Required<SuperusersRecord> & AuthSystemFields<Texpand>
 export type ActionsResponse<Texpand = unknown> = Required<ActionsRecord> & BaseSystemFields<Texpand>
 export type BrouillonsResponse<Texpand = unknown> = Required<BrouillonsRecord> & BaseSystemFields<Texpand>
+export type ContributeursResponse<Texpand = unknown> = Required<ContributeursRecord> & BaseSystemFields<Texpand>
 export type MembresResponse<Texpand = unknown> = Required<MembresRecord> & BaseSystemFields<Texpand>
+export type PartenairesResponse<Texpand = unknown> = Required<PartenairesRecord> & BaseSystemFields<Texpand>
 export type ProduitsResponse<Texpand = unknown> = Required<ProduitsRecord> & BaseSystemFields<Texpand>
 export type ProjetsResponse<Texpand = unknown> = Required<ProjetsRecord> & BaseSystemFields<Texpand>
 export type UsersResponse<Texpand = unknown> = Required<UsersRecord> & AuthSystemFields<Texpand>
@@ -276,7 +296,9 @@ export type CollectionRecords = {
 	_superusers: SuperusersRecord
 	actions: ActionsRecord
 	brouillons: BrouillonsRecord
+	contributeurs: ContributeursRecord
 	membres: MembresRecord
+	partenaires: PartenairesRecord
 	produits: ProduitsRecord
 	projets: ProjetsRecord
 	users: UsersRecord
@@ -290,7 +312,9 @@ export type CollectionResponses = {
 	_superusers: SuperusersResponse
 	actions: ActionsResponse
 	brouillons: BrouillonsResponse
+	contributeurs: ContributeursResponse
 	membres: MembresResponse
+	partenaires: PartenairesResponse
 	produits: ProduitsResponse
 	projets: ProjetsResponse
 	users: UsersResponse
