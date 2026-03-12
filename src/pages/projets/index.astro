@@ -4,13 +4,14 @@ import Hero from "../../components/Hero.astro";
 import slugify from "slugify";
 import { formatDateShort } from "../../utils/utilitaires.js";
 import HeroActions from "../../assets/projects-page/hero-project-page.png";
-import HeroActionsMobile from "../../assets/projects-page/hero-project-page.png";
-import HeroActionsTablet from "../../assets/projects-page/hero-project-page.png";
+import HeroActionsMobile from "../../assets/projects-page/hero-project-page-mobile.png";
+import HeroActionsTablet from "../../assets/projects-page/hero-project-page-tablette.png";
 import { getImage } from "astro:assets";
 
-const lcpMobile = await getImage({ src: HeroActionsMobile, format: "png", width: 440, quality: 80 });
-const lcpTablet = await getImage({ src: HeroActionsTablet, format: "png", width: 1280, quality: 80 });
-const lcpDesktop = await getImage({ src: HeroActions, format: "png", width: 1600, quality: 80 });
+const lcpMobile = await getImage({ src: HeroActionsMobile, format: "webp", width: 440, quality: 68 });
+const lcpTablet = await getImage({ src: HeroActionsTablet, format: "webp", width: 1280, quality: 72 });
+const lcpDesktopMd = await getImage({ src: HeroActions, format: "webp", width: 1440, quality: 80 });
+const lcpDesktop = await getImage({ src: HeroActions, format: "webp", width: 1840, quality: 80 });
 
 const projects = await Astro.locals.pb.collection("projets").getFullList();
 console.log(projects);
@@ -20,9 +21,9 @@ import DiagArrow from "../../components/DiagArrow.astro";
 
 <Layout>
   <Fragment slot="head">
-    <link rel="preload" as="image" href={lcpMobile.src} type="image/png" media="(max-width: 767px)" fetchpriority="high" />
-    <link rel="preload" as="image" href={lcpTablet.src} type="image/png" media="(min-width: 768px) and (max-width: 1023px)" fetchpriority="high" />
-    <link rel="preload" as="image" href={lcpDesktop.src} type="image/png" media="(min-width: 1024px)" fetchpriority="high" />
+    <link rel="preload" as="image" href={lcpMobile.src} type="image/webp" media="(max-width: 767px)" fetchpriority="high" />
+    <link rel="preload" as="image" href={lcpTablet.src} type="image/webp" media="(min-width: 768px) and (max-width: 1023px)" fetchpriority="high" />
+    <link rel="preload" as="image" href={lcpDesktop.src} imagesrcset={`${lcpDesktopMd.src} 1440w, ${lcpDesktop.src} 1840w`} imagesizes="95vw" type="image/webp" media="(min-width: 1024px)" fetchpriority="high" />
   </Fragment>
   <Hero
     image={HeroActions}

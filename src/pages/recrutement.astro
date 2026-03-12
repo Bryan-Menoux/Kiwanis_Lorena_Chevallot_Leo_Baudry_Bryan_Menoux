@@ -1,6 +1,8 @@
 ---
 import Layout from "../layouts/Layout.astro";
-import heroRecrutement from "../assets/recrutement-page/hero-recrutement.webp";
+import heroRecrutement from "../assets/recrutement-page/hero-recrutement.png";
+import heroRecrutementTablette from "../assets/recrutement-page/hero-recrutement-tablette.png";
+import heroRecrutementMobile from "../assets/recrutement-page/hero-recrutement-mobile.png";
 import Hero from "../components/Hero.astro";
 import recrutement1 from "../assets/recrutement-page/recrutement1.webp";
 import recrutement2 from "../assets/recrutement-page/recrutement2.webp";
@@ -8,27 +10,50 @@ import recrutement3 from "../assets/recrutement-page/recrutement3.webp";
 import etrekiwanienne1 from "../assets/recrutement-page/etrekiwanienne1.webp";
 import etrekiwanienne2 from "../assets/recrutement-page/etrekiwanienne2.webp";
 import etrekiwanienne3 from "../assets/recrutement-page/etrekiwanienne3.webp";
+import DiagArrow from "../components/DiagArrow.astro";
+import { getImage } from "astro:assets";
+
+const lcpMobile = await getImage({ src: heroRecrutementMobile, format: "webp", width: 440, quality: 68 });
+const lcpTablet = await getImage({ src: heroRecrutementTablette, format: "webp", width: 1280, quality: 72 });
+const lcpDesktopMd = await getImage({ src: heroRecrutement, format: "webp", width: 1440, quality: 80 });
+const lcpDesktop = await getImage({ src: heroRecrutement, format: "webp", width: 1840, quality: 80 });
+
 ---
 
 <Layout>
+  <Fragment slot="head">
+    <link rel="preload" as="image" href={lcpMobile.src} type="image/webp" media="(max-width: 767px)" fetchpriority="high" />
+    <link rel="preload" as="image" href={lcpTablet.src} type="image/webp" media="(min-width: 768px) and (max-width: 1023px)" fetchpriority="high" />
+    <link rel="preload" as="image" href={lcpDesktop.src} imagesrcset={`${lcpDesktopMd.src} 1440w, ${lcpDesktop.src} 1840w`} imagesizes="95vw" type="image/webp" media="(min-width: 1024px)" fetchpriority="high" />
+  </Fragment>
   <Hero
     image={heroRecrutement}
-    title="Recrutement"
-    subtitle="Rejoignez notre équipe de bénévoles passionnées"
+    title="Kiwanis Pays de Montbéliard"
+    subtitle="Servir les enfants du monde, au cœur de notre territoire"
   />
 
   <div
     class="flex flex-col gap-32 md:gap-44 lg:gap-64 max-w-[85dvw]! md:max-w-[80dvw]! mx-auto my-24 md:my-32 lg:my-40"
   >
-    <section class="flex flex-col lg:flex-row w-full gap-6">
+    <section class="flex flex-col lg:flex-row w-full gap-6 lg:gap-24!">
       <div class="flex flex-col flex-1 gap-4">
-        <h2 class="text-2xl md:text-3xl lg:text-4xl font-bold mb-4">
+        <h2 class="text-2xl md:text-3xl lg:text-4xl font-bold mb-4 mt-8">
           L'intronisation
         </h2>
-        <p class="text-xs md:text-sm lg:text-base mb-6">
+        <!-- mobile: shorter text -->
+        <p class="text-xs md:text-sm lg:text-base mb-6 block md:hidden">
           L’intronisation marque l’entrée officielle d’un nouveau membre au sein
           du club. C’est un moment à la fois simple, solennel et symbolique, qui
-          se déroule dans le respect du protocole Kiwanis.
+          se déroule dans le respect du protocole Kiwanis. 
+        </p>
+
+        <!-- desktop: full text -->
+        <p class="text-xs md:text-sm lg:text-base mb-6 hidden md:block">
+          L’intronisation marque l’entrée officielle d’un nouveau membre au sein
+          du club. C’est un moment à la fois simple, solennel et symbolique, qui
+          se déroule dans le respect du protocole Kiwanis. Cette étape vient
+          concrétiser son engagement, son accueil par les autres membres et son
+          intégration dans la vie du club, dans ses actions communes. 
         </p>
       </div>
       <img
@@ -39,9 +64,9 @@ import etrekiwanienne3 from "../assets/recrutement-page/etrekiwanienne3.webp";
     </section>
     <section class="flex flex-col lg:flex-row w-full gap-6">
       <div class="flex flex-col flex-1 gap-4">
-        <h3 class="text-lg md:text-xl lg:text-2xl font-semibold mb-4">
+        <h2 class="text-2xl md:text-3xl lg:text-4xl font-bold mb-4">
           Cérémonies D’intronisation
-        </h3>
+        </h2>
         <ol
           class="flex flex-col gap-3 md:gap-4 lg:gap-6 text-xs md:text-sm lg:text-base"
         >
@@ -114,83 +139,89 @@ import etrekiwanienne3 from "../assets/recrutement-page/etrekiwanienne3.webp";
         class="w-full lg:w-1/2 flex-1 rounded-lg object-cover"
       />
     </section>
-    <section class="flex flex-col lg:flex-row w-full gap-6">
-    <div class="flex flex-col flex-1 gap-4">
-      <h2 class="text-2xl md:text-3xl lg:text-4xl font-bold mb-4">
-        Nos Réunions
+    <section class="flex flex-col lg:flex-row w-full gap-6 lg:gap-24">
+      <div class="flex flex-col flex-1 gap-4 justify-between">
+        <div class="flex flex-col">
+          <h2 class="text-2xl md:text-3xl lg:text-4xl font-bold mb-4 lg:mt-8">
+            Nos Réunions
+          </h2>
+          <p class="text-xs md:text-sm lg:text-base">
+            Nous nous réunissons tous les premiers mardis de chaque mois pour
+            échanger sur la vie du club, les prochaines actions, les projets à
+            venir et les sujets qui rythment son organisation. N’hésitez pas à
+            nous contacter si vous désirez nous rejoindre !
+          </p>
+        </div>
+        <a href="/contact" class="btn btn-accent w-fit self-end mb-8 px-8 py-6 flex items-center gap-3"
+          >Nous contacter <DiagArrow class="h-3 w-auto" />
+        </a>
+      </div>
+      <img
+        src={recrutement3.src}
+        alt="Recrutement 3"
+        class="w-full lg:w-1/2 flex-1 rounded-lg object-cover"
+      />
+    </section>
+
+    <section class="max-w-[85dvw]! md:max-w-[80dvw]! mx-auto">
+      <h2 class="text-2xl md:text-3xl lg:text-4xl font-bold mb-12">
+        Être Kiwanien / Kiwanienne, C'est :
       </h2>
-      <p class="text-xs md:text-sm lg:text-base">
-        Nous nous réunissons tous les premiers mardis de chaque mois autour d’un
-        repas. N’hésitez pas à nous contacter si vous désirez nous rejoindre !
+
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
+        <div
+          class="bg-white rounded-4xl shadow-sm border border-gray-100 overflow-hidden flex flex-col text-center"
+        >
+          <img
+            src={etrekiwanienne1.src}
+            alt="Action"
+            class="w-full aspect-4/5 max-h-[40dvh] object-cover object-top"
+          />
+          <div class="p-8 grow flex items-center justify-center">
+            <p class="text-sm md:text-base font-semibold">
+              Participer à des actions pour les enfants
+            </p>
+          </div>
+        </div>
+
+        <div
+          class="bg-white rounded-4xl shadow-sm border border-gray-100 overflow-hidden flex flex-col text-center"
+        >
+          <img
+            src={etrekiwanienne2.src}
+            alt="Entraide"
+            class="w-full aspect-4/5 max-h-[40dvh] object-cover object-top"
+          />
+          <div class="p-8 grow flex items-center justify-center">
+            <p class="text-sm md:text-base font-semibold">
+              Faire parti d'un club convivial, centré sur l'entraide
+            </p>
+          </div>
+        </div>
+
+        <div
+          class="bg-white rounded-4xl shadow-sm border border-gray-100 overflow-hidden flex flex-col text-center"
+        >
+          <img
+            src={etrekiwanienne3.src}
+            alt="Bonne humeur"
+            class="w-full aspect-4/5 max-h-[40dvh] object-cover object-top"
+          />
+          <div class="p-8 grow flex items-center justify-center">
+            <p class="text-sm md:text-base font-semibold">
+              Partager la bonne humeur et la bonne volonté
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <p
+        class="text-[10px] md:text-xs text-center max-w-3xl mx-auto pt-16"
+      >
+        Une cotisation de 75€ est demandée par membre, par trimestre. Ce montant
+        assure le bon fonctionnement et la continuité du Kiwanis Pays de
+        Montbéliard !
       </p>
-    </div>
-    <img
-      src={recrutement3.src}
-      alt="Recrutement 3"
-      class="w-full lg:w-1/2 flex-1 rounded-lg object-cover"
-    />
-  </section>
-  
-<section class="max-w-[85dvw]! md:max-w-[80dvw]! mx-auto">
-  <h2 class="text-2xl md:text-3xl lg:text-4xl font-bold mb-12">
-    Être Kiwanien / Kiwanienne, C'est :
-  </h2>
-
-  <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
-    <div
-      class="bg-white rounded-4xl shadow-sm border border-gray-100 overflow-hidden flex flex-col text-center"
-    >
-      <img
-        src={etrekiwanienne1.src}
-        alt="Action"
-        class="w-full aspect-4/5 max-h-[40dvh] object-cover object-top"
-      />
-      <div class="p-8 grow flex items-center justify-center">
-        <p class="text-sm md:text-base font-semibold">
-          Participer à des actions pour les enfants
-        </p>
-      </div>
-    </div>
-
-    <div
-      class="bg-white rounded-4xl shadow-sm border border-gray-100 overflow-hidden flex flex-col text-center"
-    >
-      <img
-        src={etrekiwanienne2.src}
-        alt="Entraide"
-        class="w-full aspect-4/5 max-h-[40dvh] object-cover object-top"
-      />
-      <div class="p-8 grow flex items-center justify-center">
-        <p class="text-sm md:text-base font-semibold">
-          Faire parti d'un club convivial, centré sur l'entraide
-        </p>
-      </div>
-    </div>
-
-    <div
-      class="bg-white rounded-4xl shadow-sm border border-gray-100 overflow-hidden flex flex-col text-center"
-    >
-      <img
-        src={etrekiwanienne3.src}
-        alt="Bonne humeur"
-        class="w-full aspect-4/5 max-h-[40dvh] object-cover object-top"
-      />
-      <div class="p-8 grow flex items-center justify-center">
-        <p class="text-sm md:text-base font-semibold">
-          Partager la bonne humeur et la bonne volonté
-        </p>
-      </div>
-    </div>
+    </section>
   </div>
-
-  <p class="text-[10px] md:text-xs text-gray-400 text-center max-w-3xl mx-auto pt-16">
-    Une cotisation de 75€ est demandée par membre, par trimestre. Ce montant
-    assure le bon fonctionnement et la continuité du Kiwanis Pays de Montbéliard
-    !
-  </p>
-</section>
-
-  </div>
-
-  
 </Layout>

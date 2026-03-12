@@ -19,7 +19,7 @@ import HomePartner from "../components/Home-partner.astro";
 const lcpMobile = await getImage({ src: heroLandingfinalMobile, format: "webp", width: 440, quality: 68 });
 const lcpTablet = await getImage({ src: heroLandingfinalTablet, format: "webp", width: 1280, quality: 72 });
 const lcpDesktopMd = await getImage({ src: heroLandingfinal, format: "webp", width: 1440, quality: 80 });
-const lcpDesktop   = await getImage({ src: heroLandingfinal, format: "webp", width: 1600, quality: 80 });
+const lcpDesktop   = await getImage({ src: heroLandingfinal, format: "webp", width: 1840, quality: 80 });
 
 // landing-1 / membres : col 2fr dans grid [3fr_2fr], 85vw mobile → ~29vw desktop (~420px à 1440px)
 const landing1Sm = await getImage({ src: landing1, width: 480, format: "webp" });
@@ -49,7 +49,7 @@ const mapAddress = "76 bis faubourg de Besançon, 25200 Montbéliard";
   <Fragment slot="head">
     <link rel="preload" as="image" href={lcpMobile.src} type="image/webp" media="(max-width: 767px)" fetchpriority="high" />
     <link rel="preload" as="image" href={lcpTablet.src} type="image/webp" media="(min-width: 768px) and (max-width: 1023px)" fetchpriority="high" />
-    <link rel="preload" as="image" href={lcpDesktop.src} imagesrcset={`${lcpDesktopMd.src} 1440w, ${lcpDesktop.src} 1600w`} imagesizes="95vw" type="image/webp" media="(min-width: 1024px)" fetchpriority="high" />
+    <link rel="preload" as="image" href={lcpDesktop.src} imagesrcset={`${lcpDesktopMd.src} 1440w, ${lcpDesktop.src} 1840w`} imagesizes="95vw" type="image/webp" media="(min-width: 1024px)" fetchpriority="high" />
   </Fragment>
   <Hero
     image={heroLandingfinal}

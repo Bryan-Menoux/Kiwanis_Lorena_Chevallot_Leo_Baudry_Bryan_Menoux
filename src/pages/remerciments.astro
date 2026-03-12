@@ -2,15 +2,22 @@
 import Layout from "../layouts/Layout.astro"
 import Hero from "../components/Hero.astro"
 import heroremerciments from "../assets/remerciments-page/hero-remerciments.webp"
+import { getImage } from "astro:assets"
 import partenaire1_encreservice from "../assets/partners/encre-service-logo.webp"
 import partenaire2_fondation_arc_en_ciel from "../assets/partners/fondation-arc-en-ciel-logo.webp"
 import partenaire3_mon_plaisir from "../assets/partners/mon-plaisir-logo.webp"
 import partenaire4_montbeliard_manifest from "../assets/partners/montbeliard-manifest-logo.webp"
 import partenaire5_pma from "../assets/partners/pma-logo.webp"
 
+const lcpDesktopMd = await getImage({ src: heroremerciments, format: "webp", width: 1440, quality: 80 })
+const lcpDesktop = await getImage({ src: heroremerciments, format: "webp", width: 1840, quality: 80 })
+
 ---
 
 <Layout>
+    <Fragment slot="head">
+      <link rel="preload" as="image" href={lcpDesktop.src} imagesrcset={`${lcpDesktopMd.src} 1440w, ${lcpDesktop.src} 1840w`} imagesizes="95vw" type="image/webp" fetchpriority="high" />
+    </Fragment>
     <Hero image={heroremerciments}
         title="Remerciements"
         subtitle="Nous tenons à exprimer notre profonde gratitude envers tous ceux qui ont contribué à la réussite de nos projets."
