@@ -109,21 +109,24 @@ if (Astro.request.method === "POST") {
             data-create-tabs
             data-active-tab={activeTab}
           >
-            <div class="flex flex-wrap items-center gap-3 border-b border-base-300 pb-4">
-              <button
-                type="button"
-                class={`btn h-11 min-h-11 rounded-full px-6 ${activeTab === "partenaire" ? "btn-accent" : "btn-ghost"}`}
-                data-create-tab-trigger="partenaire"
-              >
-                Partenaire
-              </button>
-              <button
-                type="button"
-                class={`btn h-11 min-h-11 rounded-full px-6 ${activeTab === "contributeur" ? "btn-accent" : "btn-ghost"}`}
-                data-create-tab-trigger="contributeur"
-              >
-                Contributeur
-              </button>
+            <div class="space-y-3">
+              <p class="text-sm font-medium text-base-content">Type de remerciement à créer</p>
+              <div class="flex flex-wrap items-center gap-3 border-b border-base-300 pb-4">
+                <button
+                  type="button"
+                  class={`btn h-11 min-h-11 rounded-full px-6 ${activeTab === "partenaire" ? "btn-accent" : "btn-ghost"}`}
+                  data-create-tab-trigger="partenaire"
+                >
+                  Partenaire
+                </button>
+                <button
+                  type="button"
+                  class={`btn h-11 min-h-11 rounded-full px-6 ${activeTab === "contributeur" ? "btn-accent" : "btn-ghost"}`}
+                  data-create-tab-trigger="contributeur"
+                >
+                  Contributeur
+                </button>
+              </div>
             </div>
 
             <div
@@ -184,11 +187,11 @@ if (Astro.request.method === "POST") {
                   />
                 </div>
 
-                <div class="flex justify-end gap-3 pt-4">
-                  <a href="/creation/remerciements" class="btn btn-ghost rounded-lg">
+                <div class="w-full flex justify-end gap-3 pt-4">
+                  <a href="/creation/remerciements" class="btn btn-ghost btn-sm rounded-lg flex-1 w-full md:flex-initial md:w-fit md:btn-md">
                     Retour
                   </a>
-                  <button type="submit" class="btn btn-accent rounded-lg px-8">
+                  <button type="submit" class="btn btn-accent btn-sm rounded-lg flex-1 w-full md:flex-initial md:w-fit md:btn-md md:px-8">
                     Créer le partenaire
                   </button>
                 </div>
@@ -255,11 +258,11 @@ if (Astro.request.method === "POST") {
                   >{contributeurState.description}</textarea>
                 </div>
 
-                <div class="flex justify-end gap-3 pt-4">
-                  <a href="/creation/remerciements" class="btn btn-ghost rounded-lg">
+                <div class="w-full flex justify-end gap-3 pt-4">
+                  <a href="/creation/remerciements" class="btn btn-ghost btn-sm rounded-lg flex-1 w-full md:flex-initial md:w-fit md:btn-md">
                     Retour
                   </a>
-                  <button type="submit" class="btn btn-accent rounded-lg px-8">
+                  <button type="submit" class="btn btn-accent btn-sm rounded-lg flex-1 w-full md:flex-initial md:w-fit md:btn-md md:px-8">
                     Créer le contributeur
                   </button>
                 </div>

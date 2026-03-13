@@ -102,8 +102,8 @@ try {
           Sélectionnez plusieurs partenaires ou contributeurs puis cliquez sur "Supprimer sélection".
         </p>
       </div>
-      <div class="flex flex-wrap items-center gap-3 lg:justify-end">
-        <a href="/creation/remerciements" class="btn btn-border btn-sm rounded-full w-fit whitespace-nowrap md:w-fit md:btn-md">Retour aux remerciements</a>
+      <div class="w-full flex flex-wrap items-center gap-3 md:justify-end">
+        <a href="/creation/remerciements" class="btn btn-border btn-sm rounded-full flex-1 w-full md:flex-initial md:w-fit md:btn-md">Retour aux remerciements</a>
       </div>
     </div>
 
@@ -137,7 +137,7 @@ try {
             </div>
           </div>
         </div>
-        <div class="flex flex-col gap-2 select-none sm:flex-row sm:items-center sm:justify-between">
+        <div class="w-full flex flex-wrap items-center gap-3 md:justify-end">
           <label class="flex items-center gap-2">
             <input type="checkbox" id="selectAll" />
             <span class="text-sm">Tout sélectionner</span>
@@ -145,7 +145,7 @@ try {
           <button
             type="submit"
             id="bulkDelete"
-            class="btn btn-error btn-sm rounded-full md:btn-md w-full sm:w-auto"
+            class="btn btn-error btn-sm rounded-full flex-1 w-full md:flex-initial md:w-fit md:btn-md"
             >Supprimer sélection</button
           >
         </div>
@@ -153,7 +153,7 @@ try {
 
       <div
         id="cards-grid"
-        class="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-5 lg:grid-cols-3 lg:gap-6"
+        class="grid grid-cols-1 gap-4 md:grid-cols-3 md:gap-5 lg:grid-cols-3 lg:gap-6"
       >
         {
           partenaires.map((p: any) => (

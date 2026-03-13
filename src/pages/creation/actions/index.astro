@@ -142,11 +142,11 @@ const allActions = actions;
           Gérez vos actions, recherchez, filtrez et modifiez rapidement.
         </p>
       </div>
-      <div class="flex flex-wrap items-center gap-3 lg:justify-end">
-        <a href="/actions" class="btn btn-border btn-sm rounded-full md:btn-md">
+      <div class="w-full flex flex-wrap items-center gap-3 md:justify-end">
+        <a href="/actions" class="btn btn-border btn-sm rounded-full flex-1 w-full md:flex-initial md:w-fit md:btn-md">
           Voir le site
         </a>
-        <a href="/creation/actions/nouveau" class="btn btn-accent btn-sm rounded-full md:btn-md">
+        <a href="/creation/actions/nouveau" class="btn btn-accent btn-sm rounded-full flex-1 w-full md:flex-initial md:w-fit md:btn-md">
           Créer une action
         </a>
       </div>
@@ -267,7 +267,7 @@ const allActions = actions;
     const paginationHtml = renderPagination(totalPages, currentPage);
 
     container.innerHTML = `
-      <div class="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-5 lg:grid-cols-3 lg:gap-6">
+      <div class="grid grid-cols-1 gap-4 md:grid-cols-3 md:gap-5 lg:grid-cols-3 lg:gap-6">
         ${cardsHtml}
       </div>
       ${paginationHtml}

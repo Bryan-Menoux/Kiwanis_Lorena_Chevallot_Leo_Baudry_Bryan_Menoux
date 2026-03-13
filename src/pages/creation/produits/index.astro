@@ -82,11 +82,11 @@ const allProduits = produits;
           Gérez vos produits, recherchez, filtrez et modifiez rapidement.
         </p>
       </div>
-      <div class="flex flex-wrap items-center gap-3 lg:justify-end">
-        <a href="/creation/produits/delete" class="btn btn-border btn-sm rounded-full md:btn-md">
+      <div class="w-full flex flex-wrap items-center gap-3 md:justify-end">
+        <a href="/creation/produits/delete" class="btn btn-border btn-sm rounded-full flex-1 w-full md:flex-initial md:w-fit md:btn-md">
           Supprimer des produits
         </a>
-        <a href="/creation/produits/nouveau" class="btn btn-accent btn-sm rounded-full md:btn-md">
+        <a href="/creation/produits/nouveau" class="btn btn-accent btn-sm rounded-full flex-1 w-full md:flex-initial md:w-fit md:btn-md">
           Créer un produit
         </a>
       </div>
@@ -210,7 +210,7 @@ const allProduits = produits;
     const paginationHtml = renderPagination(totalPages, currentPage);
 
     container.innerHTML = `
-      <div class="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-5 lg:grid-cols-3 lg:gap-6">
+      <div class="grid grid-cols-1 gap-4 md:grid-cols-3 md:gap-5 lg:grid-cols-3 lg:gap-6">
         ${cardsHtml}
       </div>
       ${paginationHtml}

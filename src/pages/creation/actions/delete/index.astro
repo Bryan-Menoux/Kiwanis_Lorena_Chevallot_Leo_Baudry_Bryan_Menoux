@@ -81,8 +81,8 @@ try {
           Selectionnez plusieurs actions puis cliquez sur "Supprimer selection".
         </p>
       </div>
-      <div class="flex flex-wrap items-center gap-3 lg:justify-end">
-        <a href="/creation/actions" class="btn btn-border btn-sm rounded-full w-full md:w-fit md:btn-md">Retour aux actions</a>
+      <div class="w-full flex flex-wrap items-center gap-3 md:justify-end">
+        <a href="/creation/actions" class="btn btn-border btn-sm rounded-full flex-1 w-full md:flex-initial md:w-fit md:btn-md">Retour aux actions</a>
       </div>
     </div>
 
@@ -118,7 +118,7 @@ try {
             </div>
           </div>
         </div>
-        <div class="flex flex-col gap-2 select-none sm:flex-row sm:items-center sm:justify-between">
+        <div class="w-full flex flex-wrap items-center gap-3 md:justify-end">
           <label class="flex items-center gap-2">
             <input type="checkbox" id="selectAll" />
             <span class="text-sm">Tout selectionner</span>
@@ -126,7 +126,7 @@ try {
           <button
             type="submit"
             id="bulkDelete"
-            class="btn btn-error btn-sm rounded-full md:btn-md w-full sm:w-auto"
+            class="btn btn-error btn-sm rounded-full flex-1 w-full md:flex-initial md:w-fit md:btn-md"
             >Supprimer selection</button
           >
         </div>
@@ -134,7 +134,7 @@ try {
 
       <div
         id="cards-grid"
-        class="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-5 lg:grid-cols-3 lg:gap-6"
+        class="grid grid-cols-1 gap-4 md:grid-cols-3 md:gap-5 lg:grid-cols-3 lg:gap-6"
       >
         {
           actions.map((a: any) => (
