@@ -210,7 +210,7 @@ const allPages = db.pages;
             <h3 class="mb-2">Filtres</h3>
             <ActionsSearch showStatus={true} value={q} statusOptions={["all","actions","projets","produits","brouillon"]} embedded={true}>
               <label slot="secondary-extra" class="form-control w-full gap-1" for="sort-select">
-                <span class="text-xs font-medium tracking-wide text-base-content/60">Trier par date</span>
+                <span class="text-sm! font-medium tracking-wide text-base-content">Trier par date</span>
                 <select id="sort-select" class="select select-bordered w-full">
                   <option value="updated_desc">Recent -> Ancien</option>
                   <option value="updated_asc">Ancien -> Recent</option>
