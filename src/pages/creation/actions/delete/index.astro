@@ -2,6 +2,7 @@
 import Layout from "../../../../layouts/Layout-back-office.astro";
 import slugify from "slugify";
 import { formatDateShort } from "../../../../utils/utilitaires.js";
+import { getCreationViewUrl } from "../../../../utils/creationRoutes";
 import ActionsSearch from "../../../../components/ActionsSearch.astro";
 
 let error = "";
@@ -104,13 +105,12 @@ try {
             </div>
             <div class="flex flex-col gap-4">
               <div class="w-full">
-                <p class="mb-2 text-sm font-medium text-base-content">Filtres</p>
                 <ActionsSearch embedded={true}>
                   <label slot="secondary-extra" class="form-control w-full gap-1" for="sort-select">
-                    <span class="text-sm! font-medium uppercase tracking-wide text-base-content">Trier par date</span>
+                    <span class="text-sm! font-medium tracking-wide text-base-content">Trier par date</span>
                     <select id="sort-select" class="select select-bordered w-full">
-                      <option value="updated_desc">Recent -> Ancien</option>
-                      <option value="updated_asc">Ancien -> Recent</option>
+                      <option value="updated_desc">Recent → Ancien</option>
+                      <option value="updated_asc">Ancien → Recent</option>
                     </select>
                   </label>
                 </ActionsSearch>
@@ -178,7 +178,7 @@ try {
               <div class="flex justify-end">
                 <a
                   class="btn btn-sm btn-ghost w-full sm:w-auto"
-                  href={`/actions/${a.id}-${a.slug}`}
+                  href={getCreationViewUrl("action", a.id, a.slug)}
                 >
                   Voir
                 </a>

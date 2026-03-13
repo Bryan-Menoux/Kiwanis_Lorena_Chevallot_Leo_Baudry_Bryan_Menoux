@@ -3,6 +3,10 @@ import Layout from "../../layouts/Layout-back-office.astro";
 import ActionsSearch from "../../components/ActionsSearch.astro";
 import { formatDateWithTime } from "../../utils/utilitaires.js";
 import slugify from 'slugify';
+import {
+  getCreationDashboardEditUrl,
+  getCreationDashboardViewUrl,
+} from "../../utils/creationRoutes";
 
 interface Page {
   id: string;
@@ -93,31 +97,11 @@ function getStatusBadge(status: Page['status']) {
 }
 
 function getEditUrl(status: Page['status'], id: string, slug: string, type?: string): string {
-  if (status === 'actions') return `/creation/actions/edit/${id}-${slug}`;
-  if (status === 'projets') return `/creation/projets/edit/${id}-${slug}`;
-  if (status === 'produits') return `/creation/produits/edit/${id}-${slug}`;
-
-  // Pour les brouillons, utiliser le `type` si présent ; sinon ouvrir
-  // l'éditeur `actions` par défaut (comportement demandé).
-  if (status === 'brouillon') {
-    if (type === 'action') return `/creation/actions/edit/${id}-${slug}`;
-    if (type === 'projet') return `/creation/projets/edit/${id}-${slug}`;
-    if (type === 'produit') return `/creation/produits/edit/${id}-${slug}`;
-    // Cas de repli par défaut : ouvrir l'éditeur actions
-    return `/creation/actions/edit/${id}-${slug}`;
-  }
-
-  return `/creation/pages/${id}-${slug}`;
+  return getCreationDashboardEditUrl(status, id, slug, type);
 }
 
 function getViewUrl(status: Page['status'], id: string, slug: string, type?: string): string {
-  if (status === 'actions') return `/actions/${id}-${slug}`;
-  if (status === 'projets') return `/projets/${id}-${slug}`;
-  if (status === 'produits') return `/produits/${id}-${slug}`;
-  if (status === 'brouillon') {
-    return `/creation/brouillons/${id}-${slug}`;
-  }
-  return getEditUrl(status, id, slug);
+  return getCreationDashboardViewUrl(status, id, slug, type);
 }
 
 function computeStats(pages: Page[]): { actions: number; projets: number; produits: number; brouillons: number; total: number; } {
@@ -283,7 +267,15 @@ const allPages = db.pages;
   import "../../utils/utilitaires.js";
   import "../../utils/scroll.js";
   import { renderPagination } from "../../utils/renderPagination";
+  import {
+    getCreationDashboardEditUrl,
+    getCreationDashboardViewUrl,
+  } from "../../utils/creationRoutes";
   (window as any).renderPagination = renderPagination;
+  (window as any).creationRouteHelpers = {
+    getCreationDashboardEditUrl,
+    getCreationDashboardViewUrl,
+  };
 </script>
 <script define:vars={{ allPages, q, status }}>
   // Données et fonctions utilitaires
@@ -320,29 +312,17 @@ const allPages = db.pages;
   }
 
   function getEditUrl(status, id, slug, type) {
-    if (status === 'actions') return `/creation/actions/edit/${id}-${slug}`;
-    if (status === 'projets') return `/creation/projets/edit/${id}-${slug}`;
-    if (status === 'produits') return `/creation/produits/edit/${id}-${slug}`;
-
-    if (status === 'brouillon') {
-      if (type === 'action') return `/creation/actions/edit/${id}-${slug}`;
-      if (type === 'projet') return `/creation/projets/edit/${id}-${slug}`;
-      if (type === 'produit') return `/creation/produits/edit/${id}-${slug}`;
-      // Cas de repli : ouvrir l'éditeur actions
-      return `/creation/actions/edit/${id}-${slug}`;
-    }
-
-    return `/creation/pages/edit/${id}-${slug}`;
+    const helpers = window.creationRouteHelpers || {};
+    return typeof helpers.getCreationDashboardEditUrl === "function"
+      ? helpers.getCreationDashboardEditUrl(status, id, slug, type)
+      : "/creation";
   }
 
   function getViewUrl(status, id, slug, type) {
-    if (status === 'actions') return `/actions/${id}-${slug}`;
-    if (status === 'projets') return `/projets/${id}-${slug}`;
-    if (status === 'produits') return `/produits/${id}-${slug}`;
-    if (status === 'brouillon') {
-      return `/creation/brouillons/${id}-${slug}`;
-    }
-    return getEditUrl(status, id, slug);
+    const helpers = window.creationRouteHelpers || {};
+    return typeof helpers.getCreationDashboardViewUrl === "function"
+      ? helpers.getCreationDashboardViewUrl(status, id, slug, type)
+      : getEditUrl(status, id, slug, type);
   }
 
   function getStatusBadge(status) {

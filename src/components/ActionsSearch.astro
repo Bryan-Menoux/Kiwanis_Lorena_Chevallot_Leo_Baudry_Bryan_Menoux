@@ -10,6 +10,27 @@ const {
   initialType = "",
   embedded = true,
 } = props;
+
+const getStatusLabel = (status: string) => {
+  if (status === "all") return "Tous";
+  if (status === "brouillon") return "Brouillons uniquement";
+  return status;
+};
+
+const secondaryFilterCount =
+  (yearOptions.length > 0 ? 1 : 0) +
+  (typeOptions.length > 0 ? 1 : 0) +
+  (showStatus ? 1 : 0) +
+  (Astro.slots.has("secondary-extra") ? 1 : 0);
+
+const secondaryGridClass =
+  secondaryFilterCount >= 4
+    ? "lg:grid-cols-4"
+    : secondaryFilterCount === 3
+      ? "lg:grid-cols-3"
+      : secondaryFilterCount === 2
+        ? "lg:grid-cols-2"
+        : "lg:grid-cols-1";
 ---
 
 <div
@@ -44,9 +65,9 @@ const {
     </div>
 
     {(yearOptions.length > 0 || typeOptions.length > 0 || showStatus || Astro.slots.has("secondary-extra")) && (
-      <div class="flex w-full flex-col gap-3 lg:flex-row lg:flex-wrap lg:gap-x-0">
+      <div class:list={["grid w-full grid-cols-1 gap-3", secondaryGridClass]}>
         {yearOptions.length > 0 && (
-          <div class="w-full lg:w-1/3 lg:pr-3">
+          <div class="w-full">
             <label class="form-control w-full gap-1">
               <span class="text-sm! font-medium tracking-wide text-base-content">Année</span>
               <select id="year-select" class="select select-bordered w-full">
@@ -57,7 +78,7 @@ const {
           </div>
         )}
         {typeOptions.length > 0 && (
-          <div class="w-full lg:w-1/3 lg:pr-3">
+          <div class="w-full">
             <label class="form-control w-full gap-1">
               <span class="text-sm! font-medium tracking-wide text-base-content">Type</span>
               <select id="type-select" class="select select-bordered w-full">
@@ -68,17 +89,17 @@ const {
           </div>
         )}
         {showStatus && (
-          <div class="w-full lg:w-1/3 lg:pr-3">
+          <div class="w-full">
             <label class="form-control w-full gap-1">
               <span class="text-sm! font-medium tracking-wide text-base-content">Statut</span>
               <select id="status-select" class="select select-bordered w-full">
-                {statusOptions.map((s: string) => <option value={s}>{s}</option>)}
+                {statusOptions.map((s: string) => <option value={s}>{getStatusLabel(s)}</option>)}
               </select>
             </label>
           </div>
         )}
         {Astro.slots.has("secondary-extra") && (
-          <div class="w-full lg:w-1/3 lg:pr-3">
+          <div class="w-full">
             <slot name="secondary-extra" />
           </div>
         )}

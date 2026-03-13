@@ -1,0 +1,276 @@
+---
+import Layout from "../../../../layouts/Layout-back-office.astro";
+import { formatDateShort } from "../../../../utils/utilitaires.js";
+
+let error = "";
+let success = "";
+
+// Récupérer la liste des partenaires et contributeurs
+let partenairesRaw = [];
+let contributeursRaw = [];
+try {
+  partenairesRaw = await (Astro.locals as any).pb
+    .collection("partenaires")
+    .getFullList(500, { sort: "-updated" });
+} catch (e) {
+  console.error("Impossible de récupérer les partenaires:", e);
+  error = "Impossible de charger la liste des partenaires.";
+}
+
+try {
+  contributeursRaw = await (Astro.locals as any).pb
+    .collection("contributeurs")
+    .getFullList(500, { sort: "-updated" });
+} catch (e) {
+  console.error("Impossible de récupérer les contributeurs:", e);
+  error = "Impossible de charger la liste des contributeurs.";
+}
+
+// Mapper les partenaires
+const partenaires = partenairesRaw.map((p: any) => ({
+  id: p.id,
+  logo: p.logo,
+  updated: p.updated,
+  type: "partenaire",
+}));
+
+// Mapper les contributeurs
+const contributeurs = contributeursRaw.map((c: any) => ({
+  id: c.id,
+  nom: c.nom,
+  metier: c.metier,
+  description: c.description,
+  updated: c.updated,
+  type: "contributeur",
+}));
+
+// Gestion POST pour suppression multiple
+if (Astro.request.method === "POST") {
+  try {
+    const formData = await Astro.request.formData();
+    const ids = formData
+      .getAll("ids")
+      .map((v) => v.toString())
+      .filter(Boolean);
+    const types = formData
+      .getAll("types")
+      .map((v) => v.toString())
+      .filter(Boolean);
+
+    if (!ids || ids.length === 0) {
+      error = "Aucun élément sélectionné.";
+    } else {
+      const failed: string[] = [];
+      for (let i = 0; i < ids.length; i++) {
+        const id = ids[i];
+        const type = types[i];
+        try {
+          const collection = type === "partenaire" ? "partenaires" : "contributeurs";
+          await (Astro.locals as any).pb.collection(collection).delete(id);
+        } catch (e) {
+          console.error("Erreur suppression id:", id, e);
+          failed.push(id);
+        }
+      }
+      if (failed.length === 0) {
+        return Astro.redirect(
+          `/creation/remerciements/delete?success=${encodeURIComponent(`${ids.length} élément(s) supprimé(s) avec succès.`)}`,
+        );
+      } else {
+        error = `Échec de la suppression pour ${failed.length} élément(s).`;
+      }
+    }
+  } catch (e) {
+    console.error("Erreur lors du POST suppression:", e);
+    error = "La suppression a échoué.";
+  }
+}
+
+// Afficher le message de succès s'il est présent dans les paramètres de requête.
+try {
+  const s = Astro.url.searchParams.get("success");
+  if (s) success = s;
+} catch (e) {}
+---
+
+<Layout>
+  <div class="container mx-auto px-4 py-8 my-16 md:my-32">
+    <div class="mb-10 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+      <div class="mb-0">
+        <h1 class="mb-3 text-3xl font-bold text-accent font-poppins md:text-4xl">Supprimer des remerciements</h1>
+        <p class="text-base text-base-content md:text-lg">
+          Sélectionnez plusieurs partenaires ou contributeurs puis cliquez sur "Supprimer sélection".
+        </p>
+      </div>
+      <div class="flex flex-wrap items-center gap-3 lg:justify-end">
+        <a href="/creation/remerciements" class="btn btn-border btn-sm rounded-full w-fit whitespace-nowrap md:w-fit md:btn-md">Retour aux remerciements</a>
+      </div>
+    </div>
+
+    <div
+      id="delete-flash-flags"
+      data-success={success}
+      data-error={error}
+      class="hidden"
+    ></div>
+
+    <form method="POST" id="deleteForm">
+      <div class="mb-4 space-y-4">
+        <div class="card rounded-2xl border border-base-300 bg-base-100 shadow-sm">
+          <div class="card-body p-4 md:p-6">
+            <div class="mb-4">
+              <h2 class="card-title text-2xl">Filtrer</h2>
+              <p class="mt-1 text-sm text-base-content">
+                Filtrez rapidement les partenaires ou contributeurs.
+              </p>
+            </div>
+            <div class="flex flex-col gap-4">
+              <div class="w-full">
+                <p class="mb-2 text-sm font-medium text-base-content">Recherche</p>
+                <input
+                  type="text"
+                  id="search-input"
+                  placeholder="Rechercher par nom..."
+                  class="input input-bordered w-full"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="flex flex-col gap-2 select-none sm:flex-row sm:items-center sm:justify-between">
+          <label class="flex items-center gap-2">
+            <input type="checkbox" id="selectAll" />
+            <span class="text-sm">Tout sélectionner</span>
+          </label>
+          <button
+            type="submit"
+            id="bulkDelete"
+            class="btn btn-error btn-sm rounded-full md:btn-md w-full sm:w-auto"
+            >Supprimer sélection</button
+          >
+        </div>
+      </div>
+
+      <div
+        id="cards-grid"
+        class="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-5 lg:grid-cols-3 lg:gap-6"
+      >
+        {
+          partenaires.map((p: any) => (
+            <label
+              class="flex min-h-55 flex-col justify-between gap-4 rounded-xl border border-base-300 bg-base-100 p-4 shadow-sm md:p-5 lg:p-6"
+              for={`id_${p.id}`}
+              data-item-id={p.id}
+              data-title={`Partenaire`}
+              data-updated={p.updated}
+            >
+              <div class="space-y-3">
+                <div class="flex items-start gap-3">
+                  <input
+                    class="checkbox checkbox-primary mt-1 shrink-0"
+                    type="checkbox"
+                    name="ids"
+                    id={`id_${p.id}`}
+                    value={p.id}
+                    data-type="partenaire"
+                  />
+                  <div class="flex-1">
+                    <h3 class="text-lg font-bold text-base-content">
+                      Partenaire
+                    </h3>
+                    {p.logo && (
+                      <div class="mt-2 h-12 w-auto">
+                        <img
+                          src={(Astro.locals as any).pb.getFileUrl(partenairesRaw.find((x: any) => x.id === p.id), p.logo)}
+                          alt="Logo partenaire"
+                          class="max-h-12 w-auto object-contain"
+                        />
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <p class="text-xs text-base-content">
+                  {p.updated ? formatDateShort(p.updated) : ""}
+                </p>
+              </div>
+              <div class="flex justify-end">
+                <a
+                  class="btn btn-sm btn-ghost w-full sm:w-auto"
+                  href={`/creation/remerciements`}
+                >
+                  Voir
+                </a>
+              </div>
+            </label>
+          ))
+        }
+
+        {
+          contributeurs.map((c: any) => (
+            <label
+              class="flex min-h-55 flex-col justify-between gap-4 rounded-xl border border-base-300 bg-base-100 p-4 shadow-sm md:p-5 lg:p-6"
+              for={`id_${c.id}`}
+              data-item-id={c.id}
+              data-title={c.nom}
+              data-updated={c.updated}
+            >
+              <div class="space-y-3">
+                <div class="flex items-start gap-3">
+                  <input
+                    class="checkbox checkbox-primary mt-1 shrink-0"
+                    type="checkbox"
+                    name="ids"
+                    id={`id_${c.id}`}
+                    value={c.id}
+                    data-type="contributeur"
+                  />
+                  <div>
+                    <h3 class="text-xl font-bold leading-tight md:text-2xl">
+                      {c.nom}
+                    </h3>
+                    {c.metier && (
+                      <p class="text-sm text-base-content">
+                        {c.metier}
+                      </p>
+                    )}
+                    {c.description && (
+                      <p class="text-sm text-base-content mt-2 line-clamp-2">
+                        {c.description}
+                      </p>
+                    )}
+                  </div>
+                </div>
+                <p class="text-xs text-base-content">
+                  {c.updated ? formatDateShort(c.updated) : ""}
+                </p>
+              </div>
+              <div class="flex justify-end">
+                <a
+                  class="btn btn-sm btn-ghost w-full sm:w-auto"
+                  href={`/creation/remerciements`}
+                >
+                  Voir
+                </a>
+              </div>
+            </label>
+          ))
+        }
+      </div>
+      <div id="cards-pagination" class="mt-6 flex justify-center"></div>
+    </form>
+  </div>
+
+  <script>
+    import { initDeletePageHandler } from "../../../../utils/deletePageHandler";
+
+    document.addEventListener("DOMContentLoaded", () => {
+      initDeletePageHandler({
+        cardSelector: "label[data-item-id]",
+        dataIdAttribute: "data-item-id",
+        dataTypeAttribute: "data-type",
+        itemSingular: "élément",
+        itemPlural: "éléments",
+      });
+    });
+  </script>
+</Layout>

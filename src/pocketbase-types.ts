@@ -219,12 +219,16 @@ export type PartenairesRecord = {
 	created: IsoAutoDateString
 	id: string
 	logo?: FileNameString
+	nom?: string
 	updated: IsoAutoDateString
 }
 
 export type ProduitsRecord = {
 	created: IsoAutoDateString
+	description?: string
 	id: string
+	photo?: FileNameString[]
+	prix?: number
 	titre?: string
 	updated: IsoAutoDateString
 }
@@ -244,7 +248,7 @@ export type ProjetsRecord = {
 	id: string
 	nom_adresse?: string
 	titre?: string
-	type_action?: ProjetsTypeActionOptions
+	type_action?: ProjetsTypeActionOptions[]
 	updated: IsoAutoDateString
 	url_adresse?: string
 }

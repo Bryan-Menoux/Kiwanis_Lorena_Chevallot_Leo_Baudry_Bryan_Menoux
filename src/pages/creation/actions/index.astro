@@ -5,49 +5,66 @@ import ActionsSearch from "../../../components/ActionsSearch.astro";
 import FormSubmitOverlay from "../../../components/FormSubmitOverlay.astro";
 import { formatDateShort } from "../../../utils/utilitaires.js";
 import { ActionsTypeActionOptions } from "../../../pocketbase-types";
+import { showConfirm } from "../../../utils/alerts";
+import { renderPagination } from "../../../utils/renderPagination";
+import { initPublishHandlers } from "../../../utils/formHandlers";
+import { ListingPageManager } from "../../../utils/listingPageManager";
+import { renderCards, createActionCardRenderer } from "../../../utils/cardRenderer";
 
+// Types et interfaces
+
+// Interface locale correspondant aux données après transformation
 interface ActionItem {
   id: string;
-  titre: string;
+  title: string;
   slug: string;
   source: "action" | "brouillon";
-  sous_titre?: string;
+  subtitle?: string;
   hero?: string;
   updated?: string;
-  date_debut?: string;
-  date_fin?: string;
-  beneficiaire?: string;
-  type_de_chiffre?: string;
-  type_action?: string[];
+  startDate?: string;
+  endDate?: string;
+  beneficiary?: string;
+  actionType?: string[];
   missingRequiredFields?: string[];
 }
 
+// Constantes et fonctions utilitaires
+
 const PART_NUMBERS = [1, 2, 3];
-const hasFilledValue = (value: unknown) => {
+
+const isValid = (value: unknown): boolean => {
   if (typeof value === "string") return value.trim() !== "";
   return Boolean(value);
 };
-const hasAtLeastOnePart = (record: Record<string, any>) =>
-  PART_NUMBERS.some((partNumber) => {
-    const textKey = `texte_partie_${partNumber}`;
-    const photoKey = `photo_partie_${partNumber}`;
-    return hasFilledValue(record?.[textKey]) || hasFilledValue(record?.[photoKey]);
+
+const hasAtLeastOnePart = (record: Record<string, any>): boolean =>
+  PART_NUMBERS.some((num) => {
+    const textKey = `texte_partie_${num}`;
+    const photoKey = `photo_partie_${num}`;
+    return isValid(record?.[textKey]) || isValid(record?.[photoKey]);
   });
-const getDraftMissingRequiredFields = (record: Record<string, any>) => {
+
+const getMissingRequiredFields = (record: Record<string, any>): string[] => {
   const missing: string[] = [];
-  if (!hasFilledValue(record?.titre)) missing.push("titre");
-  if (!hasFilledValue(record?.date_debut)) missing.push("date de début");
-  if (!hasFilledValue(record?.hero)) missing.push("image de l'en-tête");
-  const hasTypeAction =
-    Array.isArray(record?.type_action) && record.type_action.length > 0;
-  if (!hasTypeAction) missing.push("type d'action");
+  if (!isValid(record?.titre)) missing.push("titre");
+  if (!isValid(record?.date_debut)) missing.push("date de début");
+  if (!isValid(record?.hero)) missing.push("image de l'en-tête");
+  
+  const hasActionType = Array.isArray(record?.type_action) && record.type_action.length > 0;
+  if (!hasActionType) missing.push("type d'action");
+  
   if (!hasAtLeastOnePart(record)) missing.push("au moins une partie (texte ou photo)");
+  
   return missing;
 };
+
+// Récupération des données
 
 const actionsRaw: any[] = await Astro.locals.pb
   .collection("actions")
   .getFullList(200, { sort: "-updated" });
+
 const brouillonsRaw: any[] = await Astro.locals.pb
   .collection("brouillons")
   .getFullList(200, {
@@ -55,35 +72,35 @@ const brouillonsRaw: any[] = await Astro.locals.pb
     filter: 'type = "action"',
   });
 
+// Transformation des données
+
 const actions: ActionItem[] = [
   ...actionsRaw.map((a) => ({
     id: a.id,
-    titre: a.titre,
+    title: a.titre,
     slug: slugify(a.titre || "", { lower: true, strict: true }),
     source: "action" as const,
-    sous_titre: a.sous_titre,
+    subtitle: a.sous_titre,
     hero: a.hero,
     updated: a.updated,
-    date_debut: a.date_debut,
-    date_fin: a.date_fin,
-    beneficiaire: a.beneficiaire,
-    type_de_chiffre: a.type_de_chiffre,
-    type_action: a.type_action,
+    startDate: a.date_debut,
+    endDate: a.date_fin,
+    beneficiary: a.beneficiaire,
+    actionType: a.type_action,
   })),
   ...brouillonsRaw.map((b) => ({
     id: b.id,
-    titre: b.titre || "Brouillon sans titre",
+    title: b.titre || "Brouillon sans titre",
     slug: slugify(b.titre || "brouillon", { lower: true, strict: true }),
     source: "brouillon" as const,
-    sous_titre: b.sous_titre,
+    subtitle: b.sous_titre,
     hero: b.hero,
     updated: b.updated,
-    date_debut: b.date_debut,
-    date_fin: b.date_fin,
-    beneficiaire: b.beneficiaire,
-    type_de_chiffre: b.type_de_chiffre,
-    type_action: [],
-    missingRequiredFields: getDraftMissingRequiredFields(b),
+    startDate: b.date_debut,
+    endDate: b.date_fin,
+    beneficiary: b.beneficiaire,
+    actionType: [],
+    missingRequiredFields: getMissingRequiredFields(b),
   })),
 ].sort(
   (a, b) =>
@@ -92,34 +109,33 @@ const actions: ActionItem[] = [
 
 const stats = { total: actions.length };
 
-// Construire les options de filtres
-const yearSet = new Set<string>();
+// Construction des options de filtres
+
+const anneesDisponibles = new Set<string>();
 actions.forEach((a) => {
-  const d = a.date_debut || a.date_fin;
-  if (d) {
-    const y = new Date(d).getFullYear().toString();
-    yearSet.add(y);
+  const date = a.startDate || a.endDate;
+  if (date) {
+    const année = new Date(date).getFullYear().toString();
+    anneesDisponibles.add(année);
   }
 });
-const yearOptions = Array.from(yearSet).sort((a, b) => b.localeCompare(a));
+
+const yearOptions = Array.from(anneesDisponibles).sort((a, b) => b.localeCompare(a));
 const typeOptions = Object.values(ActionsTypeActionOptions);
 
-// Lecture des paramètres de requête pour initialiser les filtres
-const params = Astro.url.searchParams;
-const q = (params.get("q") || "").trim();
+// Lecture des paramètres d'URL
 
+const paramètresUrl = Astro.url.searchParams;
+const termeRecherche = (paramètresUrl.get("q") || "").trim();
 const allActions = actions;
 ---
 
 <Layout>
   <div class="container mx-auto px-4 py-8 my-16 md:my-32">
-    <div
-      class="mb-10 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between"
-    >
+    {/* Titre et boutons d'action */}
+    <div class="mb-10 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
       <div class="mb-0">
-        <h1
-          class="mb-3 text-3xl font-bold text-accent font-poppins md:text-4xl"
-        >
+        <h1 class="mb-3 text-3xl font-bold text-accent font-poppins md:text-4xl">
           Actions
         </h1>
         <p class="text-base text-base-content/70 md:text-lg">
@@ -127,17 +143,16 @@ const allActions = actions;
         </p>
       </div>
       <div class="flex flex-wrap items-center gap-3 lg:justify-end">
-        <a href="/actions" class="btn btn-border btn-sm rounded-full md:btn-md"
-          >Voir le site</a
-        >
-        <a
-          href="/creation/actions/nouveau"
-          class="btn btn-accent btn-sm rounded-full md:btn-md"
-          >Creer une action</a
-        >
+        <a href="/actions" class="btn btn-border btn-sm rounded-full md:btn-md">
+          Voir le site
+        </a>
+        <a href="/creation/actions/nouveau" class="btn btn-accent btn-sm rounded-full md:btn-md">
+          Créer une action
+        </a>
       </div>
     </div>
 
+    {/* Statistique */}
     <div class="grid grid-cols-1 gap-4 mb-12">
       <div class="card bg-base-100 shadow-md">
         <div class="card-body text-center p-4">
@@ -147,9 +162,8 @@ const allActions = actions;
       </div>
     </div>
 
-    <div
-      class="card mb-8 rounded-2xl border border-base-300 bg-base-100 shadow-sm"
-    >
+    {/* Section de recherche et filtres */}
+    <div class="card mb-8 rounded-2xl border border-base-300 bg-base-100 shadow-sm">
       <div class="card-body p-4 md:p-6">
         <div class="mb-4">
           <h2 class="card-title text-2xl">Rechercher</h2>
@@ -160,25 +174,25 @@ const allActions = actions;
 
         <div class="flex flex-col gap-4">
           <div class="w-full">
-            <p class="mb-2 font-medium text-base-content/70">Filtres</p>
             <ActionsSearch
-              value={q}
+              value={termeRecherche}
               yearOptions={yearOptions}
               typeOptions={typeOptions}
+              showStatus={true}
+              statusOptions={["all", "brouillon"]}
               embedded={true}
             >
               <label
                 slot="secondary-extra"
                 class="form-control w-full gap-1"
-                for="sort-select"
+                for="tri-select"
               >
-                <span
-                  class="text-sm! font-medium uppercase tracking-wide text-base-content/60"
-                  >Trier par date</span
-                >
-                <select id="sort-select" class="select select-bordered w-full">
-                  <option value="updated_desc">Recent -> Ancien</option>
-                  <option value="updated_asc">Ancien -> Recent</option>
+                <span class="text-sm! font-medium tracking-wide text-base-content">
+                  Trier par date
+                </span>
+                <select id="tri-select" class="select select-bordered w-full">
+                  <option value="récent">Récent → Ancien</option>
+                  <option value="ancien">Ancien → Récent</option>
                 </select>
               </label>
             </ActionsSearch>
@@ -187,92 +201,12 @@ const allActions = actions;
       </div>
     </div>
 
-    <div id="pages-container" class="mb-8" data-initial-search={q}>
-      <!-- rendu initial fait côté serveur -->
-      <div
-        class="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-5 lg:grid-cols-3 lg:gap-6"
-      >
-        {
-          actions.map((a) => (
-            <div
-              class="flex min-h-55 flex-col justify-between gap-4 rounded-xl border border-base-300 bg-base-100 p-4 shadow-sm md:p-5 lg:p-6"
-              data-action-id={a.id}
-              data-action-slug={a.slug}
-              data-source={a.source}
-              data-title={a.titre}
-              data-type={a.type_de_chiffre}
-            >
-              <div class="space-y-3">
-                <div class="flex items-start justify-between gap-3">
-                  <h3 class="wrap-break-word text-xl font-bold leading-tight md:text-2xl">
-                    {a.titre}
-                  </h3>
-                  {a.source === "brouillon" && (
-                    <span class="badge badge-secondary text-secondary-content shrink-0">
-                      Brouillon
-                    </span>
-                  )}
-                </div>
-                {a.sous_titre && (
-                  <p class=" leading-relaxed wrap-break-word text-base-content/75">
-                    {a.sous_titre}
-                  </p>
-                )}
-                {a.beneficiaire && (
-                  <p class=" leading-relaxed wrap-break-word text-base-content/75">
-                    {a.beneficiaire}
-                  </p>
-                )}
-                <p class="text-xs leading-tight text-base-content/60">
-                  {a.updated ? formatDateShort(a.updated) : ""}
-                </p>
-              </div>
-              <div class="grid grid-cols-2 gap-2 md:flex md:flex-row md:items-center md:justify-end">
-                {a.source === "action" ? (
-                  <a
-                    class="btn btn-sm btn-ghost action-btn-text w-full md:w-auto"
-                    href={`/actions/${a.id}-${a.slug}`}
-                  >
-                    Voir
-                  </a>
-                ) : (
-                  <a
-                    class="btn btn-sm btn-ghost action-btn-text w-full md:w-auto"
-                    href={`/creation/brouillons/${a.id}-${a.slug}`}
-                  >
-                    Voir
-                  </a>
-                )}
-                <a
-                  class="btn btn-sm btn-accent action-btn-text w-full rounded-full md:w-auto"
-                  href={`/creation/actions/edit/${a.id}-${a.slug}`}
-                >
-                  Modifier
-                </a>
-                {a.source === "brouillon" && (
-                  <form
-                    method="POST"
-                    action={`/creation/actions/edit/${a.id}-${a.slug}`}
-                    data-publish-action-form="true"
-                    data-required-missing={(a.missingRequiredFields || []).join("||")}
-                    class="col-span-2 w-full md:w-auto"
-                  >
-                    <input type="hidden" name="publish_action" value="true" />
-                    <button
-                      type="submit"
-                      class="btn btn-sm btn-accent action-btn-text w-full rounded-full md:w-auto"
-                    >
-                      Publier
-                    </button>
-                  </form>
-                )}
-              </div>
-            </div>
-          ))
-        }
-      </div>
+    {/* Conteneur de grille paginée */}
+    <div id="conteneur-actions" class="mb-8" data-initial-search={termeRecherche}>
+      <!-- Rendu par JavaScript côté client -->
     </div>
   </div>
+
   <FormSubmitOverlay
     formSelector='form[data-publish-action-form="true"]'
     message="Publication en cours..."
@@ -282,363 +216,74 @@ const allActions = actions;
 <script>
   import "../../../utils/utilitaires.js";
   import "../../../utils/scroll.js";
-  import { showAlert, showConfirm } from "../../../utils/alerts";
+  import { showConfirm } from "../../../utils/alerts";
   import { renderPagination } from "../../../utils/renderPagination";
-  (window as any).renderPagination = renderPagination;
+  import { initPublishHandlers } from "../../../utils/formHandlers";
+  import { ListingPageManager } from "../../../utils/listingPageManager";
+  import { renderCards, createActionCardRenderer } from "../../../utils/cardRenderer";
 
-  // Attribut HTML temporaire utilise pour eviter une boucle
-  // (submit -> confirm -> requestSubmit -> submit -> confirm ...).
-  const PUBLISH_CONFIRMED_ATTR = "data-publish-confirmed";
-  // Extension du type Window pour stocker un etat global de binding.
-  type PublishWindowState = Window & {
-    __kcPublishActionConfirmBound?: boolean;
-  };
-  const globalWindow = window as PublishWindowState;
+  // Initialize publish handlers
+  initPublishHandlers(
+    { formSelector: 'form[data-publish-action-form="true"]' },
+    showConfirm
+  );
 
-  // Garde idempotente: le listener global "submit" ne doit etre attache qu'une seule fois.
-  if (!globalWindow.__kcPublishActionConfirmBound) {
-    globalWindow.__kcPublishActionConfirmBound = true;
+  // Get the data from the script tag
+  const dataScript = document.querySelector('script[data-actions-data]');
+  const allActions = JSON.parse(dataScript?.getAttribute('data-actions-data') || '[]');
+  const q = dataScript?.getAttribute('data-search-term') || '';
 
-    // Delegation globale: on intercepte tous les submit puis on filtre.
-    document.addEventListener("submit", (event) => {
-      const target = event.target;
+  // ============================================
+  // Initialisation du gestionnaire de liste
+  // ============================================
 
-      // On ne traite que les formulaires.
-      if (!(target instanceof HTMLFormElement)) return;
+  const manager = new ListingPageManager(allActions, {
+    containerId: "conteneur-actions",
+    sortSelectId: "tri-select",
+    pageSize: 9,
+  }, q);
 
-      // On ne traite que les formulaires de publication marques explicitement.
-      if (target.getAttribute("data-publish-action-form") !== "true") return;
+  const container = document.getElementById("conteneur-actions");
+  const cardRenderer = createActionCardRenderer();
 
-      // Validation rapide en amont: empêche la publication si le brouillon est incomplet.
-      const missingRaw = target.getAttribute("data-required-missing") || "";
-      const missingFields = missingRaw
-        .split("||")
-        .map((value) => value.trim())
-        .filter(Boolean);
-      if (missingFields.length > 0) {
-        event.preventDefault();
-        showAlert({
-          type: "error",
-          message: `Publication impossible : champs obligatoires manquants (${missingFields.join(", ")}).`,
-        });
-        return;
-      }
+  // ============================================
+  // Fonction de rendu
+  // ============================================
 
-      // Si un submit a deja ete confirme juste avant, on laisse passer
-      // et on nettoie le marqueur pour les soumissions futures.
-      const alreadyConfirmed =
-        target.getAttribute(PUBLISH_CONFIRMED_ATTR) === "true";
-      if (alreadyConfirmed) {
-        target.removeAttribute(PUBLISH_CONFIRMED_ATTR);
-        return;
-      }
-
-      // Bloque le submit natif tant que l'utilisateur n'a pas confirme.
-      event.preventDefault();
-      const submitter = event.submitter;
-
-      // Demande de confirmation utilisateur.
-      void showConfirm({
-        title: "Publier l'action",
-        message:
-          "Confirmez la publication de ce brouillon. Cette action sera visible publiquement sur le site.",
-        type: "warning",
-        confirmLabel: "Publier",
-        cancelLabel: "Annuler",
-      }).then((confirmed) => {
-        // Si annule: on ne fait rien.
-        if (!confirmed) return;
-
-        // Marque ce submit comme deja confirme pour eviter la boucle.
-        target.setAttribute(PUBLISH_CONFIRMED_ATTR, "true");
-
-        // Rejoue le submit en conservant le bouton declencheur si disponible.
-        // Cela preserve le comportement natif (name/value du bouton, etc.).
-        if (
-          submitter instanceof HTMLButtonElement ||
-          submitter instanceof HTMLInputElement
-        ) {
-          target.requestSubmit(submitter);
-          return;
-        }
-
-        // Fallback si aucun submitter exploitable.
-        target.requestSubmit();
-      });
-    });
-  }
-</script>
-<script define:vars={{ allActions, q }}>
-  // Dataset injecte cote serveur (Astro define:vars).
-  const actions = allActions;
-
-  // Etat UI courant des filtres/pagination.
-  let currentBeneficiary = "";
-  const PAGE_SIZE = 9;
-  let currentPage = 1;
-  let filteredActions = actions.slice();
-
-  // Au changement de page, recentre la vue sur le haut de la liste paginee.
-  const scrollTopOnPageChange = () => {
-  const globalScrollUtils = window.scrollUtils;
-    if (globalScrollUtils && typeof globalScrollUtils.scrollToTarget === "function") {
-      globalScrollUtils.scrollToTarget("#pages-container");
-      return;
-    }
-
-    // Fallback DOM standard.
-    const listRoot = document.getElementById("pages-container");
-    if (listRoot instanceof HTMLElement) {
-      listRoot.scrollIntoView({ behavior: "smooth", block: "start" });
-      return;
-    }
-
-    // Dernier fallback.
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
-
-  // Formate une date pour affichage humain.
-  function formatDate(d) {
-    if (!d) return "";
-    if (
-      typeof window !== "undefined" &&
-      window.dateUtils &&
-      typeof window.dateUtils.formatDateShort === "function"
-    ) {
-      try {
-        // Utilitaire global centralise (format homogène dans le projet).
-        return window.dateUtils.formatDateShort(d);
-      } catch (e) {}
-    }
-    // Repli natif si utilitaire indisponible.
-    return new Date(d).toLocaleDateString("fr-FR", {
-      day: "numeric",
-      month: "short",
-      year: "numeric",
-    });
-  }
-
-  // URL de consultation selon la source (action publiee vs brouillon).
-  function getViewUrl(id, slug, source) {
-    if (source === "brouillon") return `/creation/brouillons/${id}-${slug}`;
-    return `/actions/${id}-${slug}`;
-  }
-
-  // URL d'edition (toujours vers l'editeur action).
-  function getEditUrl(id, slug) {
-    return `/creation/actions/edit/${id}-${slug}`;
-  }
-
-  function filterActions(search, beneficiary, year, type) {
-    // On part toujours de la liste complete, puis on applique des filtres cumulables.
-    let filtered = actions.slice();
-
-    // Logs de debug utilises pendant l'ajustement des filtres.
-    if (typeof console !== "undefined" && console.debug)
-      console.debug("filterActions input", { search, beneficiary, year, type });
-
-    // Filtre par beneficiaire (sous-chaine, insensible a la casse).
-    if (beneficiary && beneficiary !== "")
-      filtered = filtered.filter((a) =>
-        (a.beneficiaire || "")
-          .toLowerCase()
-          .includes(beneficiary.toLowerCase()),
-      );
-
-    // Filtre texte sur le titre.
-    if (search && search !== "")
-      filtered = filtered.filter((a) =>
-        (a.titre || "").toLowerCase().includes(search.toLowerCase()),
-      );
-
-    // Filtre par annee extraite de date_debut ou date_fin.
-    if (year && year !== "") {
-      filtered = filtered.filter((a) => {
-        const d = a.date_debut || a.date_fin;
-        if (!d) return false;
-        return new Date(d).getFullYear().toString() === year;
-      });
-    }
-
-    // Filtre par type metier.
-    if (type && type !== "") {
-      filtered = filtered.filter((a) => {
-        // Le type peut venir de `a.type_action` ou de `type_de_chiffre` ; ajuster si nécessaire.
-        const arr = a.type_action || [];
-        return arr.includes(type);
-      });
-    }
-
-    // Log de sortie.
-    if (typeof console !== "undefined" && console.debug)
-      console.debug("filterActions result count", filtered.length);
-    return filtered;
-  }
-
-  // Rend la grille + la pagination a partir d'une liste deja filtree.
-  function renderActions(list) {
-    const container = document.getElementById("pages-container");
+  const render = () => {
     if (!container) return;
 
-    // Etat vide.
-    if (list.length === 0) {
-      container.innerHTML = `<div class="text-center py-12"><p class="text-base-content/60 mb-4">Aucune action trouvée</p></div>`;
-      currentPage = 1;
+    const { items, totalPages, currentPage, hasItems } = manager.getPaginationData();
+
+    if (!hasItems) {
+      manager.renderEmpty();
       return;
     }
 
-    // Calcule les bornes de pagination.
-    const totalPages = Math.max(1, Math.ceil(list.length / PAGE_SIZE));
-    if (currentPage > totalPages) currentPage = totalPages;
-    if (currentPage < 1) currentPage = 1;
-    const startIndex = (currentPage - 1) * PAGE_SIZE;
-    const pageItems = list.slice(startIndex, startIndex + PAGE_SIZE);
+    const cardsHtml = renderCards(items, {
+      ...cardRenderer,
+      formattedDateGetter: (item) => manager.getFormattedDates(item).updated,
+    });
+    const paginationHtml = renderPagination(totalPages, currentPage);
 
-    // Construit le HTML des cartes + controles de pagination.
-    const html = `
-        <div class="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-5 lg:grid-cols-3 lg:gap-6">
-          ${pageItems
-            .map(
-              (a) => `
-                    <div class="flex min-h-55 flex-col justify-between gap-4 rounded-xl border border-base-300 bg-base-100 p-4 shadow-sm md:p-5 lg:p-6" data-action-id="${a.id}" data-action-slug="${a.slug}" data-source="${a.source}">
-              <div class="space-y-3">
-                <div class="flex items-start justify-between gap-3">
-                  <h3 class="wrap-break-word text-xl font-bold leading-tight md:text-2xl">${a.titre}</h3>
-                  ${a.source === "brouillon" ? '<span class="badge badge-secondary text-secondary-content shrink-0">Brouillon</span>' : ""}
-                </div>
-                ${a.sous_titre ? `<p class=" leading-relaxed wrap-break-word text-base-content/75">${a.sous_titre}</p>` : ""}
-                ${a.beneficiaire ? `<p class=" leading-relaxed wrap-break-word text-base-content/75">${a.beneficiaire}</p>` : ""}
-                <p class="text-xs leading-tight text-base-content/60">${a.updated ? formatDate(a.updated) : ""}</p>
-              </div>
-              <div class="grid grid-cols-2 gap-2 md:flex md:flex-row md:items-center md:justify-end">
-                <a class="btn btn-sm btn-ghost action-btn-text w-full md:w-auto" href="${getViewUrl(a.id, a.slug, a.source)}">Voir</a>
-                <a class="btn btn-sm btn-accent action-btn-text w-full rounded-full md:w-auto" href="${getEditUrl(a.id, a.slug)}">Modifier</a>
-                ${a.source === "brouillon" ? `<form method="POST" action="${getEditUrl(a.id, a.slug)}" data-publish-action-form="true" data-required-missing="${(a.missingRequiredFields || []).join("||")}" class="col-span-2 w-full md:w-auto"><input type="hidden" name="publish_action" value="true" /><button type="submit" class="btn btn-sm btn-accent action-btn-text w-full rounded-full md:w-auto">Publier</button></form>` : ""}
-              </div>
-            </div>
-        `,
-            )
-            .join("")}
+    container.innerHTML = `
+      <div class="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-5 lg:grid-cols-3 lg:gap-6">
+        ${cardsHtml}
       </div>
-      ${(window.renderPagination || function() { return ''; })(totalPages, currentPage)}
+      ${paginationHtml}
     `;
+  };
 
-    // Injection DOM finale.
-    container.innerHTML = html;
-  }
+  // ============================================
+  // Initialisation des event listeners
+  // ============================================
 
-  // Point d'entree client: branche tous les listeners UI.
-  document.addEventListener("DOMContentLoaded", () => {
-    const pagesContainer = document.getElementById("pages-container");
+  manager.initPaginationListeners(render);
+  manager.initFilterListeners(render);
+  manager.initSortListener(render);
 
-    // Valeurs initiales derivees du SSR.
-    let currentSearch = pagesContainer?.dataset.initialSearch || "";
-    let currentYear = "";
-    let currentType = "";
-
-    // Select de tri (date desc/asc).
-    const sortSelect = document.getElementById("sort-select");
-
-    // Fonction centrale: filtre -> tri -> rendu.
-    function applyAndRender() {
-      let filtered = filterActions(
-        currentSearch,
-        currentBeneficiary,
-        currentYear,
-        currentType,
-      );
-      const sort =
-        sortSelect instanceof HTMLSelectElement
-          ? sortSelect.value
-          : "updated_desc";
-
-      // Tri final par date de mise a jour.
-      filtered.sort((a, b) => {
-        const da = new Date(a.updated || 0).getTime();
-        const db = new Date(b.updated || 0).getTime();
-        return sort === "updated_asc" ? da - db : db - da;
-      });
-      filteredActions = filtered;
-      renderActions(filteredActions);
-    }
-
-    // Applique les filtres recus depuis les evenements custom.
-    function handleFilters(d) {
-      currentSearch = d.search || "";
-      currentBeneficiary = d.beneficiary || "";
-      currentYear = d.year || "";
-      currentType = d.type || "";
-      currentPage = 1;
-      applyAndRender();
-    }
-
-    // Gestion des clics de pagination (delegation).
-    pagesContainer?.addEventListener("click", (event) => {
-      const target =
-        event.target instanceof HTMLElement
-          ? event.target.closest("[data-page-action]")
-          : null;
-      if (!(target instanceof HTMLElement)) return;
-
-      const action = target.getAttribute("data-page-action");
-      const totalPages = Math.max(
-        1,
-        Math.ceil(filteredActions.length / PAGE_SIZE),
-      );
-      const previousPage = currentPage;
-
-      // Routeur d'actions pagination.
-      if (action === "prev") {
-        currentPage = Math.max(1, currentPage - 1);
-      } else if (action === "next") {
-        currentPage = Math.min(totalPages, currentPage + 1);
-      } else if (action === "go") {
-        const nextPage = Number(target.getAttribute("data-page") || "1");
-        if (!Number.isNaN(nextPage)) {
-          currentPage = Math.min(totalPages, Math.max(1, nextPage));
-        }
-      } else {
-        return;
-      }
-
-      if (currentPage !== previousPage) {
-        // Evite un defilement inutile si la page ne change pas.
-        scrollTopOnPageChange();
-      }
-      renderActions(filteredActions);
-    });
-
-    // Reagit aux changements emis par les composants de recherche.
-    document.addEventListener("actions-filter-change", (ev) => {
-      handleFilters(ev.detail || {});
-    });
-    document.addEventListener("search-actions-change", (ev) => {
-      handleFilters(ev.detail || {});
-    });
-
-    // Tri: declenche un rerender a chaque changement.
-    if (sortSelect instanceof HTMLSelectElement) {
-      sortSelect.addEventListener("change", () => {
-        currentPage = 1;
-        applyAndRender();
-      });
-    }
-
-    // Rendu initial base sur l'etat de depart SSR.
-    applyAndRender();
-
-    // Note: suppression unitaire absente ici; la suppression groupee est geree ailleurs.
-  });
+  // Rendu initial
+  render();
 </script>
 
-<style is:global>
-  a.action-btn-text,
-  button.action-btn-text {
-    font-size: 1rem !important;
-    font-weight: 700 !important;
-    line-height: 1.5rem !important;
-    font-family: inherit !important;
-    letter-spacing: normal !important;
-    text-transform: none !important;
-  }
-</style>
+<script type="application/json" data-actions-data={JSON.stringify(allActions)} data-search-term={termeRecherche}></script>

@@ -1,0 +1,394 @@
+---
+import Layout from "../../../../layouts/Layout-back-office.astro";
+import { ProjetsTypeActionOptions } from "../../../../pocketbase-types";
+import MultiSelectDropdown from "../../../../components/actionForm/partials/MultiSelectDropdown.astro";
+import SearchLocation from "../../../../components/searchLocation.astro";
+import { buildRedirectUrl, generateSlug } from "../../../../utils/editPageHandler";
+import { getCreationViewUrl } from "../../../../utils/creationRoutes";
+
+let error = "";
+
+const id = Astro.params.id;
+
+const typeActionOptions: string[] = (Array.isArray(ProjetsTypeActionOptions)
+  ? ProjetsTypeActionOptions
+  : Object.values(ProjetsTypeActionOptions)
+).map((option) => String(option));
+
+let projectRecord: any = null;
+
+if (id) {
+  try {
+    projectRecord = await Astro.locals.pb.collection("projets").getOne(id);
+  } catch (err) {
+    console.error("Erreur lors du chargement du projet :", err);
+    error = "Impossible de charger le projet.";
+  }
+}
+
+const formState = {
+  titre: projectRecord?.titre?.toString() || "",
+  date: projectRecord?.date?.toString() || "",
+  nom_adresse: projectRecord?.nom_adresse?.toString() || "",
+  url_adresse: projectRecord?.url_adresse?.toString() || "",
+  type_action: Array.isArray(projectRecord?.type_action)
+    ? projectRecord.type_action.map((value: unknown) => String(value))
+    : [],
+};
+
+if (Astro.request.method === "POST") {
+  try {
+    if (!id || !projectRecord) {
+      throw new Error("Projet introuvable.");
+    }
+
+    const formData = await Astro.request.formData();
+
+    formState.titre = formData.get("titre")?.toString().trim() || "";
+    formState.date = formData.get("date")?.toString().trim() || "";
+    formState.nom_adresse = formData.get("nom_adresse")?.toString().trim() || "";
+    formState.url_adresse = formData.get("url_adresse")?.toString().trim() || "";
+
+    const rawTypeAction = formData.get("type_action")?.toString().trim() || "[]";
+    try {
+      const parsed = JSON.parse(rawTypeAction);
+      formState.type_action = Array.isArray(parsed)
+        ? parsed
+            .map((value) => String(value).trim())
+            .filter((value) => value && typeActionOptions.includes(value))
+            .slice(0, 7)
+        : [];
+    } catch {
+      formState.type_action = [];
+    }
+
+    if (!formState.titre) {
+      throw new Error("Le titre est obligatoire.");
+    }
+
+    const payload: Record<string, any> = {
+      titre: formState.titre,
+      date: formState.date || "",
+      nom_adresse: formState.nom_adresse || "",
+      url_adresse: "",
+      type_action: formState.type_action,
+    };
+
+    if (formState.url_adresse) {
+      let normalizedUrl = formState.url_adresse;
+      if (!/^https?:\/\//i.test(normalizedUrl)) {
+        normalizedUrl = `https://${normalizedUrl}`;
+      }
+
+      try {
+        new URL(normalizedUrl);
+      } catch {
+        throw new Error("L'URL du lieu n'est pas valide.");
+      }
+
+      payload.url_adresse = normalizedUrl;
+      formState.url_adresse = normalizedUrl;
+    }
+
+    await Astro.locals.pb.collection("projets").update(id, payload);
+
+    const slug = generateSlug(formState.titre) || "projet";
+
+    return Astro.redirect(
+      buildRedirectUrl(
+        getCreationViewUrl("projet", id, slug),
+        "Projet modifié avec succès",
+      ),
+    );
+  } catch (err) {
+    console.error("Erreur lors de la modification du projet :", err);
+    error = err instanceof Error ? err.message : "Une erreur inconnue est survenue.";
+  }
+}
+---
+
+<Layout>
+  <div class="container mx-auto px-4 py-8 my-16 md:my-32">
+    <div class="mb-8 flex flex-col gap-3">
+      <div>
+        <h1 class="font-poppins text-3xl font-bold text-accent md:text-4xl">
+          Modifier le projet
+        </h1>
+        <p class="mt-2 text-base-content">
+          Modifiez les informations du projet avec le même formulaire que pour la création.
+        </p>
+      </div>
+    </div>
+
+    <div class="w-full">
+      <div class="card rounded-2xl border border-base-300 bg-base-100 shadow-sm">
+        <div class="card-body p-6 md:p-8">
+          {error && (
+            <div class="alert alert-error mb-6 rounded-lg">
+              <span>{error}</span>
+            </div>
+          )}
+
+          <form method="POST" class="space-y-6">
+            <div class="space-y-2">
+              <label for="titre" class="block text-sm font-semibold text-base-content">
+                Titre du projet <span class="text-error">*</span>
+              </label>
+              <input
+                type="text"
+                id="titre"
+                name="titre"
+                class="input input-bordered w-full text-base"
+                placeholder="Exemple : Collecte de printemps 2026"
+                value={formState.titre}
+                required
+              />
+            </div>
+
+            <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
+              <div class="space-y-2">
+                <label for="date" class="block text-sm font-semibold text-base-content">
+                  Date du projet
+                </label>
+                <input
+                  type="date"
+                  id="date"
+                  name="date"
+                  class="input input-bordered w-full text-base"
+                  value={formState.date}
+                />
+              </div>
+
+              <div class="space-y-2">
+                <label for="input_type_action" class="block text-sm font-semibold text-base-content">
+                  Type d'action
+                </label>
+                <MultiSelectDropdown
+                  id="input_type_action"
+                  dataProp="type_action"
+                  options={typeActionOptions}
+                  selectedValues={formState.type_action}
+                  placeholder="Sélectionner..."
+                  variant="input"
+                />
+                <input
+                  type="hidden"
+                  id="hidden_type_action"
+                  name="type_action"
+                  value={JSON.stringify(formState.type_action)}
+                />
+              </div>
+            </div>
+
+            <div class="divider my-4"></div>
+
+            <div class="space-y-3">
+              <h3 class="text-sm font-semibold text-base-content">Lieu du projet (optionnel)</h3>
+              <p class="text-xs text-base-content">
+                Ajoutez une localisation pour que les participants trouvent facilement
+              </p>
+
+              <div class="flex items-stretch gap-2">
+                <SearchLocation
+                  inputId="input_nom_adresse"
+                  suggestionsId="suggestions_nom_adresse"
+                  placeholder="Salle des fêtes, Montbéliard"
+                  value={formState.nom_adresse}
+                  dataProp="nom_adresse"
+                  name="nom_adresse"
+                  inputClass="input input-bordered w-full text-base"
+                  mapLinkInputId="input_url_adresse"
+                />
+                <a
+                  id="btn_voir_maps_projet"
+                  class="btn btn-accent shrink-0 rounded-md"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  href={formState.url_adresse || "#"}
+                  style={formState.url_adresse ? "" : "display:none;"}
+                >
+                  Voir sur Maps
+                </a>
+              </div>
+
+              <input
+                type="hidden"
+                id="input_url_adresse"
+                name="url_adresse"
+                value={formState.url_adresse}
+              />
+
+              <button
+                type="button"
+                id="manual_url_adresse_toggle_link"
+                class="text-sm text-accent underline transition-all hover:no-underline"
+              >
+                {formState.url_adresse ? "Modifier" : "Coller manuellement"} le lien Google Maps
+              </button>
+
+              <div
+                id="manual_url_adresse_container"
+                class="hidden space-y-3 rounded-lg bg-base-200/50 p-4"
+              >
+                <label class="block text-sm font-medium text-base-content">
+                  Lien Google Maps
+                </label>
+                <input
+                  id="manual_url_adresse"
+                  type="text"
+                  placeholder="https://www.google.com/maps/place/..."
+                  class="input input-bordered w-full text-base"
+                  value={formState.url_adresse}
+                />
+                <div class="flex items-center justify-end gap-2 pt-2">
+                  <button
+                    type="button"
+                    id="manual_url_adresse_cancel_btn"
+                    class="text-sm text-base-content transition-colors hover:text-base-content"
+                  >
+                    Annuler
+                  </button>
+                  <button
+                    type="button"
+                    id="manual_url_adresse_validate_btn"
+                    class="btn btn-accent rounded-lg"
+                  >
+                    Valider
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div class="flex justify-end gap-3 pt-4">
+              <a href="/creation/projets" class="btn btn-ghost rounded-lg">
+                Retour
+              </a>
+              <button type="submit" class="btn btn-accent rounded-lg px-8">
+                Enregistrer le projet
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</Layout>
+
+<script>
+  function initProjetTypeActionBinding() {
+    const select = document.getElementById("input_type_action");
+    const hidden = document.getElementById("hidden_type_action");
+    if (!(select instanceof HTMLSelectElement)) return;
+    if (!(hidden instanceof HTMLInputElement)) return;
+
+    if (select.dataset.projectTypeActionBound === "true") return;
+    select.dataset.projectTypeActionBound = "true";
+
+    const sync = () => {
+      const selectedValues = Array.from(select.selectedOptions).map(
+        (option) => option.value,
+      );
+      hidden.value = JSON.stringify(selectedValues);
+    };
+
+    select.addEventListener("change", sync);
+    sync();
+  }
+
+  function initProjetLocationLink() {
+    const urlInput = document.getElementById("input_url_adresse");
+    const nomInput = document.getElementById("input_nom_adresse");
+    const mapsButton = document.getElementById("btn_voir_maps_projet");
+    const manualInput = document.getElementById("manual_url_adresse");
+    if (!(urlInput instanceof HTMLInputElement)) return;
+    if (!(mapsButton instanceof HTMLAnchorElement)) return;
+
+    if (urlInput.dataset.projectLocationBound === "true") return;
+    urlInput.dataset.projectLocationBound = "true";
+
+    const sync = () => {
+      const href = urlInput.value.trim();
+      const nomValue =
+        nomInput instanceof HTMLInputElement ? nomInput.value.trim() : "";
+      mapsButton.href = href || "#";
+      mapsButton.style.display = href || nomValue ? "" : "none";
+      if (manualInput instanceof HTMLInputElement) {
+        manualInput.value = href;
+      }
+    };
+
+    urlInput.addEventListener("input", sync);
+    urlInput.addEventListener("change", sync);
+    if (nomInput instanceof HTMLInputElement) {
+      nomInput.addEventListener("input", sync);
+      nomInput.addEventListener("change", sync);
+    }
+    sync();
+  }
+
+  function initProjetManualLocationEditor() {
+    const urlInput = document.getElementById("input_url_adresse");
+    const toggleLink = document.getElementById("manual_url_adresse_toggle_link");
+    const container = document.getElementById("manual_url_adresse_container");
+    const manualInput = document.getElementById("manual_url_adresse");
+    const cancelButton = document.getElementById("manual_url_adresse_cancel_btn");
+    const validateButton = document.getElementById("manual_url_adresse_validate_btn");
+
+    if (!(urlInput instanceof HTMLInputElement)) return;
+    if (!(toggleLink instanceof HTMLElement)) return;
+    if (!(container instanceof HTMLElement)) return;
+    if (!(manualInput instanceof HTMLInputElement)) return;
+    if (!(cancelButton instanceof HTMLButtonElement)) return;
+    if (!(validateButton instanceof HTMLButtonElement)) return;
+
+    if (container.dataset.projectManualLocationBound === "true") return;
+    container.dataset.projectManualLocationBound = "true";
+
+    const show = () => {
+      manualInput.value = urlInput.value.trim();
+      container.classList.remove("hidden");
+      manualInput.focus();
+    };
+
+    const hide = () => {
+      manualInput.value = urlInput.value.trim();
+      container.classList.add("hidden");
+    };
+
+    toggleLink.addEventListener("click", (event) => {
+      event.preventDefault();
+      show();
+    });
+
+    cancelButton.addEventListener("click", () => {
+      hide();
+    });
+
+    validateButton.addEventListener("click", () => {
+      urlInput.value = manualInput.value.trim();
+      urlInput.dispatchEvent(new Event("input", { bubbles: true }));
+      urlInput.dispatchEvent(new Event("change", { bubbles: true }));
+      hide();
+    });
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener(
+      "DOMContentLoaded",
+      () => {
+        initProjetTypeActionBinding();
+        initProjetLocationLink();
+        initProjetManualLocationEditor();
+      },
+      { once: true },
+    );
+  } else {
+    initProjetTypeActionBinding();
+    initProjetLocationLink();
+    initProjetManualLocationEditor();
+  }
+
+  document.addEventListener("astro:page-load", initProjetTypeActionBinding);
+  document.addEventListener("astro:page-load", initProjetLocationLink);
+  document.addEventListener("astro:page-load", initProjetManualLocationEditor);
+</script>

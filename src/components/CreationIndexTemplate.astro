@@ -1,0 +1,342 @@
+---
+
+import ActionsSearch from "./ActionsSearch.astro";
+
+export interface CreationIndexProps {
+  // Données
+  items: any[];
+  allItems: any[];
+  
+  // Configuration
+  pageTitle: string; // "Actions", "Projets", etc.
+  pageSubtitle: string;
+  createButtonUrl: string;
+  createButtonText: string;
+  viewSiteUrl: string;
+  
+  // Textes
+  itemSingular: string;
+  itemPlural: string;
+  nothingFoundText?: string;
+  
+  // Filtres
+  yearOptions: string[];
+  typeOptions?: string[];
+  searchTerm?: string;
+  showStatus?: boolean;
+  statusOptions?: string[];
+  
+  // Rendu
+  renderCard?: (item: any) => string;
+  
+  // Configuration avancée
+  searchFields?: string[];
+  filterFields?: Record<string, string>;
+  pageSize?: number;
+}
+
+const {
+  items,
+  allItems,
+  pageTitle,
+  createButtonUrl,
+  createButtonText,
+  viewSiteUrl,
+  itemSingular,
+  itemPlural,
+  pageSubtitle = `Gérez vos ${itemPlural.toLowerCase()}, recherchez, filtrez et modifiez rapidement.`,
+  nothingFoundText = `Aucun ${itemSingular} trouvé`,
+  yearOptions = [],
+  typeOptions = [],
+  searchTerm = "",
+  showStatus = false,
+  statusOptions = [],
+  renderCard,
+  searchFields = ["title"],
+  filterFields = {},
+  pageSize = 9,
+} = Astro.props as CreationIndexProps;
+
+const stats = { total: items.length };
+---
+
+<div class="container mx-auto px-4 py-8 my-16 md:my-32">
+  {/* Titre et boutons d'action */}
+  <div class="mb-10 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+    <div class="mb-0">
+      <h1 class="mb-3 text-3xl font-bold text-accent font-poppins md:text-4xl">
+        {pageTitle}
+      </h1>
+      <p class="text-base text-base-content/70 md:text-lg">
+        {pageSubtitle}
+      </p>
+    </div>
+    <div class="flex flex-wrap items-center gap-3 lg:justify-end">
+      <a href={viewSiteUrl} class="btn btn-border btn-sm rounded-full md:btn-md">
+        Voir le site
+      </a>
+      <a href={createButtonUrl} class="btn btn-accent btn-sm rounded-full md:btn-md">
+        {createButtonText}
+      </a>
+    </div>
+  </div>
+
+  {/* Statistique */}
+  <div class="grid grid-cols-1 gap-4 mb-12">
+    <div class="card bg-base-100 shadow-md">
+      <div class="card-body text-center p-4">
+        <div class="text-4xl! font-bold text-base-content">{stats.total}</div>
+        <div class="text-base-content">{pageTitle}</div>
+      </div>
+    </div>
+  </div>
+
+  {/* Section de recherche et filtres */}
+  <div class="card mb-8 rounded-2xl border border-base-300 bg-base-100 shadow-sm">
+    <div class="card-body p-4 md:p-6">
+      <div class="mb-4">
+        <h2 class="card-title text-2xl">Rechercher</h2>
+        <p class="mt-1 text-base-content/60">
+          Filtrez rapidement vos {itemPlural.toLowerCase()} puis triez l'affichage.
+        </p>
+      </div>
+
+      <div class="flex flex-col gap-4">
+        <div class="w-full">
+          <p class="mb-2 font-medium text-base-content/70">Filtres</p>
+          <ActionsSearch
+            value={searchTerm}
+            yearOptions={yearOptions}
+            typeOptions={typeOptions}
+            showStatus={showStatus}
+            statusOptions={statusOptions}
+            embedded={true}
+          >
+            <label
+              slot="secondary-extra"
+              class="form-control w-full gap-1"
+              for="sort-select"
+            >
+              <span class="text-sm! font-medium tracking-wide text-base-content">
+                Trier par date
+              </span>
+              <select id="sort-select" class="select select-bordered w-full">
+                <option value="desc">Récent → Ancien</option>
+                <option value="asc">Ancien → Récent</option>
+              </select>
+            </label>
+          </ActionsSearch>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {/* Conteneur de grille paginée */}
+  <div id="creation-items-container" class="mb-8" data-initial-search={searchTerm}>
+    <!-- Rendu par JavaScript côté client -->
+  </div>
+</div>
+
+<script define:vars={{ allItems, q: searchTerm, pageSize, nothingFoundText, renderCardFn: renderCard }}>
+  // ============================================
+  // Module de listing réutilisable
+  // ============================================
+
+  // Fonction de pagination (inlinée)
+  function renderPagination(totalPages, currentPage, options = {}) {
+    if (totalPages <= 1) return "";
+
+    const {
+      prevLabel = "Précédent",
+      nextLabel = "Suivant",
+      wrapperClass = "mt-6 flex flex-wrap items-center justify-center gap-2",
+      showPrevNext = true,
+      buttonClass = "btn btn-sm btn-ghost rounded-full",
+      activeButtonClass = "btn btn-sm btn-accent rounded-full",
+      noWrapper = false,
+    } = options;
+
+    const pageButtons = Array.from({ length: totalPages }, (_, i) => {
+      const n = i + 1;
+      const cls = n === currentPage ? activeButtonClass : buttonClass;
+      return `<button type="button" class="${cls}" data-page-action="go" data-page="${n}">${n}</button>`;
+    }).join("");
+
+    if (noWrapper) return pageButtons;
+
+    const prevDisabled = currentPage === 1 ? " disabled" : "";
+    const nextDisabled = currentPage === totalPages ? " disabled" : "";
+    const nav = showPrevNext
+      ? `<button type="button" class="${buttonClass}" data-page-action="prev"${prevDisabled}>${prevLabel}</button>
+  ${pageButtons}
+  <button type="button" class="${buttonClass}" data-page-action="next"${nextDisabled}>${nextLabel}</button>`
+      : pageButtons;
+
+    return `<div class="${wrapperClass}">${nav}</div>`;
+  }
+
+  // État global
+  const container = document.getElementById("creation-items-container");
+  const sortSelect = document.getElementById("sort-select");
+  
+  let state = {
+    allItemsData: allItems,
+    currentPage: 1,
+    searchTerm: q,
+    selectedBeneficiary: "",
+    selectedYear: "",
+    selectedType: "",
+    sortMode: "desc",
+  };
+
+  // ============================================
+  // Logique de filtrage et tri
+  // ============================================
+
+  const applyFilters = () => {
+    return state.allItemsData.filter((item) => {
+      if (state.selectedBeneficiary &&
+        !item.beneficiary?.toLowerCase().includes(state.selectedBeneficiary.toLowerCase()) &&
+        !item.nom_adresse?.toLowerCase().includes(state.selectedBeneficiary.toLowerCase())) {
+        return false;
+      }
+      if (state.searchTerm &&
+        !item.title?.toLowerCase().includes(state.searchTerm.toLowerCase()) &&
+        !item.titre?.toLowerCase().includes(state.searchTerm.toLowerCase())) {
+        return false;
+      }
+      if (state.selectedYear) {
+        const itemYear = new Date(item.startDate || item.date || item.updated).getFullYear().toString();
+        if (itemYear !== state.selectedYear) return false;
+      }
+      if (state.selectedType &&
+        !item.actionType?.includes(state.selectedType) &&
+        !item.type_action?.includes(state.selectedType)) {
+        return false;
+      }
+      return true;
+    });
+  };
+
+  const sortItemsList = (list) => {
+    return [...list].sort((a, b) => {
+      const dateA = new Date(a.updated || 0).getTime();
+      const dateB = new Date(b.updated || 0).getTime();
+      return state.sortMode === "desc" ? dateB - dateA : dateA - dateB;
+    });
+  };
+
+  // ============================================
+  // Rendu principal
+  // ============================================
+
+  const render = () => {
+    if (!container) return;
+
+    const filtered = applyFilters();
+    const sorted = sortItemsList(filtered);
+    const totalPages = Math.max(1, Math.ceil(sorted.length / pageSize));
+    const validPage = Math.max(1, Math.min(state.currentPage, totalPages));
+    const startIndex = (validPage - 1) * pageSize;
+    const pageItems = sorted.slice(startIndex, startIndex + pageSize);
+
+    if (!sorted.length) {
+      container.innerHTML = `<div class="text-center py-12"><p class="text-base-content/60 mb-4">${nothingFoundText}</p></div>`;
+      return;
+    }
+
+    const cardsHtml = pageItems.map((item) => {
+      if (renderCardFn && typeof renderCardFn === "function") {
+        return renderCardFn(item);
+      }
+      // Fallback: rendu par défaut
+      return `<div class="card">Item: ${item.title || item.titre}</div>`;
+    }).join("");
+
+    const paginationHtml = renderPagination(totalPages, validPage);
+
+    container.innerHTML = `
+      <div class="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-5 lg:grid-cols-3 lg:gap-6">
+        ${cardsHtml}
+      </div>
+      ${paginationHtml}
+    `;
+  };
+
+  // ============================================
+  // Gestion des événements
+  // ============================================
+
+  if (container) {
+    container.addEventListener("click", (evt) => {
+      const button = evt.target instanceof HTMLElement
+        ? evt.target.closest("[data-page-action]")
+        : null;
+
+      if (!(button instanceof HTMLElement)) return;
+
+      const action = button.getAttribute("data-page-action");
+      const filtered = applyFilters();
+      const sorted = sortItemsList(filtered);
+      const totalPages = Math.max(1, Math.ceil(sorted.length / pageSize));
+
+      switch (action) {
+        case "prev":
+          state.currentPage = Math.max(1, state.currentPage - 1);
+          break;
+        case "next":
+          state.currentPage = Math.min(totalPages, state.currentPage + 1);
+          break;
+        case "go":
+          const pageNum = Number(button.getAttribute("data-page"));
+          if (!Number.isNaN(pageNum)) {
+            state.currentPage = Math.max(1, Math.min(totalPages, pageNum));
+          }
+          break;
+      }
+
+      render();
+    });
+  }
+
+  // Filtres
+  const handleFilterChange = (detail) => {
+    state.searchTerm = detail.search || "";
+    state.selectedBeneficiary = detail.beneficiary || "";
+    state.selectedYear = detail.year || "";
+    state.selectedType = detail.type || "";
+    state.currentPage = 1;
+    render();
+  };
+
+  document.addEventListener("actions-filter-change", (evt) =>
+    handleFilterChange(evt.detail || {})
+  );
+  document.addEventListener("search-actions-change", (evt) =>
+    handleFilterChange(evt.detail || {})
+  );
+
+  // Tri
+  if (sortSelect instanceof HTMLSelectElement) {
+    sortSelect.addEventListener("change", () => {
+      state.sortMode = sortSelect.value === "desc" ? "desc" : "asc";
+      state.currentPage = 1;
+      render();
+    });
+  }
+
+  // Rendu initial
+  render();
+</script>
+
+<style is:global>
+  a.action-btn-text,
+  button.action-btn-text {
+    font-size: 1rem !important;
+    font-weight: 700 !important;
+    line-height: 1.5rem !important;
+    font-family: inherit !important;
+    letter-spacing: normal !important;
+    text-transform: none !important;
+  }
+</style>

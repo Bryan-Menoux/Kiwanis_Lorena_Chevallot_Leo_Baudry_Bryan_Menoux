@@ -1,5 +1,4 @@
 ---
-
 import arrowNextSmall from "../../../assets/arrow-next-small.svg";
 
 export interface Props {
@@ -9,6 +8,7 @@ export interface Props {
   selectedValues?: string[];
   maxSelect?: number;
   placeholder?: string;
+  variant?: "default" | "input";
 }
 
 const {
@@ -17,47 +17,51 @@ const {
   options = [],
   selectedValues = [],
   maxSelect = 7,
-  placeholder = "Selectionner des options",
+  placeholder = "Sélectionner des options",
+  variant = "default",
 } = Astro.props;
 
-// Structure `Set` pour des tests d'appartenance O(1) lors du pré-cochage initial.
-const selectedSet = new Set((selectedValues || []).map((v) => String(v)));
+const toggleClass =
+  variant === "input"
+    ? "input input-bordered flex w-full items-center justify-between gap-2 text-left"
+    : "flex w-full items-center justify-between gap-2 rounded border border-accent bg-base-100 px-3 py-2 text-left text-black";
+
+const menuClass =
+  variant === "input"
+    ? "hidden absolute z-50 mt-1 max-h-64 w-full overflow-auto rounded border border-base-300 bg-base-100 p-2 shadow"
+    : "hidden absolute z-50 mt-1 max-h-64 w-full overflow-auto rounded border border-accent bg-base-100 p-2 shadow";
+
+const selectedSet = new Set((selectedValues || []).map((value) => String(value)));
 ---
 
-<div
-  data-kc-ms-root
-  data-select-id={id}
-  class="relative w-full"
->
+<div data-kc-ms-root data-select-id={id} class="relative w-full">
   <button
     type="button"
     data-kc-ms-toggle
-    class="w-full border border-accent rounded px-3 py-2 text-black bg-base-100 text-left flex items-center justify-between gap-2"
+    class={toggleClass}
     aria-haspopup="listbox"
     aria-expanded="false"
   >
-    <span data-kc-ms-label>{placeholder}</span>
+    <span data-kc-ms-label class="truncate text-base-content/50">{placeholder}</span>
     <img
       data-kc-ms-arrow
       src={arrowNextSmall.src}
       alt=""
       aria-hidden="true"
       loading="lazy"
-      class="w-6 h-6 shrink-0 rotate-0 opacity-80 transition-transform duration-200"
-     decoding="async" />
+      decoding="async"
+      class="h-6 w-6 shrink-0 rotate-0 opacity-80 transition-transform duration-200"
+    />
   </button>
 
-  <div
-    data-kc-ms-menu
-    class="hidden absolute z-50 mt-1 w-full max-h-64 overflow-auto border border-accent rounded bg-base-100 p-2 shadow"
-  >
+  <div data-kc-ms-menu class={menuClass}>
     {
       options.map((opt, idx) => {
         const optionId = `${id}_opt_${idx}`;
         return (
           <label
             for={optionId}
-            class="flex items-center gap-2 px-2 py-1 rounded hover:bg-base-200 cursor-pointer"
+            class="flex cursor-pointer items-center gap-2 rounded px-2 py-1 hover:bg-base-200"
           >
             <input
               id={optionId}
@@ -96,7 +100,6 @@ const selectedSet = new Set((selectedValues || []).map((v) => String(v)));
     const init = () => {
       document.querySelectorAll("[data-kc-ms-root]").forEach((root) => {
         if (!(root instanceof HTMLElement)) return;
-        // Garde anti double-initialisation (navigation Astro / nouveau rendu partiel).
         if (root.dataset.kcMsBound === "true") return;
 
         const selectId = root.dataset.selectId;
@@ -116,7 +119,7 @@ const selectedSet = new Set((selectedValues || []).map((v) => String(v)));
 
         const maxRaw = Number.parseInt(select.dataset.maxSelect || "", 10);
         const maxAllowed = Number.isFinite(maxRaw) && maxRaw > 0 ? maxRaw : Infinity;
-        const placeholderText = label.textContent || "Selectionner des options";
+        const placeholderText = label.textContent || "Sélectionner des options";
 
         const setMenuState = (isOpen) => {
           menu.classList.toggle("hidden", !isOpen);
@@ -127,32 +130,38 @@ const selectedSet = new Set((selectedValues || []).map((v) => String(v)));
           }
         };
 
-        // Le libellé du bouton reflète toujours la valeur réelle du <select>.
         const syncLabel = () => {
           const selected = Array.from(select.selectedOptions).map((opt) => opt.value);
           label.textContent = selected.length ? selected.join(", ") : placeholderText;
+          // Appliquer la classe d'opacité selon si quelque chose est sélectionné
+          if (selected.length > 0) {
+            label.classList.remove("text-base-content/50");
+            label.classList.add("text-base-content");
+          } else {
+            label.classList.add("text-base-content/50");
+            label.classList.remove("text-base-content");
+          }
         };
 
-        // Synchronise l'interface des cases à cocher depuis la source de vérité : le <select> caché.
         const syncChecksFromSelect = () => {
           const selected = new Set(
             Array.from(select.selectedOptions).map((opt) => opt.value),
           );
+
           checks.forEach((node) => {
             if (node instanceof HTMLInputElement) {
               node.checked = selected.has(node.value);
             }
           });
+
           syncLabel();
         };
 
-        // Bascule d'ouverture/fermeture du menu.
         toggle.addEventListener("click", () => {
           const isOpen = !menu.classList.contains("hidden");
           setMenuState(!isOpen);
         });
 
-        // Clic extérieur : on referme le menu pour garder un vrai comportement de menu déroulant.
         document.addEventListener("click", (event) => {
           const target = event.target;
           if (!(target instanceof Node)) return;
@@ -162,12 +171,12 @@ const selectedSet = new Set((selectedValues || []).map((v) => String(v)));
 
         checks.forEach((node) => {
           if (!(node instanceof HTMLInputElement)) return;
+
           node.addEventListener("change", () => {
             const selectedCount = checks.filter(
               (item) => item instanceof HTMLInputElement && item.checked,
             ).length;
 
-            // Limite métier configurable (par défaut 7).
             if (selectedCount > maxAllowed) {
               node.checked = false;
               return;
@@ -176,11 +185,10 @@ const selectedSet = new Set((selectedValues || []).map((v) => String(v)));
             const option = Array.from(select.options).find(
               (opt) => opt.value === node.value,
             );
-            // On met à jour le <select> pour conserver une soumission HTML native.
+
             if (option) option.selected = node.checked;
 
             syncLabel();
-            // La prévisualisation écoute l'événement "change" sur `data-prop`.
             select.dispatchEvent(new Event("change", { bubbles: true }));
           });
         });

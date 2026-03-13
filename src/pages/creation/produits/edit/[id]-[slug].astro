@@ -1,0 +1,303 @@
+---
+import Layout from "../../../../layouts/Layout-back-office.astro";
+import FormSubmitOverlay from "../../../../components/FormSubmitOverlay.astro";
+import imageIcon from "../../../../assets/image-icon.svg";
+import {
+  buildRedirectUrl,
+  extractFiles,
+  generateSlug,
+} from "../../../../utils/editPageHandler";
+import { getCreationViewUrl } from "../../../../utils/creationRoutes";
+
+const MAX_PRODUCT_PHOTOS = 4;
+
+const id = Astro.params.id;
+
+let error = "";
+let productRecord: any = null;
+
+if (id) {
+  try {
+    productRecord = await Astro.locals.pb.collection("produits").getOne(id);
+  } catch (err) {
+    console.error("Erreur lors du chargement du produit :", err);
+    error = "Impossible de charger le produit.";
+  }
+}
+
+const formState = {
+  titre: productRecord?.titre?.toString() || "",
+  description: productRecord?.description?.toString() || "",
+  prix:
+    typeof productRecord?.prix === "number"
+      ? productRecord.prix.toString()
+      : "",
+};
+
+const existingPhotoUrls = Array.isArray(productRecord?.photo)
+  ? productRecord.photo.map((fileName: string) =>
+      Astro.locals.pb.files.getURL(productRecord, fileName),
+    )
+  : [];
+
+if (Astro.request.method === "POST") {
+  try {
+    if (!id || !productRecord) {
+      throw new Error("Produit introuvable.");
+    }
+
+    const formData = await Astro.request.formData();
+
+    formState.titre = formData.get("titre")?.toString().trim() || "";
+    formState.description = formData.get("description")?.toString().trim() || "";
+    formState.prix = formData.get("prix")?.toString().trim() || "";
+
+    if (!formState.titre) {
+      throw new Error("Le titre est obligatoire.");
+    }
+
+    let parsedPrice: number | null = null;
+    if (formState.prix) {
+      parsedPrice = Number(formState.prix.replace(",", "."));
+      if (!Number.isFinite(parsedPrice) || parsedPrice < 0) {
+        throw new Error("Le prix doit être un nombre valide.");
+      }
+    }
+
+    let removedPhotoUrls: string[] = [];
+    const rawRemovedPhotoUrls = formData.get("remove_photo")?.toString().trim() || "";
+    if (rawRemovedPhotoUrls) {
+      try {
+        const parsed = JSON.parse(rawRemovedPhotoUrls);
+        removedPhotoUrls = Array.isArray(parsed)
+          ? parsed
+              .map((value) => String(value).trim())
+              .filter((value) => value !== "")
+          : [];
+      } catch {
+        removedPhotoUrls = [];
+      }
+    }
+
+    const { gallery } = extractFiles(formData, ["photo"]);
+    const photoFiles = Array.isArray(gallery.photo) ? gallery.photo : [];
+
+    const existingPhotoNames = Array.isArray(productRecord.photo)
+      ? productRecord.photo.map((value: unknown) => String(value))
+      : [];
+
+    const keptExistingPhotoNames = existingPhotoNames.filter((fileName: string) => {
+      const photoUrl = Astro.locals.pb.files.getURL(productRecord, fileName);
+      return !removedPhotoUrls.includes(photoUrl);
+    });
+
+    if (keptExistingPhotoNames.length + photoFiles.length > MAX_PRODUCT_PHOTOS) {
+      throw new Error(`La galerie est limitée à ${MAX_PRODUCT_PHOTOS} images.`);
+    }
+
+    const payload = new FormData();
+    payload.set("titre", formState.titre);
+    payload.set("description", formState.description);
+    payload.set("prix", parsedPrice === null ? "" : String(parsedPrice));
+
+    if (keptExistingPhotoNames.length || photoFiles.length) {
+      keptExistingPhotoNames.forEach((fileName: string) => {
+        payload.append("photo", fileName);
+      });
+      photoFiles.forEach((file: File) => {
+        payload.append("photo", file);
+      });
+    } else {
+      payload.set("photo", "");
+    }
+
+    await Astro.locals.pb.collection("produits").update(id, payload);
+
+    const slug = generateSlug(formState.titre) || "produit";
+
+    return Astro.redirect(
+      buildRedirectUrl(
+        getCreationViewUrl("produit", id, slug),
+        "Produit modifié avec succès",
+      ),
+    );
+  } catch (err) {
+    console.error("Erreur lors de la modification du produit :", err);
+    error = err instanceof Error ? err.message : "Une erreur inconnue est survenue.";
+  }
+}
+---
+
+<Layout>
+  <div class="container mx-auto my-16 px-4 py-8 md:my-32">
+    <div class="mb-8 flex flex-col gap-3">
+      <div>
+        <h1 class="font-poppins text-3xl font-bold text-accent md:text-4xl">
+          Modifier le produit
+        </h1>
+        <p class="mt-2 text-base-content">
+          Modifiez le titre, le prix, la description et la galerie sans perdre les photos déjà enregistrées.
+        </p>
+      </div>
+    </div>
+
+    <div class="w-full">
+      <div class="card rounded-2xl border border-base-300 bg-base-100 shadow-sm">
+        <div class="card-body p-6 md:p-8">
+          {error && (
+            <div class="alert alert-error mb-6 rounded-lg">
+              <span>{error}</span>
+            </div>
+          )}
+
+          <form
+            id="leftForm"
+            method="POST"
+            enctype="multipart/form-data"
+            class="space-y-6"
+            data-submit-overlay-requires-ready="true"
+            data-submit-overlay-ready="true"
+          >
+            <div class="grid grid-cols-1 gap-6 md:grid-cols-[minmax(0,2fr)_minmax(220px,1fr)] md:items-end">
+              <div class="flex h-full flex-col justify-end gap-2">
+                <label for="titre" class="block text-sm font-semibold text-base-content">
+                  Titre du produit <span class="text-error">*</span>
+                </label>
+                <input
+                  type="text"
+                  id="titre"
+                  name="titre"
+                  class="input input-bordered w-full text-base"
+                  placeholder="Exemple : Trousse solidaire"
+                  value={formState.titre}
+                  required
+                />
+              </div>
+
+              <div class="flex h-full flex-col justify-end gap-2">
+                <label for="prix" class="block text-sm font-semibold text-base-content">
+                  Prix
+                </label>
+                <input
+                  type="number"
+                  id="prix"
+                  name="prix"
+                  class="input input-bordered w-full text-base"
+                  placeholder="Exemple : 12.50"
+                  value={formState.prix}
+                  min="0"
+                  step="0.01"
+                  inputmode="decimal"
+                />
+              </div>
+            </div>
+
+            <div class="space-y-2">
+              <label
+                for="description"
+                class="block text-sm font-semibold text-base-content"
+              >
+                Description
+              </label>
+              <textarea
+                id="description"
+                name="description"
+                class="textarea textarea-bordered min-h-36 w-full text-base"
+                placeholder="Décrivez le produit, son usage ou le contexte de vente."
+              >{formState.description}</textarea>
+            </div>
+
+            <div class="divider my-4"></div>
+
+            <div class="space-y-3">
+              <label class="block text-sm font-semibold text-base-content">
+                Photos du produit (max {MAX_PRODUCT_PHOTOS})
+              </label>
+              <p class="text-xs text-base-content/70">
+                Les images actuelles restent en place tant que vous ne les supprimez pas. Vous pouvez aussi en ajouter de nouvelles.
+              </p>
+              <label
+                for="input_photo"
+                class="flex h-40 w-full cursor-pointer items-center justify-center rounded-lg border-2 border-dashed border-base-300 bg-base-200/40 text-gray-500 transition-colors hover:border-accent/60 hover:bg-base-200/70"
+              >
+                <input
+                  data-prop-file="photo"
+                  type="file"
+                  name="photo"
+                  id="input_photo"
+                  accept="image/*"
+                  multiple
+                  class="hidden"
+                />
+                <div class="pointer-events-none flex flex-col items-center text-center">
+                  <img
+                    src={imageIcon.src}
+                    alt="Icône image"
+                    class="h-16 w-16"
+                    style="filter:grayscale(100%) brightness(0.5); opacity:0.3;"
+                    loading="lazy"
+                    decoding="async"
+                  />
+                  <span class="text-sm">Cliquez ou glissez vos photos</span>
+                  <span class="text-xs text-gray-400">
+                    Jusqu'à {MAX_PRODUCT_PHOTOS} images
+                  </span>
+                </div>
+              </label>
+
+              <input type="hidden" id="hidden_photo" />
+              <input type="hidden" id="hidden_remove_photo" name="remove_photo" />
+
+              <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+                <div id="productPhotoExisting" class="contents"></div>
+                <div id="productPhotoSelected" class="contents"></div>
+              </div>
+            </div>
+
+            <div class="flex justify-end gap-3 pt-4">
+              <a href="/creation/produits" class="btn btn-ghost rounded-lg">
+                Retour
+              </a>
+              <button type="submit" class="btn btn-accent rounded-lg px-8">
+                Enregistrer le produit
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <FormSubmitOverlay
+    formSelector="#leftForm"
+    message="Enregistrement en cours..."
+  />
+</Layout>
+
+<script define:vars={{ existingPhotoUrls }}>
+  import { initWebpConversion } from "../../../../scripts/actionForm/convertToWebp.js";
+  import { initGalleryField } from "../../../../scripts/productGalleryForm.js";
+
+  const initProductEditForm = () => {
+    initGalleryField({
+      fieldName: "photo",
+      inputId: "input_photo",
+      existingContainerId: "productPhotoExisting",
+      selectedContainerId: "productPhotoSelected",
+      hiddenRemoveInputId: "hidden_remove_photo",
+      maxImages: 4,
+      initialExistingUrls: existingPhotoUrls,
+    });
+    initWebpConversion();
+  };
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initProductEditForm, {
+      once: true,
+    });
+  } else {
+    initProductEditForm();
+  }
+
+  document.addEventListener("astro:page-load", initProductEditForm);
+</script>

@@ -1,5 +1,242 @@
 ---
-// Page pour les projets
+import Layout from "../../../layouts/Layout-back-office.astro";
+import slugify from "slugify";
+import ActionsSearch from "../../../components/ActionsSearch.astro";
+import FormSubmitOverlay from "../../../components/FormSubmitOverlay.astro";
+import { formatDateShort } from "../../../utils/utilitaires.js";
+import { ProjetsTypeActionOptions } from "../../../pocketbase-types";
+import { showConfirm } from "../../../utils/alerts";
+import { renderPagination } from "../../../utils/renderPagination";
+import { initPublishHandlers } from "../../../utils/formHandlers";
+import { ListingPageManager } from "../../../utils/listingPageManager";
+import { renderCards, createProjectCardRenderer } from "../../../utils/cardRenderer";
+
+interface ProjectItem {
+  id: string;
+  title: string;
+  slug: string;
+  source: "projet" | "brouillon";
+  updated?: string;
+  date?: string;
+  beneficiary?: string;
+  projectType?: string[];
+}
+
+const projetsRaw: any[] = await Astro.locals.pb
+  .collection("projets")
+  .getFullList(200, { sort: "-updated" });
+const brouillonsRaw: any[] = await Astro.locals.pb
+  .collection("brouillons")
+  .getFullList(200, {
+    sort: "-updated",
+    filter: 'type = "projet"',
+  });
+
+const projets: ProjectItem[] = [
+  ...projetsRaw.map((p) => ({
+    id: p.id,
+    title: p.titre,
+    slug: slugify(p.titre || "", { lower: true, strict: true }),
+    source: "projet" as const,
+    updated: p.updated,
+    date: p.date,
+    beneficiary: p.nom_adresse,
+    projectType: p.type_action,
+  })),
+  ...brouillonsRaw.map((b) => ({
+    id: b.id,
+    title: b.titre || "Brouillon sans titre",
+    slug: slugify(b.titre || "brouillon", { lower: true, strict: true }),
+    source: "brouillon" as const,
+    updated: b.updated,
+    date: b.date || b.date_debut,
+    beneficiary: b.nom_adresse || b.nom_lieu || b.adresse_lieu,
+    projectType: b.type_action,
+  })),
+].sort(
+  (a, b) =>
+    new Date(b.updated || 0).getTime() - new Date(a.updated || 0).getTime(),
+);
+
+const stats = { total: projets.length };
+
+const anneesDisponibles = new Set<string>();
+projets.forEach((p) => {
+  const date = p.date || p.updated;
+  if (date) {
+    const année = new Date(date).getFullYear().toString();
+    anneesDisponibles.add(année);
+  }
+});
+
+const yearOptions = Array.from(anneesDisponibles).sort((a, b) => b.localeCompare(a));
+const typeOptions = Object.values(ProjetsTypeActionOptions);
+
+const paramètresUrl = Astro.url.searchParams;
+const termeRecherche = (paramètresUrl.get("q") || "").trim();
+const allProjets = projets;
 ---
 
-<h1>Projets</h1>
+<Layout>
+  <div class="container mx-auto px-4 py-8 my-16 md:my-32">
+    {/* Titre et boutons d'action */}
+    <div class="mb-10 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+      <div class="mb-0">
+        <h1 class="mb-3 text-3xl font-bold text-accent font-poppins md:text-4xl">
+          Projets
+        </h1>
+        <p class="text-base text-base-content/70 md:text-lg">
+          Gérez vos projets, recherchez, filtrez et modifiez rapidement.
+        </p>
+      </div>
+      <div class="flex flex-wrap items-center gap-3 lg:justify-end">
+        <a href="/projets" class="btn btn-border btn-sm rounded-full md:btn-md">
+          Voir le site
+        </a>
+        <a href="/creation/projets/nouveau" class="btn btn-accent btn-sm rounded-full md:btn-md">
+          Créer un projet
+        </a>
+      </div>
+    </div>
+
+    {/* Statistique */}
+    <div class="grid grid-cols-1 gap-4 mb-12">
+      <div class="card bg-base-100 shadow-md">
+        <div class="card-body text-center p-4">
+          <div class="text-4xl! font-bold text-base-content">{stats.total}</div>
+          <div class="text-base-content">Projets</div>
+        </div>
+      </div>
+    </div>
+
+    {/* Section de recherche et filtres */}
+    <div class="card mb-8 rounded-2xl border border-base-300 bg-base-100 shadow-sm">
+      <div class="card-body p-4 md:p-6">
+        <div class="mb-4">
+          <h2 class="card-title text-2xl">Rechercher</h2>
+          <p class="mt-1 text-base-content/60">
+            Filtrez rapidement vos projets puis triez l'affichage.
+          </p>
+        </div>
+
+        <div class="flex flex-col gap-4">
+          <div class="w-full">
+            <ActionsSearch
+              value={termeRecherche}
+              yearOptions={yearOptions}
+              typeOptions={typeOptions}
+              embedded={true}
+            >
+              <label
+                slot="secondary-extra"
+                class="form-control w-full gap-1"
+                for="tri-select"
+              >
+                <span class="text-sm! font-medium tracking-wide text-base-content">
+                  Trier par date
+                </span>
+                <select id="tri-select" class="select select-bordered w-full">
+                  <option value="récent">Récent → Ancien</option>
+                  <option value="ancien">Ancien → Récent</option>
+                </select>
+              </label>
+            </ActionsSearch>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {/* Conteneur de grille paginée */}
+    <div id="conteneur-projets" class="mb-8" data-initial-search={termeRecherche}>
+      <!-- Rendu par JavaScript côté client -->
+    </div>
+  </div>
+
+  <FormSubmitOverlay
+    formSelector='form[data-publish-projet-form="true"]'
+    message="Publication en cours..."
+  />
+</Layout>
+
+<script>
+  import "../../../utils/utilitaires.js";
+  import "../../../utils/scroll.js";
+  import { showConfirm } from "../../../utils/alerts";
+  import { renderPagination } from "../../../utils/renderPagination";
+  import { initPublishHandlers } from "../../../utils/formHandlers";
+  import { ListingPageManager } from "../../../utils/listingPageManager";
+  import { renderCards, createProjectCardRenderer } from "../../../utils/cardRenderer";
+
+  // Initialize publish handlers
+  initPublishHandlers(
+    { formSelector: 'form[data-publish-projet-form="true"]' },
+    showConfirm
+  );
+
+  // Get the data from the script tag
+  const dataScript = document.querySelector('script[data-projets-data]');
+  const allProjets = JSON.parse(dataScript?.getAttribute('data-projets-data') || '[]');
+  const q = dataScript?.getAttribute('data-search-term') || '';
+
+  // ============================================
+  // Initialisation du gestionnaire de liste
+  // ============================================
+
+  const manager = new ListingPageManager(allProjets, {
+    containerId: "conteneur-projets",
+    sortSelectId: "tri-select",
+    pageSize: 9,
+    filterFields: {
+      title: "title",
+      beneficiary: "beneficiary",
+      type: "projectType",
+    },
+    dateFieldNames: {
+      updated: "updated",
+    },
+  }, q);
+
+  const container = document.getElementById("conteneur-projets");
+  const cardRenderer = createProjectCardRenderer();
+
+  // ============================================
+  // Fonction de rendu
+  // ============================================
+
+  const render = () => {
+    if (!container) return;
+
+    const { items, totalPages, currentPage, hasItems } = manager.getPaginationData();
+
+    if (!hasItems) {
+      manager.renderEmpty();
+      return;
+    }
+
+    const cardsHtml = renderCards(items, {
+      ...cardRenderer,
+      formattedDateGetter: (item) => manager.getFormattedDates(item).updated,
+    });
+    const paginationHtml = renderPagination(totalPages, currentPage);
+
+    container.innerHTML = `
+      <div class="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-5 lg:grid-cols-3 lg:gap-6">
+        ${cardsHtml}
+      </div>
+      ${paginationHtml}
+    `;
+  };
+
+  // ============================================
+  // Initialisation des event listeners
+  // ============================================
+
+  manager.initPaginationListeners(render);
+  manager.initFilterListeners(render);
+  manager.initSortListener(render);
+
+  // Rendu initial
+  render();
+</script>
+
+<script type="application/json" data-projets-data={JSON.stringify(allProjets)} data-search-term={termeRecherche}></script>

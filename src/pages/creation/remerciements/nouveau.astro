@@ -1,0 +1,347 @@
+---
+import Layout from "../../../layouts/Layout-back-office.astro";
+
+const asText = (value: FormDataEntryValue | null): string =>
+  typeof value === "string" ? value.trim() : "";
+
+const redirectWith = (type: "success" | "error", message: string) =>
+  Astro.redirect(`/creation/remerciements?${type}=${encodeURIComponent(message)}`);
+
+const requestedTab = (Astro.url.searchParams.get("tab") || "").trim().toLowerCase();
+let activeTab: "partenaire" | "contributeur" =
+  requestedTab === "contributeur" ? "contributeur" : "partenaire";
+
+const partenaireState = {
+  nom: "",
+};
+
+const contributeurState = {
+  nom: "",
+  metier: "",
+  description: "",
+};
+
+let error = "";
+
+if (Astro.request.method === "POST") {
+  try {
+    const formData = await Astro.request.formData();
+    const entity = asText(formData.get("entity"));
+    const intent = asText(formData.get("intent"));
+
+    if (intent !== "create") {
+      throw new Error("Action de création inconnue.");
+    }
+
+    if (entity === "partenaire") {
+      activeTab = "partenaire";
+      partenaireState.nom = asText(formData.get("nom"));
+      const logo = formData.get("logo");
+
+      if (!partenaireState.nom) {
+        throw new Error("Le nom du partenaire est obligatoire.");
+      }
+      if (!(logo instanceof File) || logo.size === 0) {
+        throw new Error("Le logo du partenaire est obligatoire.");
+      }
+
+      await Astro.locals.pb.collection("partenaires").create({
+        nom: partenaireState.nom,
+        logo,
+      });
+
+      return redirectWith("success", "Partenaire ajouté avec succès.");
+    }
+
+    if (entity === "contributeur") {
+      activeTab = "contributeur";
+      contributeurState.nom = asText(formData.get("nom"));
+      contributeurState.metier = asText(formData.get("metier"));
+      contributeurState.description = asText(formData.get("description"));
+
+      if (!contributeurState.nom) {
+        throw new Error("Le nom du contributeur est obligatoire.");
+      }
+
+      await Astro.locals.pb.collection("contributeurs").create({
+        nom: contributeurState.nom,
+        metier: contributeurState.metier,
+        description: contributeurState.description,
+      });
+
+      return redirectWith("success", "Contributeur ajouté avec succès.");
+    }
+
+    throw new Error("Type d'élément inconnu.");
+  } catch (caughtError) {
+    error =
+      caughtError instanceof Error
+        ? caughtError.message
+        : "Une erreur inconnue est survenue.";
+  }
+}
+---
+
+<Layout>
+  <div class="container mx-auto px-4 py-8 my-16 md:my-32">
+    <div class="mb-8 flex flex-col gap-3">
+      <div>
+        <h1 class="text-3xl md:text-4xl font-bold text-accent font-poppins">
+          Ajouter un remerciement
+        </h1>
+        <p class="text-base-content mt-2">
+          Choisissez le type de remerciement à créer, puis complétez le formulaire correspondant.
+        </p>
+      </div>
+    </div>
+
+    <div class="w-full">
+      <div class="card rounded-2xl border border-base-300 bg-base-100 shadow-sm">
+        <div class="card-body p-6 md:p-8">
+          {error && (
+            <div class="alert alert-error mb-6 rounded-lg">
+              <span>{error}</span>
+            </div>
+          )}
+
+          <div
+            class="space-y-6"
+            data-create-tabs
+            data-active-tab={activeTab}
+          >
+            <div class="flex flex-wrap items-center gap-3 border-b border-base-300 pb-4">
+              <button
+                type="button"
+                class={`btn h-11 min-h-11 rounded-full px-6 ${activeTab === "partenaire" ? "btn-accent" : "btn-ghost"}`}
+                data-create-tab-trigger="partenaire"
+              >
+                Partenaire
+              </button>
+              <button
+                type="button"
+                class={`btn h-11 min-h-11 rounded-full px-6 ${activeTab === "contributeur" ? "btn-accent" : "btn-ghost"}`}
+                data-create-tab-trigger="contributeur"
+              >
+                Contributeur
+              </button>
+            </div>
+
+            <div
+              data-create-tab-panel="partenaire"
+              class:list={{ hidden: activeTab !== "partenaire" }}
+            >
+              <form
+                method="POST"
+                enctype="multipart/form-data"
+                class="space-y-6"
+              >
+                <input type="hidden" name="entity" value="partenaire" />
+                <input type="hidden" name="intent" value="create" />
+
+                <div class="space-y-2">
+                  <label
+                    for="create-partenaire-nom"
+                    class="block text-sm font-semibold text-base-content"
+                  >
+                    Nom du partenaire <span class="text-error">*</span>
+                  </label>
+                  <input
+                    id="create-partenaire-nom"
+                    type="text"
+                    name="nom"
+                    class="input input-bordered w-full text-base"
+                    placeholder="Exemple : Partenaire local"
+                    value={partenaireState.nom}
+                    required
+                  />
+                </div>
+
+                <div class="space-y-2">
+                  <label
+                    for="create-partenaire-logo"
+                    class="block text-sm font-semibold text-base-content"
+                  >
+                    Logo partenaire <span class="text-error">*</span>
+                  </label>
+                  <div
+                    id="logo-preview-container-create"
+                    class="mb-4 hidden h-32 overflow-hidden rounded-xl border border-base-300/60 bg-base-200/60 md:h-48"
+                  >
+                    <img
+                      id="logo-preview-img-create"
+                      src=""
+                      alt="Aperçu du logo"
+                      class="h-full w-full object-contain object-center px-4 py-2"
+                    />
+                  </div>
+                  <input
+                    id="create-partenaire-logo"
+                    type="file"
+                    name="logo"
+                    accept="image/*"
+                    class="file-input file-input-bordered w-full"
+                    required
+                  />
+                </div>
+
+                <div class="flex justify-end gap-3 pt-4">
+                  <a href="/creation/remerciements" class="btn btn-ghost rounded-lg">
+                    Retour
+                  </a>
+                  <button type="submit" class="btn btn-accent rounded-lg px-8">
+                    Créer le partenaire
+                  </button>
+                </div>
+              </form>
+            </div>
+
+            <div
+              data-create-tab-panel="contributeur"
+              class:list={{ hidden: activeTab !== "contributeur" }}
+            >
+              <form method="POST" class="space-y-6">
+                <input type="hidden" name="entity" value="contributeur" />
+                <input type="hidden" name="intent" value="create" />
+
+                <div class="grid grid-cols-1 gap-6 md:grid-cols-2 items-end">
+                  <div class="space-y-2">
+                    <label
+                      for="create-contributeur-nom"
+                      class="block text-sm font-semibold text-base-content"
+                    >
+                      Nom du contributeur <span class="text-error">*</span>
+                    </label>
+                    <input
+                      id="create-contributeur-nom"
+                      type="text"
+                      name="nom"
+                      class="input input-bordered w-full text-base"
+                      placeholder="Exemple : Jean Dupont"
+                      value={contributeurState.nom}
+                      required
+                    />
+                  </div>
+
+                  <div class="space-y-2">
+                    <label
+                      for="create-contributeur-metier"
+                      class="block text-sm font-semibold text-base-content"
+                    >
+                      Métier
+                    </label>
+                    <input
+                      id="create-contributeur-metier"
+                      type="text"
+                      name="metier"
+                      class="input input-bordered w-full text-base"
+                      placeholder="Exemple : Photographe"
+                      value={contributeurState.metier}
+                    />
+                  </div>
+                </div>
+
+                <div class="space-y-2">
+                  <label
+                    for="create-contributeur-description"
+                    class="block text-sm font-semibold text-base-content"
+                  >
+                    Description
+                  </label>
+                  <textarea
+                    id="create-contributeur-description"
+                    name="description"
+                    class="textarea textarea-bordered min-h-32 w-full text-base"
+                    placeholder="Quelques mots sur la contribution..."
+                  >{contributeurState.description}</textarea>
+                </div>
+
+                <div class="flex justify-end gap-3 pt-4">
+                  <a href="/creation/remerciements" class="btn btn-ghost rounded-lg">
+                    Retour
+                  </a>
+                  <button type="submit" class="btn btn-accent rounded-lg px-8">
+                    Créer le contributeur
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</Layout>
+
+<script>
+  function initCreateTabs() {
+    document.querySelectorAll("[data-create-tabs]").forEach((tabsRoot) => {
+      if (!(tabsRoot instanceof HTMLElement)) return;
+      if (tabsRoot.dataset.tabsInit === "true") return;
+      tabsRoot.dataset.tabsInit = "true";
+
+      const triggers = Array.from(
+        tabsRoot.querySelectorAll("[data-create-tab-trigger]"),
+      ).filter((item): item is HTMLElement => item instanceof HTMLElement);
+      const panels = Array.from(
+        tabsRoot.querySelectorAll("[data-create-tab-panel]"),
+      ).filter((item): item is HTMLElement => item instanceof HTMLElement);
+
+      const setActiveTab = (tabName: string) => {
+        tabsRoot.dataset.activeTab = tabName;
+
+        triggers.forEach((trigger) => {
+          const isActive = trigger.dataset.createTabTrigger === tabName;
+          trigger.classList.toggle("btn-accent", isActive);
+          trigger.classList.toggle("btn-ghost", !isActive);
+        });
+
+        panels.forEach((panel) => {
+          panel.classList.toggle("hidden", panel.dataset.createTabPanel !== tabName);
+        });
+      };
+
+      triggers.forEach((trigger) => {
+        trigger.addEventListener("click", () => {
+          setActiveTab(trigger.dataset.createTabTrigger || "partenaire");
+        });
+      });
+
+      setActiveTab(tabsRoot.dataset.activeTab || "partenaire");
+    });
+  }
+
+  // Image preview for create partenaire form
+  const logoInput = document.getElementById("create-partenaire-logo");
+  const previewImg = document.getElementById("logo-preview-img-create");
+  const previewContainer = document.getElementById(
+    "logo-preview-container-create",
+  );
+
+  if (logoInput && previewImg && previewContainer) {
+    logoInput.addEventListener("change", (event) => {
+      const file = (event.target as HTMLInputElement).files?.[0];
+
+      if (file) {
+        const reader = new FileReader();
+
+        reader.onload = (e) => {
+          const imageUrl = e.target?.result as string;
+          if (previewImg instanceof HTMLImageElement) {
+            previewImg.src = imageUrl;
+            previewContainer.classList.remove("hidden");
+          }
+        };
+
+        reader.readAsDataURL(file);
+      }
+    });
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initCreateTabs, { once: true });
+  } else {
+    initCreateTabs();
+  }
+
+  document.addEventListener("astro:page-load", initCreateTabs);
+</script>

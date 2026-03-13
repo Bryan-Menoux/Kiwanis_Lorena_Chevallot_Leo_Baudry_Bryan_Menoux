@@ -1,0 +1,228 @@
+---
+import Layout from "../../../../layouts/Layout-back-office.astro";
+import { formatDateShort } from "../../../../utils/utilitaires.js";
+import { generateSlug } from "../../../../utils/editPageHandler";
+import { getCreationViewUrl } from "../../../../utils/creationRoutes";
+
+let error = "";
+let success = "";
+
+let produitsRaw = [];
+try {
+  produitsRaw = await (Astro.locals as any).pb
+    .collection("produits")
+    .getFullList(500, { sort: "-updated" });
+} catch (e) {
+  console.error("Impossible de récupérer les produits :", e);
+  error = "Impossible de charger la liste des produits.";
+}
+
+const produits = produitsRaw.map((p: any) => ({
+  id: p.id,
+  titre: p.titre || "Produit sans titre",
+  slug: generateSlug(p.titre || "") || "produit",
+  description: p.description || "",
+  prix: typeof p.prix === "number" ? p.prix : null,
+  photoPreviewUrl:
+    Array.isArray(p.photo) && p.photo.length > 0
+      ? (Astro.locals as any).pb.files.getURL(p, p.photo[0])
+      : "",
+  updated: p.updated,
+}));
+
+if (Astro.request.method === "POST") {
+  try {
+    const formData = await Astro.request.formData();
+    const ids = formData
+      .getAll("ids")
+      .map((value) => value.toString())
+      .filter(Boolean);
+
+    if (!ids.length) {
+      error = "Aucun produit sélectionné.";
+    } else {
+      const failed: string[] = [];
+
+      for (const id of ids) {
+        try {
+          await (Astro.locals as any).pb.collection("produits").delete(id);
+        } catch (e) {
+          console.error("Erreur lors de la suppression du produit :", id, e);
+          failed.push(id);
+        }
+      }
+
+      if (failed.length === 0) {
+        return Astro.redirect(
+          `/creation/produits/delete?success=${encodeURIComponent(`${ids.length} produit(s) supprimé(s) avec succès.`)}`,
+        );
+      }
+
+      error = `Échec de la suppression pour ${failed.length} produit(s).`;
+    }
+  } catch (e) {
+    console.error("Erreur lors du POST de suppression des produits :", e);
+    error = "La suppression des produits a échoué.";
+  }
+}
+
+try {
+  const successParam = Astro.url.searchParams.get("success");
+  if (successParam) success = successParam;
+} catch {}
+---
+
+<Layout>
+  <div class="container mx-auto px-4 py-8 my-16 md:my-32">
+    <div class="mb-10 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+      <div class="mb-0">
+        <h1 class="mb-3 text-3xl font-bold text-accent font-poppins md:text-4xl">
+          Supprimer des produits
+        </h1>
+        <p class="text-base text-base-content md:text-lg">
+          Sélectionnez plusieurs produits puis cliquez sur "Supprimer sélection".
+        </p>
+      </div>
+      <div class="flex flex-wrap items-center gap-3 lg:justify-end">
+        <a
+          href="/creation/produits"
+          class="btn btn-border btn-sm rounded-full w-full md:w-fit md:btn-md"
+        >
+          Retour aux produits
+        </a>
+      </div>
+    </div>
+
+    <div
+      id="delete-flash-flags"
+      data-success={success}
+      data-error={error}
+      class="hidden"
+    ></div>
+
+    <form method="POST" id="deleteForm">
+      <div class="mb-4 space-y-4">
+        <div class="card rounded-2xl border border-base-300 bg-base-100 shadow-sm">
+          <div class="card-body p-4 md:p-6">
+            <div class="mb-4">
+              <h2 class="card-title text-2xl">Filtrer</h2>
+              <p class="mt-1 text-sm text-base-content">
+                Filtrez rapidement vos produits.
+              </p>
+            </div>
+            <div class="flex flex-col gap-4">
+              <div class="w-full">
+                <p class="mb-2 text-sm font-medium text-base-content">Recherche</p>
+                <input
+                  type="text"
+                  id="search-input"
+                  placeholder="Rechercher un produit..."
+                  class="input input-bordered w-full"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex flex-col gap-2 select-none sm:flex-row sm:items-center sm:justify-between">
+          <label class="flex items-center gap-2">
+            <input type="checkbox" id="selectAll" />
+            <span class="text-sm">Tout sélectionner</span>
+          </label>
+          <button
+            type="submit"
+            id="bulkDelete"
+            class="btn btn-error btn-sm rounded-full md:btn-md w-full sm:w-auto"
+          >
+            Supprimer sélection
+          </button>
+        </div>
+      </div>
+
+      <div
+        id="cards-grid"
+        class="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-5 lg:grid-cols-3 lg:gap-6"
+      >
+        {
+          produits.map((produit: any) => (
+            <label
+              class="flex min-h-55 flex-col justify-between gap-4 rounded-xl border border-base-300 bg-base-100 p-4 shadow-sm md:p-5 lg:p-6"
+              for={`id_${produit.id}`}
+              data-item-id={produit.id}
+              data-title={produit.titre}
+              data-updated={produit.updated}
+            >
+              <div class="space-y-3">
+                <div class="flex items-start gap-3">
+                  <input
+                    class="checkbox checkbox-primary mt-1 shrink-0"
+                    type="checkbox"
+                    name="ids"
+                    id={`id_${produit.id}`}
+                    value={produit.id}
+                  />
+                  <div class="space-y-2">
+                    <h3 class="wrap-break-word text-xl font-bold leading-tight md:text-2xl">
+                      {produit.titre}
+                    </h3>
+                    {produit.prix !== null && (
+                      <p class="text-sm font-medium text-base-content/80">
+                        {new Intl.NumberFormat("fr-FR", {
+                          style: "currency",
+                          currency: "EUR",
+                        }).format(produit.prix)}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {produit.photoPreviewUrl && (
+                  <div class="overflow-hidden rounded-lg border border-base-300 bg-base-200/40">
+                    <img
+                      src={produit.photoPreviewUrl}
+                      alt="Aperçu produit"
+                      class="h-64 w-full object-contain"
+                      loading="lazy"
+                      decoding="async"
+                    />
+                  </div>
+                )}
+
+                {produit.description && (
+                  <p class="text-sm leading-relaxed wrap-break-word text-base-content/75 line-clamp-3">
+                    {produit.description}
+                  </p>
+                )}
+
+                <p class="text-xs leading-tight text-base-content">
+                  {produit.updated ? formatDateShort(produit.updated) : ""}
+                </p>
+              </div>
+
+              <div class="flex justify-end">
+                <a
+                  class="btn btn-sm btn-ghost w-full sm:w-auto"
+                  href={getCreationViewUrl("produit", produit.id, produit.slug)}
+                >
+                  Voir
+                </a>
+              </div>
+            </label>
+          ))
+        }
+      </div>
+      <div id="cards-pagination" class="mt-6 flex justify-center"></div>
+    </form>
+  </div>
+
+  <script>
+    import { initDeletePageHandler } from "../../../../utils/deletePageHandler";
+
+    document.addEventListener("DOMContentLoaded", () => {
+      initDeletePageHandler({
+        itemSingular: "produit",
+        itemPlural: "produits",
+      });
+    });
+  </script>
+</Layout>

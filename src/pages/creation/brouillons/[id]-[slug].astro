@@ -4,6 +4,7 @@ import Layout from "../../../layouts/Layout.astro";
 import ActionContent from "../../../components/ActionContent.astro";
 import backArrow from "../../../assets/back-arrow.svg";
 import type { ActionsResponse } from "../../../pocketbase-types";
+import { getDraftEditUrl } from "../../../utils/creationRoutes";
 
 const id = Astro.params.id;
 const slug = Astro.params.slug;
@@ -27,6 +28,8 @@ try {
   }
   throw err;
 }
+
+const draftEditUrl = getDraftEditUrl((draft as any)?.type, id || "", slug || "");
 ---
 
 <Layout>
@@ -52,7 +55,7 @@ try {
        decoding="async" />Retour à la création</a
     >
     <a
-      href={`/creation/actions/edit/${id}-${slug}`}
+      href={draftEditUrl}
       class="flex lg:hidden items-center text-sm w-fit btn btn-accent"
     >
       Modifier le brouillon</a
@@ -60,7 +63,7 @@ try {
   </div>
 
   <a
-    href={`/creation/actions/edit/${id}-${slug}`}
+    href={draftEditUrl}
     class="hidden fixed px-4 py-3 min-h-11 lg:flex items-center justify-center z-50 bg-opacity-80 rounded-box text-sm lg:text-base lg:right-[2%] lg:top-[12%] btn btn-accent"
   >
     Modifier le brouillon</a

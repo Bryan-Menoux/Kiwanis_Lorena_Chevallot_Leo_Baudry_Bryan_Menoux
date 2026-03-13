@@ -368,6 +368,19 @@ if (Astro.request.method === "POST") {
       typeof idParam === "string" &&
       !formData.has("titre")
     ) {
+      // Vérifier que tous les champs obligatoires sont présents avant de publier
+      const missingFields = getMissingRequiredFieldsAfterSubmit(
+        formData,
+        actionRecord,
+      );
+      if (missingFields.length > 0) {
+        // Rediriger vers la page d'édition du brouillon avec un message d'erreur
+        const errorMessage = `Informations obligatoires manquantes pour la publication: ${missingFields.join(", ")}.`;
+        return Astro.redirect(
+          `/creation/actions/${idParam}-${actionRecord?.slug || "brouillon"}?error=${encodeURIComponent(errorMessage)}`,
+        );
+      }
+
       const draftId = idParam;
       const publishSlug = slugify(
         actionRecord?.titre ?? actionRecord?.slug ?? "action",
@@ -703,6 +716,24 @@ if (Astro.request.method === "POST") {
   <script type="module" src={utilUrl}></script>
   <script type="module" src={galleryUrl}></script>
   <script type="module" src={galleryDisplayUrl}></script>
+  
+  <script>
+    import { showAlert } from "../../../../utils/alerts";
+    
+    // Affiche une alerte d'erreur de validation si elle vient de la page de liste
+    const params = new URLSearchParams(window.location.search);
+    const validationError = params.get("validation_error");
+    
+    if (validationError) {
+      showAlert({
+        type: "error",
+        message: `Publication impossible : ${validationError}`,
+      });
+      
+      // Nettoie l'URL pour éviter que l'alerte se réaffiche au rechargement
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  </script>
 </Layout>
 
 
