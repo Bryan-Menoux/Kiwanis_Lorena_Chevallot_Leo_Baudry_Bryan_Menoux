@@ -1,0 +1,21 @@
+---
+interface Props {
+  label?: string;
+}
+
+const { label = "Menu" } = Astro.props;
+---
+
+<button
+  id="menu-toggle"
+  class="flex-1 flex items-center justify-between max-[359px]:px-3 max-[359px]:py-2 px-5 py-3 rounded-xl text-white bg-accent"
+  aria-expanded="false"
+  aria-controls="mobile-dropdown"
+  aria-label={`Ouvrir le ${label.toLowerCase()}`}
+>
+  <span class="max-[359px]:text-sm text-base font-medium">{label}</span>
+  <div class="relative max-[359px]:w-5 max-[359px]:h-5 w-6 h-6 flex flex-col justify-center items-center gap-1.25 pointer-events-none">
+    <span id="ham-top" class="block w-full h-0.5 bg-white rounded-full" style="transition: transform 0.2s ease;"></span>
+    <span id="ham-bottom" class="block w-full h-0.5 bg-white rounded-full" style="transition: transform 0.2s ease;"></span>
+  </div>
+</button>

@@ -1,0 +1,142 @@
+---
+import DiagArrow from "./DiagArrow.astro";
+
+interface Props {
+  menuTitle: string;
+  menuItems: { href: string; label: string }[];
+  actionButtons?: { href: string; label: string; variant?: string }[];
+  showLogout?: boolean;
+  currentUser?: any;
+  UserWhiteSvg?: any;
+  UserSvg?: any;
+}
+
+const {
+  menuTitle,
+  menuItems,
+  actionButtons = [],
+  showLogout = true,
+  currentUser,
+  UserWhiteSvg,
+  UserSvg,
+} = Astro.props;
+---
+
+<div
+  id="mobile-dropdown"
+  class="w-full max-w-[90dvw] rounded-2xl [@media(max-height:700px)]:p-4 p-7 text-white shadow-2xl bg-accent"
+  style="display: none;"
+  role="menu"
+  aria-hidden="true"
+>
+  <h2 class="text-xs font-bold tracking-widest [@media(max-height:700px)]:mb-3 mb-6 opacity-90 uppercase">
+    {menuTitle}
+  </h2>
+
+  <nav class="flex flex-col select-none" role="navigation">
+    {
+      menuItems.map((item, idx) => (
+        <>
+          <a
+            href={item.href}
+            class="mob-link flex justify-between items-center [@media(max-height:700px)]:py-1 py-2 text-base"
+            role="menuitem"
+          >
+            {item.label} <span class="opacity-40" aria-hidden="true"><DiagArrow class="h-3 w-auto" /></span>
+          </a>
+          {idx === 2 && (
+            <div
+              class="mob-link h-px w-full bg-white/20 [@media(max-height:700px)]:my-2 my-4"
+              role="separator"
+              aria-hidden="true"
+            />
+          )}
+        </>
+      ))
+    }
+
+    {
+      actionButtons.length > 0 && (
+        <>
+          <div
+            class="mob-link h-px w-full bg-white/20 [@media(max-height:700px)]:my-2 my-4"
+            role="separator"
+            aria-hidden="true"
+          />
+
+          <div class="mob-actions [@media(max-height:700px)]:mt-2 mt-4 flex flex-col gap-3">
+            {currentUser && currentUser.verified && currentUser.administrateur === true && (
+              <a
+                href="/creation"
+                class="btn btn-secondary rounded-lg! w-full"
+                role="menuitem"
+              >
+                Espace création
+              </a>
+            )}
+
+            {actionButtons.map((btn) => (
+              <a
+                href={btn.href}
+                class={`btn ${btn.variant || 'btn-ghost'} border-base-100 rounded-lg! w-full`}
+                role="menuitem"
+              >
+                {btn.label}
+              </a>
+            ))}
+
+            {showLogout && currentUser && (
+              <div class="flex items-center gap-3 w-full md:col-span-2">
+                <a
+                  id="mobile-account-link"
+                  href="/mon-compte"
+                  role="menuitem"
+                  class="flex items-center gap-3 flex-1"
+                >
+                  <div class="avatar">
+                    <div class="w-10 rounded-full ring ring-offset-base-100 ring-white/30 overflow-hidden">
+                      {
+                        UserSvg ? (
+                            <UserSvg class="inline-block w-full h-full" aria-hidden="true" />
+                        ) : (
+                            <UserWhiteSvg class="inline-block w-full h-full" aria-hidden="true" />
+                        )
+                      }
+                    </div>
+                  </div>
+                  <span class="text-sm font-semibold">Mon compte</span>
+                </a>
+
+                <button
+                  id="mobile-logout-btn"
+                  type="button"
+                  class="btn btn-block w-fit px-4 py-2 md:px-8 md:py-4 btn-sm"
+                  role="menuitem"
+                >
+                  Déconnexion
+                </button>
+              </div>
+            )}
+
+            {!currentUser && (
+              <a
+                id="mobile-connexion-link"
+                href="/connexion"
+                class="btn btn-block border-base-100 rounded-lg! w-full"
+                role="menuitem"
+              >
+                Connexion
+              </a>
+            )}
+          </div>
+        </>
+      )
+    }
+  </nav>
+</div>
+
+<style>
+  #mobile-dropdown details > summary::-webkit-details-marker {
+    display: none;
+  }
+</style>

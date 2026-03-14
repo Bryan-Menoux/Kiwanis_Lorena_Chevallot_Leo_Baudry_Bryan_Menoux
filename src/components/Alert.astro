@@ -45,7 +45,7 @@ const variant = variants[type];
 ---
 
 <article
-  class={`kiwanis-alert pointer-events-auto w-full rounded-xl border p-3 sm:p-4 shadow-xl backdrop-blur-sm flex items-start gap-3 ${variant.container}`}
+  class={`kiwanis-alert pointer-events-auto w-full rounded-xl border p-3 sm:p-4 shadow-xl backdrop-blur-sm flex items-center gap-3 relative ${variant.container}`}
   role="status"
   aria-live="polite"
   aria-atomic="true"
@@ -53,7 +53,7 @@ const variant = variants[type];
   data-alert-type={type}
 >
   <span
-    class={`inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold ${variant.iconWrapper}`}
+    class={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold ${variant.iconWrapper}`}
     aria-hidden="true"
     data-alert-icon
   >
@@ -68,11 +68,11 @@ const variant = variants[type];
     dismissible && (
       <button
         type="button"
-        class="btn btn-ghost btn-xs h-7 min-h-0 w-7 px-0 text-current hover:bg-black/15"
+        class="absolute right-2 top-1/2 -translate-y-1/2 rounded-full w-8 h-8 md:w-10 md:h-10 flex items-center justify-center z-50 cursor-pointer text-lg leading-none"
         aria-label="Fermer l'alerte"
         data-alert-close
       >
-        X
+        ✖
       </button>
     )
   }

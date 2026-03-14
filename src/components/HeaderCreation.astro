@@ -1,230 +1,77 @@
 ---
-import LogoRaw from "../assets/logo-kiwanis-full.svg?raw";
-import UserRaw from "../assets/user.svg?raw";
-import UserWhiteRaw from "../assets/user-white.svg?raw";
-import ArrowNextRaw from "../assets/arrow-next-small.svg?raw";
-
-const logoSvg = LogoRaw.replace(/\s+width="[^"]*"/, ' width="100%"').replace(
-  /\s+height="[^"]*"/,
-  ' height="100%"',
-);
-const userWhiteSvg = UserWhiteRaw.replace(
-  /\s+width="[^"]*"/,
-  ' width="100%"',
-).replace(/\s+height="[^"]*"/, ' height="100%"');
-const userSvg = UserRaw.replace(/\s+width="[^"]*"/, ' width="100%"').replace(
-  /\s+height="[^"]*"/,
-  ' height="100%"',
-);
-// Arrow next : supprime le préambule XML/commentaire, passe en blanc, taille 100%
-const arrowNextSvg = ArrowNextRaw.replace(/<\?xml[^?]*\?>\s*/g, "")
-  .replace(/<!--[\s\S]*?-->\s*/g, "")
-  .replace(/\s+width="[^"]*"/, ' width="100%"')
-  .replace(/\s+height="[^"]*"/, ' height="100%"')
-  .replace(/fill="#0F0F0F"/g, 'fill="white"')
-  .trim();
+import LogoKiwanisSvg from "../assets/logo-kiwanis-full.svg";
+import UserWhiteSvg from "../assets/user-white.svg";
+import ArrowNextSvg from "../assets/arrow-next-small.svg";
+import HamburgerToggle from "./HamburgerToggle.astro";
+import CreationDropdown from "./CreationDropdown.astro";
+import CreationAccountLink from "./CreationAccountLink.astro";
+import CreationMobileMenu from "./CreationMobileMenu.astro";
 
 const currentUser = Astro.locals.pb.authStore.record;
 
-import DiagArrow from "./DiagArrow.astro";
+const creationMenuSections = [
+  {
+    title: "Ajouter du contenu",
+    items: [
+      { href: "/creation/actions/nouveau", label: "Actions" },
+      { href: "/creation/projets/nouveau", label: "Projets" },
+      { href: "/creation/produits/nouveau", label: "Produits" },
+      { href: "/creation/remerciements/nouveau", label: "Remerciements" },
+    ],
+  },
+  {
+    title: "Supprimer du contenu",
+    items: [
+      { href: "/creation/actions/delete", label: "Actions" },
+      { href: "/creation/projets/delete", label: "Projets" },
+      { href: "/creation/produits/delete", label: "Produits" },
+      { href: "/creation/remerciements/delete", label: "Remerciements" },
+    ],
+  },
+  {
+    title: "Modifier du contenu",
+    items: [
+      { href: "/creation/actions", label: "Actions" },
+      { href: "/creation/projets", label: "Projets" },
+      { href: "/creation/produits", label: "Produits" },
+      { href: "/creation/remerciements", label: "Remerciements" },
+    ],
+  },
+];
 ---
 
 <header id="creation-header" class="fixed top-0 left-0 right-0 z-50 font-sans">
   <div class="hidden lg:flex items-center justify-center gap-8 py-6">
     <a href="/" class="flex items-center-safe">
-      <span
-        class="inline-block w-14 h-14"
+      <LogoKiwanisSvg
+        class="inline-block w-14 h-14 text-black"
         role="img"
         aria-label="Kiwanis Logo"
-        set:html={logoSvg}
       />
     </a>
     <div
       class="w-full h-14 max-w-[80dvw] flex items-center justify-between gap-4 bg-accent rounded-xl px-4"
     >
       <div class="flex items-center gap-4 text-white">
-        <div class="relative w-fit text-white group">
-          <summary
-            class="flex w-full items-center justify-between gap-4 h-12 px-6 rounded-lg text-xs! md:text-sm! text-white cursor-pointer list-none transition hover:bg-white/10"
-          >
-            <span class="text-md!">Ajouter du contenu</span>
-            <svg
-              class="w-4 h-4 text-slate-500 transition-transform duration-200 group-hover:-rotate-180"
-              viewBox="0 0 20 20"
-              fill="none"
-              stroke="currentColor"
-            >
-              <path
-                d="M6 8l4 4 4-4"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"></path>
-            </svg>
-          </summary>
-          <ul
-            class="absolute inset-x-0 top-full z-10 rounded-lg bg-white shadow-lg ring-1 ring-black/5 opacity-0 invisible pointer-events-none group-hover:visible group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-150"
-            role="listbox"
-          >
-            <li>
-              <a
-                class="block px-6 py-2 text-xs! md:text-sm! text-slate-700 hover:bg-slate-100 rounded-lg"
-                href="/creation/actions/nouveau"
-              >
-                Actions
-              </a>
-            </li>
-            <li>
-              <a
-                class="block px-6 py-2 text-xs! md:text-sm! text-slate-700 hover:bg-slate-100 rounded-lg"
-                href="/creation/projets/nouveau"
-              >
-                Projets
-              </a>
-            </li>
-            <li>
-              <a
-                class="block px-6 py-2 text-xs! md:text-sm! text-slate-700 hover:bg-slate-100 rounded-lg"
-                href="/creation/produits/nouveau"
-              >
-                Produits
-              </a>
-            </li>
-            <li>
-              <a
-                class="block px-6 py-2 text-xs! md:text-sm! text-slate-700 hover:bg-slate-100 rounded-lg"
-                href="/creation/remerciements/nouveau"
-              >
-                Remerciements
-              </a>
-            </li>
-          </ul>
-        </div>
+        <CreationDropdown
+          title="Ajouter du contenu"
+          items={creationMenuSections[0].items}
+        />
         <span>|</span>
-        <div class="relative w-fit text-white group">
-          <div
-            class="flex w-full items-center justify-between gap-4 h-12 px-6 rounded-lg text-xs! md:text-sm! text-white cursor-pointer transition hover:bg-white/10"
-          >
-            <span class="text-md!">Supprimer du contenu</span>
-            <svg
-              class="w-4 h-4 text-slate-500 transition-transform duration-200 group-hover:-rotate-180"
-              viewBox="0 0 20 20"
-              fill="none"
-              stroke="currentColor"
-            >
-              <path
-                d="M6 8l4 4 4-4"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"></path>
-            </svg>
-          </div>
-          <ul
-            class="absolute inset-x-0 top-full z-10 rounded-lg bg-white shadow-lg ring-1 ring-black/5 opacity-0 invisible pointer-events-none group-hover:visible group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-150"
-            role="listbox"
-          >
-            <li>
-              <a
-                class="block px-6 py-2 text-xs! md:text-sm! text-slate-700 hover:bg-slate-100 rounded-lg"
-                href="/creation/actions/delete"
-              >
-                Actions
-              </a>
-            </li>
-            <li>
-              <a
-                class="block px-6 py-2 text-xs! md:text-sm! text-slate-700 hover:bg-slate-100 rounded-lg"
-                href="/creation/projets/delete"
-              >
-                Projets
-              </a>
-            </li>
-            <li>
-              <a
-                class="block px-6 py-2 text-xs! md:text-sm! text-slate-700 hover:bg-slate-100 rounded-lg"
-                href="/creation/produits/delete"
-              >
-                Produits
-              </a>
-            </li>
-            <li>
-              <a
-                class="block px-6 py-2 text-xs! md:text-sm! text-slate-700 hover:bg-slate-100 rounded-lg"
-                href="/creation/remerciements/delete"
-              >
-                Remerciements
-              </a>
-            </li>
-          </ul>
-        </div>
+        <CreationDropdown
+          title="Supprimer du contenu"
+          items={creationMenuSections[1].items}
+        />
         <span>|</span>
-        <div class="relative w-fit text-white group">
-          <div
-            class="flex w-full items-center justify-between gap-4 h-12 px-6 rounded-lg text-xs! md:text-sm! text-white cursor-pointer transition hover:bg-white/10"
-          >
-            <span class="text-md!">Modifier du contenu</span>
-            <svg
-              class="w-4 h-4 text-slate-500 transition-transform duration-200 group-hover:-rotate-180"
-              viewBox="0 0 20 20"
-              fill="none"
-              stroke="currentColor"
-            >
-              <path
-                d="M6 8l4 4 4-4"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"></path>
-            </svg>
-          </div>
-          <ul
-            class="absolute inset-x-0 top-full z-10 rounded-lg bg-white shadow-lg ring-1 ring-black/5 opacity-0 invisible pointer-events-none group-hover:visible group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-150"
-            role="listbox"
-          >
-            <li>
-              <a
-                class="block px-6 py-2 text-xs! md:text-sm! text-slate-700 hover:bg-slate-100 rounded-lg"
-                href="/creation/actions"
-              >
-                Actions
-              </a>
-            </li>
-            <li>
-              <a
-                class="block px-6 py-2 text-xs! md:text-sm! text-slate-700 hover:bg-slate-100 rounded-lg"
-                href="/creation/projets"
-              >
-                Projets
-              </a>
-            </li>
-            <li>
-              <a
-                class="block px-6 py-2 text-xs! md:text-sm! text-slate-700 hover:bg-slate-100 rounded-lg"
-                href="/creation/produits"
-              >
-                Produits
-              </a>
-            </li>
-            <li>
-              <a
-                class="block px-6 py-2 text-xs! md:text-sm! text-slate-700 hover:bg-slate-100 rounded-lg"
-                href="/creation/remerciements"
-              >
-                Remerciements
-              </a>
-            </li>
-          </ul>
-        </div>
+        <CreationDropdown
+          title="Modifier du contenu"
+          items={creationMenuSections[2].items}
+        />
 
         <span>|</span>
         <a href="/creation">Espace création</a>
       </div>
-      <a href="/mon-compte" class="flex items-center gap-4">
-        <span class="text-sm! md:text-md! text-white">Mon compte</span>
-        <span
-          class="inline-block w-8 h-8 rounded-full invert"
-          aria-hidden="true"
-          set:html={userSvg}
-        />
-      </a>
+      <CreationAccountLink UserWhiteSvg={UserWhiteSvg} />
     </div>
   </div>
 
@@ -235,276 +82,22 @@ import DiagArrow from "./DiagArrow.astro";
       class="w-full flex items-center justify-between max-[359px]:gap-2 gap-4 max-w-[90dvw]"
     >
       <a href="/" class="shrink-0 flex items-center">
-        <span
-          class="inline-block max-[359px]:h-9 max-[359px]:w-9 h-12 w-12 shrink-0"
+        <LogoKiwanisSvg
+          class="inline-block max-[359px]:h-9 max-[359px]:w-9 h-12 w-12 shrink-0 text-black"
           role="img"
           aria-label="Logo Kiwanis Pays de Montbéliard"
-          set:html={logoSvg}
         />
       </a>
 
-      <button
-        id="menu-toggle"
-        class="flex-1 flex items-center justify-between max-[359px]:px-3 max-[359px]:py-2 px-5 py-3 rounded-xl text-white bg-accent"
-        aria-expanded="false"
-        aria-controls="mobile-dropdown"
-        aria-label="Ouvrir le menu"
-      >
-        <span class="max-[359px]:text-sm text-base font-medium">Menu</span>
-        <div
-          class="relative max-[359px]:w-5 max-[359px]:h-5 w-6 h-6 flex flex-col justify-center items-center gap-1.25 pointer-events-none"
-        >
-          <span
-            id="ham-top"
-            class="block w-full h-0.5 bg-white rounded-full"
-            style="transition: transform 0.2s ease;"></span>
-          <span
-            id="ham-bottom"
-            class="block w-full h-0.5 bg-white rounded-full"
-            style="transition: transform 0.2s ease;"></span>
-        </div>
-      </button>
+      <HamburgerToggle />
     </div>
 
-    <div
-      id="mobile-dropdown"
-      class="w-full max-w-[90dvw] rounded-2xl [@media(max-height:700px)]:p-4 p-7 text-white shadow-2xl bg-accent"
-      style="display: none;"
-      role="menu"
-      aria-hidden="true"
-    >
-      <h2
-        class="text-xs font-bold tracking-widest [@media(max-height:700px)]:mb-3 mb-6 opacity-90 uppercase"
-      >
-        Espace création
-      </h2>
-
-      <nav
-        class="flex flex-col select-none [@media(max-height:700px)]:gap-1.5 gap-3"
-        role="navigation"
-      >
-        <details class="mob-link rounded-xl border border-white/20 bg-white/5">
-          <summary
-            class="flex items-center justify-between px-4 [@media(max-height:700px)]:py-2 py-3 cursor-pointer list-none"
-          >
-            <span class="uppercase text-sm! tracking-wide"
-              >Ajouter du contenu</span
-            >
-            <span
-              class="submenu-arrow inline-flex w-4 h-4 opacity-70 transition-transform duration-200"
-              aria-hidden="true"
-              set:html={arrowNextSvg}
-            />
-          </summary>
-          <div class="flex flex-col px-4 pb-3 pl-8">
-            <a
-              href="/creation/actions/nouveau"
-              class="[@media(max-height:700px)]:py-1 py-2 flex justify-between items-center text-base"
-              role="menuitem"
-            >
-              Actions <span class="opacity-40" aria-hidden="true"
-                ><DiagArrow class="h-3 w-auto" />
-              </span>
-            </a>
-            <a
-              href="/creation/projets/nouveau"
-              class="[@media(max-height:700px)]:py-1 py-2 flex justify-between items-center text-base"
-              role="menuitem"
-            >
-              Projets <span class="opacity-40" aria-hidden="true"
-                ><DiagArrow class="h-3 w-auto" />
-              </span>
-            </a>
-            <a
-              href="/creation/produits/nouveau"
-              class="[@media(max-height:700px)]:py-1 py-2 flex justify-between items-center text-base"
-              role="menuitem"
-            >
-              Produits <span class="opacity-40" aria-hidden="true"
-                ><DiagArrow class="h-3 w-auto" />
-              </span>
-            </a>
-            <a
-              href="/creation/remerciements/nouveau"
-              class="[@media(max-height:700px)]:py-1 py-2 flex justify-between items-center text-base"
-              role="menuitem"
-            >
-              Remerciements <span class="opacity-40" aria-hidden="true"
-                ><DiagArrow class="h-3 w-auto" />
-              </span>
-            </a>
-          </div>
-        </details>
-
-        <details class="mob-link rounded-xl border border-white/20 bg-white/5">
-          <summary
-            class="flex items-center justify-between px-4 [@media(max-height:700px)]:py-2 py-3 cursor-pointer list-none"
-          >
-            <span class="text-sm! uppercase tracking-wide"
-              >Supprimer du contenu</span
-            >
-            <span
-              class="submenu-arrow inline-flex w-4 h-4 opacity-70 transition-transform duration-200"
-              aria-hidden="true"
-              set:html={arrowNextSvg}
-            />
-          </summary>
-          <div class="flex flex-col px-4 pb-3 pl-8">
-            <a
-              href="/creation/actions/delete"
-              class="[@media(max-height:700px)]:py-1 py-2 flex justify-between items-center text-base"
-              role="menuitem"
-            >
-              Actions <span class="opacity-40" aria-hidden="true"
-                ><DiagArrow class="h-3 w-auto" />
-              </span>
-            </a>
-            <a
-              href="/creation/projets/delete"
-              class="[@media(max-height:700px)]:py-1 py-2 flex justify-between items-center text-base"
-              role="menuitem"
-            >
-              Projets <span class="opacity-40" aria-hidden="true"
-                ><DiagArrow class="h-3 w-auto" />
-              </span>
-            </a>
-            <a
-              href="/creation/produits/delete"
-              class="[@media(max-height:700px)]:py-1 py-2 flex justify-between items-center text-base"
-              role="menuitem"
-            >
-              Produits <span class="opacity-40" aria-hidden="true"
-                ><DiagArrow class="h-3 w-auto" />
-              </span>
-            </a>
-            <a
-              href="/creation/remerciements/delete"
-              class="[@media(max-height:700px)]:py-1 py-2 flex justify-between items-center text-base"
-              role="menuitem"
-            >
-              Remerciements <span class="opacity-40" aria-hidden="true"
-                ><DiagArrow class="h-3 w-auto" />
-              </span>
-            </a>
-          </div>
-        </details>
-
-        <details class="mob-link rounded-xl border border-white/20 bg-white/5">
-          <summary
-            class="flex items-center justify-between px-4 [@media(max-height:700px)]:py-2 py-3 cursor-pointer list-none"
-          >
-            <span class="text-sm! uppercase tracking-wide"
-              >Modifier du contenu</span
-            >
-            <span
-              class="submenu-arrow inline-flex w-4 h-4 opacity-70 transition-transform duration-200"
-              aria-hidden="true"
-              set:html={arrowNextSvg}
-            />
-          </summary>
-          <div class="flex flex-col px-4 pb-3 pl-8">
-            <a
-              href="/creation/actions"
-              class="[@media(max-height:700px)]:py-1 py-2 flex justify-between items-center text-base"
-              role="menuitem"
-            >
-              Actions <span class="opacity-40" aria-hidden="true"
-                ><DiagArrow class="h-3 w-auto" />
-              </span>
-            </a>
-            <a
-              href="/creation/projets"
-              class="[@media(max-height:700px)]:py-1 py-2 flex justify-between items-center text-base"
-              role="menuitem"
-            >
-              Projets <span class="opacity-40" aria-hidden="true"
-                ><DiagArrow class="h-3 w-auto" />
-              </span>
-            </a>
-            <a
-              href="/creation/produits"
-              class="[@media(max-height:700px)]:py-1 py-2 flex justify-between items-center text-base"
-              role="menuitem"
-            >
-              Produits <span class="opacity-40" aria-hidden="true"
-                ><DiagArrow class="h-3 w-auto" />
-              </span>
-            </a>
-            <a
-              href="/creation/remerciements"
-              class="[@media(max-height:700px)]:py-1 py-2 flex justify-between items-center text-base"
-              role="menuitem"
-            >
-              Remerciements <span class="opacity-40" aria-hidden="true"
-                ><DiagArrow class="h-3 w-auto" />
-              </span>
-            </a>
-          </div>
-        </details>
-
-        <div
-          class="mob-link h-px w-full bg-white/20 [@media(max-height:700px)]:my-1 my-2"
-          role="separator"
-          aria-hidden="true"
-        >
-        </div>
-
-        <div class="flex flex-col [@media(max-height:700px)]:gap-2 gap-4">
-          {
-            currentUser ? (
-              <>
-                {currentUser.verified &&
-                  currentUser.administrateur === true && (
-                    <a
-                      href="/creation"
-                      class="btn btn-secondary rounded-lg! w-full"
-                      role="menuitem"
-                    >
-                      Espace création
-                    </a>
-                  )}
-                <div class="flex items-center gap-3 w-full md:col-span-2">
-                  <a
-                    id="mobile-account-link"
-                    href="/mon-compte"
-                    role="menuitem"
-                    class="flex items-center gap-3 flex-1"
-                  >
-                    <div class="avatar">
-                      <div class="w-10 rounded-full ring ring-offset-base-100 ring-white/30 overflow-hidden">
-                        <span
-                          class="inline-block w-full h-full"
-                          aria-hidden="true"
-                          set:html={userWhiteSvg}
-                        />
-                      </div>
-                    </div>
-                    <span class="text-sm font-semibold">Mon compte</span>
-                  </a>
-                  <button
-                    id="mobile-logout-btn"
-                    type="button"
-                    class="btn btn-block w-fit px-4 py-2 md:px-8 md:py-4 btn-sm"
-                    role="menuitem"
-                  >
-                    Déconnexion
-                  </button>
-                </div>
-              </>
-            ) : (
-              <a
-                id="mobile-connexion-link"
-                href="/connexion"
-                class="btn btn-block border-base-100 rounded-lg! w-full"
-                role="menuitem"
-              >
-                Connexion
-              </a>
-            )
-          }
-        </div>
-      </nav>
-    </div>
+    <CreationMobileMenu
+      sections={creationMenuSections}
+      currentUser={currentUser}
+      UserWhiteSvg={UserWhiteSvg}
+      ArrowNextSvg={ArrowNextSvg}
+    />
   </div>
 </header>
 
@@ -530,6 +123,7 @@ import DiagArrow from "./DiagArrow.astro";
 </style>
 
 <script>
+  import { preloadGsap, setupHeaderLogout, setupRedirectLinks } from "../utils/headerUtils";
   import { initMobileMenu } from "../utils/mobileMenu";
 
   function resetSubMenus() {
@@ -540,41 +134,17 @@ import DiagArrow from "./DiagArrow.astro";
       });
   }
 
+  preloadGsap();
+
   document.addEventListener("DOMContentLoaded", () => {
+    setupHeaderLogout();
+    setupRedirectLinks();
+
     void initMobileMenu({
       toggleId: "menu-toggle",
       dropdownId: "mobile-dropdown",
       itemSelector: ".mob-link",
       onClose: resetSubMenus,
     });
-
-    // logout mobile bouton : redirection vers la page de connexion
-    const mobileLogoutBtn = document.getElementById(
-      "mobile-logout-btn",
-    ) as HTMLButtonElement | null;
-    if (mobileLogoutBtn) {
-      mobileLogoutBtn.addEventListener("click", async () => {
-        try {
-          const response = await fetch("/api/logout", { method: "POST" });
-          if (response.ok) {
-            window.location.href = "/connexion";
-          }
-        } catch (e) {
-          console.error(e);
-        }
-      });
-    }
-
-    // idem pour les liens de connexion : attachons le param redirect
-    const updateLoginLinks = () => {
-      const current = window.location.pathname + window.location.search;
-      if (current.startsWith("/connexion")) return;
-      const enc = encodeURIComponent(current);
-      const mobile = document.getElementById(
-        "mobile-connexion-link",
-      ) as HTMLAnchorElement | null;
-      if (mobile) mobile.setAttribute("href", "/connexion?redirect=" + enc);
-    };
-    updateLoginLinks();
   });
 </script>

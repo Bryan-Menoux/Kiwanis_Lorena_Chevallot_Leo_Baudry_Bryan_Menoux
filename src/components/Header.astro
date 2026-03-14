@@ -1,28 +1,25 @@
 ---
-// src/components/Header.astro
-import LogoRaw from "../assets/logo-kiwanis-full.svg?raw";
-import ArrowRaw from "../assets/arrow-previous-small.svg?raw";
-import UserRaw from "../assets/user.svg?raw";
-import UserWhiteRaw from "../assets/user-white.svg?raw";
-import DiagArrow from "./DiagArrow.astro";
+import LogoKiwanisSvg from "../assets/logo-kiwanis-full.svg";
+import ArrowPreviousSvg from "../assets/arrow-previous-small.svg";
+import UserSvg from "../assets/user.svg";
+import UserWhiteSvg from "../assets/user-white.svg"
+import HamburgerToggle from "./HamburgerToggle.astro";
+import MobileMenu from "./MobileMenu.astro";
 
-// Inline SVGs : supprime les dimensions codées en dur → remplit le conteneur
-const logoSvg = LogoRaw
-  .replace(/\s+width="[^"]*"/, ' width="100%"')
-  .replace(/\s+height="[^"]*"/, ' height="100%"');
-const arrowSvg = ArrowRaw
-  .replace(/<\?xml[^?]*\?>\s*/g, '')
-  .replace(/<!--[\s\S]*?-->\s*/g, '')
-  .replace(/\s+width="[^"]*"/, ' width="100%"')
-  .replace(/\s+height="[^"]*"/, ' height="100%"')
-  .trim();
-const userWhiteSvg = UserWhiteRaw
-  .replace(/\s+width="[^"]*"/, ' width="100%"')
-  .replace(/\s+height="[^"]*"/, ' height="100%"');
-// Masque CSS : data URI (utilisé seulement si l'utilisateur est connecté)
-const userDataUri = `data:image/svg+xml,${encodeURIComponent(UserRaw)}`;
+const userDataUri = `data:image/svg+xml,${encodeURIComponent("<svg>user</svg>")}`;
 
 const currentUser = Astro.locals.pb.authStore.record;
+
+const menuItems = [
+  { href: "/membres", label: "Nos membres" },
+  { href: "/remerciments", label: "Remerciements" },
+  { href: "/recrutement", label: "Recrutement" },
+  { href: "/actions", label: "Nos actions" },
+  { href: "/projets", label: "Nos projets" },
+  { href: "/produits", label: "Nos produits" },
+];
+
+const actionButtons = [{ href: "/contact", label: "Contact" }];
 ---
 
 <header
@@ -31,7 +28,11 @@ const currentUser = Astro.locals.pb.authStore.record;
 >
   <div class="hidden lg:flex py-4 px-12 items-center justify-between">
     <a href="/" class="flex items-center gap-4">
-      <span class="inline-block h-14 w-14 shrink-0" role="img" aria-label="Logo Kiwanis Pays de Montbéliard" set:html={logoSvg} />
+      <LogoKiwanisSvg
+        class="inline-block h-14 w-14 shrink-0"
+        role="img"
+        aria-label="Logo Kiwanis Pays de Montbéliard"
+      />
       <div class="flex flex-col text-gray-900 leading-tight">
         <span class="text-xl font-bold tracking-tighter font-merriweather"
           >KIWANIS</span
@@ -47,7 +48,9 @@ const currentUser = Astro.locals.pb.authStore.record;
       class="flex items-center gap-3 xl:gap-8 select-none text-[11px] xl:text-sm font-semibold text-base-content tracking-tight xl:tracking-normal"
     >
       <!-- Le club: Nos membres + Recrutement regroupés (lg uniquement) -->
-      <div class="relative cursor-pointer py-2 [@media(min-width:1400px)]:hidden">
+      <div
+        class="relative cursor-pointer py-2 [@media(min-width:1400px)]:hidden"
+      >
         <div
           id="leclub-toggle"
           class="nav-item hover:text-accent transition-colors uppercase flex items-center gap-2"
@@ -62,7 +65,10 @@ const currentUser = Astro.locals.pb.authStore.record;
             class="inline-flex transition-transform duration-300"
             aria-hidden="true"
           >
-            <span class="inline-flex h-6 w-6 rotate-180" aria-hidden="true" set:html={arrowSvg} />
+            <ArrowPreviousSvg
+              class="inline-flex h-6 w-6 rotate-180"
+              aria-hidden="true"
+            />
           </span>
         </div>
         <div
@@ -83,14 +89,20 @@ const currentUser = Astro.locals.pb.authStore.record;
           >
         </div>
       </div>
-      <div class="h-4 w-px bg-base-content/20 [@media(min-width:1400px)]:hidden"></div>
+      <div
+        class="h-4 w-px bg-base-content/20 [@media(min-width:1400px)]:hidden"
+      >
+      </div>
 
       <a
         href="/membres"
         class="hidden [@media(min-width:1400px)]:block hover:text-accent transition-colors uppercase whitespace-nowrap"
         >Nos membres</a
       >
-      <div class="hidden [@media(min-width:1400px)]:block h-6 w-px bg-base-content/20"></div>
+      <div
+        class="hidden [@media(min-width:1400px)]:block h-6 w-px bg-base-content/20"
+      >
+      </div>
 
       <div class="relative cursor-pointer py-2">
         <div
@@ -107,9 +119,11 @@ const currentUser = Astro.locals.pb.authStore.record;
             class="inline-flex transition-transform duration-300"
             aria-hidden="true"
           >
-            <span class="inline-flex h-6 w-6 rotate-180" aria-hidden="true" set:html={arrowSvg} />
-          </span
-          >
+            <ArrowPreviousSvg
+              class="inline-flex h-6 w-6 rotate-180"
+              aria-hidden="true"
+            />
+          </span>
         </div>
         <div
           id="discover-dropdown"
@@ -141,7 +155,10 @@ const currentUser = Astro.locals.pb.authStore.record;
         class="hover:text-accent transition-colors uppercase whitespace-nowrap"
         >Remerciements</a
       >
-      <div class="hidden [@media(min-width:1400px)]:block h-6 w-px bg-base-content/20"></div>
+      <div
+        class="hidden [@media(min-width:1400px)]:block h-6 w-px bg-base-content/20"
+      >
+      </div>
 
       <a
         href="/recrutement"
@@ -170,17 +187,19 @@ const currentUser = Astro.locals.pb.authStore.record;
     <div class="flex items-center gap-3">
       {
         currentUser ? (
-            <a
-              id="account-link"
-              href="/mon-compte"
-              class="flex items-center gap-4"
-            >
-              <span class="text-sm font-semibold whitespace-nowrap hidden [@media(min-width:1500px)]:inline">Mon compte</span>
-              <div
-                class="w-10 h-10 icon-accent"
-                style={`--icon-url: url("${userDataUri}")`}
-              />
-            </a>
+          <a
+            id="account-link"
+            href="/mon-compte"
+            class="flex items-center gap-4"
+          >
+            <span class="text-sm font-semibold whitespace-nowrap hidden [@media(min-width:1500px)]:inline">
+              Mon compte
+            </span>
+            <UserSvg
+              class="inline-block w-8 h-8 rounded-full "
+              aria-hidden="true"
+            />
+          </a>
         ) : (
           <a
             id="connexion-link"
@@ -194,171 +213,29 @@ const currentUser = Astro.locals.pb.authStore.record;
     </div>
   </div>
 
-  <div class="lg:hidden flex flex-col items-center max-[359px]:p-2 p-4 max-[359px]:gap-2 gap-3 w-full">
-    <div class="w-full flex items-center justify-between max-[359px]:gap-2 gap-4 max-w-[90dvw]">
-      <a href="/" class="shrink-0">
-        <span class="inline-block max-[359px]:h-9 max-[359px]:w-9 h-12 w-12 shrink-0" role="img" aria-label="Logo Kiwanis Pays de Montbéliard" set:html={logoSvg} />
-      </a>
-
-      <button
-        id="menu-toggle"
-        class="flex-1 flex items-center justify-between max-[359px]:px-3 max-[359px]:py-2 px-5 py-3 rounded-xl text-white bg-accent"
-        aria-expanded="false"
-        aria-controls="mobile-dropdown"
-        aria-label="Ouvrir le menu"
-      >
-        <span class="max-[359px]:text-sm text-base font-medium">Menu</span>
-        <div class="relative max-[359px]:w-5 max-[359px]:h-5 w-6 h-6 flex flex-col justify-center items-center gap-1.25 pointer-events-none">
-          <span id="ham-top" class="block w-full h-0.5 bg-white rounded-full" style="transition: transform 0.2s ease;"></span>
-          <span id="ham-bottom" class="block w-full h-0.5 bg-white rounded-full" style="transition: transform 0.2s ease;"></span>
-        </div>
-      </button>
-    </div>
-
+  <div
+    class="lg:hidden flex flex-col items-center max-[359px]:p-2 p-4 max-[359px]:gap-2 gap-3 w-full"
+  >
     <div
-      id="mobile-dropdown"
-      class="w-full max-w-[90dvw] rounded-2xl [@media(max-height:700px)]:p-4 p-7 text-white shadow-2xl bg-accent"
-      style="display: none;"
-      role="menu"
-      aria-hidden="true"
+      class="w-full flex items-center justify-between max-[359px]:gap-2 gap-4 max-w-[90dvw]"
     >
-      <h2 class="text-xs font-bold tracking-widest [@media(max-height:700px)]:mb-3 mb-6 opacity-90 uppercase">
-        KIWANIS PAYS DE MONTBÉLIARD
-      </h2>
-
-      <nav class="flex flex-col select-none" role="navigation">
-        <a
-          href="/membres"
-          class="mob-link flex justify-between items-center [@media(max-height:700px)]:py-1 py-2 text-base"
-          role="menuitem"
-        >
-          Nos membres <span class="opacity-40" aria-hidden="true"
-            ><DiagArrow class="h-3 w-auto" />
-           </span>
-        </a>
-        <a
-          href="/remerciments"
-          class="mob-link flex justify-between items-center [@media(max-height:700px)]:py-1 py-2 text-base"
-          role="menuitem"
-        >
-          Remerciements <span class="opacity-40" aria-hidden="true"
-            ><DiagArrow class="h-3 w-auto" />
-           </span>
-        </a>
-        <a
-          href="/recrutement"
-          class="mob-link flex justify-between items-center [@media(max-height:700px)]:py-1 py-2 text-base"
-          role="menuitem"
-        >
-          Recrutement <span class="opacity-40" aria-hidden="true"
-            ><DiagArrow class="h-3 w-auto" />
-           </span>
-        </a>
-
-        <div
-          class="mob-link h-px w-full bg-white/20 [@media(max-height:700px)]:my-2 my-4"
-          role="separator"
-          aria-hidden="true"
-        >
-        </div>
-
-        <a
-          href="/actions"
-          class="mob-link flex justify-between items-center [@media(max-height:700px)]:py-1 py-2 text-base"
-          role="menuitem"
-        >
-          Nos actions <span class="opacity-40" aria-hidden="true"
-            ><DiagArrow class="h-3 w-auto" />
-           </span>
-        </a>
-        <a
-          href="/projets"
-          class="mob-link flex justify-between items-center [@media(max-height:700px)]:py-1 py-2 text-base"
-          role="menuitem"
-        >
-          Nos projets <span class="opacity-40" aria-hidden="true"
-            ><DiagArrow class="h-3 w-auto" />
-           </span>
-        </a>
-        <a
-          href="/produits"
-          class="mob-link flex justify-between items-center [@media(max-height:700px)]:py-1 py-2 text-base"
-          role="menuitem"
-        >
-          Nos produits <span class="opacity-40" aria-hidden="true"
-            ><DiagArrow class="h-3 w-auto" />
-           </span>
-        </a>
-
-        <div
-          class="mob-link h-px w-full bg-white/20 [@media(max-height:700px)]:my-2 my-4"
-          role="separator"
-          aria-hidden="true"
-        >
-        </div>
-
-        <div class="mob-actions [@media(max-height:700px)]:mt-2 mt-4 grid grid-cols-1 md:grid-cols-2 gap-3">
-          <a
-            href="/contact"
-            class="btn btn-ghost border-base-100 rounded-lg! w-full"
-            role="menuitem"
-          >
-            Contact
-          </a>
-
-          {
-            currentUser ? (
-              <>
-                {currentUser.verified &&
-                  currentUser.administrateur === true && (
-                    <a
-                      href="/creation"
-                      class="btn btn-secondary rounded-lg! w-full"
-                      role="menuitem"
-                    >
-                      Espace création
-                    </a>
-                  )}
-
-                <div class="flex items-center gap-3 w-full md:col-span-2">
-                  <a
-                    id="mobile-account-link"
-                    href="/mon-compte"
-                    role="menuitem"
-                    class="flex items-center gap-3 flex-1"
-                  >
-                    <div class="avatar">
-                      <div class="w-10 rounded-full ring ring-offset-base-100 ring-white/30 overflow-hidden">
-                        <span class="inline-block w-full h-full" aria-hidden="true" set:html={userWhiteSvg} />
-                      </div>
-                    </div>
-                    <span class="text-sm font-semibold">Mon compte</span>
-                  </a>
-
-                  <button
-                    id="mobile-logout-btn"
-                    type="button"
-                    class="btn btn-block w-fit px-4 py-2 md:px-8 md:py-4 btn-sm"
-                    role="menuitem"
-                  >
-                    Déconnexion
-                  </button>
-                </div>
-              </>
-            ) : (
-              <a
-                id="mobile-connexion-link"
-                href="/connexion"
-                class="btn btn-block border-base-100 rounded-lg! w-full"
-                role="menuitem"
-              >
-                Connexion
-              </a>
-            )
-          }
-        </div>
-      </nav>
+      <a href="/" class="shrink-0 h-full flex items-center">
+        <LogoKiwanisSvg
+          class="inline-block max-[359px]:h-9 max-[359px]:w-9 h-12 w-12 shrink-0"
+          role="img"
+          aria-label="Logo Kiwanis Pays de Montbéliard"
+        />
+      </a>
+      <HamburgerToggle />
     </div>
+
+    <MobileMenu
+      menuTitle="KIWANIS PAYS DE MONTBÉLIARD"
+      menuItems={menuItems}
+      actionButtons={actionButtons}
+      currentUser={currentUser}
+      UserSvg={UserSvg}
+    />
   </div>
 </header>
 
@@ -400,10 +277,19 @@ const currentUser = Astro.locals.pb.authStore.record;
 </style>
 
 <script>
-  const DROPDOWN_IDS = ["leclub", "discover"] as const;
-  type DropdownId = typeof DROPDOWN_IDS[number];
+  import {
+    preloadGsap,
+    setupHeaderLogout,
+    setupRedirectLinks,
+  } from "../utils/headerUtils";
 
-  const openState: Record<DropdownId, boolean> = { leclub: false, discover: false };
+  const DROPDOWN_IDS = ["leclub", "discover"] as const;
+  type DropdownId = (typeof DROPDOWN_IDS)[number];
+
+  const openState: Record<DropdownId, boolean> = {
+    leclub: false,
+    discover: false,
+  };
   let mobileMenuInitialized = false;
 
   function setState(id: DropdownId, isOpen: boolean) {
@@ -441,7 +327,6 @@ const currentUser = Astro.locals.pb.authStore.record;
     });
   }
 
-  // Handler global unique pour fermer tous les dropdowns au clic extérieur
   document.addEventListener("click", (e) => {
     for (const id of DROPDOWN_IDS) {
       if (!openState[id]) continue;
@@ -457,7 +342,11 @@ const currentUser = Astro.locals.pb.authStore.record;
   });
 
   function initMobileMenuWhenNeeded() {
-    if (mobileMenuInitialized || !window.matchMedia("(max-width: 1023px)").matches) return;
+    if (
+      mobileMenuInitialized ||
+      !window.matchMedia("(max-width: 1023px)").matches
+    )
+      return;
     mobileMenuInitialized = true;
     void import("../utils/mobileMenu")
       .then(({ initMobileMenu }) => {
@@ -470,27 +359,14 @@ const currentUser = Astro.locals.pb.authStore.record;
       .catch(() => {});
   }
 
-  window.addEventListener("resize", initMobileMenuWhenNeeded, { passive: true });
+  preloadGsap();
+  window.addEventListener("resize", initMobileMenuWhenNeeded, {
+    passive: true,
+  });
 
   document.addEventListener("DOMContentLoaded", () => {
-    document.getElementById("mobile-logout-btn")?.addEventListener("click", async () => {
-      try {
-        const res = await fetch("/api/logout", { method: "POST" });
-        if (res.ok) window.location.href = "/connexion";
-      } catch (e) {
-        console.error("Erreur lors de la déconnexion:", e);
-      }
-    });
-
-    const current = window.location.pathname + window.location.search;
-    if (!current.startsWith("/connexion")) {
-      const enc = encodeURIComponent(current);
-      (document.getElementById("connexion-link") as HTMLAnchorElement | null)
-        ?.setAttribute("href", "/connexion?redirect=" + enc);
-      (document.getElementById("mobile-connexion-link") as HTMLAnchorElement | null)
-        ?.setAttribute("href", "/connexion?redirect=" + enc);
-    }
-
+    setupHeaderLogout();
+    setupRedirectLinks();
     initMobileMenuWhenNeeded();
     initDropdown("leclub");
     initDropdown("discover");

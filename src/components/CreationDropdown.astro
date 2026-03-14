@@ -1,0 +1,48 @@
+---
+interface MenuItem {
+  label: string;
+  href: string;
+}
+
+interface Props {
+  title: string;
+  items: MenuItem[];
+}
+
+const { title, items } = Astro.props;
+---
+
+<div class="relative w-fit text-white group">
+  <div
+    class="flex w-full items-center justify-between gap-4 h-12 px-6 rounded-lg text-xs! md:text-sm! text-white cursor-pointer transition hover:bg-white/10"
+  >
+    <span class="text-md!">{title}</span>
+    <svg
+      class="w-4 h-4 text-white transition-transform duration-200 -rotate-90 group-hover:rotate-0"
+      viewBox="0 0 20 20"
+      fill="none"
+      stroke="currentColor"
+    >
+      <path
+        d="M6 8l4 4 4-4"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"></path>
+    </svg>
+  </div>
+  <ul
+    class="absolute inset-x-0 top-full z-10 rounded-lg bg-white shadow-lg ring-1 ring-black/5 opacity-0 invisible pointer-events-none group-hover:visible group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-150"
+    role="listbox"
+  >
+    {items.map((item) => (
+      <li>
+        <a
+          class="block px-6 py-2 text-xs! md:text-sm! text-slate-700 hover:bg-slate-100 rounded-lg"
+          href={item.href}
+        >
+          {item.label}
+        </a>
+      </li>
+    ))}
+  </ul>
+</div>

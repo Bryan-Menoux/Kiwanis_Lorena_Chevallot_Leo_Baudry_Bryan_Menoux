@@ -71,6 +71,10 @@ export function initMobileMenu({
   const hamTop = document.getElementById("ham-top");
   const hamBottom = document.getElementById("ham-bottom");
   let gsap: GsapInstance | null = null;
+  let gsapReady = requestGsap().then((instance) => {
+    gsap = instance;
+    return instance;
+  });
 
   let isOpen = false;
   let hideTimer = 0;
@@ -114,17 +118,14 @@ export function initMobileMenu({
     setHamburgerState(hamTop, hamBottom, false);
   };
 
-  const openMenu = () => {
+  const openMenu = async () => {
     window.clearTimeout(hideTimer);
     isOpen = true;
     toggle.setAttribute("aria-expanded", "true");
     dropdown.setAttribute("aria-hidden", "false");
 
-    if (!gsap) {
-      void requestGsap().then((instance) => {
-        gsap = instance;
-      });
-    }
+    // Attendre que GSAP soit chargé avant de continuer
+    await gsapReady;
 
     if (gsap) {
       gsap.killTweensOf([dropdown, ...items]);
@@ -153,7 +154,7 @@ export function initMobileMenu({
       closeMenu();
       return;
     }
-    openMenu();
+    void openMenu();
   });
 
   toggle.addEventListener("keydown", (event) => {
@@ -163,7 +164,7 @@ export function initMobileMenu({
       closeMenu();
       return;
     }
-    openMenu();
+    void openMenu();
   });
 
   document.addEventListener("click", (event) => {

@@ -1,0 +1,134 @@
+---
+import DiagArrow from "./DiagArrow.astro";
+
+interface MenuSection {
+  title: string;
+  items: { href: string; label: string }[];
+}
+
+interface Props {
+  sections: MenuSection[];
+  currentUser?: any;
+  UserWhiteSvg?: any;
+  ArrowNextSvg?: any;
+}
+
+const { sections, currentUser, UserWhiteSvg, ArrowNextSvg } = Astro.props;
+---
+
+<div
+  id="mobile-dropdown"
+  class="w-full max-w-[90dvw] rounded-2xl [@media(max-height:700px)]:p-4 p-7 text-white shadow-2xl bg-accent"
+  style="display: none;"
+  role="menu"
+  aria-hidden="true"
+>
+  <h2
+    class="text-xs font-bold tracking-widest [@media(max-height:700px)]:mb-3 mb-6 opacity-90 uppercase"
+  >
+    Espace création
+  </h2>
+
+  <nav
+    class="flex flex-col select-none [@media(max-height:700px)]:gap-1.5 gap-3"
+    role="navigation"
+  >
+    {sections.map((section) => (
+      <details class="mob-link rounded-xl border border-white/20 bg-white/5">
+        <summary
+          class="flex items-center justify-between px-4 [@media(max-height:700px)]:py-2 py-3 cursor-pointer list-none"
+        >
+          <span class="uppercase text-sm! tracking-wide">{section.title}</span>
+          <span
+            class="submenu-arrow inline-flex w-4 h-4 opacity-70 transition-transform duration-200 -rotate-90"
+            aria-hidden="true"
+          >
+            <svg
+              class="w-full h-full text-white"
+              viewBox="0 0 20 20"
+              fill="none"
+              stroke="currentColor"
+            >
+              <path
+                d="M6 8l4 4 4-4"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"></path>
+            </svg>
+          </span>
+        </summary>
+        <div class="flex flex-col px-4 pb-3 pl-8">
+          {section.items.map((item) => (
+            <a
+              href={item.href}
+              class="[@media(max-height:700px)]:py-1 py-2 flex justify-between items-center text-base"
+              role="menuitem"
+            >
+              {item.label} <span class="opacity-40" aria-hidden="true"><DiagArrow class="h-3 w-auto" /></span>
+            </a>
+          ))}
+        </div>
+      </details>
+    ))}
+
+    <div
+      class="mob-link h-px w-full bg-white/20 [@media(max-height:700px)]:my-1 my-2"
+      role="separator"
+      aria-hidden="true"
+    />
+
+    <div class="flex flex-col [@media(max-height:700px)]:gap-2 gap-4">
+      {
+        currentUser && currentUser.verified && currentUser.administrateur === true && (
+          <a
+            href="/creation"
+            class="btn btn-secondary rounded-lg! w-full"
+            role="menuitem"
+          >
+            Espace création
+          </a>
+        )
+      }
+      <div class="flex items-center gap-3 w-full md:col-span-2">
+        <a
+          id="mobile-account-link"
+          href="/mon-compte"
+          role="menuitem"
+          class="flex items-center gap-3 flex-1"
+        >
+          <div class="avatar">
+            <div class="w-10 rounded-full ring ring-offset-base-100 ring-white/30 overflow-hidden">
+              <UserWhiteSvg
+                class="inline-block w-full h-full"
+                aria-hidden="true"
+              />
+            </div>
+          </div>
+          <span class="text-sm font-semibold">Mon compte</span>
+        </a>
+        <button
+          id="mobile-logout-btn"
+          type="button"
+          class="btn btn-block w-fit px-4 py-2 md:px-8 md:py-4 btn-sm"
+          role="menuitem"
+        >
+          Déconnexion
+        </button>
+      </div>
+    </div>
+  </nav>
+</div>
+
+<style>
+  #mobile-dropdown details > summary::-webkit-details-marker {
+    display: none;
+  }
+
+  #mobile-dropdown details > summary .submenu-arrow {
+    transition: transform 0.2s ease;
+  }
+
+  #mobile-dropdown details[open] > summary .submenu-arrow {
+    transform: rotate(90deg);
+  }
+</style>
