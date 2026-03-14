@@ -13,8 +13,7 @@ const lcpTablet = await getImage({ src: HeroActionsTablet, format: "webp", width
 const lcpDesktopMd = await getImage({ src: HeroActions, format: "webp", width: 1440, quality: 80 });
 const lcpDesktop = await getImage({ src: HeroActions, format: "webp", width: 1840, quality: 80 });
 
-const projects = await Astro.locals.pb.collection("projets").getFullList();
-console.log(projects);
+const projects = await Astro.locals.pb.collection("projets").getFullList({ sort: "-date" });
 
 import DiagArrow from "../../components/DiagArrow.astro";
 ---
@@ -40,15 +39,32 @@ import DiagArrow from "../../components/DiagArrow.astro";
       </div>
       <a href="/actions" class="btn btn-block flex items-center gap-2 uppercase w-fit self-end" >Découvrez nos actions passées <DiagArrow class="h-3 w-auto invert" /></a>
     </div>
-    <div class="w-1/2 min-h-fit bg-blue-600 flex flex-col gap-16 px-16 py-32">
-      <div class="w-full h-[50dvh] bg-base-100 shadow-2xl rounded-box px-16 py-8"><h2>test</h2></div>
-      <div class="w-full h-[50dvh] bg-base-100 shadow-2xl rounded-box px-16 py-8"><h2>test</h2></div>
-      <div class="w-full h-[50dvh] bg-base-100 shadow-2xl rounded-box px-16 py-8"><h2>test</h2></div>
-      <div class="w-full h-[50dvh] bg-base-100 shadow-2xl rounded-box px-16 py-8"><h2>test</h2></div>
-      <div class="w-full h-[50dvh] bg-base-100 shadow-2xl rounded-box px-16 py-8"><h2>test</h2></div>
-      <div class="w-full h-[50dvh] bg-base-100 shadow-2xl rounded-box px-16 py-8"><h2>test</h2></div>
-      <div class="w-full h-[50dvh] bg-base-100 shadow-2xl rounded-box px-16 py-8"><h2>test</h2></div>
-      <div class="w-full h-[50dvh] bg-base-100 shadow-2xl rounded-box px-16 py-8"><h2>test</h2></div>
+    <div class="w-1/2 min-h-fit flex flex-col gap-16 px-16 py-32">
+      {
+        projects.map((project) => (
+          <div class="w-full h-[50dvh] bg-base-100 shadow-2xl rounded-box p-8 flex flex-col justify-between items-end">
+            <div class="flex flex-col w-full" >
+              <ul class="flex gap-2">
+              {
+                project.type_action.map((type) => (
+                  <li class="bg-secondary px-4 py-2 rounded-full text-accent">{type}</li>
+                ))
+              }
+            </ul>
+            <h2 class="font-medium! mt-4" >{project.titre}</h2>
+            <p>{project.description}</p>
+            </div>
+            <div class="flex w-full items-end justify-between" >
+              <p>{project.date ? formatDateShort(new Date(project.date)) : ""}</p>
+              {project.date && project.nom_adresse ? (
+              <button class="btn btn-accent mt-4">Ajouter à l'agenda <DiagArrow class="h-3 w-auto ml-2" /></button>
+            ) : !project.date && project.nom_adresse ? (
+              <a href={project.url_adresse} target="_blank" rel="noopener noreferrer" class="btn btn-accent mt-4">Voir sur Maps <DiagArrow class="h-3 w-auto ml-2" /></a>
+            ) : null}
+            </div>
+          </div>
+        ))
+      }
     </div>
 
   </section>

@@ -245,6 +245,7 @@ export enum ProjetsTypeActionOptions {
 export type ProjetsRecord = {
 	created: IsoAutoDateString
 	date?: IsoDateString
+	description?: string
 	id: string
 	nom_adresse?: string
 	titre?: string

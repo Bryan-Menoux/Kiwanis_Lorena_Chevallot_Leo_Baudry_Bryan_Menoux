@@ -1,0 +1,29 @@
+---
+export interface Props {
+  id: string;
+  slug?: string;
+  source?: "action" | "brouillon" | "projet" | "produit" | "partenaire" | "contributeur";
+  isDraft?: boolean;
+  class?: string;
+  title?: string;
+  updated?: string;
+}
+
+const { id, slug = "", source = "", isDraft = false, class: className = "", title = "", updated = "" } = Astro.props;
+---
+
+<div
+  class={`flex min-h-55 flex-col justify-between rounded-xl border border-base-300 bg-base-100 p-4 shadow-sm md:p-5 lg:p-6 ${className}`}
+  data-action-id={id}
+  data-action-slug={slug}
+  data-source={source}
+  data-title={title}
+  data-updated={updated}
+  data-item-id={id}
+>
+  <div class="space-y-3">
+    <slot name="header" />
+    <slot name="content" />
+  </div>
+  <slot name="footer" />
+</div>

@@ -1,7 +1,7 @@
 ---
 import Layout from "../../../../layouts/Layout-back-office.astro";
+import ItemCard from "../../../../components/ItemCard.astro";
 import slugify from "slugify";
-import { formatDateShort } from "../../../../utils/utilitaires.js";
 import { getCreationViewUrl } from "../../../../utils/creationRoutes";
 
 let error = "";
@@ -21,13 +21,26 @@ try {
 // Mapper les données essentielles
 const projets = projetsRaw.map((p: any) => ({
   id: p.id,
-  titre: p.titre,
+  title: p.titre,
   slug: slugify(p.titre || "", { lower: true, strict: true }),
-  date: p.date,
-  nom_adresse: p.nom_adresse,
-  type_action: p.type_action || [],
+  subtitle: p.nom_adresse,
   updated: p.updated,
+  source: "projet" as const,
 }));
+
+function formatDate(dateStr?: string): string {
+  if (!dateStr) return "";
+  try {
+    const date = new Date(dateStr);
+    return date.toLocaleDateString("fr-FR", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+  } catch {
+    return dateStr;
+  }
+}
 
 // Gestion POST pour suppression multiple
 if (Astro.request.method === "POST") {
@@ -134,63 +147,21 @@ try {
         class="grid grid-cols-1 gap-4 md:grid-cols-3 md:gap-5 lg:grid-cols-3 lg:gap-6"
       >
         {
-          projets.map((p: any) => (
-            <label
-              class="flex min-h-55 flex-col justify-between gap-4 rounded-xl border border-base-300 bg-base-100 p-4 shadow-sm md:p-5 lg:p-6"
-              for={`id_${p.id}`}
-              data-item-id={p.id}
-              data-projet-slug={p.slug}
-              data-title={p.titre}
-              data-date={p.date}
-              data-adresse={p.nom_adresse}
-              data-updated={p.updated}
-            >
-              <div class="space-y-3">
-                <div class="flex items-start gap-3">
-                  <input
-                    class="checkbox checkbox-primary mt-1 shrink-0"
-                    type="checkbox"
-                    name="ids"
-                    id={`id_${p.id}`}
-                    value={p.id}
-                  />
-                  <h3 class="wrap-break-word text-xl font-bold leading-tight md:text-2xl">
-                    {p.titre}
-                  </h3>
-                </div>
-                {p.date && (
-                  <p class="text-sm text-base-content">
-                    {formatDateShort(p.date)}
-                  </p>
-                )}
-                {p.nom_adresse && (
-                  <p class="text-sm text-base-content">
-                    📍 {p.nom_adresse}
-                  </p>
-                )}
-                {p.type_action && p.type_action.length > 0 && (
-                  <div class="flex flex-wrap gap-2">
-                    {p.type_action.slice(0, 2).map((type: string) => (
-                      <span class="badge badge-sm badge-neutral">{type}</span>
-                    ))}
-                    {p.type_action.length > 2 && (
-                      <span class="badge badge-sm badge-neutral">+{p.type_action.length - 2}</span>
-                    )}
-                  </div>
-                )}
-                <p class="text-xs text-base-content">
-                  {p.updated ? formatDateShort(p.updated) : ""}
-                </p>
-              </div>
-              <div class="flex justify-end">
-                <a
-                  class="btn btn-sm btn-ghost w-full sm:w-auto"
-                  href={getCreationViewUrl("projet", p.id, p.slug)}
-                >
-                  Voir
-                </a>
-              </div>
-            </label>
+          projets.map((projet: any) => (
+            <ItemCard
+              id={projet.id}
+              title={projet.title}
+              slug={projet.slug}
+              source={projet.source}
+              subtitle={projet.subtitle}
+              formattedDate={formatDate(projet.updated)}
+              viewUrl={getCreationViewUrl("projet", projet.id, projet.slug)}
+              editUrl={getCreationViewUrl("projet", projet.id, projet.slug)}
+              showCheckbox={true}
+              checkboxSlot={`<input class="checkbox checkbox-primary shrink-0" type="checkbox" name="ids" id="id_${projet.id}" value="${projet.id}" data-item-id="${projet.id}" data-title="${projet.title}" data-updated="${projet.updated}" />`}
+              maxHeightContent={true}
+              deleteMode={true}
+            />
           ))
         }
       </div>
@@ -201,11 +172,10 @@ try {
   <script>
     import { initDeletePageHandler } from "../../../../utils/deletePageHandler";
 
-    document.addEventListener("DOMContentLoaded", () => {
-      initDeletePageHandler({
-        itemSingular: "projet",
-        itemPlural: "projets",
-      });
+    initDeletePageHandler({
+      cardSelector: "div[data-item-id]",
+      itemSingular: "projet",
+      itemPlural: "projets",
     });
   </script>
 </Layout>

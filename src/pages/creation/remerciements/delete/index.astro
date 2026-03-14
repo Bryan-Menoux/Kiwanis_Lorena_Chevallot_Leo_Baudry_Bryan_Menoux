@@ -1,6 +1,6 @@
 ---
 import Layout from "../../../../layouts/Layout-back-office.astro";
-import { formatDateShort } from "../../../../utils/utilitaires.js";
+import ItemCard from "../../../../components/ItemCard.astro";
 
 let error = "";
 let success = "";
@@ -27,22 +27,50 @@ try {
 }
 
 // Mapper les partenaires
-const partenaires = partenairesRaw.map((p: any) => ({
-  id: p.id,
-  logo: p.logo,
-  updated: p.updated,
-  type: "partenaire",
-}));
+const partenaires = partenairesRaw.map((p: any) => {
+  const photoUrl = Array.isArray(p.logo) && p.logo.length > 0
+    ? (Astro.locals as any).pb.files.getURL(p, p.logo[0])
+    : "";
+  
+  return {
+    id: p.id,
+    title: p.nom || "Partenaire sans nom",
+    photoUrl,
+    updated: p.updated,
+    type: "partenaire",
+    source: "partenaire" as const,
+  };
+});
 
 // Mapper les contributeurs
 const contributeurs = contributeursRaw.map((c: any) => ({
   id: c.id,
-  nom: c.nom,
-  metier: c.metier,
-  description: c.description,
+  title: c.nom || "Contributeur sans nom",
+  subtitle: c.metier || "",
   updated: c.updated,
   type: "contributeur",
+  source: "contributeur" as const,
 }));
+
+// Combiner et trier
+const items = [...partenaires, ...contributeurs].sort(
+  (a, b) =>
+    new Date(b.updated || 0).getTime() - new Date(a.updated || 0).getTime(),
+);
+
+function formatDate(dateStr?: string): string {
+  if (!dateStr) return "";
+  try {
+    const date = new Date(dateStr);
+    return date.toLocaleDateString("fr-FR", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+  } catch {
+    return dateStr;
+  }
+}
 
 // Gestion POST pour suppression multiple
 if (Astro.request.method === "POST") {
@@ -52,21 +80,19 @@ if (Astro.request.method === "POST") {
       .getAll("ids")
       .map((v) => v.toString())
       .filter(Boolean);
-    const types = formData
-      .getAll("types")
-      .map((v) => v.toString())
-      .filter(Boolean);
 
     if (!ids || ids.length === 0) {
       error = "Aucun élément sélectionné.";
     } else {
       const failed: string[] = [];
-      for (let i = 0; i < ids.length; i++) {
-        const id = ids[i];
-        const type = types[i];
+      for (const id of ids) {
         try {
-          const collection = type === "partenaire" ? "partenaires" : "contributeurs";
-          await (Astro.locals as any).pb.collection(collection).delete(id);
+          // Essayer d'abord partenaires, puis contributeurs
+          try {
+            await (Astro.locals as any).pb.collection("partenaires").delete(id);
+          } catch {
+            await (Astro.locals as any).pb.collection("contributeurs").delete(id);
+          }
         } catch (e) {
           console.error("Erreur suppression id:", id, e);
           failed.push(id);
@@ -156,103 +182,21 @@ try {
         class="grid grid-cols-1 gap-4 md:grid-cols-3 md:gap-5 lg:grid-cols-3 lg:gap-6"
       >
         {
-          partenaires.map((p: any) => (
-            <label
-              class="flex min-h-55 flex-col justify-between gap-4 rounded-xl border border-base-300 bg-base-100 p-4 shadow-sm md:p-5 lg:p-6"
-              for={`id_${p.id}`}
-              data-item-id={p.id}
-              data-title={`Partenaire`}
-              data-updated={p.updated}
-            >
-              <div class="space-y-3">
-                <div class="flex items-start gap-3">
-                  <input
-                    class="checkbox checkbox-primary mt-1 shrink-0"
-                    type="checkbox"
-                    name="ids"
-                    id={`id_${p.id}`}
-                    value={p.id}
-                    data-type="partenaire"
-                  />
-                  <div class="flex-1">
-                    <h3 class="text-lg font-bold text-base-content">
-                      Partenaire
-                    </h3>
-                    {p.logo && (
-                      <div class="mt-2 h-12 w-auto">
-                        <img
-                          src={(Astro.locals as any).pb.getFileUrl(partenairesRaw.find((x: any) => x.id === p.id), p.logo)}
-                          alt="Logo partenaire"
-                          class="max-h-12 w-auto object-contain"
-                        />
-                      </div>
-                    )}
-                  </div>
-                </div>
-                <p class="text-xs text-base-content">
-                  {p.updated ? formatDateShort(p.updated) : ""}
-                </p>
-              </div>
-              <div class="flex justify-end">
-                <a
-                  class="btn btn-sm btn-ghost w-full sm:w-auto"
-                  href={`/creation/remerciements`}
-                >
-                  Voir
-                </a>
-              </div>
-            </label>
-          ))
-        }
-
-        {
-          contributeurs.map((c: any) => (
-            <label
-              class="flex min-h-55 flex-col justify-between gap-4 rounded-xl border border-base-300 bg-base-100 p-4 shadow-sm md:p-5 lg:p-6"
-              for={`id_${c.id}`}
-              data-item-id={c.id}
-              data-title={c.nom}
-              data-updated={c.updated}
-            >
-              <div class="space-y-3">
-                <div class="flex items-start gap-3">
-                  <input
-                    class="checkbox checkbox-primary mt-1 shrink-0"
-                    type="checkbox"
-                    name="ids"
-                    id={`id_${c.id}`}
-                    value={c.id}
-                    data-type="contributeur"
-                  />
-                  <div>
-                    <h3 class="text-xl font-bold leading-tight md:text-2xl">
-                      {c.nom}
-                    </h3>
-                    {c.metier && (
-                      <p class="text-sm text-base-content">
-                        {c.metier}
-                      </p>
-                    )}
-                    {c.description && (
-                      <p class="text-sm text-base-content mt-2 line-clamp-2">
-                        {c.description}
-                      </p>
-                    )}
-                  </div>
-                </div>
-                <p class="text-xs text-base-content">
-                  {c.updated ? formatDateShort(c.updated) : ""}
-                </p>
-              </div>
-              <div class="flex justify-end">
-                <a
-                  class="btn btn-sm btn-ghost w-full sm:w-auto"
-                  href={`/creation/remerciements`}
-                >
-                  Voir
-                </a>
-              </div>
-            </label>
+          items.map((item: any) => (
+            <ItemCard
+              id={item.id}
+              title={item.title}
+              subtitle={item.subtitle}
+              photoUrl={item.photoUrl}
+              source={item.source}
+              formattedDate={formatDate(item.updated)}
+              viewUrl="/creation/remerciements"
+              editUrl="/creation/remerciements"
+              showCheckbox={true}
+              checkboxSlot={`<input class="checkbox checkbox-primary shrink-0" type="checkbox" name="ids" id="id_${item.id}" value="${item.id}" data-item-id="${item.id}" data-title="${item.title}" data-updated="${item.updated}" />`}
+              maxHeightContent={true}
+              deleteMode={true}
+            />
           ))
         }
       </div>
@@ -263,14 +207,10 @@ try {
   <script>
     import { initDeletePageHandler } from "../../../../utils/deletePageHandler";
 
-    document.addEventListener("DOMContentLoaded", () => {
-      initDeletePageHandler({
-        cardSelector: "label[data-item-id]",
-        dataIdAttribute: "data-item-id",
-        dataTypeAttribute: "data-type",
-        itemSingular: "élément",
-        itemPlural: "éléments",
-      });
+    initDeletePageHandler({
+      cardSelector: "div[data-item-id]",
+      itemSingular: "élément",
+      itemPlural: "éléments",
     });
   </script>
 </Layout>

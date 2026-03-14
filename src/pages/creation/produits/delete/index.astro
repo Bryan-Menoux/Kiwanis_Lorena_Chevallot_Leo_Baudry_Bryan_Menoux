@@ -1,6 +1,6 @@
 ---
 import Layout from "../../../../layouts/Layout-back-office.astro";
-import { formatDateShort } from "../../../../utils/utilitaires.js";
+import ItemCard from "../../../../components/ItemCard.astro";
 import { generateSlug } from "../../../../utils/editPageHandler";
 import { getCreationViewUrl } from "../../../../utils/creationRoutes";
 
@@ -17,18 +17,36 @@ try {
   error = "Impossible de charger la liste des produits.";
 }
 
-const produits = produitsRaw.map((p: any) => ({
-  id: p.id,
-  titre: p.titre || "Produit sans titre",
-  slug: generateSlug(p.titre || "") || "produit",
-  description: p.description || "",
-  prix: typeof p.prix === "number" ? p.prix : null,
-  photoPreviewUrl:
-    Array.isArray(p.photo) && p.photo.length > 0
-      ? (Astro.locals as any).pb.files.getURL(p, p.photo[0])
-      : "",
-  updated: p.updated,
-}));
+const produits = produitsRaw.map((p: any) => {
+  const photoUrl = Array.isArray(p.photo) && p.photo.length > 0
+    ? (Astro.locals as any).pb.files.getURL(p, p.photo[0])
+    : "";
+  
+  return {
+    id: p.id,
+    title: p.titre || "Produit sans titre",
+    slug: generateSlug(p.titre || "") || "produit",
+    subtitle: p.description || "",
+    photoUrl,
+    price: typeof p.prix === "number" ? p.prix : undefined,
+    updated: p.updated,
+    source: "produit" as const,
+  };
+});
+
+function formatDate(dateStr?: string): string {
+  if (!dateStr) return "";
+  try {
+    const date = new Date(dateStr);
+    return date.toLocaleDateString("fr-FR", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+  } catch {
+    return dateStr;
+  }
+}
 
 if (Astro.request.method === "POST") {
   try {
@@ -145,69 +163,22 @@ try {
       >
         {
           produits.map((produit: any) => (
-            <label
-              class="flex min-h-55 flex-col justify-between gap-4 rounded-xl border border-base-300 bg-base-100 p-4 shadow-sm md:p-5 lg:p-6"
-              for={`id_${produit.id}`}
-              data-item-id={produit.id}
-              data-title={produit.titre}
-              data-updated={produit.updated}
-            >
-              <div class="space-y-3">
-                <div class="flex items-start gap-3">
-                  <input
-                    class="checkbox checkbox-primary mt-1 shrink-0"
-                    type="checkbox"
-                    name="ids"
-                    id={`id_${produit.id}`}
-                    value={produit.id}
-                  />
-                  <div class="space-y-2">
-                    <h3 class="wrap-break-word text-xl font-bold leading-tight md:text-2xl">
-                      {produit.titre}
-                    </h3>
-                    {produit.prix !== null && (
-                      <p class="text-sm font-medium text-base-content/80">
-                        {new Intl.NumberFormat("fr-FR", {
-                          style: "currency",
-                          currency: "EUR",
-                        }).format(produit.prix)}
-                      </p>
-                    )}
-                  </div>
-                </div>
-
-                {produit.photoPreviewUrl && (
-                  <div class="overflow-hidden rounded-lg border border-base-300 bg-base-200/40">
-                    <img
-                      src={produit.photoPreviewUrl}
-                      alt="Aperçu produit"
-                      class="h-64 w-full object-contain"
-                      loading="lazy"
-                      decoding="async"
-                    />
-                  </div>
-                )}
-
-                {produit.description && (
-                  <p class="text-sm leading-relaxed wrap-break-word text-base-content/75 line-clamp-3">
-                    {produit.description}
-                  </p>
-                )}
-
-                <p class="text-xs leading-tight text-base-content">
-                  {produit.updated ? formatDateShort(produit.updated) : ""}
-                </p>
-              </div>
-
-              <div class="flex justify-end">
-                <a
-                  class="btn btn-sm btn-ghost w-full sm:w-auto"
-                  href={getCreationViewUrl("produit", produit.id, produit.slug)}
-                >
-                  Voir
-                </a>
-              </div>
-            </label>
+            <ItemCard
+              id={produit.id}
+              title={produit.title}
+              slug={produit.slug}
+              source={produit.source}
+              subtitle={produit.subtitle}
+              photoUrl={produit.photoUrl}
+              price={produit.price}
+              formattedDate={formatDate(produit.updated)}
+              viewUrl={getCreationViewUrl("produit", produit.id, produit.slug)}
+              editUrl={getCreationViewUrl("produit", produit.id, produit.slug)}
+              showCheckbox={true}
+              checkboxSlot={`<input class="checkbox checkbox-primary shrink-0" type="checkbox" name="ids" id="id_${produit.id}" value="${produit.id}" data-item-id="${produit.id}" data-title="${produit.title}" data-updated="${produit.updated}" />`}
+              maxHeightContent={true}
+              deleteMode={true}
+            />
           ))
         }
       </div>
@@ -218,11 +189,10 @@ try {
   <script>
     import { initDeletePageHandler } from "../../../../utils/deletePageHandler";
 
-    document.addEventListener("DOMContentLoaded", () => {
-      initDeletePageHandler({
-        itemSingular: "produit",
-        itemPlural: "produits",
-      });
+    initDeletePageHandler({
+      cardSelector: "div[data-item-id]",
+      itemSingular: "produit",
+      itemPlural: "produits",
     });
   </script>
 </Layout>

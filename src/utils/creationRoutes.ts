@@ -21,7 +21,7 @@ export function getCreationViewUrl(
   }
 
   if (entityType === "projet") {
-    return `/creation/projets/edit/${slugPath}`;
+    return `/creation/projets/`;
   }
 
   return `/creation/produits/${slugPath}`;

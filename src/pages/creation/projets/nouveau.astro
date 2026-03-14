@@ -15,6 +15,7 @@ const typeActionOptions: string[] = (Array.isArray(ProjetsTypeActionOptions)
 
 const formState = {
   titre: "",
+  description: "",
   date: "",
   nom_adresse: "",
   url_adresse: "",
@@ -26,6 +27,7 @@ if (Astro.request.method === "POST") {
     const formData = await Astro.request.formData();
 
     formState.titre = formData.get("titre")?.toString().trim() || "";
+    formState.description = formData.get("description")?.toString().trim() || "";
     formState.date = formData.get("date")?.toString().trim() || "";
     formState.nom_adresse = formData.get("nom_adresse")?.toString().trim() || "";
     formState.url_adresse = formData.get("url_adresse")?.toString().trim() || "";
@@ -51,6 +53,7 @@ if (Astro.request.method === "POST") {
       titre: formState.titre,
     };
 
+    if (formState.description) payload.description = formState.description;
     if (formState.date) payload.date = formState.date;
     if (formState.nom_adresse) payload.nom_adresse = formState.nom_adresse;
 
@@ -126,6 +129,19 @@ if (Astro.request.method === "POST") {
               required
             />
 
+          </div>
+
+          <div class="space-y-2">
+            <label for="description" class="block text-sm font-semibold text-base-content">
+              Description du projet
+            </label>
+            <textarea
+              id="description"
+              name="description"
+              class="textarea textarea-bordered w-full text-base"
+              placeholder="Décrivez brièvement votre projet, ses objectifs et son impact"
+              rows="4"
+            ></textarea>
           </div>
 
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">

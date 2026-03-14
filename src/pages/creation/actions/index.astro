@@ -1,15 +1,10 @@
 ---
 import Layout from "../../../layouts/Layout-back-office.astro";
+import ItemCard from "../../../components/ItemCard.astro";
 import slugify from "slugify";
-import ActionsSearch from "../../../components/ActionsSearch.astro";
 import FormSubmitOverlay from "../../../components/FormSubmitOverlay.astro";
-import { formatDateShort } from "../../../utils/utilitaires.js";
-import { ActionsTypeActionOptions } from "../../../pocketbase-types";
 import { showConfirm } from "../../../utils/alerts";
-import { renderPagination } from "../../../utils/renderPagination";
-import { initPublishHandlers } from "../../../utils/formHandlers";
-import { ListingPageManager } from "../../../utils/listingPageManager";
-import { renderCards, createActionCardRenderer } from "../../../utils/cardRenderer";
+import { getCreationEditUrl, getCreationViewUrl } from "../../../utils/creationRoutes";
 
 // Types et interfaces
 
@@ -19,45 +14,11 @@ interface ActionItem {
   title: string;
   slug: string;
   source: "action" | "brouillon";
-  subtitle?: string;
-  hero?: string;
   updated?: string;
-  startDate?: string;
-  endDate?: string;
+  subtitle?: string;
   beneficiary?: string;
   actionType?: string[];
-  missingRequiredFields?: string[];
 }
-
-// Constantes et fonctions utilitaires
-
-const PART_NUMBERS = [1, 2, 3];
-
-const isValid = (value: unknown): boolean => {
-  if (typeof value === "string") return value.trim() !== "";
-  return Boolean(value);
-};
-
-const hasAtLeastOnePart = (record: Record<string, any>): boolean =>
-  PART_NUMBERS.some((num) => {
-    const textKey = `texte_partie_${num}`;
-    const photoKey = `photo_partie_${num}`;
-    return isValid(record?.[textKey]) || isValid(record?.[photoKey]);
-  });
-
-const getMissingRequiredFields = (record: Record<string, any>): string[] => {
-  const missing: string[] = [];
-  if (!isValid(record?.titre)) missing.push("titre");
-  if (!isValid(record?.date_debut)) missing.push("date de début");
-  if (!isValid(record?.hero)) missing.push("image de l'en-tête");
-  
-  const hasActionType = Array.isArray(record?.type_action) && record.type_action.length > 0;
-  if (!hasActionType) missing.push("type d'action");
-  
-  if (!hasAtLeastOnePart(record)) missing.push("au moins une partie (texte ou photo)");
-  
-  return missing;
-};
 
 // Récupération des données
 
@@ -80,11 +41,8 @@ const actions: ActionItem[] = [
     title: a.titre,
     slug: slugify(a.titre || "", { lower: true, strict: true }),
     source: "action" as const,
-    subtitle: a.sous_titre,
-    hero: a.hero,
     updated: a.updated,
-    startDate: a.date_debut,
-    endDate: a.date_fin,
+    subtitle: a.sous_titre,
     beneficiary: a.beneficiaire,
     actionType: a.type_action,
   })),
@@ -93,14 +51,10 @@ const actions: ActionItem[] = [
     title: b.titre || "Brouillon sans titre",
     slug: slugify(b.titre || "brouillon", { lower: true, strict: true }),
     source: "brouillon" as const,
-    subtitle: b.sous_titre,
-    hero: b.hero,
     updated: b.updated,
-    startDate: b.date_debut,
-    endDate: b.date_fin,
+    subtitle: b.sous_titre,
     beneficiary: b.beneficiaire,
-    actionType: [],
-    missingRequiredFields: getMissingRequiredFields(b),
+    actionType: b.type_action,
   })),
 ].sort(
   (a, b) =>
@@ -111,22 +65,21 @@ const stats = { total: actions.length };
 
 // Construction des options de filtres
 
-const anneesDisponibles = new Set<string>();
-actions.forEach((a) => {
-  const date = a.startDate || a.endDate;
-  if (date) {
-    const année = new Date(date).getFullYear().toString();
-    anneesDisponibles.add(année);
+const yearOptions: string[] = [];
+
+function formatDate(dateStr?: string): string {
+  if (!dateStr) return "";
+  try {
+    const date = new Date(dateStr);
+    return date.toLocaleDateString("fr-FR", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+  } catch {
+    return dateStr;
   }
-});
-
-const yearOptions = Array.from(anneesDisponibles).sort((a, b) => b.localeCompare(a));
-const typeOptions = Object.values(ActionsTypeActionOptions);
-
-// Lecture des paramètres d'URL
-
-const paramètresUrl = Astro.url.searchParams;
-const termeRecherche = (paramètresUrl.get("q") || "").trim();
+}
 const allActions = actions;
 ---
 
@@ -162,49 +115,34 @@ const allActions = actions;
       </div>
     </div>
 
-    {/* Section de recherche et filtres */}
-    <div class="card mb-8 rounded-2xl border border-base-300 bg-base-100 shadow-sm">
-      <div class="card-body p-4 md:p-6">
-        <div class="mb-4">
-          <h2 class="card-title text-2xl">Rechercher</h2>
-          <p class="mt-1 text-base-content/60">
-            Filtrez rapidement vos actions puis triez l'affichage.
-          </p>
-        </div>
+    {/* Grille d'actions */}
+    <div class="grid grid-cols-1 gap-4 md:grid-cols-3 md:gap-5 lg:grid-cols-3 lg:gap-6">
+      {actions.map((action) => (
+        <ItemCard
+          id={action.id}
+          title={action.title}
+          slug={action.slug}
+          source={action.source}
+          isDraft={action.source === "brouillon"}
+          subtitle={action.subtitle}
+          beneficiary={action.beneficiary}
+          formattedDate={formatDate(action.updated)}
+          viewUrl={
+            action.source === "brouillon"
+              ? `/creation/brouillons/${action.id}-${action.slug}`
+              : getCreationViewUrl("action", action.id, action.slug)
+          }
+          editUrl={getCreationEditUrl("action", action.id, action.slug)}
+          maxHeightContent={true}
+        />
+      ))}
+    </div>
 
-        <div class="flex flex-col gap-4">
-          <div class="w-full">
-            <ActionsSearch
-              value={termeRecherche}
-              yearOptions={yearOptions}
-              typeOptions={typeOptions}
-              showStatus={true}
-              statusOptions={["all", "brouillon"]}
-              embedded={true}
-            >
-              <label
-                slot="secondary-extra"
-                class="form-control w-full gap-1"
-                for="tri-select"
-              >
-                <span class="text-sm! font-medium tracking-wide text-base-content">
-                  Trier par date
-                </span>
-                <select id="tri-select" class="select select-bordered w-full">
-                  <option value="récent">Récent → Ancien</option>
-                  <option value="ancien">Ancien → Récent</option>
-                </select>
-              </label>
-            </ActionsSearch>
-          </div>
-        </div>
+    {actions.length === 0 && (
+      <div class="text-center py-12">
+        <p class="text-base-content/60">Aucune action trouvée</p>
       </div>
-    </div>
-
-    {/* Conteneur de grille paginée */}
-    <div id="conteneur-actions" class="mb-8" data-initial-search={termeRecherche}>
-      <!-- Rendu par JavaScript côté client -->
-    </div>
+    )}
   </div>
 
   <FormSubmitOverlay
@@ -214,76 +152,12 @@ const allActions = actions;
 </Layout>
 
 <script>
-  import "../../../utils/utilitaires.js";
-  import "../../../utils/scroll.js";
-  import { showConfirm } from "../../../utils/alerts";
-  import { renderPagination } from "../../../utils/renderPagination";
   import { initPublishHandlers } from "../../../utils/formHandlers";
-  import { ListingPageManager } from "../../../utils/listingPageManager";
-  import { renderCards, createActionCardRenderer } from "../../../utils/cardRenderer";
+  import { showConfirm } from "../../../utils/alerts";
 
   // Initialize publish handlers
   initPublishHandlers(
     { formSelector: 'form[data-publish-action-form="true"]' },
     showConfirm
   );
-
-  // Get the data from the script tag
-  const dataScript = document.querySelector('script[data-actions-data]');
-  const allActions = JSON.parse(dataScript?.getAttribute('data-actions-data') || '[]');
-  const q = dataScript?.getAttribute('data-search-term') || '';
-
-  // ============================================
-  // Initialisation du gestionnaire de liste
-  // ============================================
-
-  const manager = new ListingPageManager(allActions, {
-    containerId: "conteneur-actions",
-    sortSelectId: "tri-select",
-    pageSize: 9,
-  }, q);
-
-  const container = document.getElementById("conteneur-actions");
-  const cardRenderer = createActionCardRenderer();
-
-  // ============================================
-  // Fonction de rendu
-  // ============================================
-
-  const render = () => {
-    if (!container) return;
-
-    const { items, totalPages, currentPage, hasItems } = manager.getPaginationData();
-
-    if (!hasItems) {
-      manager.renderEmpty();
-      return;
-    }
-
-    const cardsHtml = renderCards(items, {
-      ...cardRenderer,
-      formattedDateGetter: (item) => manager.getFormattedDates(item).updated,
-    });
-    const paginationHtml = renderPagination(totalPages, currentPage);
-
-    container.innerHTML = `
-      <div class="grid grid-cols-1 gap-4 md:grid-cols-3 md:gap-5 lg:grid-cols-3 lg:gap-6">
-        ${cardsHtml}
-      </div>
-      ${paginationHtml}
-    `;
-  };
-
-  // ============================================
-  // Initialisation des event listeners
-  // ============================================
-
-  manager.initPaginationListeners(render);
-  manager.initFilterListeners(render);
-  manager.initSortListener(render);
-
-  // Rendu initial
-  render();
 </script>
-
-<script type="application/json" data-actions-data={JSON.stringify(allActions)} data-search-term={termeRecherche}></script>

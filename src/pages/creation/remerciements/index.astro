@@ -1,5 +1,6 @@
 ---
 import Layout from "../../../layouts/Layout-back-office.astro";
+import ItemCard from "../../../components/ItemCard.astro";
 import SectionPaginator from "../../../components/SectionPaginator.astro";
 import { formatDateShort } from "../../../utils/utilitaires.js";
 
@@ -256,54 +257,20 @@ const error = (Astro.url.searchParams.get("error") || "").trim();
             >
               {partenaires.map((partenaire, partenaireIndex) => (
                 <div
-                  class="rounded-2xl border border-base-300 bg-base-100 p-4 shadow-sm transition-all hover:shadow-md md:p-5"
                   data-partenaire-item={partenaireIndex}
                   data-search={`${partenaire.nom} ${formatDateShort(partenaire.updated)} ${partenaire.updated || ""}`}
+                  class="space-y-3"
                 >
-                  <div class="mb-4 h-24 overflow-hidden rounded-xl! border border-base-300/60 bg-base-200/60 md:h-48">
-                    {partenaire.logoUrl ? (
-                      <img
-                        src={partenaire.logoUrl}
-                        alt={`Logo ${partenaire.nom}`}
-                        class="h-full min-w-full object-contain object-center px-4 py-2"
-                      />
-                    ) : (
-                      <div class="flex h-full w-full items-center justify-center bg-base-content/5 text-sm text-base-content/60">
-                        Aucun logo
-                      </div>
-                    )}
-                  </div>
-
-                  <h3 class="text-xl font-bold leading-tight capitalize">
-                    {partenaire.nom}
-                  </h3>
-                  <p class="text-sm! font-medium text-base-content/60">
-                    Mis à jour : {formatDateShort(partenaire.updated)}
-                  </p>
-
-                  <div class="mt-4 flex items-center justify-end gap-4">
-                    <form
-                      method="POST"
-                      class="m-0"
-                      data-delete-form
-                      data-confirm-message="Supprimer ce partenaire ?"
-                    >
-                      <input type="hidden" name="entity" value="partenaire" />
-                      <input type="hidden" name="intent" value="delete" />
-                      <input type="hidden" name="id" value={partenaire.id} />
-
-                      <button type="submit" class="btn btn-error rounded-full">
-                        Supprimer
-                      </button>
-                    </form>
-
-                    <a
-                      href={`/creation/remerciements/edit/${partenaire.id}`}
-                      class="btn btn-accent rounded-full"
-                    >
-                      Modifier
-                    </a>
-                  </div>
+                  <ItemCard
+                    id={partenaire.id}
+                    title={partenaire.nom}
+                    photoUrl={partenaire.logoUrl}
+                    source="partenaire"
+                    formattedDate={formatDateShort(partenaire.updated)}
+                    viewUrl={`/creation/remerciements/edit/${partenaire.id}`}
+                    editUrl={`/creation/remerciements/edit/${partenaire.id}`}
+                  />
+                  
                 </div>
               ))}
             </div>
@@ -351,50 +318,19 @@ const error = (Astro.url.searchParams.get("error") || "").trim();
             >
               {contributeurs.map((contributeur, contributeurIndex) => (
                 <div
-                  class="rounded-2xl border border-base-300 bg-base-100 p-4 shadow-sm transition-all hover:shadow-md md:p-5"
                   data-contributeur-item={contributeurIndex}
                   data-search={`${contributeur.nom} ${contributeur.metier} ${contributeur.description}`}
+                  class="space-y-3"
                 >
-                  <h3 class="text-xl font-bold leading-tight capitalize">
-                    {contributeur.nom}
-                  </h3>
-                  {contributeur.metier && (
-                    <p class="mt-1 text-sm text-base-content/75 capitalize">
-                      {contributeur.metier}
-                    </p>
-                  )}
-                  {contributeur.description && (
-                    <p class="mt-4 text-sm text-base-content/70 capitalize">
-                      {contributeur.description}
-                    </p>
-                  )}
-                  <p class="mt-6 text-sm! font-medium text-base-content/60">
-                    Mis à jour : {formatDateShort(contributeur.updated)}
-                  </p>
-
-                  <div class="mt-4 flex items-center justify-end gap-4">
-                    <form
-                      method="POST"
-                      class="m-0"
-                      data-delete-form
-                      data-confirm-message="Supprimer ce contributeur ?"
-                    >
-                      <input type="hidden" name="entity" value="contributeur" />
-                      <input type="hidden" name="intent" value="delete" />
-                      <input type="hidden" name="id" value={contributeur.id} />
-
-                      <button type="submit" class="btn btn-error rounded-full">
-                        Supprimer
-                      </button>
-                    </form>
-
-                    <a
-                      href={`/creation/remerciements/edit/${contributeur.id}`}
-                      class="btn btn-accent rounded-full"
-                    >
-                      Modifier
-                    </a>
-                  </div>
+                  <ItemCard
+                    id={contributeur.id}
+                    title={contributeur.nom}
+                    subtitle={contributeur.metier || contributeur.description}
+                    source="contributeur"
+                    formattedDate={formatDateShort(contributeur.updated)}
+                    viewUrl={`/creation/remerciements/edit/${contributeur.id}`}
+                    editUrl={`/creation/remerciements/edit/${contributeur.id}`}
+                  />
                 </div>
               ))}
             </div>

@@ -1,14 +1,9 @@
 ---
 import Layout from "../../../layouts/Layout-back-office.astro";
+import ItemCard from "../../../components/ItemCard.astro";
 import slugify from "slugify";
-import ActionsSearch from "../../../components/ActionsSearch.astro";
 import FormSubmitOverlay from "../../../components/FormSubmitOverlay.astro";
-import { formatDateShort } from "../../../utils/utilitaires.js";
-import { showConfirm } from "../../../utils/alerts";
-import { renderPagination } from "../../../utils/renderPagination";
-import { initPublishHandlers } from "../../../utils/formHandlers";
-import { ListingPageManager } from "../../../utils/listingPageManager";
-import { renderCards, createProductCardRenderer } from "../../../utils/cardRenderer";
+import { getCreationEditUrl, getCreationViewUrl } from "../../../utils/creationRoutes";
 
 interface ProductItem {
   id: string;
@@ -16,7 +11,8 @@ interface ProductItem {
   slug: string;
   source: "produit" | "brouillon";
   updated?: string;
-  photoPreviewUrl?: string;
+  photoUrl?: string;
+  price?: number;
 }
 
 const produitsRaw: any[] = await Astro.locals.pb
@@ -30,24 +26,36 @@ const brouillonsRaw: any[] = await Astro.locals.pb
   });
 
 const produits: ProductItem[] = [
-  ...produitsRaw.map((p) => ({
-    id: p.id,
-    title: p.titre,
-    slug: slugify(p.titre || "", { lower: true, strict: true }),
-    source: "produit" as const,
-    updated: p.updated,
-    photoPreviewUrl:
-      Array.isArray(p.photo) && p.photo.length > 0
-        ? Astro.locals.pb.files.getURL(p, p.photo[0])
-        : "",
-  })),
-  ...brouillonsRaw.map((b) => ({
-    id: b.id,
-    title: b.titre || "Brouillon sans titre",
-    slug: slugify(b.titre || "brouillon", { lower: true, strict: true }),
-    source: "brouillon" as const,
-    updated: b.updated,
-  })),
+  ...produitsRaw.map((p) => {
+    const photoUrl = Array.isArray(p.photo) && p.photo.length > 0
+      ? (Astro.locals as any).pb.files.getURL(p, p.photo[0])
+      : "";
+    
+    return {
+      id: p.id,
+      title: p.titre,
+      slug: slugify(p.titre || "", { lower: true, strict: true }),
+      source: "produit" as const,
+      updated: p.updated,
+      photoUrl,
+      price: typeof p.prix === "number" ? p.prix : undefined,
+    };
+  }),
+  ...brouillonsRaw.map((b) => {
+    const photoUrl = Array.isArray(b.photo) && b.photo.length > 0
+      ? (Astro.locals as any).pb.files.getURL(b, b.photo[0])
+      : "";
+    
+    return {
+      id: b.id,
+      title: b.titre || "Brouillon sans titre",
+      slug: slugify(b.titre || "brouillon", { lower: true, strict: true }),
+      source: "brouillon" as const,
+      updated: b.updated,
+      photoUrl,
+      price: typeof b.prix === "number" ? b.prix : undefined,
+    };
+  }),
 ].sort(
   (a, b) =>
     new Date(b.updated || 0).getTime() - new Date(a.updated || 0).getTime(),
@@ -55,19 +63,19 @@ const produits: ProductItem[] = [
 
 const stats = { total: produits.length };
 
-const anneesDisponibles = new Set<string>();
-produits.forEach((p) => {
-  if (p.updated) {
-    const année = new Date(p.updated).getFullYear().toString();
-    anneesDisponibles.add(année);
+function formatDate(dateStr?: string): string {
+  if (!dateStr) return "";
+  try {
+    const date = new Date(dateStr);
+    return date.toLocaleDateString("fr-FR", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+  } catch {
+    return dateStr;
   }
-});
-
-const yearOptions = Array.from(anneesDisponibles).sort((a, b) => b.localeCompare(a));
-
-const paramètresUrl = Astro.url.searchParams;
-const termeRecherche = (paramètresUrl.get("q") || "").trim();
-const allProduits = produits;
+}
 ---
 
 <Layout>
@@ -102,46 +110,33 @@ const allProduits = produits;
       </div>
     </div>
 
-    {/* Section de recherche et filtres */}
-    <div class="card mb-8 rounded-2xl border border-base-300 bg-base-100 shadow-sm">
-      <div class="card-body p-4 md:p-6">
-        <div class="mb-4">
-          <h2 class="card-title text-2xl">Rechercher</h2>
-          <p class="mt-1 text-base-content/60">
-            Filtrez rapidement vos produits puis triez l'affichage.
-          </p>
-        </div>
+    {/* Grille de produits */}
+    <div class="grid grid-cols-1 gap-4 md:grid-cols-3 md:gap-5 lg:grid-cols-3 lg:gap-6">
+      {produits.map((produit) => (
+        <ItemCard
+          id={produit.id}
+          title={produit.title}
+          slug={produit.slug}
+          source={produit.source}
+          isDraft={produit.source === "brouillon"}
+          photoUrl={produit.photoUrl}
+          price={produit.price}
+          formattedDate={formatDate(produit.updated)}
+          viewUrl={
+            produit.source === "brouillon"
+              ? `/creation/brouillons/${produit.id}-${produit.slug}`
+              : getCreationViewUrl("produit", produit.id, produit.slug)
+          }
+          editUrl={getCreationEditUrl("produit", produit.id, produit.slug)}
+        />
+      ))}
+    </div>
 
-        <div class="flex flex-col gap-4">
-          <div class="w-full">
-            <ActionsSearch
-              value={termeRecherche}
-              yearOptions={yearOptions}
-              embedded={true}
-            >
-              <label
-                slot="secondary-extra"
-                class="form-control w-full gap-1"
-                for="tri-select"
-              >
-                <span class="text-sm! font-medium tracking-wide text-base-content">
-                  Trier par date
-                </span>
-                <select id="tri-select" class="select select-bordered w-full">
-                  <option value="récent">Récent → Ancien</option>
-                  <option value="ancien">Ancien → Récent</option>
-                </select>
-              </label>
-            </ActionsSearch>
-          </div>
-        </div>
+    {produits.length === 0 && (
+      <div class="text-center py-12">
+        <p class="text-base-content/60">Aucun produit trouvé</p>
       </div>
-    </div>
-
-    {/* Conteneur de grille paginée */}
-    <div id="conteneur-produits" class="mb-8" data-initial-search={termeRecherche}>
-      <!-- Rendu par JavaScript côté client -->
-    </div>
+    )}
   </div>
 
   <FormSubmitOverlay
@@ -151,82 +146,12 @@ const allProduits = produits;
 </Layout>
 
 <script>
-  import "../../../utils/utilitaires.js";
-  import "../../../utils/scroll.js";
-  import { showConfirm } from "../../../utils/alerts";
-  import { renderPagination } from "../../../utils/renderPagination";
   import { initPublishHandlers } from "../../../utils/formHandlers";
-  import { ListingPageManager } from "../../../utils/listingPageManager";
-  import { renderCards, createProductCardRenderer } from "../../../utils/cardRenderer";
+  import { showConfirm } from "../../../utils/alerts";
 
   // Initialize publish handlers
   initPublishHandlers(
     { formSelector: 'form[data-publish-produit-form="true"]' },
     showConfirm
   );
-
-  // Get the data from the script tag
-  const dataScript = document.querySelector('script[data-produits-data]');
-  const allProduits = JSON.parse(dataScript?.getAttribute('data-produits-data') || '[]');
-  const q = dataScript?.getAttribute('data-search-term') || '';
-
-  // ============================================
-  // Initialisation du gestionnaire de liste
-  // ============================================
-
-  const manager = new ListingPageManager(allProduits, {
-    containerId: "conteneur-produits",
-    sortSelectId: "tri-select",
-    pageSize: 9,
-    filterFields: {
-      title: "title",
-    },
-    dateFieldNames: {
-      updated: "updated",
-    },
-  }, q);
-
-  const container = document.getElementById("conteneur-produits");
-  const cardRenderer = createProductCardRenderer();
-
-  // ============================================
-  // Fonction de rendu
-  // ============================================
-
-  const render = () => {
-    if (!container) return;
-
-    const { items, totalPages, currentPage, hasItems } = manager.getPaginationData();
-
-    if (!hasItems) {
-      manager.renderEmpty();
-      return;
-    }
-
-    const cardsHtml = renderCards(items, {
-      ...cardRenderer,
-      formattedDateGetter: (item) => manager.getFormattedDates(item).updated,
-    });
-    const paginationHtml = renderPagination(totalPages, currentPage);
-
-    container.innerHTML = `
-      <div class="grid grid-cols-1 gap-4 md:grid-cols-3 md:gap-5 lg:grid-cols-3 lg:gap-6">
-        ${cardsHtml}
-      </div>
-      ${paginationHtml}
-    `;
-  };
-
-  // ============================================
-  // Initialisation des event listeners
-  // ============================================
-
-  manager.initPaginationListeners(render);
-  manager.initFilterListeners(render);
-  manager.initSortListener(render);
-
-  // Rendu initial
-  render();
 </script>
-
-<script type="application/json" data-produits-data={JSON.stringify(allProduits)} data-search-term={termeRecherche}></script>

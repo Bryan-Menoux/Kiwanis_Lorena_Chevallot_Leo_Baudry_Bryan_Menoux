@@ -1,5 +1,6 @@
 ---
 import Layout from "../../../../layouts/Layout-back-office.astro";
+import ItemCard from "../../../../components/ItemCard.astro";
 import slugify from "slugify";
 import { formatDateShort } from "../../../../utils/utilitaires.js";
 import { getCreationViewUrl } from "../../../../utils/creationRoutes";
@@ -22,13 +23,27 @@ try {
 // Mapper les données essentielles
 const actions = actionsRaw.map((a: any) => ({
   id: a.id,
-  titre: a.titre,
+  title: a.titre,
   slug: slugify(a.titre || "", { lower: true, strict: true }),
-  sous_titre: a.sous_titre,
+  subtitle: a.sous_titre,
   updated: a.updated,
-  beneficiaire: a.beneficiaire,
-  type_de_chiffre: a.type_de_chiffre,
+  beneficiary: a.beneficiaire,
+  source: "action" as const,
 }));
+
+function formatDate(dateStr?: string): string {
+  if (!dateStr) return "";
+  try {
+    const date = new Date(dateStr);
+    return date.toLocaleDateString("fr-FR", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+  } catch {
+    return dateStr;
+  }
+}
 
 // Gestion POST pour suppression multiple
 if (Astro.request.method === "POST") {
@@ -127,7 +142,7 @@ try {
             type="submit"
             id="bulkDelete"
             class="btn btn-error btn-sm rounded-full flex-1 w-full md:flex-initial md:w-fit md:btn-md"
-            >Supprimer selection</button
+            >Supprimer sélection</button
           >
         </div>
       </div>
@@ -137,53 +152,22 @@ try {
         class="grid grid-cols-1 gap-4 md:grid-cols-3 md:gap-5 lg:grid-cols-3 lg:gap-6"
       >
         {
-          actions.map((a: any) => (
-            <label
-              class="flex min-h-55 flex-col justify-between gap-4 rounded-xl border border-base-300 bg-base-100 p-4 shadow-sm md:p-5 lg:p-6"
-              for={`id_${a.id}`}
-              data-action-id={a.id}
-              data-action-slug={a.slug}
-              data-title={a.titre}
-              data-type={a.type_de_chiffre}
-              data-beneficiary={a.beneficiaire}
-              data-updated={a.updated}
-            >
-              <div class="space-y-3">
-                <div class="flex items-start gap-3">
-                  <input
-                    class="checkbox checkbox-primary mt-1 shrink-0"
-                    type="checkbox"
-                    name="ids"
-                    id={`id_${a.id}`}
-                    value={a.id}
-                  />
-                  <h3 class="wrap-break-word text-xl font-bold leading-tight md:text-2xl">
-                    {a.titre}
-                  </h3>
-                </div>
-                {a.sous_titre && (
-                  <p class="text-sm leading-relaxed wrap-break-word text-base-content/75">
-                    {a.sous_titre}
-                  </p>
-                )}
-                {a.beneficiaire && (
-                  <p class="text-sm leading-relaxed wrap-break-word text-base-content/75">
-                    {a.beneficiaire}
-                  </p>
-                )}
-                <p class="text-xs leading-tight text-base-content">
-                  {a.updated ? formatDateShort(a.updated) : ""}
-                </p>
-              </div>
-              <div class="flex justify-end">
-                <a
-                  class="btn btn-sm btn-ghost w-full sm:w-auto"
-                  href={getCreationViewUrl("action", a.id, a.slug)}
-                >
-                  Voir
-                </a>
-              </div>
-            </label>
+          actions.map((action: any) => (
+            <ItemCard
+              id={action.id}
+              title={action.title}
+              slug={action.slug}
+              source={action.source}
+              subtitle={action.subtitle}
+              beneficiary={action.beneficiary}
+              formattedDate={formatDate(action.updated)}
+              viewUrl={getCreationViewUrl("action", action.id, action.slug)}
+              editUrl={getCreationViewUrl("action", action.id, action.slug)}
+              showCheckbox={true}
+              checkboxSlot={`<input class="checkbox checkbox-primary shrink-0" type="checkbox" name="ids" id="id_${action.id}" value="${action.id}" data-item-id="${action.id}" data-title="${action.title}" data-updated="${action.updated}" />`}
+              maxHeightContent={true}
+              deleteMode={true}
+            />
           ))
         }
       </div>
@@ -192,288 +176,12 @@ try {
   </div>
 
   <script>
-    import { showAlert, showConfirm } from "../../../../utils/alerts";
-    import { scrollToTarget } from "../../../../utils/scroll.js";
-    import { renderPagination } from "../../../../utils/renderPagination";
+    import { initDeletePageHandler } from "../../../../utils/deletePageHandler";
 
-    // Recherche, filtres et tri côté client + sélection globale + suppression par carte.
-    document.addEventListener("DOMContentLoaded", () => {
-      const flashFlags = document.getElementById("delete-flash-flags");
-      if (flashFlags instanceof HTMLElement) {
-        const successMessage = flashFlags.dataset.success || "";
-        const errorMessage = flashFlags.dataset.error || "";
-        if (successMessage) {
-          showAlert({
-            type: "success",
-            message: successMessage,
-          });
-        }
-        if (errorMessage) {
-          showAlert({
-            type: "error",
-            message: errorMessage,
-          });
-        }
-      }
-
-      const selectAll = document.getElementById("selectAll");
-      const form = document.getElementById("deleteForm");
-      const grid = document.getElementById("cards-grid");
-      const sortSelect = document.getElementById("sort-select");
-
-      if (!(form instanceof HTMLFormElement) || !(grid instanceof HTMLElement)) return;
-
-      const g = grid;
-      let bypassConfirmSubmit = false;
-      // IDs sélectionnés à travers toutes les pages (persiste pendant la pagination et les filtres).
-      const selectedIds = new Set<string>();
-
-      form.addEventListener("submit", async (event) => {
-        if (bypassConfirmSubmit) {
-          bypassConfirmSubmit = false;
-          return;
-        }
-
-        event.preventDefault();
-
-        const selected = selectedIds.size;
-
-        if (selected === 0) {
-          showAlert({
-            type: "warning",
-            message: "Sélectionnez au moins une action avant de lancer la suppression.",
-          });
-          return;
-        }
-
-        const confirmed = await showConfirm({
-          title: "Confirmer la suppression",
-          message: `Confirmez-vous la suppression de ${selected} action(s) ? Cette action est irréversible.`,
-          type: "warning",
-          confirmLabel: "Supprimer",
-          cancelLabel: "Annuler",
-        });
-
-        if (!confirmed) return;
-
-        // Supprimer les checkboxes DOM (page courante seulement) et injecter
-        // un hidden input pour chaque ID sélectionné, toutes pages confondues.
-        form.querySelectorAll('input[name="ids"]').forEach((el) => el.remove());
-        selectedIds.forEach((id) => {
-          const hidden = document.createElement("input");
-          hidden.type = "hidden";
-          hidden.name = "ids";
-          hidden.value = id;
-          form.appendChild(hidden);
-        });
-
-        bypassConfirmSubmit = true;
-        if (typeof form.requestSubmit === "function") {
-          form.requestSubmit();
-        } else {
-          form.submit();
-        }
-      });
-
-      // Récupérer toutes les cartes (instantané initial).
-      const allCards = Array.from(
-        g.querySelectorAll("label[data-action-id]"),
-      ) as HTMLElement[];
-      let currentSearch = "";
-      let currentBenef = "";
-      const PAGE_SIZE = 9;
-      let currentPage = 1;
-      const pagination = document.getElementById("cards-pagination");
-
-      function updatePaginationEl(totalPages: number) {
-        if (!(pagination instanceof HTMLElement)) return;
-        pagination.innerHTML = renderPagination(totalPages, currentPage);
-      }
-
-      /** Retourne toutes les cartes correspondant aux filtres actifs, toutes pages. */
-      function getFilteredCards(): HTMLElement[] {
-        const q = (currentSearch || "").toLowerCase().trim();
-        const benef = (currentBenef || "").toLowerCase().trim();
-        return allCards.filter((card) => {
-          const title = (card.dataset.title || "").toLowerCase();
-          const b = (card.dataset.beneficiary || "").toLowerCase();
-          if (benef && !b.includes(benef)) return false;
-          if (q && !title.includes(q)) return false;
-          return true;
-        });
-      }
-
-      /**
-       * Synchronise l'état coché des checkboxes visibles depuis selectedIds,
-       * et attache un listener (une seule fois) pour mettre à jour selectedIds.
-       */
-      function syncCheckboxes() {
-        g.querySelectorAll<HTMLInputElement>('input[type="checkbox"][name="ids"]').forEach((cb) => {
-          const id = cb.value;
-          cb.checked = selectedIds.has(id);
-          if (!cb.dataset.selListenerAttached) {
-            cb.dataset.selListenerAttached = "true";
-            cb.addEventListener("change", () => {
-              if (cb.checked) {
-                selectedIds.add(id);
-              } else {
-                selectedIds.delete(id);
-              }
-              updateSelectAllState();
-              updateDeleteButtonLabel();
-            });
-          }
-        });
-        updateSelectAllState();
-        updateDeleteButtonLabel();
-      }
-
-      /** Met à jour l'état checked/indeterminate du "Tout sélectionner". */
-      function updateSelectAllState() {
-        if (!(selectAll instanceof HTMLInputElement)) return;
-        const filteredIds = getFilteredCards()
-          .map((c) => c.querySelector<HTMLInputElement>('input[name="ids"]')?.value)
-          .filter((id): id is string => Boolean(id));
-        const checkedCount = filteredIds.filter((id) => selectedIds.has(id)).length;
-        if (filteredIds.length === 0) {
-          selectAll.checked = false;
-          selectAll.indeterminate = false;
-        } else if (checkedCount === filteredIds.length) {
-          selectAll.checked = true;
-          selectAll.indeterminate = false;
-        } else if (checkedCount > 0) {
-          selectAll.checked = false;
-          selectAll.indeterminate = true;
-        } else {
-          selectAll.checked = false;
-          selectAll.indeterminate = false;
-        }
-      }
-
-      /** Affiche le nombre de sélections dans le bouton Supprimer. */
-      function updateDeleteButtonLabel() {
-        const btn = document.getElementById("bulkDelete");
-        if (!(btn instanceof HTMLButtonElement)) return;
-        const count = selectedIds.size;
-        btn.textContent = count > 0 ? `Supprimer sélection (${count})` : "Supprimer sélection";
-      }
-
-      function updateView() {
-        const q = (currentSearch || "").toLowerCase().trim();
-        const benef = (currentBenef || "").toLowerCase().trim();
-        const sort = (sortSelect instanceof HTMLSelectElement) ? sortSelect.value : "updated_desc";
-
-        let visible = allCards.filter((card) => {
-          const title = (card.dataset.title || "").toLowerCase();
-          const t = (card.dataset.type || "").toLowerCase();
-          const b = (card.dataset.beneficiary || "").toLowerCase();
-          const upd = card.dataset.updated ? new Date(card.dataset.updated) : null;
-          
-          if (benef && benef !== "" && !b.includes(benef)) return false;
-          if (q && q !== "" && !title.includes(q)) return false;
-          // Filtrage par date non implémenté pour l'instant.
-          return true;
-        });
-
-        visible.sort((a, b) => {
-          const da = new Date(a.dataset.updated || "0").getTime();
-          const db = new Date(b.dataset.updated || "0").getTime();
-          return sort === "updated_asc" ? da - db : db - da;
-        });
-
-        const totalPages = Math.max(1, Math.ceil(visible.length / PAGE_SIZE));
-        if (currentPage > totalPages) currentPage = totalPages;
-        if (currentPage < 1) currentPage = 1;
-        const startIndex = (currentPage - 1) * PAGE_SIZE;
-        const pageItems = visible.slice(startIndex, startIndex + PAGE_SIZE);
-
-        // Vider puis réinsérer les cartes visibles dans l'ordre.
-        g.innerHTML = "";
-        pageItems.forEach((c) => g.appendChild(c));
-        updatePaginationEl(totalPages);
-        syncCheckboxes();
-      }
-
-      // Écouter les mises à jour de filtres du composant ActionsSearch.
-      document.addEventListener('actions-filter-change', (ev: any) => {
-        const d = ev.detail || {};
-        currentSearch = d.search || "";
-        currentBenef = d.beneficiary || "";
-        currentPage = 1;
-        updateView();
-      });
-
-      pagination?.addEventListener("click", (event) => {
-        const target = event.target instanceof HTMLElement
-          ? event.target.closest("[data-page-action]")
-          : null;
-        if (!(target instanceof HTMLElement)) return;
-
-        const action = target.getAttribute("data-page-action");
-        const q = (currentSearch || "").toLowerCase().trim();
-        const benef = (currentBenef || "").toLowerCase().trim();
-        const totalItems = allCards.filter((card) => {
-          const title = (card.dataset.title || "").toLowerCase();
-          const b = (card.dataset.beneficiary || "").toLowerCase();
-          if (benef && benef !== "" && !b.includes(benef)) return false;
-          if (q && q !== "" && !title.includes(q)) return false;
-          return true;
-        }).length;
-        const totalPages = Math.max(1, Math.ceil(totalItems / PAGE_SIZE));
-        const previousPage = currentPage;
-
-        if (action === "prev") {
-          currentPage = Math.max(1, currentPage - 1);
-        } else if (action === "next") {
-          currentPage = Math.min(totalPages, currentPage + 1);
-        } else if (action === "go") {
-          const nextPage = Number(target.getAttribute("data-page") || "1");
-          if (!Number.isNaN(nextPage)) {
-            currentPage = Math.min(totalPages, Math.max(1, nextPage));
-          }
-        } else {
-          return;
-        }
-
-        if (currentPage !== previousPage) {
-          // Ramène le haut de la grille dans le viewport après pagination.
-          scrollToTarget("#cards-grid");
-        }
-        updateView();
-      });
-
-      // Rendu initial.
-      updateView();
-
-      if (sortSelect instanceof HTMLSelectElement) {
-        sortSelect.addEventListener("change", () => {
-          currentPage = 1;
-          updateView();
-        });
-      }
-
-      // Sélectionner / décocher toutes les actions filtrées, toutes pages confondues.
-      if (selectAll instanceof HTMLInputElement) {
-        selectAll.addEventListener("change", () => {
-          const checked = selectAll.checked;
-          getFilteredCards().forEach((card) => {
-            const id = card.querySelector<HTMLInputElement>('input[name="ids"]')?.value;
-            if (!id) return;
-            if (checked) {
-              selectedIds.add(id);
-            } else {
-              selectedIds.delete(id);
-            }
-          });
-          // Mettre à jour immédiatement les cases de la page visible.
-          g.querySelectorAll<HTMLInputElement>('input[type="checkbox"][name="ids"]').forEach((cb) => {
-            cb.checked = selectedIds.has(cb.value);
-          });
-          updateDeleteButtonLabel();
-        });
-      }
-
-      // Aucun bouton de suppression unitaire sur cette page ; la suppression groupée est gérée par le formulaire.
+    initDeletePageHandler({
+      cardSelector: "div[data-item-id]",
+      itemSingular: "action",
+      itemPlural: "actions",
     });
   </script>
 </Layout>

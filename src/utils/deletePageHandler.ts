@@ -138,6 +138,7 @@ export function initDeletePageHandler(config: Partial<DeletePageConfig> = {}) {
   }
 
   function syncCheckboxes() {
+    if (!grid) return;
     grid.querySelectorAll<HTMLInputElement>('input[type="checkbox"][name="ids"]').forEach((checkbox) => {
       const id = checkbox.value;
       checkbox.checked = selectedIds.has(id);
@@ -192,6 +193,7 @@ export function initDeletePageHandler(config: Partial<DeletePageConfig> = {}) {
     const startIndex = (currentPage - 1) * cfg.pageSize;
     const pageItems = visibleCards.slice(startIndex, startIndex + cfg.pageSize);
 
+    if (!grid) return;
     grid.innerHTML = "";
     pageItems.forEach((card) => grid.appendChild(card));
 

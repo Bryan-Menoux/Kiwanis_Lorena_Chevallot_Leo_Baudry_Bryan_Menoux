@@ -28,7 +28,8 @@ if (id) {
 
 const formState = {
   titre: projectRecord?.titre?.toString() || "",
-  date: projectRecord?.date?.toString() || "",
+  description: projectRecord?.description?.toString() || "",
+  date: projectRecord?.date ? projectRecord.date.split(' ')[0] : "",
   nom_adresse: projectRecord?.nom_adresse?.toString() || "",
   url_adresse: projectRecord?.url_adresse?.toString() || "",
   type_action: Array.isArray(projectRecord?.type_action)
@@ -45,6 +46,7 @@ if (Astro.request.method === "POST") {
     const formData = await Astro.request.formData();
 
     formState.titre = formData.get("titre")?.toString().trim() || "";
+    formState.description = formData.get("description")?.toString().trim() || "";
     formState.date = formData.get("date")?.toString().trim() || "";
     formState.nom_adresse = formData.get("nom_adresse")?.toString().trim() || "";
     formState.url_adresse = formData.get("url_adresse")?.toString().trim() || "";
@@ -68,6 +70,7 @@ if (Astro.request.method === "POST") {
 
     const payload: Record<string, any> = {
       titre: formState.titre,
+      description: formState.description || "",
       date: formState.date || "",
       nom_adresse: formState.nom_adresse || "",
       url_adresse: "",
@@ -143,6 +146,19 @@ if (Astro.request.method === "POST") {
                 value={formState.titre}
                 required
               />
+            </div>
+
+            <div class="space-y-2">
+              <label for="description" class="block text-sm font-semibold text-base-content">
+                Description du projet
+              </label>
+              <textarea
+                id="description"
+                name="description"
+                class="textarea textarea-bordered w-full text-base"
+                placeholder="Décrivez brièvement votre projet, ses objectifs et son impact"
+                rows="4"
+              >{formState.description}</textarea>
             </div>
 
             <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
