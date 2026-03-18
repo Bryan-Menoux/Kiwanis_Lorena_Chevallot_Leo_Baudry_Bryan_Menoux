@@ -20,6 +20,7 @@ export interface Props {
   checkboxSlot?: string;
   maxHeightContent?: boolean;
   photoUrl?: string;
+  photoClass?: string;
   price?: number;
   deleteMode?: boolean;
 }
@@ -43,6 +44,7 @@ const {
   checkboxSlot,
   maxHeightContent = true,
   photoUrl,
+  photoClass = "",
   price,
   deleteMode = false,
 } = Astro.props;
@@ -72,7 +74,7 @@ const {
       <img
         src={photoUrl}
         alt={title}
-        class="h-74 w-full rounded-lg object-cover object-top"
+        class={`w-full rounded-lg bg-white object-contain lg:object-contain object-center px-4 ${photoClass || "h-74"}`}
       />
     )}
     {price !== undefined && (

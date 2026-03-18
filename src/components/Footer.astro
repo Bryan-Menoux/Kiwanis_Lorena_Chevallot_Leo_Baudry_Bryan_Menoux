@@ -1,10 +1,6 @@
 ---
-import logoRaw from "../assets/logo.svg?raw";
+import logo from "../assets/logo.svg";
 import DiagArrow from "./DiagArrow.astro";
-
-const logoSvg = logoRaw
-  .replace(/\s+width="[^"]*"/, ' width="100%"')
-  .replace(/\s+height="[^"]*"/, ' height="100%"');
 ---
 
 <footer class="bg-[#2B2549] px-6 py-10 md:px-6 md:py-10 lg:px-6 lg:py-10 w-full lg:min-h-75 mt-16 lg:mt-32">
@@ -12,7 +8,11 @@ const logoSvg = logoRaw
     
     <!-- Logo et Titre -->
     <div class="h-full flex flex-col items-center gap-6 mb-10 sm:flex-row-reverse sm:items-start sm:gap-6 lg:mb-0 lg:justify-end lg:w-1/2 lg:h-full lg:flex-row-reverse lg:gap-12 lg:items-center min-w-0">
-      <span class="w-32 h-32 md:w-40 md:h-40 lg:w-64 lg:h-64 shrink lg:min-w-0 block" role="img" aria-label="logo kiwanis" set:html={logoSvg} />
+      <img
+        src={logo.src}
+        alt="logo kiwanis"
+        class="w-32 h-32 md:w-40 md:h-40 lg:w-64 lg:h-64 shrink lg:min-w-0 block object-contain"
+      />
       <div class="text-left flex flex-col flex-1 lg:flex-initial justify-between lg:h-full gap-0 w-fit font-merriweather">
         <p class="text-white font-merriweather text-4xl! md:text-5xl! lg:text-6xl! font-normal leading-[1.1] tracking-tighter m-0">
           KIWANIS

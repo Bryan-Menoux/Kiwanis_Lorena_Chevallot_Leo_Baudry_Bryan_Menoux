@@ -5,6 +5,7 @@ import slugify from "slugify";
 import FormSubmitOverlay from "../../../components/FormSubmitOverlay.astro";
 import { showConfirm } from "../../../utils/alerts";
 import { getCreationEditUrl, getCreationViewUrl } from "../../../utils/creationRoutes";
+import { normalizeImageUrl } from "../../../utils/utilitaires.js";
 
 // Types et interfaces
 
@@ -18,6 +19,7 @@ interface ActionItem {
   subtitle?: string;
   beneficiary?: string;
   actionType?: string[];
+  heroActionUrl?: string;
 }
 
 // Récupération des données
@@ -45,6 +47,7 @@ const actions: ActionItem[] = [
     subtitle: a.sous_titre,
     beneficiary: a.beneficiaire,
     actionType: a.type_action,
+    heroActionUrl: normalizeImageUrl(a.hero, a, Astro.locals.pb) || undefined,
   })),
   ...brouillonsRaw.map((b) => ({
     id: b.id,
@@ -55,6 +58,7 @@ const actions: ActionItem[] = [
     subtitle: b.sous_titre,
     beneficiary: b.beneficiaire,
     actionType: b.type_action,
+    heroActionUrl: normalizeImageUrl(b.hero, b, Astro.locals.pb) || undefined,
   })),
 ].sort(
   (a, b) =>
@@ -123,6 +127,8 @@ const allActions = actions;
           title={action.title}
           slug={action.slug}
           source={action.source}
+          photoUrl={action.heroActionUrl}
+          photoClass="h-44 object-cover! px-0! "
           isDraft={action.source === "brouillon"}
           subtitle={action.subtitle}
           beneficiary={action.beneficiary}

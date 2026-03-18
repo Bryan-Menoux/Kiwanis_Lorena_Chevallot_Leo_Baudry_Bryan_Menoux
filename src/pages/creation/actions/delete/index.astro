@@ -5,6 +5,7 @@ import slugify from "slugify";
 import { formatDateShort } from "../../../../utils/utilitaires.js";
 import { getCreationViewUrl } from "../../../../utils/creationRoutes";
 import ActionsSearch from "../../../../components/ActionsSearch.astro";
+import { normalizeImageUrl } from "../../../../utils/utilitaires.js";
 
 let error = "";
 let success = "";
@@ -28,6 +29,7 @@ const actions = actionsRaw.map((a: any) => ({
   subtitle: a.sous_titre,
   updated: a.updated,
   beneficiary: a.beneficiaire,
+  heroActionUrl: normalizeImageUrl(a.hero, a, Astro.locals.pb) || undefined,
   source: "action" as const,
 }));
 
@@ -89,15 +91,25 @@ try {
 
 <Layout>
   <div class="container mx-auto px-4 py-8 my-16 md:my-32">
-    <div class="mb-10 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+    <div
+      class="mb-10 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between"
+    >
       <div class="mb-0">
-        <h1 class="mb-3 text-3xl font-bold text-accent font-poppins md:text-4xl">Supprimer des actions</h1>
+        <h1
+          class="mb-3 text-3xl font-bold text-accent font-poppins md:text-4xl"
+        >
+          Supprimer des actions
+        </h1>
         <p class="text-base text-base-content md:text-lg">
           Selectionnez plusieurs actions puis cliquez sur "Supprimer selection".
         </p>
       </div>
       <div class="w-full flex flex-wrap items-center gap-3 md:justify-end">
-        <a href="/creation/actions" class="btn btn-border btn-sm rounded-full flex-1 w-full md:flex-initial md:w-fit md:btn-md">Retour aux actions</a>
+        <a
+          href="/creation/actions"
+          class="btn btn-border btn-sm rounded-full flex-1 w-full md:flex-initial md:w-fit md:btn-md"
+          >Retour aux actions</a
+        >
       </div>
     </div>
 
@@ -106,11 +118,14 @@ try {
       data-success={success}
       data-error={error}
       class="hidden"
-    ></div>
+    >
+    </div>
 
     <form method="POST" id="deleteForm">
       <div class="mb-4 space-y-4">
-        <div class="card rounded-2xl border border-base-300 bg-base-100 shadow-sm">
+        <div
+          class="card rounded-2xl border border-base-300 bg-base-100 shadow-sm"
+        >
           <div class="card-body p-4 md:p-6">
             <div class="mb-4">
               <h2 class="card-title text-2xl">Rechercher</h2>
@@ -121,9 +136,19 @@ try {
             <div class="flex flex-col gap-4">
               <div class="w-full">
                 <ActionsSearch embedded={true}>
-                  <label slot="secondary-extra" class="form-control w-full gap-1" for="sort-select">
-                    <span class="text-sm! font-medium tracking-wide text-base-content">Trier par date</span>
-                    <select id="sort-select" class="select select-bordered w-full">
+                  <label
+                    slot="secondary-extra"
+                    class="form-control w-full gap-1"
+                    for="sort-select"
+                  >
+                    <span
+                      class="text-sm! font-medium tracking-wide text-base-content"
+                      >Trier par date</span
+                    >
+                    <select
+                      id="sort-select"
+                      class="select select-bordered w-full"
+                    >
                       <option value="updated_desc">Recent → Ancien</option>
                       <option value="updated_asc">Ancien → Recent</option>
                     </select>
@@ -158,6 +183,8 @@ try {
               title={action.title}
               slug={action.slug}
               source={action.source}
+              photoUrl={action.heroActionUrl}
+              photoClass="h-44 object-cover! px-0! "
               subtitle={action.subtitle}
               beneficiary={action.beneficiary}
               formattedDate={formatDate(action.updated)}
