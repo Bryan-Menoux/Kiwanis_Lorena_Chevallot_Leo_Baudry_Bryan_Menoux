@@ -1,5 +1,4 @@
 ---
-import HiddenField from "../partials/HiddenField.astro";
 import ImageUpload from "../partials/ImageUpload.astro";
 import MultiSelectDropdown from "../partials/MultiSelectDropdown.astro";
 
@@ -7,7 +6,6 @@ export interface Props {
   mode?: string;
   previewData?: any;
   placeholders: any;
-  imageIcon?: any;
   typeActionOptions?: string[];
 }
 
@@ -15,7 +13,6 @@ const {
   mode = "create",
   previewData,
   placeholders,
-  imageIcon,
   typeActionOptions = [],
 } = Astro.props;
 
@@ -35,29 +32,20 @@ const selectedTypeActions =
   <input
     data-prop="titre"
     id="input_titre"
-    name="titre_local"
+    name="titre"
     class="w-full border-2 border-accent rounded px-2 py-1 text-black bg-base-100"
     placeholder={placeholders.titre}
     {...mode === "edit" && previewData ? { value: previewData.titre } : {}}
-  />
-  <HiddenField
-    name="titre"
-    id="hidden_titre"
-    value={mode === "edit" && previewData ? previewData.titre : undefined}
   />
 
   <label class="block text-sm font-medium mt-3 mb-1">Sous-titre de l'action</label>
   <input
     data-prop="sous_titre"
     id="input_sous_titre"
+    name="sous_titre"
     class="w-full border border-accent rounded px-2 py-1 text-black bg-base-100"
     placeholder={placeholders.sous_titre}
     {...mode === "edit" && previewData ? { value: previewData.sous_titre } : {}}
-  />
-  <HiddenField
-    name="sous_titre"
-    id="hidden_sous_titre"
-    value={mode === "edit" && previewData ? previewData.sous_titre : undefined}
   />
 
   <div class="flex items-end gap-4">
@@ -69,13 +57,9 @@ const selectedTypeActions =
         data-prop="date_debut"
         id="input_date_debut"
         type="date"
+        name="date_debut"
         class="border border-accent rounded px-2 py-1 w-full text-black bg-base-100"
         {...mode === "edit" && previewData ? { value: previewData.date_debut } : {}}
-      />
-      <HiddenField
-        name="date_debut"
-        id="hidden_date_debut"
-        value={mode === "edit" && previewData ? previewData.date_debut : undefined}
       />
     </div>
     <div class="w-1/2">
@@ -84,13 +68,9 @@ const selectedTypeActions =
         data-prop="date_fin"
         id="input_date_fin"
         type="date"
+        name="date_fin"
         class="border border-accent rounded px-2 py-1 w-full text-black bg-base-100"
         {...mode === "edit" && previewData ? { value: previewData.date_fin } : {}}
-      />
-      <HiddenField
-        name="date_fin"
-        id="hidden_date_fin"
-        value={mode === "edit" && previewData ? previewData.date_fin : undefined}
       />
     </div>
   </div>
@@ -102,7 +82,6 @@ const selectedTypeActions =
     fieldName="hero"
     mode={mode}
     previewData={previewData}
-    imageIcon={imageIcon}
     ctaText="Cliquez ou glissez l'image ici"
     helperText="PNG, JPG, GIF"
     heightClass="h-40"
@@ -116,16 +95,7 @@ const selectedTypeActions =
     id="input_description_hero"
     placeholder={placeholders.description_hero}
     class="w-full border border-accent rounded px-2 py-1 text-black bg-base-100"
-    rows="2"
-    >{mode === "edit" && previewData ? previewData.description_hero : ""}</textarea
-  >
-  <HiddenField
-    name="description_hero"
-    id="hidden_description_hero"
-    value={mode === "edit" && previewData
-      ? previewData.description_hero
-      : undefined}
-  />
+    rows="2">{mode === "edit" && previewData ? previewData.description_hero : ""}</textarea>
 
   <label class="block text-sm font-medium mt-3 mb-1">
     Type d'action (vous pouvez en sélectionner plusieurs) <span class="text-error">*</span>
@@ -133,6 +103,7 @@ const selectedTypeActions =
   <MultiSelectDropdown
     id="input_type_action"
     dataProp="type_action"
+    name="type_action"
     options={typeActionOptions}
     selectedValues={selectedTypeActions}
     maxSelect={7}
@@ -141,12 +112,4 @@ const selectedTypeActions =
   <p class="text-xs text-base-content/70">
     Vous pouvez sélectionner jusqu'à 7 types. Au moins un type d'action est obligatoire.
   </p>
-  <HiddenField
-    name="type_action"
-    id="hidden_type_action"
-    value={mode === "edit" && previewData
-      ? JSON.stringify(selectedTypeActions)
-      : "[]"}
-  />
 </div>
-

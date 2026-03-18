@@ -9,6 +9,9 @@ import {
   ActionsTypeDeChiffreOptions,
 } from "../../../pocketbase-types";
 import previewDefaults from "../../../scripts/previewDefaults.js";
+import {
+  getNormalizedSelectedTypeActionValues,
+} from "../../../scripts/actionForm/validation.js";
 const previewDefaultsMap = previewDefaults as Record<string, unknown>;
 
 let error: string = "";
@@ -36,18 +39,6 @@ const hasAtLeastOnePartContent = (formData: FormData) =>
     const photoKey = `photo_partie_${partNumber}`;
     return isNonEmptyString(formData.get(textKey)) || hasUploadedFile(formData, photoKey);
   });
-
-const getSelectedTypeActions = (formData: FormData): string[] => {
-  const rawValue = formData.get("type_action");
-  if (typeof rawValue !== "string") return [];
-  try {
-    const parsed = JSON.parse(rawValue);
-    if (!Array.isArray(parsed)) return [];
-    return parsed.map((value) => String(value).trim()).filter(Boolean);
-  } catch {
-    return [];
-  }
-};
 
 const hasDescriptionForPartTitle = (payload: Record<string, any>, partNumber: number) => {
   const textKey = `texte_partie_${partNumber}`;
@@ -94,7 +85,7 @@ const getMissingRequiredFields = (formData: FormData) => {
   if (!hasUploadedFile(formData, "hero")) {
     missing.push("image de l'en-tête");
   }
-  if (getSelectedTypeActions(formData).length === 0) {
+  if (getNormalizedSelectedTypeActionValues(formData, typeActionOptions, 7).length === 0) {
     missing.push("type d'action");
   }
   if (!hasAtLeastOnePartContent(formData)) {
@@ -113,12 +104,6 @@ let typeActionOptions: string[] = (Array.isArray(ActionsTypeActionOptions)
 // Placeholder partagé (source unique injectée côté serveur depuis `previewDefaults.js`)
 const previewPlaceholder: any = {
   ...previewDefaults,
-  nom_lieu: "",
-  adresse_lieu: "",
-  lien_lieu: "",
-  chiffre: "",
-  type_de_chiffre: "",
-  beneficiaire: "",
 };
 // Gestion de la soumission du formulaire côté serveur (création)
 if (Astro.request.method === "POST") {
@@ -149,6 +134,9 @@ if (Astro.request.method === "POST") {
 
     // Préparer les données pour PocketBase
     const data: any = {};
+    const selectedTypeActions = isBrouillon
+      ? []
+      : getNormalizedSelectedTypeActionValues(formData, typeActionOptions, 7);
     // Première passe: champs texte/JSON (sans fichiers).
     for (const [key, value] of formData.entries()) {
       if (value instanceof File) continue;
@@ -192,6 +180,9 @@ if (Astro.request.method === "POST") {
         continue;
       }
       if (s) data[key] = s;
+    }
+    if (!isBrouillon) {
+      data.type_action = selectedTypeActions;
     }
 
     // Gérer les fichiers

@@ -34,11 +34,11 @@ const showInlineForm = Boolean(formId);
 ---
 
 <dialog id={id} class="modal">
-  <div class={`modal-box ${boxClass}`}>
-    <h3 class="text-xl font-bold">{title}</h3>
+  <div class={`modal-box ${boxClass} max-h-[90dvh] overflow-y-auto min-w-0`}>
+    <h3 class="text-xl font-bold leading-tight break-words">{title}</h3>
     {
       subtitle && (
-        <p class="mt-1 text-sm text-base-content/60">
+        <p class="mt-1 text-sm text-base-content/60 break-words whitespace-pre-wrap">
           {subtitle}
         </p>
       )
@@ -55,17 +55,17 @@ const showInlineForm = Boolean(formId);
         >
           <slot />
 
-          <div class="mt-8 flex items-center justify-end gap-2">
+          <div class="mt-8 flex flex-col-reverse gap-2 sm:flex-row sm:items-center sm:justify-end">
             <button
               type="button"
-              class="btn btn-ghost rounded-full"
+              class="btn btn-ghost rounded-full w-full sm:w-auto"
               data-thank-modal-close={id}
             >
               {closeLabel}
             </button>
             {
               showSubmitAction && (
-                <button type="submit" class="btn btn-accent rounded-full">
+                <button type="submit" class="btn btn-accent rounded-full w-full sm:w-auto">
                   {submitLabel}
                 </button>
               )
@@ -76,10 +76,10 @@ const showInlineForm = Boolean(formId);
         <>
           <slot />
 
-          <div class="mt-8 flex items-center justify-end gap-2">
+          <div class="mt-8 flex flex-col-reverse gap-2 sm:flex-row sm:items-center sm:justify-end">
             <button
               type="button"
-              class="btn btn-ghost rounded-full"
+              class="btn btn-ghost rounded-full w-full sm:w-auto"
               data-thank-modal-close={id}
             >
               {closeLabel}

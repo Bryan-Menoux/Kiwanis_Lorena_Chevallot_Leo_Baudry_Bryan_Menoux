@@ -4,6 +4,7 @@ import arrowNextSmall from "../../../assets/arrow-next-small.svg";
 export interface Props {
   id: string;
   dataProp: string;
+  name?: string;
   options: string[];
   selectedValues?: string[];
   maxSelect?: number;
@@ -14,6 +15,7 @@ export interface Props {
 const {
   id,
   dataProp,
+  name,
   options = [],
   selectedValues = [],
   maxSelect = 7,
@@ -81,6 +83,7 @@ const selectedSet = new Set((selectedValues || []).map((value) => String(value))
   <select
     id={id}
     data-prop={dataProp}
+    name={name || dataProp}
     multiple
     data-max-select={maxSelect}
     class="hidden"

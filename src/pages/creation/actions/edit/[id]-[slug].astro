@@ -25,6 +25,9 @@ import {
   ActionsTypeDeChiffreOptions,
 } from "../../../../pocketbase-types";
 import previewDefaults from "../../../../scripts/previewDefaults.js";
+import {
+  getNormalizedSelectedTypeActionValues,
+} from "../../../../scripts/actionForm/validation.js";
 
 // Message d'erreur affiché dans le formulaire en cas d'échec serveur
 let error: string = "";
@@ -120,22 +123,14 @@ const hasStartDateAfterSubmit = (formData: FormData, record: any) => {
   const startDateFromRecord = isRecordValueFilled(record?.date_debut);
   return formData.has("date_debut") ? startDateFromForm : startDateFromRecord;
 };
-const getSubmittedTypeActionValues = (formData: FormData): string[] | null => {
-  if (!formData.has("type_action")) return null;
-  const rawValue = formData.get("type_action");
-  if (typeof rawValue !== "string") return [];
-  try {
-    const parsed = JSON.parse(rawValue);
-    if (!Array.isArray(parsed)) return [];
-    return parsed.map((value) => String(value).trim()).filter(Boolean);
-  } catch {
-    return [];
-  }
-};
 const hasTypeActionAfterSubmit = (formData: FormData, record: any) => {
-  const submittedValues = getSubmittedTypeActionValues(formData);
-  if (submittedValues !== null) {
-    return submittedValues.length > 0;
+  const submittedValues = getNormalizedSelectedTypeActionValues(
+    formData,
+    typeActionOptions,
+    7,
+  );
+  if (submittedValues.length > 0) {
+    return true;
   }
   return Array.isArray(record?.type_action) && record.type_action.length > 0;
 };
@@ -452,6 +447,11 @@ if (Astro.request.method === "POST") {
 
     // Préparer les données pour PocketBase
     const data: any = { slug };
+    const selectedTypeActions = getNormalizedSelectedTypeActionValues(
+      formData,
+      typeActionOptions,
+      7,
+    );
 
     // Copier les champs texte (ignorer fichiers et flags 'remove_')
     for (const [key, value] of formData.entries()) {
@@ -501,6 +501,9 @@ if (Astro.request.method === "POST") {
       if (stringValue !== "") {
         data[key] = stringValue;
       }
+    }
+    if (!actionRecordFromBrouillon || publishRequested) {
+      data.type_action = selectedTypeActions;
     }
 
     if (requiresCompleteAction && (!Array.isArray(data.type_action) || data.type_action.length === 0)) {

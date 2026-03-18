@@ -1,22 +1,18 @@
 ---
-import HiddenField from "./HiddenField.astro";
-
 export interface Props {
   target: string;
   displayValue: string;
   placeholderValue: string;
   inputValue?: string;
-  hiddenValue?: string;
 }
 
-const { target, displayValue, placeholderValue, inputValue, hiddenValue } =
+const { target, displayValue, placeholderValue, inputValue } =
   Astro.props;
 
 // Convention d'IDs partagee avec editableTitle.js:
 // le script trouve le label, l'input et le hidden via ces motifs.
 const labelId = `titre_label_${target.replace(/^titre_/, "")}`;
 const inputId = `input_${target}`;
-const hiddenId = `hidden_${target}`;
 ---
 
 <div class="flex items-center justify-between">
@@ -25,10 +21,11 @@ const hiddenId = `hidden_${target}`;
     <input
       data-prop={target}
       id={inputId}
+      name={target}
       class="w-full border border-accent rounded px-2 py-1 text-black bg-base-100"
       placeholder={"Ex : " + placeholderValue}
       data-example={placeholderValue}
-      value={inputValue}
+      {...inputValue !== undefined && inputValue !== null ? { value: inputValue } : {}}
       style="display:none;"
     />
   </div>
@@ -42,4 +39,3 @@ const hiddenId = `hidden_${target}`;
     Modifier le titre de la section
   </button>
 </div>
-<HiddenField name={target} id={hiddenId} value={hiddenValue} />

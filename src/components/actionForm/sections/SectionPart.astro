@@ -1,6 +1,5 @@
 ---
 import EditableTitle from "../partials/EditableTitle.astro";
-import HiddenField from "../partials/HiddenField.astro";
 import ImageUpload from "../partials/ImageUpload.astro";
 
 export interface Props {
@@ -26,49 +25,17 @@ const textKey = `texte_partie_${partNumber}`;
 const photoKey = `photo_partie_${partNumber}`;
 const descriptionKey = `description_photo_partie_${partNumber}`;
 
-// La partie 1 a des placeholders "metier" predefinis.
-// Les parties suivantes restent vides par defaut pour laisser l'utilisateur choisir.
-const isPartOne = partNumber === 1;
-
 const titleDisplayValue = mode === "edit" && previewData
   ? previewData[titleKey]
   : placeholders[titleKey];
 
 const titleInputValue = mode === "edit" && previewData
   ? previewData[titleKey]
-  : isPartOne
-    ? undefined
-    : "";
-
-const titleHiddenValue = mode === "edit" && previewData
-  ? previewData[titleKey]
-  : isPartOne
-    ? undefined
-    : "";
-
-const textHiddenValue = mode === "edit" && previewData
-  ? previewData[textKey]
-  : isPartOne
-    ? undefined
-    : "";
+  : undefined;
 
 const descriptionInputValue = mode === "edit" && previewData
   ? previewData[descriptionKey]
-  : isPartOne
-    ? undefined
-    : "";
-// On n'ajoute l'attribut `value` que s'il y a une vraie valeur.
-// Cela evite d'ecraser le placeholder avec une chaine vide.
-const hasDescriptionInputValue =
-  typeof descriptionInputValue === "string"
-    ? descriptionInputValue.trim() !== ""
-    : descriptionInputValue !== undefined && descriptionInputValue !== null;
-
-const descriptionHiddenValue = mode === "edit" && previewData
-  ? previewData[descriptionKey]
-  : isPartOne
-    ? undefined
-    : "";
+  : undefined;
 ---
 
 <div class="p-4 bg-base-200 rounded-box border border-contrast space-y-4 opacity-0 -translate-x-4">
@@ -77,7 +44,6 @@ const descriptionHiddenValue = mode === "edit" && previewData
     displayValue={titleDisplayValue}
     placeholderValue={placeholders[titleKey]}
     inputValue={titleInputValue}
-    hiddenValue={titleHiddenValue}
   />
 
   <label class="block text-sm font-medium mt-3 mb-1"
@@ -93,10 +59,7 @@ const descriptionHiddenValue = mode === "edit" && previewData
     id={`input_${textKey}`}
     placeholder={placeholders[textKey]}
     class="w-full border border-accent rounded px-2 py-1 text-black bg-base-100"
-    rows="4"
-    >{mode === "edit" && previewData ? previewData[textKey] : ""}</textarea
-  >
-  <HiddenField name={textKey} id={`hidden_${textKey}`} value={textHiddenValue} />
+    rows="4">{mode === "edit" && previewData ? previewData[textKey] : ""}</textarea>
 
   <label class="block text-sm font-medium mt-3 mb-1"
     >Photo partie <span
@@ -125,13 +88,9 @@ const descriptionHiddenValue = mode === "edit" && previewData
   <input
     data-prop={descriptionKey}
     id={`input_${descriptionKey}`}
+    name={descriptionKey}
     placeholder={placeholders[descriptionKey]}
     class="w-full border border-accent rounded px-2 py-1 text-black bg-base-100"
-    {...hasDescriptionInputValue ? { value: descriptionInputValue } : {}}
-  />
-  <HiddenField
-    name={descriptionKey}
-    id={`hidden_${descriptionKey}`}
-    value={descriptionHiddenValue}
+    {...descriptionInputValue !== undefined && descriptionInputValue !== null ? { value: descriptionInputValue } : {}}
   />
 </div>

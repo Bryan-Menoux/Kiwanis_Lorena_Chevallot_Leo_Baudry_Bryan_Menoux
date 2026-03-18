@@ -1,6 +1,12 @@
 import { showAlert } from "../../utils/alerts";
 import { scrollToTarget } from "../../utils/scroll.js";
 import { renderPagination } from "../../utils/renderPagination";
+import {
+  buildStepOneRequiredMessage,
+  getMissingHeaderFields,
+  isDraftSubmitAction,
+  isEditDraftContext,
+} from "./validation.js";
 const MOBILE_QUERY = "(max-width: 1023px)";
 const TOTAL_STEPS = 7;
 const INIT_FLAG_ATTR = "data-mobile-wizard-init";
@@ -93,70 +99,8 @@ function setError(form, message) {
   });
 }
 
-function hasExistingImagePreview(form, fieldName) {
-  const existingPreview = form.querySelector(
-    `#preview_${fieldName} [data-delete-image="${fieldName}"]`,
-  );
-  return existingPreview instanceof HTMLElement;
-}
-
-function hasSelectedFile(form, fieldName) {
-  const input = form.querySelector(`[data-prop-file="${fieldName}"]`);
-  return (
-    input instanceof HTMLInputElement &&
-    input.files instanceof FileList &&
-    input.files.length > 0
-  );
-}
-
-function getMissingHeaderFields(form) {
-  const missingFields = [];
-
-  const titleInput = form.querySelector("#input_titre");
-  const hasTitle =
-    titleInput instanceof HTMLInputElement &&
-    titleInput.value.trim().length > 0;
-  if (!hasTitle) missingFields.push("titre");
-
-  const startDateInput = form.querySelector("#input_date_debut");
-  const hasStartDate =
-    startDateInput instanceof HTMLInputElement &&
-    startDateInput.value.trim().length > 0;
-  if (!hasStartDate) missingFields.push("date de début");
-
-  const hasHero =
-    hasSelectedFile(form, "hero") || hasExistingImagePreview(form, "hero");
-  if (!hasHero) missingFields.push("image de l'en-tête");
-
-  const typeActionSelect = form.querySelector("#input_type_action");
-  const hasTypeAction =
-    typeActionSelect instanceof HTMLSelectElement &&
-    Array.from(typeActionSelect.selectedOptions).length > 0;
-  if (!hasTypeAction) missingFields.push("type d'action");
-
-  return missingFields;
-}
-
-function buildStepOneRequiredMessage(missingHeaderFields) {
-  if (!missingHeaderFields.length) return "";
-  return `Complétez l'étape 1 en renseignant : ${missingHeaderFields.join(", ")}.`;
-}
-
-
-function isEditDraftContext(form) {
-  return (
-    form.getAttribute("data-form-mode") === "edit" &&
-    form.getAttribute("data-is-draft") === "true"
-  );
-}
-
 function shouldSkipStepValidationForDraftFlow(form) {
   return isEditDraftContext(form);
-}
-
-function isDraftSubmitAction(form, submitterName) {
-  if (submitterName === "save_as") return true;
-  return isEditDraftContext(form) && submitterName !== "publish_action";
 }
 function validateStep(form, step) {
   const currentStep = form.querySelector(

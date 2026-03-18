@@ -1,6 +1,5 @@
 ---
 import SearchLocation from "../../searchLocation.astro";
-import HiddenField from "../partials/HiddenField.astro";
 
 export interface Props {
   mode?: string;
@@ -47,16 +46,11 @@ const hasBeneficiaire = mode === "edit" && hasValue(previewData?.beneficiaire);
   <input
     data-prop="nom_lieu"
     id="input_nom_lieu"
-    name="nom_lieu_local"
+    name="nom_lieu"
     maxlength="30"
     class="w-full border border-accent rounded px-2 py-1 text-black bg-base-100"
     placeholder={placeholders.nom_lieu}
     {...hasNomLieu ? { value: previewData.nom_lieu } : {}}
-  />
-  <HiddenField
-    name="nom_lieu"
-    id="hidden_nom_lieu"
-    value={hasNomLieu ? previewData.nom_lieu : undefined}
   />
 
   <label class="block text-sm font-medium mt-3 mb-1">Adresse du lieu (max 30 caractères)</label>
@@ -65,24 +59,12 @@ const hasBeneficiaire = mode === "edit" && hasValue(previewData?.beneficiaire);
       inputId="input_adresse_lieu"
       suggestionsId="suggestions_adresse_lieu"
       placeholder={placeholders.adresse_lieu}
-      value={hasAdresseLieu ? previewData.adresse_lieu : undefined}
+      {...hasAdresseLieu ? { value: previewData.adresse_lieu } : {}}
       dataProp="adresse_lieu"
+      name="adresse_lieu"
       maxLength={30}
       inputClass="w-full border border-accent rounded px-2 py-1 text-black bg-base-100 flex-1"
-      mapLinkInputId="input_lien_lieu"
-    />
-    <HiddenField
-      name="adresse_lieu"
-      id="hidden_adresse_lieu"
-      value={hasAdresseLieu ? previewData.adresse_lieu : undefined}
-    />
-
-    <input
-      type="hidden"
-      data-prop="lien_lieu"
-      id="input_lien_lieu"
-      name="lien_lieu"
-      {...hasLienLieu ? { value: previewData.lien_lieu } : {}}
+      mapLinkInputId="manual_lien_lieu"
     />
 
     <div class="w-fit flex items-stretch shrink-0">
@@ -108,9 +90,12 @@ const hasBeneficiaire = mode === "edit" && hasValue(previewData?.beneficiaire);
   <div id="manual_lien_lieu_container" style="display:none;" class="mt-3">
     <label class="block text-sm font-medium mt-3 mb-1">Coller le lien Google Maps</label>
     <input
+      data-prop="lien_lieu"
       id="manual_lien_lieu"
+      name="lien_lieu"
       placeholder="https://www.google.com/maps/..."
       class="w-full border border-accent rounded px-2 py-1 text-black bg-base-100"
+      {...hasLienLieu ? { value: previewData.lien_lieu } : {}}
     />
     <div class="flex gap-2 mt-3 justify-end">
       <button type="button" id="manual_cancel_btn" class="btn btn-ghost"
@@ -131,6 +116,7 @@ const hasBeneficiaire = mode === "edit" && hasValue(previewData?.beneficiaire);
         data-prop="chiffre"
         id="input_chiffre"
         type="number"
+        name="chiffre"
         class="border border-accent rounded px-2 py-1 w-full text-black bg-base-100"
         placeholder={placeholders.chiffre}
         {...hasChiffre ? { value: previewData.chiffre } : {}}
@@ -144,6 +130,7 @@ const hasBeneficiaire = mode === "edit" && hasValue(previewData?.beneficiaire);
       <select
         data-prop="type_de_chiffre"
         id="input_type_de_chiffre"
+        name="type_de_chiffre"
         class="border border-accent rounded px-2 py-1 w-full text-black bg-base-100"
         {...hasTypeDeChiffre ? { value: previewData.type_de_chiffre } : {}}
       >
@@ -155,31 +142,15 @@ const hasBeneficiaire = mode === "edit" && hasValue(previewData?.beneficiaire);
       </select>
     </div>
   </div>
-
-  <HiddenField
-    name="chiffre"
-    id="hidden_chiffre"
-    value={hasChiffre ? previewData.chiffre : undefined}
-  />
-  <HiddenField
-    name="type_de_chiffre"
-    id="hidden_type_de_chiffre"
-    value={hasTypeDeChiffre ? previewData.type_de_chiffre : undefined}
-  />
-
   <label for="input_beneficiaire" class="block text-sm font-medium mt-3 mb-1"
     >Bénéficiaires</label
   >
   <input
     data-prop="beneficiaire"
     id="input_beneficiaire"
+    name="beneficiaire"
     class="w-full border border-accent rounded px-2 py-1 text-black bg-base-100"
     placeholder={placeholders.beneficiaire}
     {...hasBeneficiaire ? { value: previewData.beneficiaire } : {}}
-  />
-  <HiddenField
-    name="beneficiaire"
-    id="hidden_beneficiaire"
-    value={hasBeneficiaire ? previewData.beneficiaire : undefined}
   />
 </div>
