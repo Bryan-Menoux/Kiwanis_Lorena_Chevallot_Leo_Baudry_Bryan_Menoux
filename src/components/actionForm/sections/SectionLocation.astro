@@ -53,7 +53,7 @@ const hasBeneficiaire = mode === "edit" && hasValue(previewData?.beneficiaire);
     {...hasNomLieu ? { value: previewData.nom_lieu } : {}}
   />
 
-  <label class="block text-sm font-medium mt-3 mb-1">Adresse du lieu (max 30 caractères)</label>
+  <label class="block text-sm font-medium mt-3 mb-1">Adresse du lieu</label>
   <div class="flex items-stretch gap-2">
     <SearchLocation
       inputId="input_adresse_lieu"
@@ -62,7 +62,6 @@ const hasBeneficiaire = mode === "edit" && hasValue(previewData?.beneficiaire);
       {...hasAdresseLieu ? { value: previewData.adresse_lieu } : {}}
       dataProp="adresse_lieu"
       name="adresse_lieu"
-      maxLength={30}
       inputClass="w-full border border-accent rounded px-2 py-1 text-black bg-base-100 flex-1"
       mapLinkInputId="manual_lien_lieu"
     />

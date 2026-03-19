@@ -45,39 +45,18 @@ export function getCreationEditUrl(
   return `/creation/produits/edit/${slugPath}`;
 }
 
-export function getDraftEditUrl(
-  draftType: string | undefined,
-  id: string,
-  slug: string,
-): string {
-  if (draftType === "projet") {
-    return getCreationEditUrl("projet", id, slug);
-  }
-
-  if (draftType === "produit") {
-    return getCreationEditUrl("produit", id, slug);
-  }
-
+export function getDraftEditUrl(id: string, slug: string): string {
   return getCreationEditUrl("action", id, slug);
 }
 
-export function getDraftViewUrl(
-  draftType: string | undefined,
-  id: string,
-  slug: string,
-): string {
-  if (draftType === "action") {
-    return `/creation/brouillons/${buildSlugPath(id, slug)}`;
-  }
-
-  return getDraftEditUrl(draftType, id, slug);
+export function getDraftViewUrl(id: string, slug: string): string {
+  return `/creation/brouillons/${buildSlugPath(id, slug)}`;
 }
 
 export function getCreationDashboardEditUrl(
   status: CreationStatusType,
   id: string,
   slug: string,
-  type?: string,
 ): string {
   if (status === "actions") {
     return getCreationEditUrl("action", id, slug);
@@ -91,14 +70,13 @@ export function getCreationDashboardEditUrl(
     return getCreationEditUrl("produit", id, slug);
   }
 
-  return getDraftEditUrl(type, id, slug);
+  return getDraftEditUrl(id, slug);
 }
 
 export function getCreationDashboardViewUrl(
   status: CreationStatusType,
   id: string,
   slug: string,
-  type?: string,
 ): string {
   if (status === "actions") {
     return getCreationViewUrl("action", id, slug);
@@ -112,5 +90,5 @@ export function getCreationDashboardViewUrl(
     return getCreationViewUrl("produit", id, slug);
   }
 
-  return getDraftViewUrl(type, id, slug);
+  return getDraftViewUrl(id, slug);
 }

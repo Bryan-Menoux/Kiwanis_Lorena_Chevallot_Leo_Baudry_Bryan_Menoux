@@ -58,6 +58,14 @@ const resolvedImageIcon = imageIconProp || imageIcon;
 const isMobileWizard = uiMode === "mobile-wizard";
 const formTitle =
   mode === "create" ? "Créer une nouvelle action" : "Modifier l'action";
+const showUnsavedModal = mode === "create" || mode === "edit";
+const unsavedModalTitle = "Modifications non enregistrées";
+const unsavedModalMessage =
+  mode === "create"
+    ? "Tu peux enregistrer un brouillon avant de quitter, ou abandonner les modifications."
+    : "Tu peux enregistrer les modifications avant de quitter, ou abandonner les changements.";
+const unsavedModalSaveLabel =
+  mode === "create" ? "Enregistrer brouillon" : "Enregistrer les modifications";
 ---
 
 <form
@@ -100,6 +108,19 @@ const formTitle =
   <p class="text-xs text-base-100/80">
     Pour publier: titre, date de début, image de l'en-tête, type d'action, et au moins une partie (texte ou photo).
   </p>
+
+  {
+    mode === "create" && (
+      <input type="hidden" name="draft_id" data-autodraft-id value="" />
+    )
+  }
+  {
+    mode === "create" && (
+      <p data-autodraft-status class="text-xs text-base-100/70">
+        Brouillon non enregistré
+      </p>
+    )
+  }
 
   <div
     data-mobile-step-wrapper
@@ -324,6 +345,33 @@ const formTitle =
   }
 </form>
 
+{
+  showUnsavedModal && (
+    <dialog id="unsaved-changes-modal" class="modal">
+      <div class="modal-box max-w-lg">
+        <h3 data-unsaved-title class="text-xl font-bold">{unsavedModalTitle}</h3>
+        <p data-unsaved-message class="mt-2 text-sm text-base-content/70">
+          {unsavedModalMessage}
+        </p>
+        <div class="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+          <button type="button" class="btn btn-ghost rounded-full" data-unsaved-cancel>
+            Annuler
+          </button>
+          <button type="button" class="btn btn-outline rounded-full" data-unsaved-abandon>
+            Abandonner
+          </button>
+          <button type="button" class="btn btn-accent rounded-full" data-unsaved-save>
+            {unsavedModalSaveLabel}
+          </button>
+        </div>
+      </div>
+      <form method="dialog" class="modal-backdrop">
+        <button type="button" data-unsaved-cancel>Fermer</button>
+      </form>
+    </dialog>
+  )
+}
+
 <FormSubmitOverlay
   formSelector="#leftForm"
   message="Enregistrement en cours... Cela peut prendre jusqu’à une minute."
@@ -371,6 +419,8 @@ const formTitle =
   import "../../scripts/actionForm/editableTitle.js";
   import "../../scripts/actionForm/formAnimations.js";
   import "../../scripts/actionForm/formValidation.js";
+  import "../../scripts/actionForm/autoDraftAutosave.js";
+  import "../../scripts/actionForm/unsavedChangesGuard.js";
   import "../../scripts/actionForm/mobileWizard.js";
   import "../../scripts/preview/index.js";
   import { initWebpConversion } from "../../scripts/actionForm/convertToWebp.js";

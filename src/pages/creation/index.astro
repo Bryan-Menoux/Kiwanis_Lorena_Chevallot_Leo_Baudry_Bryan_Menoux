@@ -15,7 +15,6 @@ interface Page {
   status: 'actions' | 'projets' | 'produits' | 'brouillon';
   updatedAt: string;
   authorName: string;
-  type?: 'action' | 'projet' | 'produit';
   beneficiary?: string;
 }
 
@@ -62,13 +61,6 @@ const pages: Page[] = [
     authorName: 'Admin' // Valeur par défaut
   })),
   ...brouillons.map(brouillon => {
-    // Inférer le type si absent (heuristique : champs typiques d'une action)
-    const inferredType = brouillon.type || (
-      brouillon.date_debut || brouillon.nom_lieu || brouillon.beneficiaire || brouillon.titre_partie_1 || (Array.isArray(brouillon.galerie_photos) && brouillon.galerie_photos.length)
-        ? 'action'
-        : undefined
-    );
-
     return ({
       id: brouillon.id,
       title: asSafeText(brouillon.titre, "Brouillon sans titre"),
@@ -76,7 +68,6 @@ const pages: Page[] = [
       status: 'brouillon' as const,
       updatedAt: brouillon.updated,
       authorName: 'Admin', // Valeur par défaut
-      type: inferredType,
     });
   })
 ];
@@ -96,12 +87,12 @@ function getStatusBadge(status: Page['status']) {
   return { label: status, className: 'badge' };
 }
 
-function getEditUrl(status: Page['status'], id: string, slug: string, type?: string): string {
-  return getCreationDashboardEditUrl(status, id, slug, type);
+function getEditUrl(status: Page['status'], id: string, slug: string): string {
+  return getCreationDashboardEditUrl(status, id, slug);
 }
 
-function getViewUrl(status: Page['status'], id: string, slug: string, type?: string): string {
-  return getCreationDashboardViewUrl(status, id, slug, type);
+function getViewUrl(status: Page['status'], id: string, slug: string): string {
+  return getCreationDashboardViewUrl(status, id, slug);
 }
 
 function computeStats(pages: Page[]): { actions: number; projets: number; produits: number; brouillons: number; total: number; } {
@@ -295,8 +286,8 @@ if (Astro.request.method === "POST") {
                         >
                           Supprimer
                         </button>
-                        <a href={getViewUrl(page.status, page.id, page.slug, page.type)} class="btn btn-sm">Voir</a>
-                        <a href={getEditUrl(page.status, page.id, page.slug, page.type)} class="btn btn-sm">Modifier</a>
+                        <a href={getViewUrl(page.status, page.id, page.slug)} class="btn btn-sm">Voir</a>
+                        <a href={getEditUrl(page.status, page.id, page.slug)} class="btn btn-sm">Modifier</a>
                       </div>
                     </div>
                   </div>
@@ -357,18 +348,18 @@ if (Astro.request.method === "POST") {
     return new Date(d).toLocaleString('fr-FR', { dateStyle: 'medium', timeStyle: 'short' });
   }
 
-  function getEditUrl(status, id, slug, type) {
+  function getEditUrl(status, id, slug) {
     const helpers = window.creationRouteHelpers || {};
     return typeof helpers.getCreationDashboardEditUrl === "function"
-      ? helpers.getCreationDashboardEditUrl(status, id, slug, type)
+      ? helpers.getCreationDashboardEditUrl(status, id, slug)
       : "/creation";
   }
 
-  function getViewUrl(status, id, slug, type) {
+  function getViewUrl(status, id, slug) {
     const helpers = window.creationRouteHelpers || {};
     return typeof helpers.getCreationDashboardViewUrl === "function"
-      ? helpers.getCreationDashboardViewUrl(status, id, slug, type)
-      : getEditUrl(status, id, slug, type);
+      ? helpers.getCreationDashboardViewUrl(status, id, slug)
+      : getEditUrl(status, id, slug);
   }
 
   function getStatusBadge(status) {
@@ -509,8 +500,8 @@ if (Astro.request.method === "POST") {
                     >
                       Supprimer
                     </button>
-                    <a href="${getViewUrl(page.status, page.id, page.slug, page.type)}" class="btn btn-sm">Voir</a>
-                    <a href="${getEditUrl(page.status, page.id, page.slug, page.type)}" class="btn btn-sm">Modifier</a>
+                    <a href="${getViewUrl(page.status, page.id, page.slug)}" class="btn btn-sm">Voir</a>
+                    <a href="${getEditUrl(page.status, page.id, page.slug)}" class="btn btn-sm">Modifier</a>
                   </div>
                 </div>
               </div>

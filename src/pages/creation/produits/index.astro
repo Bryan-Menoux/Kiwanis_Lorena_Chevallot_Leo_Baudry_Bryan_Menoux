@@ -9,7 +9,7 @@ interface ProductItem {
   id: string;
   title: string;
   slug: string;
-  source: "produit" | "brouillon";
+  source: "produit";
   updated?: string;
   photoUrl?: string;
   price?: number;
@@ -18,13 +18,6 @@ interface ProductItem {
 const produitsRaw: any[] = await Astro.locals.pb
   .collection("produits")
   .getFullList(200, { sort: "-updated" });
-const brouillonsRaw: any[] = await Astro.locals.pb
-  .collection("brouillons")
-  .getFullList(200, {
-    sort: "-updated",
-    filter: 'type = "produit"',
-  });
-
 const produits: ProductItem[] = [
   ...produitsRaw.map((p) => {
     const photoUrl = Array.isArray(p.photo) && p.photo.length > 0
@@ -39,21 +32,6 @@ const produits: ProductItem[] = [
       updated: p.updated,
       photoUrl,
       price: typeof p.prix === "number" ? p.prix : undefined,
-    };
-  }),
-  ...brouillonsRaw.map((b) => {
-    const photoUrl = Array.isArray(b.photo) && b.photo.length > 0
-      ? (Astro.locals as any).pb.files.getURL(b, b.photo[0])
-      : "";
-    
-    return {
-      id: b.id,
-      title: b.titre || "Brouillon sans titre",
-      slug: slugify(b.titre || "brouillon", { lower: true, strict: true }),
-      source: "brouillon" as const,
-      updated: b.updated,
-      photoUrl,
-      price: typeof b.prix === "number" ? b.prix : undefined,
     };
   }),
 ].sort(
@@ -118,16 +96,11 @@ function formatDate(dateStr?: string): string {
           title={produit.title}
           slug={produit.slug}
           source={produit.source}
-          isDraft={produit.source === "brouillon"}
           photoUrl={produit.photoUrl}
           showPhotoPlaceholder={true}
           price={produit.price}
           formattedDate={formatDate(produit.updated)}
-          viewUrl={
-            produit.source === "brouillon"
-              ? `/creation/brouillons/${produit.id}-${produit.slug}`
-              : getCreationViewUrl("produit", produit.id, produit.slug)
-          }
+          viewUrl={getCreationViewUrl("produit", produit.id, produit.slug)}
           editUrl={getCreationEditUrl("produit", produit.id, produit.slug)}
           showDeleteButton={true}
         />

@@ -26,7 +26,9 @@ import {
 } from "../../../../pocketbase-types";
 import previewDefaults from "../../../../scripts/previewDefaults.js";
 import {
+  buildWordLimitMessage,
   getNormalizedSelectedTypeActionValues,
+  getOverLimitPartTextFieldsAfterSubmit,
 } from "../../../../scripts/actionForm/validation.js";
 
 // Message d'erreur affiché dans le formulaire en cas d'échec serveur
@@ -104,6 +106,106 @@ const keepExistingImageFields = (payload: Record<string, any>, record: any) => {
   }
   return payload;
 };
+const getRecordFileName = (value: any) => {
+  if (typeof value === "string") return value.trim();
+  if (Array.isArray(value)) return String(value[0] ?? "").trim();
+  return "";
+};
+const downloadRecordFile = async (
+  record: any,
+  fileName: string,
+  pocketbaseClient: any,
+) => {
+  const normalizedFileName = fileName.trim();
+  if (!normalizedFileName) return null;
+
+  const tryFetch = async (url: string) => {
+    const response = await fetch(url, {
+      headers: pocketbaseClient.authStore.token
+        ? { Authorization: `Bearer ${pocketbaseClient.authStore.token}` }
+        : undefined,
+    });
+
+    if (!response.ok) {
+      return null;
+    }
+
+    const blob = await response.blob();
+    return new File(
+      [blob],
+      normalizedFileName,
+      { type: blob.type || "application/octet-stream" },
+    );
+  };
+
+  let file = await tryFetch(pocketbaseClient.files.getURL(record, normalizedFileName));
+  if (file) return file;
+
+  try {
+    const token = await pocketbaseClient.files.getToken();
+    file = await tryFetch(
+      pocketbaseClient.files.getURL(record, normalizedFileName, { token }),
+    );
+  } catch {
+    // On laissera l'appelant décider quoi faire si le fichier n'est pas accessible.
+  }
+
+  return file;
+};
+const hydrateFilesForActionCreate = async (
+  payload: Record<string, any>,
+  record: any,
+  pocketbaseClient: any,
+) => {
+  const singleFileFields = [
+    "hero",
+    "photo_partie_1",
+    "photo_partie_2",
+    "photo_partie_3",
+  ];
+
+  for (const field of singleFileFields) {
+    const currentValue = payload[field];
+    if (currentValue instanceof File) continue;
+
+    const fileName = getRecordFileName(currentValue);
+    if (!fileName) continue;
+
+    const file = await downloadRecordFile(record, fileName, pocketbaseClient);
+    if (!file) {
+      throw new Error(`Impossible de récupérer le fichier "${fileName}" pour "${field}".`);
+    }
+
+    payload[field] = file;
+  }
+
+  if (Array.isArray(payload.galerie_photos)) {
+    const hydratedGallery: File[] = [];
+
+    for (const entry of payload.galerie_photos) {
+      if (entry instanceof File) {
+        hydratedGallery.push(entry);
+        continue;
+      }
+
+      const fileName = getRecordFileName(entry);
+      if (!fileName) continue;
+
+      const file = await downloadRecordFile(record, fileName, pocketbaseClient);
+      if (!file) {
+        throw new Error(
+          `Impossible de récupérer le fichier de galerie "${fileName}".`,
+        );
+      }
+
+      hydratedGallery.push(file);
+    }
+
+    payload.galerie_photos = hydratedGallery.length ? hydratedGallery : "";
+  }
+
+  return payload;
+};
 const isFieldRemoved = (formData: FormData, fieldName: string) => {
   const raw = formData.get(`remove_${fieldName}`);
   if (!raw) return false;
@@ -132,7 +234,10 @@ const hasTypeActionAfterSubmit = (formData: FormData, record: any) => {
   if (submittedValues.length > 0) {
     return true;
   }
-  return Array.isArray(record?.type_action) && record.type_action.length > 0;
+  if (Array.isArray(record?.type_action) && record.type_action.length > 0) {
+    return true;
+  }
+  return typeof record?.type_actions === "string" && record.type_actions.trim() !== "";
 };
 const hasAtLeastOnePartAfterSubmit = (formData: FormData, record: any) =>
   PART_NUMBERS.some((partNumber) => {
@@ -259,7 +364,10 @@ const previewData: any = {
   type_de_chiffre: actionRecord?.type_de_chiffre ?? "",
   type_action: Array.isArray(actionRecord?.type_action)
     ? actionRecord.type_action
-    : [],
+    : actionRecord?.type_actions
+      ? [String(actionRecord.type_actions)]
+      : [],
+  type_actions: actionRecord?.type_actions ?? "",
   beneficiaire: actionRecord?.beneficiaire ?? "",
   titre_partie_2: actionRecord?.titre_partie_2 ?? "",
   texte_partie_2: actionRecord?.texte_partie_2 ?? "",
@@ -304,6 +412,20 @@ if (Astro.request.method === "POST") {
   try {
     const formData = await Astro.request.formData();
     const action = formData.get("_action")?.toString();
+    const wantsJsonResponse =
+      formData.get("leave_after_save")?.toString() === "true";
+    const finishSave = (path: string, message: string) => {
+      if (wantsJsonResponse) {
+        return new Response(
+          JSON.stringify({ ok: true, path, message }),
+          {
+            headers: { "Content-Type": "application/json" },
+          },
+        );
+      }
+
+      return Astro.redirect(withSuccess(path, message));
+    };
 
     if (action === "delete" && idParam && typeof idParam === "string") {
       if (actionRecordFromBrouillon) {
@@ -317,10 +439,21 @@ if (Astro.request.method === "POST") {
       return Astro.redirect(withSuccess("/creation/actions", "Action supprimée"));
     }
 
+    const publishRequested = formData.get("publish_action")?.toString() === "true";
+    if (!actionRecordFromBrouillon || publishRequested) {
+      const overLimitPartTexts = getOverLimitPartTextFieldsAfterSubmit(
+        formData,
+        actionRecord,
+        70,
+      );
+      if (overLimitPartTexts.length > 0) {
+        throw new Error(buildWordLimitMessage(overLimitPartTexts, 70));
+      }
+    }
+
     // La valeur du slug sera générée plus tard quand le titre sera connu ; on
     // la déclare ici pour éviter des erreurs TypeScript dans la branche de publication rapide.
     let slug: string = "";
-    const publishRequested = formData.get("publish_action")?.toString() === "true";
     const requiresCompleteAction =
       !actionRecordFromBrouillon || publishRequested;
 
@@ -416,19 +549,30 @@ if (Astro.request.method === "POST") {
           publishPayload[key] = actionRecord[key];
         }
       }
+      const draftTypeActions = Array.isArray(actionRecord?.type_action)
+        ? actionRecord.type_action
+        : actionRecord?.type_actions
+          ? [String(actionRecord.type_actions)]
+          : [];
+      if (draftTypeActions.length > 0) {
+        publishPayload.type_action = draftTypeActions;
+      }
       publishPayload.slug = publishSlug;
       applyPartTitleRule(publishPayload);
+      await hydrateFilesForActionCreate(
+        publishPayload,
+        actionRecord,
+        Astro.locals.pb,
+      );
 
       const publishedAction = await Astro.locals.pb
         .collection("actions")
         .create(publishPayload);
       await Astro.locals.pb.collection("brouillons").delete(draftId);
 
-      return Astro.redirect(
-        withSuccess(
-          `/creation/actions/${publishedAction.id}-${publishSlug}`,
-          "Brouillon publié",
-        ),
+      return finishSave(
+        `/creation/actions/${publishedAction.id}-${publishSlug}`,
+        "Brouillon publié",
       );
     }
 
@@ -455,12 +599,17 @@ if (Astro.request.method === "POST") {
       if (
         key === "galerie_photos" ||
         key === "remove_galerie_photos" ||
-        key.startsWith("remove_")
+        key.startsWith("remove_") ||
+        key === "save_as" ||
+        key === "publish_action" ||
+        key === "draft_id" ||
+        key === "autosave" ||
+        key === "leave_after_save"
       )
         continue;
       if (key === "type_action") {
         // Le champ `type_action` n'existe pas dans la collection `brouillons`.
-        if (actionRecordFromBrouillon && !publishRequested) {
+      if (actionRecordFromBrouillon && !publishRequested) {
           continue;
         }
         try {
@@ -597,9 +746,24 @@ if (Astro.request.method === "POST") {
             applyPartTitleRule({ ...payload }),
             actionRecord,
           );
+          if (!Array.isArray(publishPayload.type_action) || publishPayload.type_action.length === 0) {
+            const draftTypeActions = Array.isArray(actionRecord?.type_action)
+              ? actionRecord.type_action
+              : actionRecord?.type_actions
+                ? [String(actionRecord.type_actions)]
+                : [];
+            if (draftTypeActions.length > 0) {
+              publishPayload.type_action = draftTypeActions;
+            }
+          }
           if (Object.prototype.hasOwnProperty.call(publishPayload, "type")) {
             delete publishPayload.type;
           }
+          await hydrateFilesForActionCreate(
+            publishPayload,
+            actionRecord,
+            Astro.locals.pb,
+          );
           const publishedAction = await Astro.locals.pb
             .collection("actions")
             .create(publishPayload);
@@ -615,6 +779,9 @@ if (Astro.request.method === "POST") {
 
         // assurer que le type reste 'action' pour que les liens redirigent correctement
         payload.type = 'action';
+        if (selectedTypeActions.length > 0) {
+          payload.type_actions = selectedTypeActions[0];
+        }
         // Sécurité : ne jamais pousser `type_action` vers `brouillons`.
         if (Object.prototype.hasOwnProperty.call(payload, "type_action")) {
           delete payload.type_action;
@@ -626,9 +793,7 @@ if (Astro.request.method === "POST") {
 
         await Astro.locals.pb.collection("brouillons").update(idParam, payload);
 
-        return Astro.redirect(
-          withSuccess(`/creation/brouillons/${idParam}-${slug}`, "Brouillon mis à jour"),
-        );
+        return finishSave(`/creation/brouillons/${idParam}-${slug}`, "Brouillon mis à jour");
       }
 
       // Mise à jour classique d'une action
@@ -648,9 +813,7 @@ if (Astro.request.method === "POST") {
         throw updateErr;
       }
 
-      return Astro.redirect(
-        withSuccess(`/creation/actions/${idParam}-${slug}`, "Action mise à jour"),
-      );
+      return finishSave(`/creation/actions/${idParam}-${slug}`, "Action mise à jour");
     } else {
       // Création
       const createPayload = applyPartTitleRule({
@@ -660,8 +823,9 @@ if (Astro.request.method === "POST") {
       const newAction = await Astro.locals.pb.collection("actions").create({
         ...createPayload,
       });
-      return Astro.redirect(
-        withSuccess(`/creation/actions/${newAction.id}-${slug}`, "Action créée avec succès"),
+      return finishSave(
+        `/creation/actions/${newAction.id}-${slug}`,
+        "Action créée avec succès",
       );
     }
   } catch (err) {

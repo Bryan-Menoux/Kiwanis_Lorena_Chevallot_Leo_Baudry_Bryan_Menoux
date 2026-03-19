@@ -118,6 +118,12 @@ function handleGalleryFileElement(inputElement) {
         files: updatedGalleryFiles,
       });
       syncGalleryFileInput();
+      const form = document.getElementById('leftForm');
+      if (form instanceof HTMLFormElement) {
+        form.dispatchEvent(
+          new CustomEvent('kc:action-form-modified', { bubbles: true }),
+        );
+      }
 
       newFiles.forEach((_, index) => {
         dispatch({
@@ -163,6 +169,12 @@ function bindGalleryButtons() {
         index: removeIndex,
       });
       syncGalleryFileInput();
+      const form = document.getElementById('leftForm');
+      if (form instanceof HTMLFormElement) {
+        form.dispatchEvent(
+          new CustomEvent('kc:action-form-modified', { bubbles: true }),
+        );
+      }
       return;
     }
 
@@ -178,6 +190,12 @@ function bindGalleryButtons() {
       type: 'GALLERY_EXISTING_REMOVED',
       url: photoUrl,
     });
+    const form = document.getElementById('leftForm');
+    if (form instanceof HTMLFormElement) {
+      form.dispatchEvent(
+        new CustomEvent('kc:action-form-modified', { bubbles: true }),
+      );
+    }
   });
 
   document.__galleryButtonsBound = true;

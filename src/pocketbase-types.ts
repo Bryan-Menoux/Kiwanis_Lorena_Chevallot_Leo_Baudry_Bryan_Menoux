@@ -147,15 +147,19 @@ export type ActionsRecord = {
 	updated: IsoAutoDateString
 }
 
+export enum BrouillonsTypeActionsOptions {
+	"Événement solidaire" = "Événement solidaire",
+	"Intervention en milieu scolaire" = "Intervention en milieu scolaire",
+	"Soutien médical" = "Soutien médical",
+	"Action ponctuelle" = "Action ponctuelle",
+	"Atelier éducatif et culturel" = "Atelier éducatif et culturel",
+	"Animations" = "Animations",
+	"Rencontre intergénération" = "Rencontre intergénération",
+}
+
 export enum BrouillonsTypeDeChiffreOptions {
 	"dépenses" = "dépenses",
 	"récoltes" = "récoltes",
-}
-
-export enum BrouillonsTypeOptions {
-	"action" = "action",
-	"produit" = "produit",
-	"projet" = "projet",
 }
 export type BrouillonsRecord = {
 	adresse_lieu?: string
@@ -186,7 +190,7 @@ export type BrouillonsRecord = {
 	titre_partie_2?: string
 	titre_partie_3?: string
 	titre_remerciements?: string
-	type?: BrouillonsTypeOptions
+	type_actions?: BrouillonsTypeActionsOptions[]
 	type_de_chiffre?: BrouillonsTypeDeChiffreOptions
 	updated: IsoAutoDateString
 }

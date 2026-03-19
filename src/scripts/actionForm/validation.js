@@ -35,6 +35,74 @@ function hasAtLeastOnePart(form) {
   });
 }
 
+function countWords(value) {
+  if (typeof value !== "string") return 0;
+  const normalized = value.trim();
+  if (!normalized) return 0;
+  return normalized.split(/\s+/).filter(Boolean).length;
+}
+
+function getPartTextKey(partNumber) {
+  return `texte_partie_${partNumber}`;
+}
+
+function getPartTextValueAfterSubmit(formData, record, partNumber) {
+  const textKey = getPartTextKey(partNumber);
+  if (formData.has(textKey)) {
+    const submittedValue = formData.get(textKey);
+    return typeof submittedValue === "string" ? submittedValue : "";
+  }
+  return typeof record?.[textKey] === "string" ? record[textKey] : "";
+}
+
+function getOverLimitPartTextFieldsFromForm(form, limit = 70) {
+  return [1, 2, 3]
+    .map((partNumber) => {
+      const textInput = form.querySelector(`#input_${getPartTextKey(partNumber)}`);
+      if (!(textInput instanceof HTMLTextAreaElement)) return null;
+      const words = countWords(textInput.value);
+      if (words <= limit) return null;
+      return getPartTextKey(partNumber);
+    })
+    .filter(Boolean);
+}
+
+function getOverLimitPartTextFieldsAfterSubmit(
+  formData,
+  record,
+  limit = 70,
+) {
+  return [1, 2, 3]
+    .map((partNumber) => {
+      const textKey = getPartTextKey(partNumber);
+      const words = countWords(
+        getPartTextValueAfterSubmit(formData, record, partNumber),
+      );
+      if (words <= limit) return null;
+      return textKey;
+    })
+    .filter(Boolean);
+}
+
+function buildWordLimitMessage(overLimitFields, limit = 70) {
+  if (!Array.isArray(overLimitFields) || overLimitFields.length === 0) {
+    return "";
+  }
+  const labels = overLimitFields
+    .map((field) => {
+      const match = String(field).match(/^texte_partie_(\d)$/);
+      return match ? `partie ${match[1]}` : String(field);
+    });
+  if (labels.length === 1) {
+    return `Le texte de la ${labels[0]} est limité à ${limit} mots maximum.`;
+  }
+  const labelList =
+    labels.length === 2
+      ? labels.join(" et ")
+      : `${labels.slice(0, -1).join(", ")} et ${labels[labels.length - 1]}`;
+  return `Les textes des ${labelList} sont limités à ${limit} mots maximum.`;
+}
+
 function getMissingHeaderFields(form) {
   const missingFields = [];
 
@@ -140,6 +208,7 @@ export {
   hasExistingImagePreview,
   hasSelectedFile,
   hasAtLeastOnePart,
+  countWords,
   getMissingHeaderFields,
   buildRequiredMessage,
   buildStepOneRequiredMessage,
@@ -148,4 +217,7 @@ export {
   getSelectedTypeActionValues,
   normalizeTypeActionValues,
   getNormalizedSelectedTypeActionValues,
+  getOverLimitPartTextFieldsFromForm,
+  getOverLimitPartTextFieldsAfterSubmit,
+  buildWordLimitMessage,
 };

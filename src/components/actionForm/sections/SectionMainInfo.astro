@@ -7,6 +7,7 @@ export interface Props {
   previewData?: any;
   placeholders: any;
   typeActionOptions?: string[];
+  imageIcon?: any;
 }
 
 const {
@@ -14,13 +15,18 @@ const {
   previewData,
   placeholders,
   typeActionOptions = [],
+  imageIcon,
 } = Astro.props;
 
 // En édition, on pré-remplit le multi-select avec les valeurs existantes.
 // En création, on part volontairement d'une liste vide.
 const selectedTypeActions =
-  mode === "edit" && previewData && Array.isArray(previewData.type_action)
-    ? previewData.type_action
+  mode === "edit" && previewData
+    ? Array.isArray(previewData.type_action)
+      ? previewData.type_action
+      : previewData.type_actions
+        ? [String(previewData.type_actions)]
+        : []
     : [];
 
 // Schéma général du formulaire :

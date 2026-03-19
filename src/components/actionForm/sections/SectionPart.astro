@@ -1,6 +1,7 @@
 ---
 import EditableTitle from "../partials/EditableTitle.astro";
 import ImageUpload from "../partials/ImageUpload.astro";
+import { countWords } from "../../../scripts/actionForm/validation.js";
 
 export interface Props {
   partNumber: number;
@@ -36,6 +37,8 @@ const titleInputValue = mode === "edit" && previewData
 const descriptionInputValue = mode === "edit" && previewData
   ? previewData[descriptionKey]
   : undefined;
+const initialWordCount =
+  mode === "edit" && previewData ? countWords(String(previewData[textKey] ?? "")) : 0;
 ---
 
 <div class="p-4 bg-base-200 rounded-box border border-contrast space-y-4 opacity-0 -translate-x-4">
@@ -55,11 +58,16 @@ const descriptionInputValue = mode === "edit" && previewData
   >
   <textarea
     data-prop={textKey}
+    data-word-limit="70"
     name={textKey}
     id={`input_${textKey}`}
     placeholder={placeholders[textKey]}
     class="w-full border border-accent rounded px-2 py-1 text-black bg-base-100"
     rows="4">{mode === "edit" && previewData ? previewData[textKey] : ""}</textarea>
+  <div class="flex items-center justify-between gap-3 text-xs text-base-content/70">
+    <p>Limite: 70 mots max.</p>
+    <p data-word-count-for={textKey}>{initialWordCount}/70 mots</p>
+  </div>
 
   <label class="block text-sm font-medium mt-3 mb-1"
     >Photo partie <span

@@ -30,5 +30,9 @@ document.addEventListener('DOMContentLoaded', () => {
       type: 'SINGLE_IMAGE_REMOVED',
       prop: fieldName,
     });
+
+    form.dispatchEvent(
+      new CustomEvent('kc:action-form-modified', { bubbles: true }),
+    );
   });
 });

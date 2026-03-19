@@ -8,7 +8,7 @@ interface ProjectItem {
   id: string;
   title: string;
   slug: string;
-  source: "projet" | "brouillon";
+  source: "projet";
   updated?: string;
   date?: string;
   beneficiary?: string;
@@ -17,13 +17,6 @@ interface ProjectItem {
 const projetsRaw: any[] = await Astro.locals.pb
   .collection("projets")
   .getFullList(200, { sort: "-updated" });
-const brouillonsRaw: any[] = await Astro.locals.pb
-  .collection("brouillons")
-  .getFullList(200, {
-    sort: "-updated",
-    filter: 'type = "projet"',
-  });
-
 const projets: ProjectItem[] = [
   ...projetsRaw.map((p) => ({
     id: p.id,
@@ -33,15 +26,6 @@ const projets: ProjectItem[] = [
     updated: p.updated,
     date: p.date,
     beneficiary: p.nom_adresse,
-  })),
-  ...brouillonsRaw.map((b) => ({
-    id: b.id,
-    title: b.titre || "Brouillon sans titre",
-    slug: slugify(b.titre || "brouillon", { lower: true, strict: true }),
-    source: "brouillon" as const,
-    updated: b.updated,
-    date: b.date || b.date_debut,
-    beneficiary: b.nom_adresse || b.nom_lieu || b.adresse_lieu,
   })),
 ].sort(
   (a, b) =>
@@ -111,14 +95,9 @@ function formatDate(dateStr?: string): string {
           title={projet.title}
           slug={projet.slug}
           source={projet.source}
-          isDraft={projet.source === "brouillon"}
           beneficiary={projet.beneficiary}
           formattedDate={formatDate(projet.date)}
-          viewUrl={
-            projet.source === "brouillon"
-              ? `/creation/brouillons/${projet.id}-${projet.slug}`
-              : getCreationViewUrl("projet", projet.id, projet.slug)
-          }
+          viewUrl={getCreationViewUrl("projet", projet.id, projet.slug)}
           editUrl={getCreationEditUrl("projet", projet.id, projet.slug)}
           showDeleteButton={true}
         />

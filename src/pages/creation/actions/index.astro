@@ -30,10 +30,7 @@ const actionsRaw: any[] = await Astro.locals.pb
 
 const brouillonsRaw: any[] = await Astro.locals.pb
   .collection("brouillons")
-  .getFullList(200, {
-    sort: "-updated",
-    filter: 'type = "action"',
-  });
+  .getFullList(200, { sort: "-updated" });
 
 // Transformation des données
 

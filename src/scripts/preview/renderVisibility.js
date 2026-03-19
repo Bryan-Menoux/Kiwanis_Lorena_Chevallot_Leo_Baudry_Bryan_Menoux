@@ -79,13 +79,42 @@ function syncThanksSectionVisibility() {
 function syncLocationSectionLayout(sectionNode) {
   if (!(sectionNode instanceof HTMLElement)) return;
 
+  const derived = getDerivedState();
+  const cardCount = Number(derived.visibility.locationCardCount || 0);
   const cards = Array.from(sectionNode.querySelectorAll('[data-location-card]')).filter(
     (card) => card instanceof HTMLElement,
   );
   if (!cards.length) return;
 
+  sectionNode.classList.remove(
+    'grid-cols-1',
+    'md:grid-cols-1',
+    'md:grid-cols-2',
+    'lg:grid-cols-1',
+    'lg:grid-cols-2',
+    'lg:grid-cols-3',
+  );
+
   cards.forEach((card) => {
     card.classList.remove('md:col-span-2', 'lg:col-span-1');
+  });
+
+  if (cardCount <= 1) {
+    sectionNode.classList.add('grid-cols-1');
+    return;
+  }
+
+  sectionNode.classList.add('grid-cols-1', 'md:grid-cols-2');
+  if (cardCount === 2) {
+    sectionNode.classList.add('lg:grid-cols-2');
+    return;
+  }
+
+  sectionNode.classList.add('lg:grid-cols-3');
+  cards.forEach((card) => {
+    if (card.getAttribute('data-location-card') === 'beneficiaire') {
+      card.classList.add('md:col-span-2', 'lg:col-span-1');
+    }
   });
 }
 

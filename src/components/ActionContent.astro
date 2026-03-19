@@ -72,6 +72,15 @@ const chiffreTypeLabel = hasTypeDeChiffreValue
   : (chiffreIsNegative ? "chiffre clé" : "");
 const hasBeneficiaireCard = hasNonEmptyText(action?.beneficiaire);
 const hasLocationSection = hasLieuCard || hasChiffreCard || hasBeneficiaireCard;
+const locationCardCount = [hasLieuCard, hasChiffreCard, hasBeneficiaireCard].filter(Boolean).length;
+const locationGridClass =
+  locationCardCount <= 1
+    ? "grid-cols-1"
+    : locationCardCount === 2
+      ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-2"
+      : "grid-cols-1 md:grid-cols-2 lg:grid-cols-3";
+const locationBeneficiaryCardClass =
+  locationCardCount === 3 ? "md:col-span-2 lg:col-span-1" : "";
 const shouldRenderLocationSection =
   hasLocationSection || forcePreviewLocationSection;
 const hasPart1Section = hasNonEmptyText(action?.texte_partie_1);
@@ -199,7 +208,7 @@ const hasThanksSection = hasNonEmptyText(action?.description_remerciements);
         data-location-section
         data-kc="compact"
         style={hasLocationSection ? "" : "display:none;"}
-        class="grid w-full h-auto grid-cols-1 items-stretch gap-6 mx-auto my-16 md:grid-cols-1 md:my-32 md:px-0 lg:grid-cols-3 lg:gap-8"
+        class={`grid w-full h-auto items-stretch gap-6 mx-auto my-16 md:my-32 md:px-0 lg:gap-8 ${locationGridClass}`}
       >
         {(hasLieuCard || forcePreviewLocationSection) ? (
           <div
@@ -261,7 +270,7 @@ const hasThanksSection = hasNonEmptyText(action?.description_remerciements);
           <div
             data-location-card="beneficiaire"
             style={hasBeneficiaireCard ? "" : "display:none;"}
-            class="bg-accent text-base-100 rounded-2xl px-6 md:px-8 py-4 md:py-6 flex flex-col justify-between min-h-30 md:min-h-48 w-full h-full"
+            class={`bg-accent text-base-100 rounded-2xl px-6 md:px-8 py-4 md:py-6 flex flex-col justify-between min-h-30 md:min-h-48 w-full h-full ${locationBeneficiaryCardClass}`}
           >
             <h2
               data-field="beneficiaire"

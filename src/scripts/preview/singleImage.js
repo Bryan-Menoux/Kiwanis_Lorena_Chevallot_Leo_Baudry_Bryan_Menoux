@@ -63,6 +63,13 @@ function handleFileElement(inputElement) {
           prop,
           file: optimizedFile,
         });
+
+        const form = document.getElementById('leftForm');
+        if (form instanceof HTMLFormElement) {
+          form.dispatchEvent(
+            new CustomEvent('kc:action-form-modified', { bubbles: true }),
+          );
+        }
       }
 
       dispatch({

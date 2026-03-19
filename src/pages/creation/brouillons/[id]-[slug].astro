@@ -29,7 +29,7 @@ try {
   throw err;
 }
 
-const draftEditUrl = getDraftEditUrl((draft as any)?.type, id || "", slug || "");
+const draftEditUrl = getDraftEditUrl(id || "", slug || "");
 ---
 
 <Layout>

@@ -357,6 +357,7 @@ function getDerivedState() {
   const hasChiffre = chiffreIsZero ? false : hasChiffreValue(chiffreRaw);
   const hasBeneficiaire = hasNonEmptyValue(values.beneficiaire);
   const hasLocationSection = hasLieu || hasChiffre || hasBeneficiaire;
+  const locationCardCount = [hasLieu, hasChiffre, hasBeneficiaire].filter(Boolean).length;
   const hasPart1Section = hasNonEmptyValue(values.texte_partie_1);
   const hasPart2Section = hasNonEmptyValue(values.texte_partie_2);
   const hasPart3Section = hasNonEmptyValue(values.texte_partie_3);
@@ -390,6 +391,7 @@ function getDerivedState() {
         chiffre: hasChiffre,
         beneficiaire: hasBeneficiaire,
       },
+      locationCardCount,
       locationFields: {
         nom_lieu: hasNonEmptyValue(values.nom_lieu),
         adresse_lieu: hasNonEmptyValue(values.adresse_lieu),

@@ -1,14 +1,18 @@
 import { showAlert } from "../../utils/alerts";
 import {
   buildRequiredMessage,
+  buildWordLimitMessage,
   getMissingHeaderFields,
   hasAtLeastOnePart,
+  getOverLimitPartTextFieldsFromForm,
   isEditDraftContext,
 } from "./validation.js";
 
 const VALIDATION_ALERT_DEBOUNCE_MS = 1200;
 let lastValidationAlertMessage = "";
 let lastValidationAlertAt = 0;
+
+const PART_TEXT_LIMIT = 70;
 
 function setClientValidationError(message) {
   if (!message) return;
@@ -33,6 +37,31 @@ function initActionFormRequiredValidation() {
   if (form.dataset.requiredValidationInit === "true") return;
   form.dataset.requiredValidationInit = "true";
 
+  const updatePartWordCounters = () => {
+    [1, 2, 3].forEach((partNumber) => {
+      const textKey = `texte_partie_${partNumber}`;
+      const textInput = form.querySelector(`#input_${textKey}`);
+      const counter = form.querySelector(`[data-word-count-for="${textKey}"]`);
+      if (!(textInput instanceof HTMLTextAreaElement) || !(counter instanceof HTMLElement)) {
+        return;
+      }
+
+      const words = textInput.value.trim()
+        ? textInput.value.trim().split(/\s+/).filter(Boolean).length
+        : 0;
+      counter.textContent = `${words}/${PART_TEXT_LIMIT} mots`;
+      counter.classList.toggle("text-error", words > PART_TEXT_LIMIT);
+    });
+  };
+
+  updatePartWordCounters();
+  form.addEventListener("input", (event) => {
+    const target = event.target;
+    if (target instanceof HTMLTextAreaElement && target.id?.startsWith("input_texte_partie_")) {
+      updatePartWordCounters();
+    }
+  });
+
   form.addEventListener("submit", (event) => {
     if (event.defaultPrevented) return;
 
@@ -51,6 +80,25 @@ function initActionFormRequiredValidation() {
 
     if (isDraftSave || isEditDraftSubmit) {
       setClientValidationError("");
+      return;
+    }
+
+    const overLimitFields = getOverLimitPartTextFieldsFromForm(form, PART_TEXT_LIMIT);
+    if (overLimitFields.length > 0) {
+      event.preventDefault();
+      setClientValidationError(
+        buildWordLimitMessage(overLimitFields, PART_TEXT_LIMIT),
+      );
+
+      const firstOverLimitField = overLimitFields[0];
+      if (typeof firstOverLimitField === "string") {
+        const firstOverLimitInput = form.querySelector(
+          `#input_${firstOverLimitField}`,
+        );
+        if (firstOverLimitInput instanceof HTMLTextAreaElement) {
+          firstOverLimitInput.focus();
+        }
+      }
       return;
     }
 

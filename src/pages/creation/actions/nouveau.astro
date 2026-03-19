@@ -10,7 +10,9 @@ import {
 } from "../../../pocketbase-types";
 import previewDefaults from "../../../scripts/previewDefaults.js";
 import {
+  buildWordLimitMessage,
   getNormalizedSelectedTypeActionValues,
+  getOverLimitPartTextFieldsAfterSubmit,
 } from "../../../scripts/actionForm/validation.js";
 const previewDefaultsMap = previewDefaults as Record<string, unknown>;
 
@@ -112,7 +114,33 @@ if (Astro.request.method === "POST") {
 
     // Détecter si l'utilisateur veut enregistrer en brouillon
     const saveAs = formData.get("save_as")?.toString();
-    const isBrouillon = saveAs === "brouillon";
+    const discardDraft = formData.get("discard_draft")?.toString() === "true";
+    const isAutosave = formData.get("autosave")?.toString() === "true";
+    const draftId = formData.get("draft_id")?.toString()?.trim() || "";
+    const isBrouillon = saveAs === "brouillon" || isAutosave;
+
+    if (discardDraft) {
+      if (draftId) {
+        try {
+          await Astro.locals.pb.collection("brouillons").delete(draftId);
+        } catch (discardErr: any) {
+          if (discardErr?.status !== 404) {
+            throw discardErr;
+          }
+        }
+      }
+
+      if (isAutosave) {
+        return new Response(
+          JSON.stringify({ ok: true, discarded: true, draftId: "" }),
+          {
+            headers: { "Content-Type": "application/json" },
+          },
+        );
+      }
+
+      return Astro.redirect("/creation/actions?success=Brouillon%20supprim%C3%A9");
+    }
 
     if (!isBrouillon) {
       const missingFields = getMissingRequiredFields(formData);
@@ -120,6 +148,17 @@ if (Astro.request.method === "POST") {
         throw new Error(
           `Informations obligatoires manquantes: ${missingFields.join(", ")}.`,
         );
+      }
+    }
+
+    if (!isBrouillon) {
+      const overLimitPartTexts = getOverLimitPartTextFieldsAfterSubmit(
+        formData,
+        null,
+        70,
+      );
+      if (overLimitPartTexts.length > 0) {
+        throw new Error(buildWordLimitMessage(overLimitPartTexts, 70));
       }
     }
 
@@ -134,13 +173,22 @@ if (Astro.request.method === "POST") {
 
     // Préparer les données pour PocketBase
     const data: any = {};
-    const selectedTypeActions = isBrouillon
-      ? []
-      : getNormalizedSelectedTypeActionValues(formData, typeActionOptions, 7);
+    const selectedTypeActions = getNormalizedSelectedTypeActionValues(
+      formData,
+      typeActionOptions,
+      7,
+    );
     // Première passe: champs texte/JSON (sans fichiers).
     for (const [key, value] of formData.entries()) {
       if (value instanceof File) continue;
-      if (key === "galerie_photos" || key.startsWith("remove_")) continue;
+      if (
+        key === "galerie_photos" ||
+        key.startsWith("remove_") ||
+        key === "save_as" ||
+        key === "publish_action" ||
+        key === "draft_id" ||
+        key === "autosave"
+      ) continue;
       if (key === "type_action") {
         if (isBrouillon) {
           // La collection brouillons ne porte pas ce champ.
@@ -209,17 +257,53 @@ if (Astro.request.method === "POST") {
     if (isBrouillon) {
       const draftSlug = slug || "brouillon";
       // On garde type="action" pour réutiliser le même flux de back-office.
+      const draftTypeAction = selectedTypeActions[0] ?? "";
       const draftPayload = applyPartTitleRule({
         ...data,
         slug: draftSlug,
         type: "action",
+        type_actions: draftTypeAction,
         ...files,
       });
-      const newDraft = await Astro.locals.pb
-        .collection("brouillons")
-        .create(draftPayload);
+      let savedDraft;
+      let isNewDraft = false;
+      if (draftId) {
+        try {
+          savedDraft = await Astro.locals.pb
+            .collection("brouillons")
+            .update(draftId, draftPayload);
+        } catch (draftUpdateErr: any) {
+          if (draftUpdateErr?.status !== 404) {
+            throw draftUpdateErr;
+          }
+          isNewDraft = true;
+          savedDraft = await Astro.locals.pb
+            .collection("brouillons")
+            .create(draftPayload);
+        }
+      } else {
+        isNewDraft = true;
+        savedDraft = await Astro.locals.pb
+          .collection("brouillons")
+          .create(draftPayload);
+      }
+
+      if (isAutosave) {
+        return new Response(
+          JSON.stringify({
+            ok: true,
+            draftId: savedDraft.id,
+            slug: draftSlug,
+            isNewDraft,
+          }),
+          {
+            headers: { "Content-Type": "application/json" },
+          },
+        );
+      }
+
       return Astro.redirect(
-        `/creation/brouillons/${newDraft.id}-${draftSlug}?success=${encodeURIComponent("Brouillon créé")}`
+        `/creation/brouillons/${savedDraft.id}-${draftSlug}?success=${encodeURIComponent("Brouillon créé")}`
       );
     }
 
