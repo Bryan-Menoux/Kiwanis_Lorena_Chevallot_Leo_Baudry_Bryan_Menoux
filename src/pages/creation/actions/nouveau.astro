@@ -251,10 +251,12 @@ if (Astro.request.method === "POST") {
       />
     </Fragment>
     <Fragment slot="preview">
-      <ActionContent
-        action={previewPlaceholder}
-        forcePreviewLocationSection={true}
-      />
+      <div class="lg:py-20">
+        <ActionContent
+          action={previewPlaceholder}
+          forcePreviewLocationSection={true}
+        />
+      </div>
     </Fragment>
   </ActionEditorShell>
 

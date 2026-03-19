@@ -137,6 +137,42 @@ const stats = computeStats(db.pages);
 
 // Données pour le JavaScript côté client
 const allPages = db.pages;
+
+if (Astro.request.method === "POST") {
+  try {
+    const formData = await Astro.request.formData();
+    const action = formData.get("_action")?.toString();
+
+    if (action === "delete") {
+      const id = formData.get("id")?.toString().trim();
+      const status = formData.get("status")?.toString().trim();
+
+      if (!id || !status) {
+        throw new Error("Élément introuvable.");
+      }
+
+      const collection =
+        status === "actions"
+          ? "actions"
+          : status === "projets"
+            ? "projets"
+            : status === "produits"
+              ? "produits"
+              : "brouillons";
+
+      await Astro.locals.pb.collection(collection).delete(id);
+      return Astro.redirect("/creation?success=Element supprime avec succes.");
+    }
+  } catch (caughtError) {
+    return Astro.redirect(
+      `/creation?error=${encodeURIComponent(
+        caughtError instanceof Error
+          ? caughtError.message
+          : "La suppression a échoué.",
+      )}`,
+    );
+  }
+}
 ---
 
 <Layout>
@@ -249,6 +285,16 @@ const allPages = db.pages;
                       <p class="text-sm text-base-content/60 mb-2">Par {page.authorName}</p>
                       <p class="text-sm text-base-content/60">{formatDateWithTime(page.updatedAt)}</p>
                       <div class="card-actions justify-end mt-4">
+                        <button
+                          type="button"
+                          class="btn btn-sm btn-error rounded-full"
+                          data-page-delete-btn
+                          data-page-id={page.id}
+                          data-page-title={page.title}
+                          data-page-status={page.status}
+                        >
+                          Supprimer
+                        </button>
                         <a href={getViewUrl(page.status, page.id, page.slug, page.type)} class="btn btn-sm">Voir</a>
                         <a href={getEditUrl(page.status, page.id, page.slug, page.type)} class="btn btn-sm">Modifier</a>
                       </div>
@@ -453,6 +499,16 @@ const allPages = db.pages;
                   <p class="text-sm text-base-content/60 mb-2">Par ${page.authorName}</p>
                   <p class="text-sm text-base-content/60">${formatDate(page.updatedAt)}</p>
                   <div class="card-actions justify-end mt-4">
+                    <button
+                      type="button"
+                      class="btn btn-sm btn-error rounded-full"
+                      data-page-delete-btn
+                      data-page-id="${page.id}"
+                      data-page-title="${page.title}"
+                      data-page-status="${page.status}"
+                    >
+                      Supprimer
+                    </button>
                     <a href="${getViewUrl(page.status, page.id, page.slug, page.type)}" class="btn btn-sm">Voir</a>
                     <a href="${getEditUrl(page.status, page.id, page.slug, page.type)}" class="btn btn-sm">Modifier</a>
                   </div>
@@ -468,11 +524,65 @@ const allPages = db.pages;
   }
 
   // Initialisation
-  document.addEventListener('DOMContentLoaded', () => {
+  const initCreationIndexHandlers = () => {
     const clearFiltersBtn = document.getElementById('clear-filters');
     const pagesContainer = document.getElementById('pages-container');
 
     pagesContainer?.addEventListener('click', (event) => {
+      const deleteButton = event.target instanceof HTMLElement
+        ? event.target.closest('[data-page-delete-btn]')
+        : null;
+
+      if (deleteButton instanceof HTMLElement) {
+        event.preventDefault();
+        event.stopPropagation();
+
+        const itemTitle = deleteButton.getAttribute('data-page-title') || 'cet élément';
+        const itemStatus = deleteButton.getAttribute('data-page-status');
+        if (!itemStatus) return;
+
+        const confirmDelete = window.KiwanisAlert?.confirm
+          ? window.KiwanisAlert.confirm({
+              title: "Supprimer",
+              message: `Supprimer "${itemTitle}" ?`,
+              confirmLabel: "Supprimer",
+              cancelLabel: "Annuler",
+              type: "warning",
+            })
+          : Promise.resolve(window.confirm(`Supprimer "${itemTitle}" ?`));
+
+        void confirmDelete.then((confirmed) => {
+          if (!confirmed) return;
+
+          const tempForm = document.createElement("form");
+          tempForm.method = "POST";
+          tempForm.action = window.location.pathname;
+          tempForm.style.display = "none";
+
+          const actionInput = document.createElement("input");
+          actionInput.type = "hidden";
+          actionInput.name = "_action";
+          actionInput.value = "delete";
+          tempForm.appendChild(actionInput);
+
+          const idInput = document.createElement("input");
+          idInput.type = "hidden";
+          idInput.name = "id";
+          idInput.value = deleteButton.getAttribute("data-page-id") || "";
+          tempForm.appendChild(idInput);
+
+          const statusInput = document.createElement("input");
+          statusInput.type = "hidden";
+          statusInput.name = "status";
+          statusInput.value = itemStatus;
+          tempForm.appendChild(statusInput);
+
+          document.body.appendChild(tempForm);
+          tempForm.submit();
+        });
+        return;
+      }
+
       const target = event.target instanceof HTMLElement
         ? event.target.closest('[data-page-action]')
         : null;
@@ -554,7 +664,13 @@ const allPages = db.pages;
         renderPages(filteredPagesCache);
       }
     });
-  });
+  };
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initCreationIndexHandlers, { once: true });
+  } else {
+    initCreationIndexHandlers();
+  }
 </script>
 
 

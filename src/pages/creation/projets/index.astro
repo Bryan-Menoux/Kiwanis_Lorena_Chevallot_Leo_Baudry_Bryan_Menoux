@@ -120,6 +120,7 @@ function formatDate(dateStr?: string): string {
               : getCreationViewUrl("projet", projet.id, projet.slug)
           }
           editUrl={getCreationEditUrl("projet", projet.id, projet.slug)}
+          showDeleteButton={true}
         />
       ))}
     </div>

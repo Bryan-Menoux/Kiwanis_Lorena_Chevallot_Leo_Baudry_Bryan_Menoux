@@ -129,6 +129,7 @@ const allActions = actions;
           source={action.source}
           photoUrl={action.heroActionUrl}
           photoClass="h-44 object-cover! px-0! "
+          showPhotoPlaceholder={true}
           isDraft={action.source === "brouillon"}
           subtitle={action.subtitle}
           beneficiary={action.beneficiary}
@@ -139,6 +140,7 @@ const allActions = actions;
               : getCreationViewUrl("action", action.id, action.slug)
           }
           editUrl={getCreationEditUrl("action", action.id, action.slug)}
+          showDeleteButton={true}
           maxHeightContent={true}
         />
       ))}

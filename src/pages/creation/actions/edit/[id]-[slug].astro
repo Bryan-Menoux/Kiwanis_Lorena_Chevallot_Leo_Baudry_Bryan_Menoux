@@ -303,13 +303,26 @@ const previewPlaceholder: any = {
 if (Astro.request.method === "POST") {
   try {
     const formData = await Astro.request.formData();
+    const action = formData.get("_action")?.toString();
+
+    if (action === "delete" && idParam && typeof idParam === "string") {
+      if (actionRecordFromBrouillon) {
+        await Astro.locals.pb.collection("brouillons").delete(String(idParam));
+        return Astro.redirect(
+          withSuccess("/creation/actions", "Brouillon supprimé"),
+        );
+      }
+
+      await Astro.locals.pb.collection("actions").delete(idParam);
+      return Astro.redirect(withSuccess("/creation/actions", "Action supprimée"));
+    }
+
     // La valeur du slug sera générée plus tard quand le titre sera connu ; on
     // la déclare ici pour éviter des erreurs TypeScript dans la branche de publication rapide.
     let slug: string = "";
     const publishRequested = formData.get("publish_action")?.toString() === "true";
-    const action = formData.get("_action")?.toString();
     const requiresCompleteAction =
-      action !== "delete" && (!actionRecordFromBrouillon || publishRequested);
+      !actionRecordFromBrouillon || publishRequested;
 
     if (requiresCompleteAction) {
       const missingFields = getMissingRequiredFieldsAfterSubmit(
@@ -337,23 +350,6 @@ if (Astro.request.method === "POST") {
       }
     } catch (e) {
       // Ce diagnostic ne doit jamais bloquer le flux métier.
-    }
-
-    // Prise en charge de la suppression envoyée par POST depuis la liste.
-    if (action === "delete" && idParam && typeof idParam === "string") {
-      try {
-        if (actionRecordFromBrouillon) {
-          // supprimer le brouillon
-          await Astro.locals.pb.collection("brouillons").delete(String(idParam));
-          return Astro.redirect(withSuccess("/creation/brouillons", "Brouillon supprimé"));
-        }
-
-        // suppression classique d'une action
-        await Astro.locals.pb.collection("actions").delete(idParam);
-        return Astro.redirect(withSuccess("/creation/actions", "Action supprimée"));
-      } catch (e) {
-        // On laisse l'exécution continuer pour remonter vers le flux standard.
-      }
     }
 
     // Publication directe depuis la liste (sans charger tout le formulaire d'édition)
@@ -702,10 +698,13 @@ if (Astro.request.method === "POST") {
       />
     </Fragment>
     <Fragment slot="preview">
+      <div class="lg:py-20" >
+        
       <ActionContent
         action={previewPlaceholder}
         forcePreviewLocationSection={true}
       />
+      </div>
     </Fragment>
   </ActionEditorShell>
   <script set:html={`window.__previewData = ${JSON.stringify({

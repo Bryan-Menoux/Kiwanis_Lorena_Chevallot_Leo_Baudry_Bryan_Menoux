@@ -84,7 +84,7 @@ const hasThanksSection = hasNonEmptyText(action?.description_remerciements);
   id="actionPreview"
   data-tablet-mobile-preview={tabletPreviewAsMobile ? "true" : "false"}
   style="container-type: inline-size;"
-  class="w-full max-w-[85dvw]! md:max-w-[80dvw]! mx-auto lg:mt-40 relative"
+  class="w-full max-w-[85dvw]! md:max-w-[80dvw]! mx-auto lg:mt-24 relative"
 >
   <!-- Section titre -->
   {
@@ -124,7 +124,7 @@ const hasThanksSection = hasNonEmptyText(action?.description_remerciements);
           alt={action.description_hero}
           loading="lazy"
           decoding="async"
-          class="w-full min-h-[50dvh] max-h-[80dvh] lg:max-h-[70dvh] object-cover object-top rounded-lg"
+          class="w-full min-h-[50dvh] max-h-[80dvh] lg:max-h-[70dvh] object-cover object-center rounded-lg"
         />
         {action.description_hero && (
           <p data-field="description_hero" class="mt-4">

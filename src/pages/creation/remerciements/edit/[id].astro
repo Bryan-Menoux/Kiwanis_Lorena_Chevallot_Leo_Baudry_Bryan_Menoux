@@ -51,10 +51,21 @@ const logoUrl =
 if (Astro.request.method === "POST") {
   try {
     const formData = await Astro.request.formData();
+    const action = asText(formData.get("_action"));
     const entity = asText(formData.get("entity"));
 
     if (!id || !itemRecord) {
       throw new Error("Élément introuvable.");
+    }
+
+    if (action === "delete") {
+      if (itemType === "partenaire") {
+        await Astro.locals.pb.collection("partenaires").delete(id);
+        return redirectWith("success", "Partenaire supprimé avec succès.");
+      }
+
+      await Astro.locals.pb.collection("contributeurs").delete(id);
+      return redirectWith("success", "Contributeur supprimé avec succès.");
     }
 
     if (entity === "partenaire") {

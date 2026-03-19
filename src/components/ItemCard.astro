@@ -1,5 +1,6 @@
 ---
 import Card from "./Card.astro";
+import imageIcon from "../assets/image-icon.svg";
 
 export interface Props {
   id: string;
@@ -23,6 +24,8 @@ export interface Props {
   photoClass?: string;
   price?: number;
   deleteMode?: boolean;
+  showDeleteButton?: boolean;
+  showPhotoPlaceholder?: boolean;
 }
 
 const {
@@ -47,15 +50,15 @@ const {
   photoClass = "",
   price,
   deleteMode = false,
+  showDeleteButton = false,
+  showPhotoPlaceholder = false,
 } = Astro.props;
 ---
 
 <Card {id} {slug} {source} {isDraft} class={className} title={title} updated={formattedDate}>
   <div slot="header" class="flex items-start justify-between gap-3">
     <div class="flex items-start gap-3 flex-1">
-      {showCheckbox && checkboxSlot ? (
-        <div set:html={checkboxSlot} />
-      ) : null}
+      {showCheckbox && checkboxSlot ? <div set:html={checkboxSlot} /> : null}
       <h3 class="wrap-break-word text-xl font-bold leading-tight md:text-2xl line-clamp-1">
         {title || "Sans titre"}
       </h3>
@@ -67,15 +70,27 @@ const {
     )}
     {badge && <span set:html={badge} />}
   </div>
-  </div>
 
-  <div slot="content" class={`space-y-2 ${maxHeightContent ? 'max-h-74 overflow-hidden' : ''}`}>
+  <div slot="content" class={`space-y-2 ${maxHeightContent ? "max-h-74 overflow-hidden" : ""}`}>
     {photoUrl && (
       <img
         src={photoUrl}
         alt={title}
         class={`w-full rounded-lg bg-white object-contain lg:object-contain object-center px-4 ${photoClass || "h-74"}`}
       />
+    )}
+    {!photoUrl && showPhotoPlaceholder && (
+      <div
+        class={`w-full rounded-lg border border-base-300 bg-base-200/40 flex items-center justify-center overflow-hidden ${photoClass || "h-74"}`}
+      >
+        <img
+          src={imageIcon.src}
+          alt="Image par défaut"
+          class="h-16 w-16 opacity-30"
+          loading="lazy"
+          decoding="async"
+        />
+      </div>
     )}
     {price !== undefined && (
       <p class="text-sm font-semibold text-accent">
@@ -98,12 +113,35 @@ const {
     {meta && <div set:html={meta} />}
   </div>
 
-  <div slot="footer" class="flex w-full items-end justify-between gap-4 mt-2">
+  <div slot="footer" class="flex w-full flex-wrap items-end gap-x-4 gap-y-2 mt-4">
     {formattedDate && (
-      <p class="text-xs leading-tight text-base-content/60">{formattedDate}</p>
+      <p class="max-w-full whitespace-nowrap text-xs leading-tight text-base-content/60">
+        {formattedDate}
+      </p>
     )}
-    {!formattedDate && <div />}
-    <div class="flex gap-2">
+    <div class="ml-auto flex shrink-0 gap-2">
+      {showDeleteButton && (
+        <button
+          type="button"
+          class="btn btn-sm btn-error rounded-full"
+          data-item-delete-btn
+          data-item-id={id}
+          data-item-edit-url={editUrl}
+          data-item-title={title}
+        >
+          Supprimer
+        </button>
+      )}
+      {deleteMode && (
+        <button
+          type="button"
+          class="btn btn-sm btn-error rounded-full"
+          data-item-delete-btn
+          data-item-id={id}
+        >
+          Supprimer
+        </button>
+      )}
       {!deleteMode && (
         <>
           <a href={viewUrl} class="btn btn-sm btn-ghost action-btn-text">Voir</a>
@@ -111,16 +149,6 @@ const {
             Modifier
           </a>
         </>
-      )}
-      {deleteMode && (
-        <button 
-          type="button" 
-          class="btn btn-sm btn-error rounded-full"
-          data-item-delete-btn
-          data-item-id={id}
-        >
-          Supprimer
-        </button>
       )}
       {publishButton && <span set:html={publishButton} />}
     </div>
@@ -136,19 +164,39 @@ const {
 
     event.preventDefault();
     event.stopPropagation();
+
     const itemId = button.getAttribute("data-item-id");
+    const editUrl = button.getAttribute("data-item-edit-url");
     if (!itemId) return;
 
     void showConfirm({
       title: "Supprimer",
-      message: "Supprimer cet élément ?",
+      message: editUrl
+        ? `Supprimer "${button.getAttribute("data-item-title") || "cet élément"}" ?`
+        : "Supprimer cet élément ?",
       confirmLabel: "Supprimer",
       cancelLabel: "Annuler",
       type: "warning",
     }).then((confirmed) => {
       if (!confirmed) return;
 
-      // Create a temporary form with only this item's ID
+      if (editUrl) {
+        const tempForm = document.createElement("form");
+        tempForm.method = "POST";
+        tempForm.action = editUrl;
+        tempForm.style.display = "none";
+
+        const actionInput = document.createElement("input");
+        actionInput.type = "hidden";
+        actionInput.name = "_action";
+        actionInput.value = "delete";
+        tempForm.appendChild(actionInput);
+
+        document.body.appendChild(tempForm);
+        tempForm.submit();
+        return;
+      }
+
       const tempForm = document.createElement("form");
       tempForm.method = "POST";
       tempForm.style.display = "none";
@@ -160,9 +208,7 @@ const {
 
       tempForm.appendChild(input);
       document.body.appendChild(tempForm);
-
       tempForm.submit();
     });
   });
 </script>
-

@@ -264,10 +264,12 @@ const error = (Astro.url.searchParams.get("error") || "").trim();
                     id={partenaire.id}
                     title={partenaire.nom}
                     photoUrl={partenaire.logoUrl}
+                    showPhotoPlaceholder={true}
                     source="partenaire"
                     formattedDate={formatDateShort(partenaire.updated)}
                     viewUrl={`/creation/remerciements/edit/${partenaire.id}`}
                     editUrl={`/creation/remerciements/edit/${partenaire.id}`}
+                    showDeleteButton={true}
                   />
                   
                 </div>
@@ -329,6 +331,7 @@ const error = (Astro.url.searchParams.get("error") || "").trim();
                     formattedDate={formatDateShort(contributeur.updated)}
                     viewUrl={`/creation/remerciements/edit/${contributeur.id}`}
                     editUrl={`/creation/remerciements/edit/${contributeur.id}`}
+                    showDeleteButton={true}
                   />
                 </div>
               ))}

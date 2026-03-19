@@ -44,6 +44,14 @@ if (Astro.request.method === "POST") {
     }
 
     const formData = await Astro.request.formData();
+    const action = formData.get("_action")?.toString();
+
+    if (action === "delete") {
+      await Astro.locals.pb.collection("projets").delete(id);
+      return Astro.redirect(
+        buildRedirectUrl("/creation/projets", "Projet supprimé avec succès"),
+      );
+    }
 
     formState.titre = formData.get("titre")?.toString().trim() || "";
     formState.description = formData.get("description")?.toString().trim() || "";

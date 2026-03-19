@@ -120,6 +120,7 @@ function formatDate(dateStr?: string): string {
           source={produit.source}
           isDraft={produit.source === "brouillon"}
           photoUrl={produit.photoUrl}
+          showPhotoPlaceholder={true}
           price={produit.price}
           formattedDate={formatDate(produit.updated)}
           viewUrl={
@@ -128,6 +129,7 @@ function formatDate(dateStr?: string): string {
               : getCreationViewUrl("produit", produit.id, produit.slug)
           }
           editUrl={getCreationEditUrl("produit", produit.id, produit.slug)}
+          showDeleteButton={true}
         />
       ))}
     </div>
