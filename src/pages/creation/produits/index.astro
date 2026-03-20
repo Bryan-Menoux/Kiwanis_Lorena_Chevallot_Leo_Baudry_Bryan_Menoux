@@ -3,7 +3,7 @@ import Layout from "../../../layouts/Layout-back-office.astro";
 import ItemCard from "../../../components/ItemCard.astro";
 import slugify from "slugify";
 import FormSubmitOverlay from "../../../components/FormSubmitOverlay.astro";
-import { getCreationEditUrl, getCreationViewUrl } from "../../../utils/creationRoutes";
+import { getCreationEditUrl } from "../../../utils/creationRoutes";
 
 interface ProductItem {
   id: string;
@@ -100,8 +100,8 @@ function formatDate(dateStr?: string): string {
           showPhotoPlaceholder={true}
           price={produit.price}
           formattedDate={formatDate(produit.updated)}
-          viewUrl={getCreationViewUrl("produit", produit.id, produit.slug)}
           editUrl={getCreationEditUrl("produit", produit.id, produit.slug)}
+          showViewButton={false}
           showDeleteButton={true}
         />
       ))}

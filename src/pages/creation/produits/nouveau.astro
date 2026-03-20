@@ -5,7 +5,6 @@ import imageIcon from "../../../assets/image-icon.svg";
 import {
   buildRedirectUrl,
   extractFiles,
-  generateSlug,
   preparePayload,
 } from "../../../utils/editPageHandler";
 
@@ -59,13 +58,9 @@ if (Astro.request.method === "POST") {
     });
 
     const createdProduct = await Astro.locals.pb.collection("produits").create(payload);
-    const slug = generateSlug(formState.titre) || "produit";
 
     return Astro.redirect(
-      buildRedirectUrl(
-        `/creation/produits/${createdProduct.id}-${slug}`,
-        "Produit créé avec succès",
-      ),
+      buildRedirectUrl("/creation/produits", "Produit créé avec succès"),
     );
   } catch (err) {
     console.error("Erreur lors de la création du produit :", err);

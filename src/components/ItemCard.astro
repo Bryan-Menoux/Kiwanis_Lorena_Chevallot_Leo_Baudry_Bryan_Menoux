@@ -12,7 +12,7 @@ export interface Props {
   beneficiary?: string;
   meta?: string;
   formattedDate?: string;
-  viewUrl: string;
+  viewUrl?: string;
   editUrl: string;
   publishButton?: string;
   badge?: string;
@@ -25,6 +25,7 @@ export interface Props {
   price?: number;
   deleteMode?: boolean;
   showDeleteButton?: boolean;
+  showViewButton?: boolean;
   showPhotoPlaceholder?: boolean;
 }
 
@@ -51,6 +52,7 @@ const {
   price,
   deleteMode = false,
   showDeleteButton = false,
+  showViewButton = true,
   showPhotoPlaceholder = false,
 } = Astro.props;
 ---
@@ -144,7 +146,9 @@ const {
       )}
       {!deleteMode && (
         <>
-          <a href={viewUrl} class="btn btn-sm btn-ghost action-btn-text">Voir</a>
+          {showViewButton && viewUrl && (
+            <a href={viewUrl} class="btn btn-sm btn-ghost action-btn-text">Voir</a>
+          )}
           <a href={editUrl} class="btn btn-sm btn-accent action-btn-text rounded-full">
             Modifier
           </a>

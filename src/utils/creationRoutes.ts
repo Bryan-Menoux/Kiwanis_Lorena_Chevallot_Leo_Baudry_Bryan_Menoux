@@ -24,7 +24,7 @@ export function getCreationViewUrl(
     return `/creation/projets/`;
   }
 
-  return `/creation/produits/${slugPath}`;
+  return getCreationEditUrl("produit", id, slug);
 }
 
 export function getCreationEditUrl(

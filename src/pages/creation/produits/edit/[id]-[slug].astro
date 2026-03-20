@@ -7,7 +7,6 @@ import {
   extractFiles,
   generateSlug,
 } from "../../../../utils/editPageHandler";
-import { getCreationViewUrl } from "../../../../utils/creationRoutes";
 
 const MAX_PRODUCT_PHOTOS = 4;
 
@@ -121,13 +120,8 @@ if (Astro.request.method === "POST") {
 
     await Astro.locals.pb.collection("produits").update(id, payload);
 
-    const slug = generateSlug(formState.titre) || "produit";
-
     return Astro.redirect(
-      buildRedirectUrl(
-        getCreationViewUrl("produit", id, slug),
-        "Produit modifié avec succès",
-      ),
+      buildRedirectUrl("/creation/produits", "Produit modifié avec succès"),
     );
   } catch (err) {
     console.error("Erreur lors de la modification du produit :", err);
