@@ -7,6 +7,13 @@ import HeroActions from "../assets/projects-page/hero-project-page.png";
 import HeroActionsMobile from "../assets/projects-page/hero-project-page-mobile.png";
 import HeroActionsTablet from "../assets/projects-page/hero-project-page-tablette.png";
 import { getImage } from "astro:assets";
+import AdminEditBanner from "../components/AdminEditBanner.astro";
+
+const currentUser = Astro.locals.pb.authStore.record;
+const canEditProjets =
+  Astro.locals.pb.authStore.isValid &&
+  currentUser?.verified === true &&
+  currentUser?.administrateur === true;
 
 const lcpMobile = await getImage({ src: HeroActionsMobile, format: "webp", width: 440, quality: 68 });
 const lcpTablet = await getImage({ src: HeroActionsTablet, format: "webp", width: 1280, quality: 72 });
@@ -38,8 +45,15 @@ function truncateWords(text: string, limit = 70): string {
   </Fragment>
   <Hero
     image={HeroActions}
-    title="Kiwanis Pays de Montbéliard"
-    subtitle="Servir les enfants du monde, au cœur de notre territoire"
+    title="Nos projets"
+  />
+
+  <AdminEditBanner
+    canEdit={canEditProjets}
+    title="Modifier les projets"
+    description="Cet espace vous permet de mettre à jour les projets du club à tout moment. Vous pouvez y ajouter, modifier ou supprimer les contenus selon l'évolution des initiatives et des partenariats."
+    buttonLabel="Modifier les projets"
+    href="/creation/projets"
   />
 
   <section class="min-h-[80dvh] h-fit w-full mt-64 flex">

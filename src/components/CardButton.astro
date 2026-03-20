@@ -21,7 +21,7 @@ const roundedClass = isRounded ? "rounded-full" : "";
 
 <a
   href={href}
-  class={`btn btn-sm ${variantClass} action-btn-text ${roundedClass} ${className}`}
+  class={`btn btn-sm ${variantClass} !text-base !font-normal !normal-case ${roundedClass} ${className}`}
 >
   <slot />
   {icon && <span set:html={icon.html} />}

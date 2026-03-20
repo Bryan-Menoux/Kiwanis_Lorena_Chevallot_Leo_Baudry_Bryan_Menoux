@@ -1,0 +1,36 @@
+---
+import Logo from "../assets/logo-kiwanis-full.svg";
+
+interface Props {
+  canEdit: boolean;
+  title: string;
+  description: string;
+  buttonLabel: string;
+  href: string;
+}
+
+const { canEdit, title, description, buttonLabel, href } = Astro.props as Props;
+---
+
+{
+  canEdit && (
+    <div class="mx-auto mt-8 md:mt-12 lg:mt-16 w-full max-w-[95dvw] md:max-w-[90dvw] xl:max-w-7xl rounded-2xl bg-secondary px-4 py-6 sm:px-6 sm:py-8 md:px-10 lg:px-16 flex flex-col gap-6 md:gap-8 lg:flex-row lg:gap-12">
+      <img
+        src={Logo.src}
+        alt="Logo Kiwanis Pays de Montbéliard"
+        class="mx-auto h-24 w-24 shrink-0 sm:h-32 sm:w-32 md:h-40 md:w-40 lg:h-48 lg:w-48 lg:mx-0"
+      />
+      <div class="flex min-h-full w-full flex-col items-start justify-between gap-6">
+        <div class="flex max-w-none flex-col gap-3 md:gap-4 lg:max-w-[45dvw]">
+          <h2 class="text-xl font-bold md:text-2xl">{title}</h2>
+          <p class="text-sm leading-relaxed md:text-base">{description}</p>
+        </div>
+        <section class="self-stretch md:self-end">
+          <a href={href} class="btn btn-accent btn-sm w-full rounded-full md:btn-md md:w-auto">
+            {buttonLabel}
+          </a>
+        </section>
+      </div>
+    </div>
+  )
+}

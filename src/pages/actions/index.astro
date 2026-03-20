@@ -8,6 +8,13 @@ import HeroActions from "../../assets/action-page/hero-action-page.png";
 import HeroActionsMobile from "../../assets/action-page/hero-action-page-mobile.png";
 import HeroActionsTablet from "../../assets/action-page/hero-action-page-tablette.png";
 import { getImage } from "astro:assets";
+import AdminEditBanner from "../../components/AdminEditBanner.astro";
+
+const currentUser = Astro.locals.pb.authStore.record;
+const canEditActions =
+  Astro.locals.pb.authStore.isValid &&
+  currentUser?.verified === true &&
+  currentUser?.administrateur === true;
 
 let actionsRaw: any[] = [];
 try {
@@ -59,25 +66,12 @@ const actionsWithUrls = actions.map((action) => {
   };
 });
 
-const roleTexte = (value: unknown) => String(value || "").trim().toLowerCase();
-
-let users: any[] = [];
+let membres: any[] = [];
 try {
-  users = await Astro.locals.pb.collection("users").getFullList();
+  membres = await Astro.locals.pb.collection("membres").getFullList();
 } catch (error) {
-  users = [];
+  membres = [];
 }
-
-const membres = users.filter((user) => {
-  const role = roleTexte(user.role);
-  return (
-    role === "membre" ||
-    role === "président" ||
-    role === "présidente" ||
-    role === "president" ||
-    role === "presidente"
-  );
-});
 
 const date = new Date().getFullYear();
 const dureeEngagement = Math.max(0, date - 2019);
@@ -113,8 +107,16 @@ const lcpDesktop = await getImage({ src: HeroActions, format: "webp", width: 184
     subtitle="Servir les enfants du monde, au cœur de notre territoire"
   />
 
+  <AdminEditBanner
+    canEdit={canEditActions}
+    title="Modifier les actions"
+    description="Cet espace vous permet de mettre à jour les actions du club à tout moment. Vous pouvez y ajouter, modifier ou supprimer les contenus en fonction des besoins et des projets menés sur le terrain."
+    buttonLabel="Modifier les actions"
+    href="/creation/actions"
+  />
+
   <section
-    class="mx-auto mt-12 w-full max-w-7xl px-4 md:mt-16 md:px-6 lg:mt-20 lg:px-8"
+    class="mx-auto w-full max-w-[85dvw]! py-3 md:max-w-[80dvw]! md:py-5 lg:py-8"
   >
     <div
       class="grid grid-cols-1 gap-3 md:grid-cols-2 md:gap-4 lg:grid-cols-4 lg:gap-5"
@@ -139,12 +141,12 @@ const lcpDesktop = await getImage({ src: HeroActions, format: "webp", width: 184
   </section>
 
   <section
-    class="mx-auto mt-10 w-full max-w-7xl px-4 md:mt-12 md:px-6 lg:mt-14 lg:px-8"
+   class="mx-auto w-full max-w-[85dvw]! py-3 md:max-w-[80dvw]! md:py-5 lg:py-8"
   >
     <div
-      class="rounded-2xl border border-base-300 bg-base-100 p-4 shadow-sm md:p-6 lg:p-8"
+      class="rounded-2xl border border-base-300 bg-base-100 p-4 shadow-sm md:p-5 lg:p-6"
     >
-      <div class="mb-5 space-y-3 md:mb-6">
+      <div class="mb-4 space-y-2 md:mb-5">
         <h2 class="text-2xl font-bold text-accent md:text-3xl lg:text-4xl">
           Nos actions sur le terrain
         </h2>
@@ -158,7 +160,7 @@ const lcpDesktop = await getImage({ src: HeroActions, format: "webp", width: 184
   </section>
 
   <section
-    class="mx-auto mb-20 mt-10 w-full max-w-7xl px-4 md:mt-12 md:px-6 lg:mt-14 lg:px-8"
+    class="mx-auto mb-16 mt-6 w-full max-w-7xl px-4 md:mt-8 md:px-6 lg:mt-10 lg:px-8"
   >
     {
       actionsWithUrls.length === 0 ? (
@@ -180,7 +182,7 @@ const lcpDesktop = await getImage({ src: HeroActions, format: "webp", width: 184
 
           <div
             id="actions-grid"
-            class="grid grid-cols-1 gap-5 md:gap-6 lg:gap-7"
+            class="grid grid-cols-1 gap-4 md:gap-5 lg:gap-6"
           >
             {actionsWithUrls.map((action, index) => {
               const imageOrderClass =
@@ -196,7 +198,7 @@ const lcpDesktop = await getImage({ src: HeroActions, format: "webp", width: 184
                   data-beneficiary={action.beneficiaire || ""}
                   data-year={action.year}
                   data-types={action.typeActionNormalized.join("||")}
-                  class="overflow-hidden rounded-2xl border border-base-300 bg-base-100 shadow-sm min-h-[55dvh] lg:h-[24rem]"
+                  class="overflow-hidden rounded-2xl border border-base-300 bg-base-100 shadow-sm min-h-[55dvh] lg:h-96"
                 >
                   <div class="flex h-full flex-col lg:flex-row lg:items-stretch">
                     {action.heroUrl ? (

@@ -125,7 +125,7 @@ const {
       {showDeleteButton && (
         <button
           type="button"
-          class="btn btn-sm btn-error rounded-full"
+          class="btn btn-sm btn-error !text-base !font-normal !normal-case rounded-full"
           data-item-delete-btn
           data-item-id={id}
           data-item-edit-url={editUrl}
@@ -137,7 +137,7 @@ const {
       {deleteMode && (
         <button
           type="button"
-          class="btn btn-sm btn-error rounded-full"
+          class="btn btn-sm btn-error !text-base !font-normal !normal-case rounded-full"
           data-item-delete-btn
           data-item-id={id}
         >
@@ -147,9 +147,9 @@ const {
       {!deleteMode && (
         <>
           {showViewButton && viewUrl && (
-            <a href={viewUrl} class="btn btn-sm btn-ghost action-btn-text">Voir</a>
+            <a href={viewUrl} class="btn btn-sm btn-ghost !text-base !font-normal !normal-case">Voir</a>
           )}
-          <a href={editUrl} class="btn btn-sm btn-accent action-btn-text rounded-full">
+          <a href={editUrl} class="btn btn-sm btn-accent !text-base !font-normal !normal-case rounded-full">
             Modifier
           </a>
         </>

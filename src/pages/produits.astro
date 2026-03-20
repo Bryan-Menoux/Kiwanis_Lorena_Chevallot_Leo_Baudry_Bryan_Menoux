@@ -7,6 +7,13 @@ import imageIcon from "../assets/image-icon.svg";
 import HeroProducts from "../assets/products-page/hero-products-page.png";
 import KiwanisPoupee1 from "../assets/products-page/poupee_kiwanis_1.webp";
 import KiwanisPoupee2 from "../assets/products-page/poupee_kiwanis_2.webp";
+import AdminEditBanner from "../components/AdminEditBanner.astro";
+
+const currentUser = Astro.locals.pb.authStore.record;
+const canEditProduits =
+  Astro.locals.pb.authStore.isValid &&
+  currentUser?.verified === true &&
+  currentUser?.administrateur === true;
 
 interface ProductCard {
   id: string;
@@ -59,10 +66,17 @@ const produits: ProductCard[] = produitsRaw.map((produit) => {
 
   <Hero
     image={HeroProducts}
-    title="Kiwanis Pays de Montbéliard"
-    subtitle="Servir les enfants du monde, au cœur de notre territoire"
+    title="NOS PRODUITS"
     loading="lazy"
     fetchpriority="low"
+  />
+
+  <AdminEditBanner
+    canEdit={canEditProduits}
+    title="Modifier les produits"
+    description="Cet espace vous permet de mettre à jour les produits du club à tout moment. Vous pouvez y ajouter, modifier ou supprimer les contenus affichés sur cette page."
+    buttonLabel="Modifier les produits"
+    href="/creation/produits"
   />
 
   <div class="mx-auto w-full max-w-[85dvw]! py-10 md:max-w-[80dvw]! md:py-14 lg:py-16">
