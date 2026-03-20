@@ -196,11 +196,11 @@ const lcpDesktop = await getImage({ src: HeroActions, format: "webp", width: 184
                   data-beneficiary={action.beneficiaire || ""}
                   data-year={action.year}
                   data-types={action.typeActionNormalized.join("||")}
-                  class="overflow-hidden rounded-2xl border border-base-300 bg-base-100 shadow-sm min-h-[55dvh]"
+                  class="overflow-hidden rounded-2xl border border-base-300 bg-base-100 shadow-sm min-h-[55dvh] lg:h-[24rem]"
                 >
-                  <div class="flex h-full flex-col lg:flex-row">
+                  <div class="flex h-full flex-col lg:flex-row lg:items-stretch">
                     {action.heroUrl ? (
-                      <img loading="lazy"
+                      <img
                         src={action.heroUrl}
                         alt={
                           action.description_hero ||
@@ -208,11 +208,11 @@ const lcpDesktop = await getImage({ src: HeroActions, format: "webp", width: 184
                         }
                         loading="lazy"
                         decoding="async"
-                        class={`h-56 w-full object-cover md:h-[36dvh] lg:h-auto lg:min-h-full lg:w-1/2 ${imageOrderClass}`}
+                        class={`h-56 w-full object-cover md:h-[36dvh] lg:h-full lg:w-1/2 ${imageOrderClass}`}
                       />
                     ) : (
                       <div
-                        class={`flex h-56 w-full items-center justify-center bg-base-200 text-sm text-base-content/50 md:h-[36dvh] lg:h-auto lg:min-h-full lg:w-1/2 ${imageOrderClass}`}
+                        class={`flex h-56 w-full items-center justify-center bg-base-200 text-sm text-base-content/50 md:h-[36dvh] lg:h-full lg:w-1/2 ${imageOrderClass}`}
                       >
                         Image non disponible
                       </div>

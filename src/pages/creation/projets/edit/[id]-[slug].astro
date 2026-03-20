@@ -4,9 +4,12 @@ import { ProjetsTypeActionOptions } from "../../../../pocketbase-types";
 import MultiSelectDropdown from "../../../../components/actionForm/partials/MultiSelectDropdown.astro";
 import SearchLocation from "../../../../components/searchLocation.astro";
 import { buildRedirectUrl, generateSlug } from "../../../../utils/editPageHandler";
+import { countWords } from "../../../../scripts/actionForm/validation.js";
 import { getCreationViewUrl } from "../../../../utils/creationRoutes";
 
 let error = "";
+const MAX_DESCRIPTION_WORDS = 70;
+const MAX_DESCRIPTION_CHARS = MAX_DESCRIPTION_WORDS * 7;
 
 const id = Astro.params.id;
 
@@ -29,13 +32,15 @@ if (id) {
 const formState = {
   titre: projectRecord?.titre?.toString() || "",
   description: projectRecord?.description?.toString() || "",
-  date: projectRecord?.date ? projectRecord.date.split(' ')[0] : "",
+  date: projectRecord?.date ? projectRecord.date.split(" ")[0] : "",
   nom_adresse: projectRecord?.nom_adresse?.toString() || "",
   url_adresse: projectRecord?.url_adresse?.toString() || "",
   type_action: Array.isArray(projectRecord?.type_action)
     ? projectRecord.type_action.map((value: unknown) => String(value))
     : [],
 };
+
+const initialDescriptionWordCount = countWords(formState.description);
 
 if (Astro.request.method === "POST") {
   try {
@@ -74,6 +79,12 @@ if (Astro.request.method === "POST") {
 
     if (!formState.titre) {
       throw new Error("Le titre est obligatoire.");
+    }
+    if (
+      countWords(formState.description) > MAX_DESCRIPTION_WORDS ||
+      formState.description.length > MAX_DESCRIPTION_CHARS
+    ) {
+      throw new Error("La description du projet est limitée à 70 mots maximum.");
     }
 
     const payload: Record<string, any> = {
@@ -140,7 +151,7 @@ if (Astro.request.method === "POST") {
             </div>
           )}
 
-          <form method="POST" class="space-y-6">
+          <form method="POST" class="space-y-6" id="project-edit-form">
             <div class="space-y-2">
               <label for="titre" class="block text-sm font-semibold text-base-content">
                 Titre du projet <span class="text-error">*</span>
@@ -166,7 +177,15 @@ if (Astro.request.method === "POST") {
                 class="textarea textarea-bordered w-full text-base"
                 placeholder="Décrivez brièvement votre projet, ses objectifs et son impact"
                 rows="4"
+                data-word-limit="70"
+                maxlength={MAX_DESCRIPTION_CHARS}
               >{formState.description}</textarea>
+              <div class="flex items-center justify-between gap-3 text-xs text-base-content/70">
+                <p>Limite: 70 mots max.</p>
+                <p data-word-count-for="project-description">
+                  {initialDescriptionWordCount}/70 mots
+                </p>
+              </div>
             </div>
 
             <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
@@ -299,6 +318,8 @@ if (Astro.request.method === "POST") {
 </Layout>
 
 <script>
+  import { countWords } from "../../../../scripts/actionForm/validation.js";
+
   function initProjetTypeActionBinding() {
     const select = document.getElementById("input_type_action");
     const hidden = document.getElementById("hidden_type_action");
@@ -317,6 +338,42 @@ if (Astro.request.method === "POST") {
 
     select.addEventListener("change", sync);
     sync();
+  }
+
+  function initProjectDescriptionWordLimit() {
+    const form = document.getElementById("project-edit-form");
+    const textarea = document.getElementById("description");
+    const counter = form?.querySelector('[data-word-count-for="project-description"]');
+
+    if (!(form instanceof HTMLFormElement)) return;
+    if (!(textarea instanceof HTMLTextAreaElement)) return;
+    if (!(counter instanceof HTMLElement)) return;
+
+    const limit = Number(textarea.dataset.wordLimit ?? "70");
+    if (form.dataset.projectWordLimitBound === "true") return;
+    form.dataset.projectWordLimitBound = "true";
+
+    const validationMessage = `La description du projet est limitée à ${limit} mots maximum.`;
+
+    const updateCounter = () => {
+      const words = countWords(textarea.value);
+      counter.textContent = `${words}/${limit} mots`;
+      const isOverLimit = words > limit;
+      counter.classList.toggle("text-error", isOverLimit);
+      textarea.setCustomValidity(isOverLimit ? validationMessage : "");
+      return isOverLimit;
+    };
+
+    updateCounter();
+    textarea.addEventListener("input", updateCounter);
+
+    form.addEventListener("submit", (event) => {
+      if (updateCounter()) {
+        event.preventDefault();
+        textarea.reportValidity();
+        textarea.focus();
+      }
+    });
   }
 
   function initProjetLocationLink() {
@@ -401,6 +458,7 @@ if (Astro.request.method === "POST") {
       "DOMContentLoaded",
       () => {
         initProjetTypeActionBinding();
+        initProjectDescriptionWordLimit();
         initProjetLocationLink();
         initProjetManualLocationEditor();
       },
@@ -408,11 +466,13 @@ if (Astro.request.method === "POST") {
     );
   } else {
     initProjetTypeActionBinding();
+    initProjectDescriptionWordLimit();
     initProjetLocationLink();
     initProjetManualLocationEditor();
   }
 
   document.addEventListener("astro:page-load", initProjetTypeActionBinding);
+  document.addEventListener("astro:page-load", initProjectDescriptionWordLimit);
   document.addEventListener("astro:page-load", initProjetLocationLink);
   document.addEventListener("astro:page-load", initProjetManualLocationEditor);
 </script>

@@ -9,9 +9,18 @@ interface Props {
   title: string;
   subtitle: string;
   imageAlt?: string;
+  loading?: "lazy" | "eager";
+  fetchpriority?: "high" | "low" | "auto";
 }
 
-const { image, title, subtitle, imageAlt = "" } = Astro.props as Props;
+const {
+  image,
+  title,
+  subtitle,
+  imageAlt = "",
+  loading = "eager",
+  fetchpriority = "high",
+} = Astro.props as Props;
 const { desktop, tablet, mobile } = resolveHeroVariants(image);
 
 const desktopImageMd = await getImage({
@@ -78,9 +87,9 @@ const mobileSrcSet = mobileImage?.srcSet.attribute || mobileImage?.src;
       width={desktopImageLg.attributes.width}
       height={desktopImageLg.attributes.height}
       alt={imageAlt}
-      loading="eager"
+      loading={loading}
       decoding="sync"
-      fetchpriority="high"
+      fetchpriority={fetchpriority}
       class="h-full w-full"
       style="height:100%;width:100%;object-fit:cover;object-position:center;"
     />

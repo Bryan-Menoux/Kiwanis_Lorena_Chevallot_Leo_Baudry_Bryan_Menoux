@@ -1,11 +1,11 @@
 ---
-import Layout from "../../layouts/Layout.astro";
-import Hero from "../../components/Hero.astro";
+import Layout from "../layouts/Layout.astro";
+import Hero from "../components/Hero.astro";
 import slugify from "slugify";
-import { formatDateShort } from "../../utils/utilitaires.js";
-import HeroActions from "../../assets/projects-page/hero-project-page.png";
-import HeroActionsMobile from "../../assets/projects-page/hero-project-page-mobile.png";
-import HeroActionsTablet from "../../assets/projects-page/hero-project-page-tablette.png";
+import { formatDateShort } from "../utils/utilitaires.js";
+import HeroActions from "../assets/projects-page/hero-project-page.png";
+import HeroActionsMobile from "../assets/projects-page/hero-project-page-mobile.png";
+import HeroActionsTablet from "../assets/projects-page/hero-project-page-tablette.png";
 import { getImage } from "astro:assets";
 
 const lcpMobile = await getImage({ src: HeroActionsMobile, format: "webp", width: 440, quality: 68 });
@@ -15,7 +15,19 @@ const lcpDesktop = await getImage({ src: HeroActions, format: "webp", width: 184
 
 const projects = await Astro.locals.pb.collection("projets").getFullList({ sort: "-date" });
 
-import DiagArrow from "../../components/DiagArrow.astro";
+import DiagArrow from "../components/DiagArrow.astro";
+
+const projets = await Astro.locals.pb.collection("projets").getFullList({ sort: "-date" });
+
+function truncateWords(text: string, limit = 70): string {
+  const normalized = text.trim();
+  if (!normalized) return "";
+
+  const words = normalized.split(/\s+/).filter(Boolean);
+  if (words.length <= limit) return normalized;
+
+  return `${words.slice(0, limit).join(" ")}...`;
+}
 ---
 
 <Layout>
@@ -30,7 +42,7 @@ import DiagArrow from "../../components/DiagArrow.astro";
     subtitle="Servir les enfants du monde, au cœur de notre territoire"
   />
 
-  <section class="min-h-[80dvh] h-[520dvh] bg-red-600 w-full mt-64 flex">
+  <section class="min-h-[80dvh] h-fit w-full mt-64 flex">
     <div class="w-1/2 min-h-[80dvh] rounded-tr-box rounded-br-box bg-accent flex flex-col justify-between items-center px-8 py-16 text-base-100 sticky top-[15dvh] self-start">
       <div class="flex flex-col gap-8">
         <p class="text-sm font-bold" >Prochaines actions</p>
@@ -41,25 +53,32 @@ import DiagArrow from "../../components/DiagArrow.astro";
     </div>
     <div class="w-1/2 min-h-fit flex flex-col gap-16 px-16 py-32">
       {
-        projects.map((project) => (
+        projets.map((projet) => (
           <div class="w-full h-[50dvh] bg-base-100 shadow-2xl rounded-box p-8 flex flex-col justify-between items-end">
-            <div class="flex flex-col w-full" >
+            <div class="flex flex-col w-full min-w-0" >
               <ul class="flex gap-2">
               {
-                project.type_action.map((type) => (
+                projet.type_action.map((type) => (
                   <li class="bg-secondary px-4 py-2 rounded-full text-accent">{type}</li>
                 ))
               }
             </ul>
-            <h2 class="font-medium! mt-4" >{project.titre}</h2>
-            <p>{project.description}</p>
+            <h2
+              class="font-medium! mt-4"
+              style="overflow-wrap:anywhere; word-break:break-word;"
+            >
+              {projet.titre}
+            </h2>
+            <p style="overflow-wrap:anywhere; word-break:break-word;">
+              {projet.description ? truncateWords(projet.description, 70) : ""}
+            </p>
             </div>
             <div class="flex w-full items-end justify-between" >
-              <p>{project.date ? formatDateShort(new Date(project.date)) : ""}</p>
-              {project.date && project.nom_adresse ? (
+              <p>{projet.date ? formatDateShort(new Date(projet.date)) : ""}</p>
+              {projet.date && projet.nom_adresse ? (
               <button class="btn btn-accent mt-4">Ajouter à l'agenda <DiagArrow class="h-3 w-auto ml-2" /></button>
-            ) : !project.date && project.nom_adresse ? (
-              <a href={project.url_adresse} target="_blank" rel="noopener noreferrer" class="btn btn-accent mt-4">Voir sur Maps <DiagArrow class="h-3 w-auto ml-2" /></a>
+            ) : !projet.date && projet.nom_adresse ? (
+              <a href={projet.url_adresse} target="_blank" rel="noopener noreferrer" class="btn btn-accent mt-4">Voir sur Maps <DiagArrow class="h-3 w-auto ml-2" /></a>
             ) : null}
             </div>
           </div>

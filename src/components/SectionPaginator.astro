@@ -54,6 +54,7 @@ const {
     if (items.length === 0) return;
 
     let page = 1;
+    const scrollOffset = () => window.innerHeight * 0.15;
 
     const getFilteredItems = () => {
       const query =
@@ -67,7 +68,21 @@ const {
       });
     };
 
-    const render = () => {
+    const scrollToCurrentPageStart = (filteredItems: HTMLElement[], currentPage: number) => {
+      const start = (currentPage - 1) * pageSize;
+      const target = filteredItems[start];
+      if (!target) return;
+
+      requestAnimationFrame(() => {
+        const targetTop = window.scrollY + target.getBoundingClientRect().top - scrollOffset();
+        window.scrollTo({
+          top: Math.max(0, targetTop),
+          behavior: "smooth",
+        });
+      });
+    };
+
+    const render = (shouldScroll = false) => {
       const filteredItems = getFilteredItems();
       const totalPages = Math.max(1, Math.ceil(filteredItems.length / pageSize));
       page = Math.min(page, totalPages);
@@ -91,12 +106,19 @@ const {
 
       if (filteredItems.length <= pageSize) {
         root.innerHTML = "";
+        if (shouldScroll && filteredItems.length > 0) {
+          scrollToCurrentPageStart(filteredItems, page);
+        }
         return;
       }
 
       root.innerHTML = renderPagination(totalPages, page, {
         wrapperClass: "flex flex-wrap items-center justify-center gap-2",
       });
+
+      if (shouldScroll) {
+        scrollToCurrentPageStart(filteredItems, page);
+      }
     };
 
     root.addEventListener("click", (event) => {
@@ -118,14 +140,14 @@ const {
       }
 
       if (page !== previousPage) {
-        render();
+        render(true);
       }
     });
 
     if (searchInput instanceof HTMLInputElement) {
       searchInput.addEventListener("input", () => {
         page = 1;
-        render();
+        render(true);
       });
     }
 

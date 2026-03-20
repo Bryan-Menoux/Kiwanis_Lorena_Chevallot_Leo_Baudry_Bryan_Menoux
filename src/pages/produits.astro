@@ -1,0 +1,203 @@
+---
+import Layout from "../layouts/Layout.astro";
+import Hero from "../components/Hero.astro";
+import DiagArrow from "../components/DiagArrow.astro";
+import SectionPaginator from "../components/SectionPaginator.astro";
+import imageIcon from "../assets/image-icon.svg";
+import HeroProducts from "../assets/products-page/hero-products-page.png";
+import KiwanisPoupee1 from "../assets/products-page/poupee_kiwanis_1.webp";
+import KiwanisPoupee2 from "../assets/products-page/poupee_kiwanis_2.webp";
+
+interface ProductCard {
+  id: string;
+  title: string;
+  photoUrl: string;
+  priceLabel: string;
+}
+
+function formatPrice(price?: number): string {
+  if (typeof price !== "number" || Number.isNaN(price)) {
+    return "";
+  }
+
+  const decimals = Number.isInteger(price) ? 0 : 2;
+  return new Intl.NumberFormat("fr-FR", {
+    style: "currency",
+    currency: "EUR",
+    minimumFractionDigits: decimals,
+    maximumFractionDigits: decimals,
+  }).format(price);
+}
+
+const produitsRaw: any[] = await Astro.locals.pb
+  .collection("produits")
+  .getFullList({ sort: "-updated" });
+
+const produits: ProductCard[] = produitsRaw.map((produit) => {
+  const photoUrl =
+    Array.isArray(produit.photo) && produit.photo.length > 0
+      ? Astro.locals.pb.files.getURL(produit, produit.photo[0])
+      : "";
+
+  return {
+    id: produit.id,
+    title: produit.titre?.toString() || "Produit",
+    photoUrl,
+    priceLabel: formatPrice(produit.prix),
+  };
+});
+---
+
+<Layout>
+  <Fragment slot="head">
+    <title>Produits | Kiwanis Pays de Montbéliard</title>
+    <meta
+      name="description"
+      content="Découvrez les produits du Kiwanis Pays de Montbéliard, disponibles uniquement en consultation lors de nos actions."
+    />
+  </Fragment>
+
+  <Hero
+    image={HeroProducts}
+    title="Kiwanis Pays de Montbéliard"
+    subtitle="Servir les enfants du monde, au cœur de notre territoire"
+    loading="lazy"
+    fetchpriority="low"
+  />
+
+  <div class="mx-auto w-full max-w-[85dvw]! py-10 md:max-w-[80dvw]! md:py-14 lg:py-16">
+    <div class="mb-10 flex justify-center">
+      <p class="bg-secondary w-full rounded-box px-6 py-3 font-medium text-secondary-content md:px-8 md:py-4">
+        Retrouvez nos produits au cours de nos actions, en physique ! Ils ne sont pas disponibles en achat sur ce site, seulement en consultation.
+      </p>
+    </div>
+
+    {
+      produits.length > 0 ? (
+        <section class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 lg:gap-8">
+          {produits.map((produit) => (
+            <article
+              class="card group h-full overflow-hidden bg-base-100 shadow-md transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
+              data-product-card
+              data-search={produit.title}
+            >
+              <figure class="relative aspect-[5/4] w-full bg-base-200">
+                {produit.photoUrl ? (
+                  <img
+                    src={produit.photoUrl}
+                    alt={produit.title}
+                    loading="lazy"
+                    decoding="async"
+                    class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
+                  />
+                ) : (
+                  <div class="flex h-full w-full items-center justify-center">
+                    <div class="flex flex-col items-center gap-3">
+                      <img
+                        src={imageIcon.src}
+                        alt="Image par défaut"
+                        class="h-16 w-16 opacity-35"
+                        loading="lazy"
+                        decoding="async"
+                      />
+                      <span class="font-medium">À venir</span>
+                    </div>
+                  </div>
+                )}
+              </figure>
+
+              <div class="card-body gap-4 p-5 md:p-6">
+                <div class="space-y-2">
+                  <h2 class="min-h-[3.25rem] font-semibold md:min-h-[3.5rem]">
+                    {produit.title}
+                  </h2>
+                </div>
+
+                <div class="card-actions mt-auto flex items-center justify-between border-t border-base-300 pt-4">
+                  <span class="font-medium">Prix</span>
+                  <span class="bg-transparent p-0 font-bold text-2xl! md:text-3xl!">
+                    {produit.priceLabel || "Prix sur demande"}
+                  </span>
+                </div>
+              </div>
+            </article>
+          ))}
+        </section>
+      <SectionPaginator itemAttr="data-product-card" pageSize={9} class="mt-8" />
+    ) : (
+        <div class="rounded-2xl border border-base-300 bg-base-100 px-6 py-16 text-center shadow-sm">
+          <p>Aucun produit disponible pour le moment.</p>
+        </div>
+      )
+    }
+
+    <section class="mt-16 space-y-6 md:mt-20">
+      <div class="flex flex-col gap-6 rounded-box bg-base-100 p-6 shadow-md md:p-8 lg:p-10">
+        <p class="max-w-2xl">
+          Découvrez nos projets pour nous rencontrer, et pour pouvoir mettre la main sur le(s) produit(s) de votre choix !
+        </p>
+        <a href="/projets" class="btn btn-accent flex w-full gap-4 self-end md:w-fit">
+          Voir les projets
+          <DiagArrow class="h-3 w-auto" />
+        </a>
+      </div>
+
+      <div class="flex flex-col gap-6 rounded-box bg-base-100 p-6 shadow-md md:p-8 lg:p-10">
+        <p class="max-w-2xl">
+          Vous pouvez aussi les retrouver chez notre boulangerie partenaire, la boulangerie La Comtoise !
+        </p>
+        <a
+          href="https://www.facebook.com/profile.php?id=61575848495298"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="btn btn-accent flex w-full gap-4 self-end md:w-fit"
+        >
+          Voir la boulangerie
+          <DiagArrow class="h-3 w-auto" />
+        </a>
+      </div>
+    </section>
+
+    <section class="mt-16 rounded-box bg-base-100 p-6 shadow-md md:mt-20 md:p-8 lg:mt-24 lg:p-10">
+      <div class="grid grid-cols-1 gap-8 lg:grid-cols-[1.15fr_0.85fr] lg:gap-12">
+        <div class="flex flex-col gap-12">
+          <div class="flex flex-col gap-2">
+            <h2 class="font-bold">Poupées Kiwanis</h2>
+            <span class="badge badge-secondary px-4 py-4 font-medium">
+              Produit non disponible à la vente
+            </span>
+          </div>
+
+          <div class="flex flex-col gap-8">
+            <p>
+              La poupée Kiwanis est un objet solidaire destiné aux enfants. Elle n’est pas mise en vente, mais offerte dans le cadre d’actions menées par le Kiwanis, notamment auprès d’enfants hospitalisés ou accompagnés par des structures partenaires.
+            </p>
+            <p>
+              Conçue volontairement sans traits ni couleurs, elle devient un support d’expression libre. Les enfants peuvent la dessiner, la colorier ou se l’approprier, transformant la poupée en un objet personnel, rassurant et porteur d’émotions.
+            </p>
+            <p>
+              Au-delà de son aspect ludique, la poupée Kiwanis joue un rôle pédagogique et émotionnel. Elle permet d’apaiser, de créer du lien et d’offrir un moment de douceur dans des contextes parfois difficiles.
+            </p>
+          </div>
+        </div>
+
+        <div class="grid gap-5">
+          <img
+            src={KiwanisPoupee2.src}
+            alt="Membres Kiwanis lors d'une action"
+            loading="lazy"
+            decoding="async"
+            class="h-[16rem] w-full rounded-box object-cover shadow-md md:h-[18rem] lg:h-[35dvh]"
+          />
+          <img
+            src={KiwanisPoupee1.src}
+            alt="Roll-up Kiwanis lors d'un événement"
+            loading="lazy"
+            decoding="async"
+            class="h-[16rem] w-full rounded-box object-cover shadow-md md:h-[18rem] lg:h-[35dvh]"
+          />
+        </div>
+      </div>
+    </section>
+  </div>
+</Layout>

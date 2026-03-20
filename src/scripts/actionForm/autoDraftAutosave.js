@@ -1,4 +1,4 @@
-const AUTOSAVE_DELAY_MS = 1600;
+const AUTOSAVE_DELAY_MS = 700;
 const AUTOSAVE_STATUS_DEFAULT = "Brouillon non enregistré";
 const AUTOSAVE_STATUS_PENDING = "Enregistrement automatique en cours...";
 const AUTOSAVE_STATUS_SUCCESS_NEW = "Brouillon créé";
