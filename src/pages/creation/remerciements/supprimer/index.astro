@@ -7,6 +7,30 @@ import { normalizeImageUrl, resolveCreatorName } from "../../../../utils/utilita
 let error = "";
 let success = "";
 
+type DeletePartenaire = {
+  id: string;
+  title: string;
+  nom: string;
+  photoUrl: string;
+  updated: string;
+  authorName: string;
+  type: "partenaire";
+  source: "partenaire";
+  search: string;
+};
+
+type DeleteContributeur = {
+  id: string;
+  title: string;
+  nom: string;
+  subtitle: string;
+  updated: string;
+  authorName: string;
+  type: "contributeur";
+  source: "contributeur";
+  search: string;
+};
+
 // Récupérer la liste des partenaires et contributeurs
 let partenairesRaw = [];
 let contributeursRaw = [];
@@ -29,7 +53,7 @@ try {
 }
 
 // Mapper les partenaires
-const partenaires = partenairesRaw.map((p: any) => {
+const partenaires: DeletePartenaire[] = partenairesRaw.map((p: any) => {
   const photoUrl = normalizeImageUrl(p.logo, p, (Astro.locals as any).pb) || "";
 
   return {
@@ -46,7 +70,7 @@ const partenaires = partenairesRaw.map((p: any) => {
 });
 
 // Mapper les contributeurs
-const contributeurs = contributeursRaw.map((c: any) => ({
+const contributeurs: DeleteContributeur[] = contributeursRaw.map((c: any) => ({
   id: c.id,
   title: c.nom || "Contributeur sans nom",
   nom: c.nom || "Contributeur sans nom",
