@@ -710,6 +710,10 @@ if (Astro.request.method === "POST") {
         payload.galerie_photos = combinedGallery.length ? combinedGallery : "";
       }
 
+      // Réinjecter les images existantes quand elles n'ont pas été remplacées
+      // pour permettre leur conversion en WebP au moment de la sauvegarde.
+      keepExistingImageFields(payload, actionRecord);
+
       // Si le record provient d'un brouillon, mettre à jour la collection `brouillons`.
       if (actionRecordFromBrouillon) {
         if (publishRequested) {

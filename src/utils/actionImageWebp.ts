@@ -32,18 +32,38 @@ async function convertFileToWebp(file: File, outputName?: string) {
   const webpBuffer = await sharp(inputBuffer)
     .webp({ quality: WEBP_QUALITY })
     .toBuffer();
+  const webpArrayBuffer = Uint8Array.from(webpBuffer).buffer;
 
-  return new File([webpBuffer], outputName || toWebpFileName(file.name), {
+  return new File([webpArrayBuffer], outputName || toWebpFileName(file.name), {
     type: "image/webp",
   });
 }
 
-async function downloadRecordFile(record: any, fileName: string, pocketbaseClient: any) {
+async function downloadRecordFile(
+  record: any,
+  source: string,
+  fileName: string,
+  pocketbaseClient: any,
+) {
+  const normalizedSource = String(source || "").trim();
   const normalizedFileName = String(fileName || "").trim();
-  if (!normalizedFileName) return null;
+  const normalizedBaseUrl = String(pocketbaseClient?.baseUrl || "").trim();
+  if (!normalizedSource && !normalizedFileName) return null;
 
   const tryFetch = async (url: string) => {
-    const response = await fetch(url, {
+    const trimmedUrl = String(url || "").trim();
+    if (!trimmedUrl) return null;
+
+    let fetchUrl = trimmedUrl;
+    try {
+      fetchUrl = normalizedBaseUrl
+        ? new URL(trimmedUrl, normalizedBaseUrl).toString()
+        : new URL(trimmedUrl).toString();
+    } catch {
+      return null;
+    }
+
+    const response = await fetch(fetchUrl, {
       headers: pocketbaseClient?.authStore?.token
         ? { Authorization: `Bearer ${pocketbaseClient.authStore.token}` }
         : undefined,
@@ -57,23 +77,64 @@ async function downloadRecordFile(record: any, fileName: string, pocketbaseClien
     });
   };
 
-  let file = await tryFetch(pocketbaseClient.files.getURL(record, normalizedFileName));
-  if (file) return file;
+  const candidateUrls: string[] = [];
+
+  if (/^https?:\/\//i.test(normalizedSource)) {
+    candidateUrls.push(normalizedSource);
+  } else if (normalizedSource.startsWith("/")) {
+    if (normalizedBaseUrl) {
+      candidateUrls.push(new URL(normalizedSource, normalizedBaseUrl).toString());
+    }
+  }
+
+  if (normalizedFileName) {
+    try {
+      candidateUrls.push(pocketbaseClient.files.getURL(record, normalizedFileName));
+    } catch {
+      // Fallback handled below.
+    }
+  }
+
+  for (const url of candidateUrls) {
+    const file = await tryFetch(url);
+    if (file) return file;
+  }
 
   try {
     const token = await pocketbaseClient.files.getToken();
-    file = await tryFetch(
-      pocketbaseClient.files.getURL(record, normalizedFileName, { token }),
-    );
+    const tokenUrl = normalizedFileName
+      ? pocketbaseClient.files.getURL(record, normalizedFileName, { token })
+      : normalizedSource;
+    const file = await tryFetch(tokenUrl);
+    if (file) return file;
   } catch {
     // Si le fichier n'est pas accessible, l'appelant gérera l'erreur.
   }
 
-  return file;
+  return null;
 }
 
 function getFileReference(value: unknown) {
-  if (typeof value === "string") return value.trim();
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    if (!trimmed) return "";
+    if (trimmed.startsWith("data:") || trimmed.startsWith("blob:")) return "";
+    try {
+      const baseUrl =
+        trimmed.startsWith("http://") || trimmed.startsWith("https://")
+          ? trimmed
+          : `https://local.invalid${trimmed.startsWith("/") ? "" : "/"}${trimmed}`;
+      const parsed = new URL(baseUrl);
+      const pathname = parsed.pathname.split("/").filter(Boolean).pop() || "";
+      const candidate = pathname || trimmed;
+      const withoutQuery = candidate.split("?")[0].split("#")[0].trim();
+      return decodeURIComponent(withoutQuery);
+    } catch {
+      const noQuery = trimmed.split("?")[0].split("#")[0].trim();
+      const parts = noQuery.split("/").filter(Boolean);
+      return decodeURIComponent(parts[parts.length - 1] || noQuery);
+    }
+  }
   if (Array.isArray(value)) return String(value[0] ?? "").trim();
   if (value && typeof value === "object") {
     const candidate = value as { filename?: unknown; name?: unknown; id?: unknown };
@@ -88,7 +149,7 @@ async function normalizeImageValue(
   value: unknown,
   record: any,
   pocketbaseClient: any,
-) {
+): Promise<unknown> {
   if (value instanceof File) {
     return isWebpFileLike(value)
       ? value
@@ -96,9 +157,13 @@ async function normalizeImageValue(
   }
 
   if (Array.isArray(value)) {
-    const normalizedEntries = [];
+    const normalizedEntries: unknown[] = [];
     for (const entry of value) {
-      const normalizedEntry = await normalizeImageValue(entry, record, pocketbaseClient);
+      const normalizedEntry: unknown = await normalizeImageValue(
+        entry,
+        record,
+        pocketbaseClient,
+      );
       if (normalizedEntry === undefined || normalizedEntry === null || normalizedEntry === "") {
         continue;
       }
@@ -110,16 +175,18 @@ async function normalizeImageValue(
   if (typeof value !== "string") return value;
 
   const fileName = value.trim();
-  if (!fileName) return value;
+  const fileReference = getFileReference(fileName);
+  if (!fileReference) return value;
+  if (isWebpFileName(fileReference)) return value;
   if (isWebpFileName(fileName)) return value;
   if (!record || !pocketbaseClient) return value;
 
-  const file = await downloadRecordFile(record, fileName, pocketbaseClient);
+  const file = await downloadRecordFile(record, fileName, fileReference, pocketbaseClient);
   if (!file) {
-    throw new Error(`Impossible de récupérer le fichier "${fileName}" pour le convertir en WebP.`);
+    throw new Error(`Impossible de récupérer le fichier "${fileReference}" pour le convertir en WebP.`);
   }
 
-  return convertFileToWebp(file, toWebpFileName(file.name || fileName));
+  return convertFileToWebp(file, toWebpFileName(file.name || fileReference));
 }
 
 export async function normalizeActionImagesForSave(
