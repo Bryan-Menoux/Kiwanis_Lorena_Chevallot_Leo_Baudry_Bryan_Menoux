@@ -150,6 +150,8 @@ const mapAddress = "76 bis faubourg de Besançon, 25200 Montbéliard";
     </div>
   </div>
 
+  </div>
+
   <!-- Section nous retrouver -->
 
   <div
@@ -346,8 +348,6 @@ const mapAddress = "76 bis faubourg de Besançon, 25200 Montbéliard";
   </div>
 
     <HomePartner />
-  </div>
-
   <script>
     // CSS Leaflet inliné dans le bundle → 0 requête réseau supplémentaire
     import leafletCss from "leaflet/dist/leaflet.css?inline";
@@ -411,10 +411,14 @@ const mapAddress = "76 bis faubourg de Besançon, 25200 Montbéliard";
       // Charge au survol (desktop) ou au toucher (mobile)
       root.addEventListener("mouseenter", loadMap, { once: true });
       root.addEventListener("touchstart", loadMap, { once: true, passive: true });
-      // Fallback : visible à 50%
+      // Charge avant que la carte soit réellement visible.
       const observer = new IntersectionObserver(
-        (e) => { if (e[0]?.isIntersecting) loadMap(); },
-        { threshold: 0.5 }
+        (entries) => {
+          if (entries.some((entry) => entry.isIntersecting)) {
+            void loadMap();
+          }
+        },
+        { threshold: 0, rootMargin: "800px 0px 800px 0px" }
       );
       observer.observe(root);
     }

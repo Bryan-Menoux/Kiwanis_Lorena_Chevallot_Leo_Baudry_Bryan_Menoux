@@ -71,6 +71,12 @@ export function initModifications() {
     const target = e.target;
     if (!(target instanceof Element)) return;
 
+    if (target === modal) {
+      modal?.classList.remove("modal-open");
+      editingCard = null;
+      return;
+    }
+
     const btn = target.closest(".modify-btn");
     if (btn) {
       e.preventDefault();

@@ -1,24 +1,16 @@
 ---
-import { getImage } from "astro:assets";
+const partenairesRaw: any[] = await Astro.locals.pb
+  .collection("partenaires")
+  .getFullList(200, { sort: "-updated" });
 
-import type { ImageMetadata } from "astro";
-
-const imageModules = import.meta.glob<{ default: ImageMetadata }>('/src/assets/partners/*.webp', { eager: true });
-
-const images = await Promise.all(
-  Object.entries(imageModules)
-    .sort(([pathA], [pathB]) => pathA.localeCompare(pathB))
-    .map(async ([path, module]) => {
-      const name = path.split('/').pop()!.replace('.webp', '');
-      const srcSm = await getImage({ src: module.default, width: 160, format: "webp" });
-      const src = await getImage({ src: module.default, width: 220, format: "webp" });
-      return {
-        src,
-        srcSm,
-        alt: `Logo du partenaire ${name}`,
-      };
-    }),
-);
+const images = partenairesRaw
+  .filter((partenaire) => partenaire?.logo)
+  .map((partenaire, index) => ({
+    src: Astro.locals.pb.files.getURL(partenaire, partenaire.logo),
+    alt: partenaire.nom
+      ? `Logo du partenaire ${partenaire.nom}`
+      : `Logo du partenaire ${index + 1}`,
+  }));
 
 ---
 
@@ -28,12 +20,8 @@ const images = await Promise.all(
       {images.map((image) => (
         <div class="partner-carousel-item shrink-0 flex w-32 items-center justify-center md:w-40 lg:w-48">
           <img
-            src={image.src.src}
-            srcset={`${image.srcSm.src} 160w, ${image.src.src} 220w`}
-            sizes="(min-width: 1024px) 192px, (min-width: 768px) 160px, 128px"
+            src={image.src}
             alt={image.alt}
-            width={image.src.attributes.width}
-            height={image.src.attributes.height}
             loading="lazy"
             fetchpriority="low"
             class="block h-14 w-full object-contain md:h-16 lg:h-20"
@@ -45,13 +33,9 @@ const images = await Promise.all(
       {images.map((image) => (
         <div class="partner-carousel-item shrink-0 flex w-32 items-center justify-center md:w-40 lg:w-48">
           <img
-            src={image.src.src}
-            srcset={`${image.srcSm.src} 160w, ${image.src.src} 220w`}
-            sizes="(min-width: 1024px) 192px, (min-width: 768px) 160px, 128px"
+            src={image.src}
             alt=""
             aria-hidden="true"
-            width={image.src.attributes.width}
-            height={image.src.attributes.height}
             loading="lazy"
             fetchpriority="low"
             class="block h-14 w-full object-contain md:h-16 lg:h-20"
