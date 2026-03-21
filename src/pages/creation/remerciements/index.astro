@@ -277,8 +277,8 @@ const error = (Astro.url.searchParams.get("error") || "").trim();
                     showPhotoPlaceholder={true}
                     source="partenaire"
                     authorName={partenaire.authorName}
-                    viewUrl={`/creation/remerciements/edit/${partenaire.id}`}
-                    editUrl={`/creation/remerciements/edit/${partenaire.id}`}
+                    viewUrl={`/creation/remerciements/modifier/${partenaire.id}`}
+                    editUrl={`/creation/remerciements/modifier/${partenaire.id}`}
                     showDeleteButton={true}
                   />
                   
@@ -339,8 +339,8 @@ const error = (Astro.url.searchParams.get("error") || "").trim();
                     subtitle={contributeur.metier || contributeur.description}
                     source="contributeur"
                     authorName={contributeur.authorName}
-                    viewUrl={`/creation/remerciements/edit/${contributeur.id}`}
-                    editUrl={`/creation/remerciements/edit/${contributeur.id}`}
+                    viewUrl={`/creation/remerciements/modifier/${contributeur.id}`}
+                    editUrl={`/creation/remerciements/modifier/${contributeur.id}`}
                     showDeleteButton={true}
                   />
                 </div>

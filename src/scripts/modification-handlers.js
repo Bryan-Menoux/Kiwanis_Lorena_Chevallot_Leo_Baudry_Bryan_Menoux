@@ -119,7 +119,11 @@ export function initModifications() {
 
   const modalForm = document.getElementById("modify-form");
   if (modalForm instanceof HTMLFormElement) {
-    modalForm.addEventListener("submit", async (e) => {
+    if (window._modificationSubmitHandler) {
+      modalForm.removeEventListener("submit", window._modificationSubmitHandler);
+    }
+
+    const submitHandler = async (e) => {
       e.preventDefault();
 
       const userIdField = document.getElementById("modal-user-id");
@@ -204,12 +208,19 @@ export function initModifications() {
           submitBtn.innerHTML = originalHTML;
         }
       }
-    });
+    };
+
+    window._modificationSubmitHandler = submitHandler;
+    modalForm.addEventListener("submit", submitHandler);
   }
 
   const userSearchInput = document.getElementById("user-search");
   if (userSearchInput instanceof HTMLInputElement) {
-    userSearchInput.addEventListener("input", () => {
+    if (window._modificationSearchHandler) {
+      userSearchInput.removeEventListener("input", window._modificationSearchHandler);
+    }
+
+    const searchHandler = () => {
       const query = userSearchInput.value.toLowerCase();
       const cards = document.querySelectorAll(".user-card");
       cards.forEach((card) => {
@@ -217,12 +228,19 @@ export function initModifications() {
         const email = (card.querySelector("p")?.textContent || "").toLowerCase();
         card.style.display = name.includes(query) || email.includes(query) ? "" : "none";
       });
-    });
+    };
+
+    window._modificationSearchHandler = searchHandler;
+    userSearchInput.addEventListener("input", searchHandler);
   }
 
   const deleteBtn = document.getElementById("delete-btn");
   if (deleteBtn) {
-    deleteBtn.addEventListener("click", async () => {
+    if (window._modificationDeleteHandler) {
+      deleteBtn.removeEventListener("click", window._modificationDeleteHandler);
+    }
+
+    const deleteHandler = async () => {
       if (!editingCard) return;
       const confirmed = await showConfirm({
         title: "Supprimer l'utilisateur",
@@ -276,7 +294,10 @@ export function initModifications() {
             "Impossible de supprimer cet utilisateur pour le moment. Vérifiez votre connexion puis réessayez.",
         });
       }
-    });
+    };
+
+    window._modificationDeleteHandler = deleteHandler;
+    deleteBtn.addEventListener("click", deleteHandler);
   }
 
   if (totalPages > 0) {

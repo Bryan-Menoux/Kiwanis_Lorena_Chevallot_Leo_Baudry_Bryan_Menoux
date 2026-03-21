@@ -35,14 +35,14 @@ export function getCreationEditUrl(
   const slugPath = buildSlugPath(id, slug);
 
   if (entityType === "action") {
-    return `/creation/actions/edit/${slugPath}`;
+    return `/creation/actions/modifier/${slugPath}`;
   }
 
   if (entityType === "projet") {
-    return `/creation/projets/edit/${slugPath}`;
+    return `/creation/projets/modifier/${slugPath}`;
   }
 
-  return `/creation/produits/edit/${slugPath}`;
+  return `/creation/produits/modifier/${slugPath}`;
 }
 
 export function getDraftEditUrl(id: string, slug: string): string {

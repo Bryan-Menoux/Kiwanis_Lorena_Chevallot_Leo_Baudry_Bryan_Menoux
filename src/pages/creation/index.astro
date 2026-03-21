@@ -290,7 +290,7 @@ if (Astro.request.method === "POST") {
                       <div class="card-actions justify-end mt-4">
                         <button
                           type="button"
-                          class="btn btn-sm btn-error !text-sm !font-normal !normal-case rounded-full"
+                          class="btn btn-sm btn-error text-sm! font-normal! normal-case! rounded-full"
                           data-page-delete-btn
                           data-page-id={page.id}
                           data-page-title={page.title}
@@ -298,8 +298,8 @@ if (Astro.request.method === "POST") {
                         >
                           Supprimer
                         </button>
-                        <a href={getViewUrl(page.status, page.id, page.slug)} class="btn btn-sm btn-ghost !text-sm !font-normal !normal-case">Voir</a>
-                        <a href={getEditUrl(page.status, page.id, page.slug)} class="btn btn-sm btn-accent !text-sm !font-normal !normal-case">Modifier</a>
+                        <a href={getViewUrl(page.status, page.id, page.slug)} class="btn btn-sm btn-ghost text-sm! font-normal! normal-case!">Voir</a>
+                        <a href={getEditUrl(page.status, page.id, page.slug)} class="btn btn-sm btn-accent text-sm! font-normal! normal-case!">Modifier</a>
                       </div>
                     </div>
                   </div>
@@ -452,7 +452,7 @@ if (Astro.request.method === "POST") {
                   <div class="card-actions justify-end mt-4">
                     <button
                       type="button"
-                      class="btn btn-sm btn-error !text-sm !font-normal !normal-case rounded-full"
+                      class="btn btn-sm btn-error text-sm! font-normal! normal-case! rounded-full"
                       data-page-delete-btn
                       data-page-id="${page.id}"
                       data-page-title="${page.title}"
@@ -460,8 +460,8 @@ if (Astro.request.method === "POST") {
                     >
                       Supprimer
                     </button>
-                    <a href="${getViewUrl(page.status, page.id, page.slug)}" class="btn btn-sm btn-ghost !text-sm !font-normal !normal-case">Voir</a>
-                    <a href="${getEditUrl(page.status, page.id, page.slug)}" class="btn btn-sm btn-accent !text-sm !font-normal !normal-case">Modifier</a>
+                    <a href="${getViewUrl(page.status, page.id, page.slug)}" class="btn btn-sm btn-ghost text-sm! font-normal! normal-case!">Voir</a>
+                    <a href="${getEditUrl(page.status, page.id, page.slug)}" class="btn btn-sm btn-accent text-sm! font-normal! normal-case!">Modifier</a>
                   </div>
                 </div>
               </div>
