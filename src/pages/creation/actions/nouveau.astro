@@ -55,6 +55,18 @@ const hasDescriptionForPartTitle = (payload: Record<string, any>, partNumber: nu
   return descriptionValue.trim() !== defaultDescription.trim();
 };
 
+const deleteDraftIfNeeded = async (draftId: string) => {
+  if (!draftId) return;
+
+  try {
+    await Astro.locals.pb.collection("brouillons").delete(draftId);
+  } catch (discardErr: any) {
+    if (discardErr?.status !== 404) {
+      throw discardErr;
+    }
+  }
+};
+
 const applyPartTitleRule = (payload: Record<string, any>) => {
   for (const partNumber of PART_NUMBERS) {
     const titleKey = `titre_partie_${partNumber}`;
@@ -309,6 +321,7 @@ if (Astro.request.method === "POST") {
 
     const payload = applyPartTitleRule({ ...data, slug, ...files });
     const newAction = await Astro.locals.pb.collection("actions").create(payload);
+    await deleteDraftIfNeeded(draftId);
     return Astro.redirect(`/creation/actions/${newAction.id}-${slug}`);
   } catch (err) {
     console.error("Erreur lors de la création:", err);
