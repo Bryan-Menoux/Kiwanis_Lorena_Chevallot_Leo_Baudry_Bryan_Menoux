@@ -219,7 +219,8 @@ const getSectionTitle = (key: string, fallback: string) => {
           data-preview-crop-field="hero"
           src={heroImg || ""}
           alt={action.description_hero || "Aperçu de l'image de l'en-tête"}
-          loading="lazy"
+          loading="eager"
+          fetchpriority="high"
           decoding="async"
           title="Cliquer pour recadrer"
           style={`${heroImg ? "" : "display:none;"}${cropStyle("hero")}`}
@@ -278,6 +279,7 @@ const getSectionTitle = (key: string, fallback: string) => {
                   src={partie1Img || ""}
                   alt={action.description_photo_partie_1 || "Aperçu de la photo partie 1"}
                   loading="lazy"
+                  fetchpriority="low"
                   decoding="async"
                   title="Cliquer pour recadrer"
                   style={`${action.photo_partie_1 ? "" : "display:none;"}${cropStyle("photo_partie_1")}`}
@@ -427,6 +429,7 @@ const getSectionTitle = (key: string, fallback: string) => {
                   src={partie2Img || ""}
                   alt={action.description_photo_partie_2 || "Aperçu de la photo partie 2"}
                   loading="lazy"
+                  fetchpriority="low"
                   decoding="async"
                   title="Cliquer pour recadrer"
                   style={`${action.photo_partie_2 ? "" : "display:none;"}${cropStyle("photo_partie_2")}`}
@@ -470,6 +473,7 @@ const getSectionTitle = (key: string, fallback: string) => {
                   src={partie3Img || ""}
                   alt={action.description_photo_partie_3 || "Aperçu de la photo partie 3"}
                   loading="lazy"
+                  fetchpriority="low"
                   decoding="async"
                   title="Cliquer pour recadrer"
                   style={`${action.photo_partie_3 ? "" : "display:none;"}${cropStyle("photo_partie_3")}`}
@@ -561,7 +565,9 @@ const getSectionTitle = (key: string, fallback: string) => {
                   class="overflow-hidden rounded-box cursor-pointer"
                   data-photo-url={photoURL}
                 >
-                  <img loading="lazy"
+                  <img
+                    loading="lazy"
+                    fetchpriority="low"
                     src={photoURL}
                     alt="Photo de la galerie"
                     class="w-full h-[60dvh] object-cover block"
@@ -618,7 +624,9 @@ const getSectionTitle = (key: string, fallback: string) => {
             />
           </button>
           <div class="relative p-2 md:p-4">
-            <img loading="lazy"
+            <img
+              loading="lazy"
+              fetchpriority="low"
               id="modalImage"
               src=""
               alt="Image agrandie"

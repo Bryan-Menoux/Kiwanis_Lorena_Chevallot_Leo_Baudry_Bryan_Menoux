@@ -205,6 +205,7 @@ const lcpDesktop = await getImage({ src: HeroActions, format: "webp", width: 184
                           `Illustration de ${action.titre}`
                         }
                         loading="lazy"
+                        fetchpriority="low"
                         decoding="async"
                         class={`h-56 w-full object-cover md:h-[36dvh] lg:h-full lg:w-1/2 ${imageOrderClass}`}
                       />

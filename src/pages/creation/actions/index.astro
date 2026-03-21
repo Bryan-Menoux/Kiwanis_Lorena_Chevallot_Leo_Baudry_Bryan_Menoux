@@ -183,6 +183,8 @@ const stats = { total: actions.length };
             source={action.source}
             photoUrl={action.heroActionUrl}
             photoClass="h-56 md:h-64 object-cover! px-0! "
+            photoLoading="lazy"
+            photoFetchPriority="low"
             showPhotoPlaceholder={true}
             isDraft={action.source === "brouillon"}
             subtitle={action.subtitle}

@@ -22,6 +22,8 @@ export interface Props {
   maxHeightContent?: boolean;
   photoUrl?: string;
   photoClass?: string;
+  photoLoading?: "eager" | "lazy";
+  photoFetchPriority?: "high" | "low" | "auto";
   price?: number;
   authorName?: string;
   deleteMode?: boolean;
@@ -56,6 +58,8 @@ const {
   showDeleteButton = false,
   showViewButton = true,
   showPhotoPlaceholder = false,
+  photoLoading = "lazy",
+  photoFetchPriority = "low",
 } = Astro.props;
 ---
 
@@ -80,6 +84,9 @@ const {
       <img
         src={photoUrl}
         alt={title}
+        loading={photoLoading}
+        fetchpriority={photoFetchPriority}
+        decoding="async"
         class={`w-full rounded-lg bg-white object-contain lg:object-contain object-center px-4 ${photoClass || "h-74"}`}
       />
     )}
