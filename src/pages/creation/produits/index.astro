@@ -1,9 +1,12 @@
 ---
 import Layout from "../../../layouts/Layout-back-office.astro";
+import ActionsSearch from "../../../components/ActionsSearch.astro";
 import ItemCard from "../../../components/ItemCard.astro";
+import SectionPaginator from "../../../components/SectionPaginator.astro";
 import slugify from "slugify";
 import FormSubmitOverlay from "../../../components/FormSubmitOverlay.astro";
 import { getCreationEditUrl } from "../../../utils/creationRoutes";
+import { resolveCreatorName } from "../../../utils/utilitaires.js";
 
 interface ProductItem {
   id: string;
@@ -13,17 +16,20 @@ interface ProductItem {
   updated?: string;
   photoUrl?: string;
   price?: number;
+  authorName?: string;
 }
 
 const produitsRaw: any[] = await Astro.locals.pb
   .collection("produits")
-  .getFullList(200, { sort: "-updated" });
-const produits: ProductItem[] = [
-  ...produitsRaw.map((p) => {
-    const photoUrl = Array.isArray(p.photo) && p.photo.length > 0
-      ? (Astro.locals as any).pb.files.getURL(p, p.photo[0])
-      : "";
-    
+  .getFullList(200, { sort: "-updated", expand: "cree_par" });
+
+const produits: ProductItem[] = produitsRaw
+  .map((p) => {
+    const photoUrl =
+      Array.isArray(p.photo) && p.photo.length > 0
+        ? (Astro.locals as any).pb.files.getURL(p, p.photo[0])
+        : "";
+
     return {
       id: p.id,
       title: p.titre,
@@ -32,33 +38,16 @@ const produits: ProductItem[] = [
       updated: p.updated,
       photoUrl,
       price: typeof p.prix === "number" ? p.prix : undefined,
+      authorName: resolveCreatorName(p) || "Auteur inconnu",
     };
-  }),
-].sort(
-  (a, b) =>
-    new Date(b.updated || 0).getTime() - new Date(a.updated || 0).getTime(),
-);
+  })
+  .sort((a, b) => new Date(b.updated || 0).getTime() - new Date(a.updated || 0).getTime());
 
 const stats = { total: produits.length };
-
-function formatDate(dateStr?: string): string {
-  if (!dateStr) return "";
-  try {
-    const date = new Date(dateStr);
-    return date.toLocaleDateString("fr-FR", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
-  } catch {
-    return dateStr;
-  }
-}
 ---
 
 <Layout>
   <div class="container mx-auto px-4 py-8 my-16 md:my-32">
-    {/* Titre et boutons d'action */}
     <div class="mb-10 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
       <div class="mb-0">
         <h1 class="mb-3 text-3xl font-bold text-accent font-poppins md:text-4xl">
@@ -78,7 +67,6 @@ function formatDate(dateStr?: string): string {
       </div>
     </div>
 
-    {/* Statistique */}
     <div class="grid grid-cols-1 gap-4 mb-12">
       <div class="card bg-base-100 shadow-md">
         <div class="card-body text-center p-4">
@@ -88,30 +76,69 @@ function formatDate(dateStr?: string): string {
       </div>
     </div>
 
-    {/* Grille de produits */}
-    <div class="grid grid-cols-1 gap-4 md:grid-cols-3 md:gap-5 lg:grid-cols-3 lg:gap-6">
+    <div class="card mb-8 rounded-2xl border border-base-300 bg-base-100 shadow-sm">
+      <div class="card-body p-4 md:p-6">
+        <div class="mb-4">
+          <h2 class="card-title text-2xl">Rechercher</h2>
+          <p class="mt-1 text-sm text-base-content/60">
+            Filtrez rapidement vos produits puis triez l'affichage.
+          </p>
+        </div>
+
+        <div class="flex flex-col gap-4">
+          <div class="w-full">
+            <p class="mb-2 font-medium text-base-content/70">Filtres</p>
+            <ActionsSearch showBeneficiary={false} embedded={true}>
+              <label slot="secondary-extra" class="form-control w-full gap-1" for="sort-select">
+                <span class="text-sm! font-medium tracking-wide text-base-content">
+                  Trier par date
+                </span>
+                <select id="sort-select" class="select select-bordered w-full">
+                  <option value="updated_desc">Récent → Ancien</option>
+                  <option value="updated_asc">Ancien → Récent</option>
+                </select>
+              </label>
+            </ActionsSearch>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div
+      id="products-grid"
+      class="grid grid-cols-1 gap-4 md:grid-cols-3 md:gap-5 lg:grid-cols-3 lg:gap-6"
+    >
       {produits.map((produit) => (
-        <ItemCard
-          id={produit.id}
-          title={produit.title}
-          slug={produit.slug}
-          source={produit.source}
-          photoUrl={produit.photoUrl}
-          showPhotoPlaceholder={true}
-          price={produit.price}
-          formattedDate={formatDate(produit.updated)}
-          editUrl={getCreationEditUrl("produit", produit.id, produit.slug)}
-          showViewButton={false}
-          showDeleteButton={true}
-        />
+        <div
+          data-product-item
+          data-search={`${produit.title} ${produit.authorName || ""}`}
+          data-updated={produit.updated}
+          class="h-full"
+        >
+          <ItemCard
+            id={produit.id}
+            title={produit.title}
+            slug={produit.slug}
+            source={produit.source}
+            photoUrl={produit.photoUrl}
+            showPhotoPlaceholder={true}
+            price={produit.price}
+            authorName={produit.authorName}
+            editUrl={getCreationEditUrl("produit", produit.id, produit.slug)}
+            showViewButton={false}
+            showDeleteButton={true}
+          />
+        </div>
       ))}
     </div>
 
-    {produits.length === 0 && (
-      <div class="text-center py-12">
-        <p class="text-base-content/60">Aucun produit trouvé</p>
-      </div>
-    )}
+    <SectionPaginator
+      itemAttr="data-product-item"
+      pageSize={9}
+      searchInputId="search-input"
+      sortSelectId="sort-select"
+      emptyMessage="Aucun produit trouvé"
+    />
   </div>
 
   <FormSubmitOverlay
@@ -124,7 +151,6 @@ function formatDate(dateStr?: string): string {
   import { initPublishHandlers } from "../../../utils/formHandlers";
   import { showConfirm } from "../../../utils/alerts";
 
-  // Initialize publish handlers
   initPublishHandlers(
     { formSelector: 'form[data-publish-produit-form="true"]' },
     showConfirm

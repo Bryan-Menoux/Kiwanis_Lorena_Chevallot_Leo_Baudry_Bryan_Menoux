@@ -36,10 +36,21 @@ function formatActionDate(dateStart?: string, dateEnd?: string): string {
   return start && end ? `${start} au ${end}` : start || end;
 }
 
-const actions = await Astro.locals.pb.collection('actions').getFullList(200, { sort: '-updated' });
-const projets = await Astro.locals.pb.collection('projets').getFullList(200, { sort: '-updated' });
-const produits = await Astro.locals.pb.collection('produits').getFullList(200, { sort: '-updated' });
-const brouillons = await Astro.locals.pb.collection('brouillons').getFullList(200, { sort: '-updated' });
+const actions = await Astro.locals.pb.collection('actions').getFullList(200, { sort: '-updated', expand: 'cree_par' });
+const projets = await Astro.locals.pb.collection('projets').getFullList(200, { sort: '-updated', expand: 'cree_par' });
+const produits = await Astro.locals.pb.collection('produits').getFullList(200, { sort: '-updated', expand: 'cree_par' });
+const brouillons = await Astro.locals.pb.collection('brouillons').getFullList(200, { sort: '-updated', expand: 'cree_par' });
+
+const resolveCreatorName = (record: any) => {
+  const creator = record?.expand?.cree_par;
+  if (typeof creator?.name === "string" && creator.name.trim() !== "") {
+    return creator.name.trim();
+  }
+  if (typeof creator?.email === "string" && creator.email.trim() !== "") {
+    return creator.email.trim();
+  }
+  return "";
+};
 
 // Combiner toutes les pages des différentes collections
 const pages: Page[] = [
@@ -49,7 +60,7 @@ const pages: Page[] = [
     slug: safeSlug(action.titre, "action"),
     status: 'actions' as const,
     updatedAt: action.updated,
-    authorName: 'Admin', // Valeur par défaut
+    authorName: resolveCreatorName(action) || "Auteur inconnu",
     beneficiary: action.beneficiaire,
     displayDate: formatActionDate(action.date_debut, action.date_fin),
   })),
@@ -59,7 +70,7 @@ const pages: Page[] = [
     slug: safeSlug(projet.titre, "projet"),
     status: 'projets' as const,
     updatedAt: projet.updated,
-    authorName: 'Admin', // Valeur par défaut
+    authorName: resolveCreatorName(projet) || "Auteur inconnu",
     displayDate: projet.date ? formatDateShort(projet.date) : "",
   })),
   ...produits.map(produit => ({
@@ -68,7 +79,7 @@ const pages: Page[] = [
     slug: safeSlug(produit.titre, "produit"),
     status: 'produits' as const,
     updatedAt: produit.updated,
-    authorName: 'Admin', // Valeur par défaut
+    authorName: resolveCreatorName(produit) || "Auteur inconnu",
     displayDate: formatDateWithTime(produit.updated),
   })),
   ...brouillons.map(brouillon => {
@@ -78,7 +89,7 @@ const pages: Page[] = [
       slug: safeSlug(brouillon.titre, "brouillon"),
       status: 'brouillon' as const,
       updatedAt: brouillon.updated,
-      authorName: 'Admin', // Valeur par défaut
+      authorName: resolveCreatorName(brouillon) || "Auteur inconnu",
       displayDate: formatDateWithTime(brouillon.updated),
     });
   })
@@ -237,13 +248,6 @@ if (Astro.request.method === "POST") {
           </p>
         </div>
 
-        <div id="active-filters" class="hidden mb-4 w-full rounded-xl border border-info/20 bg-info/10 px-3 py-2 md:px-4 relative items-center justify-between">
-          <div class="flex items-center w-full pr-12">
-            <div class="flex flex-wrap gap-2" id="filter-badges"></div>
-          </div>
-          <button id="clear-filters" class="btn btn-ghost btn-sm absolute right-0 top-1/2 -translate-y-1/2">Effacer</button>
-        </div>
-
         <div class="flex flex-col gap-4">
           <div class="w-full">
             <h3 class="mb-2">Filtres</h3>
@@ -271,7 +275,6 @@ if (Astro.request.method === "POST") {
           {recent.length === 0 ? (
             <div class="text-center py-12">
               <p class="text-base-content/60 mb-4">Aucune page trouvée</p>
-              <button id="clear-filters-empty" class="btn btn-primary hidden">Effacer les filtres</button>
             </div>
           ) : (
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -284,7 +287,6 @@ if (Astro.request.method === "POST") {
                         <h3 class="card-title text-lg">{page.title}</h3>
                         <span class={`badge ${badge.className}`}>{badge.label}</span>
                       </div>
-                      <p class="text-sm text-base-content/60 mb-2">/{page.slug}</p>
                       <p class="text-sm text-base-content/60 mb-2">Par {page.authorName}</p>
                       <p class="text-sm text-base-content/60">{page.displayDate || formatDateWithTime(page.updatedAt)}</p>
                       <div class="card-actions justify-end mt-4">
@@ -418,38 +420,6 @@ if (Astro.request.method === "POST") {
     return filtered;
   }
 
-  function updateActiveFilters(search, statusFilter) {
-    const activeFiltersEl = document.getElementById('active-filters');
-    const filterBadgesEl = document.getElementById('filter-badges');
-
-    if (search || (statusFilter && statusFilter !== 'all')) {
-      activeFiltersEl.classList.remove('hidden');
-      activeFiltersEl.classList.add('flex');
-      filterBadgesEl.innerHTML = '';
-
-      if (search) {
-        const badge = document.createElement('span');
-        badge.className = 'badge';
-        badge.textContent = `Recherche: "${search}"`;
-        filterBadgesEl.appendChild(badge);
-      }
-
-      if (statusFilter && statusFilter !== 'all') {
-        const statusLabel = statusFilter === 'actions' ? 'Actions' :
-                           statusFilter === 'projets' ? 'Projets' :
-                           statusFilter === 'produits' ? 'Produits' :
-                           statusFilter === 'brouillon' ? 'Brouillons' : statusFilter;
-        const badge = document.createElement('span');
-        badge.className = 'badge';
-        badge.textContent = `Type: ${statusLabel}`;
-        filterBadgesEl.appendChild(badge);
-      }
-    } else {
-      activeFiltersEl.classList.add('hidden');
-      activeFiltersEl.classList.remove('flex');
-    }
-  }
-
   function renderPages(filteredPages) {
     const container = document.getElementById('pages-container');
     if (!(container instanceof HTMLElement)) return;
@@ -458,28 +428,9 @@ if (Astro.request.method === "POST") {
       container.innerHTML = `
         <div class="text-center py-12">
           <p class="text-base-content/60 mb-4">Aucune page trouvée</p>
-          <button id="clear-filters-empty" class="btn btn-primary">Effacer les filtres</button>
         </div>
       `;
       currentPage = 1;
-
-      // Réattacher l'événement pour effacer les filtres
-      document.getElementById('clear-filters-empty').addEventListener('click', () => {
-        const root = document.querySelector('.actions-search');
-        if (root instanceof HTMLElement) {
-          const si = root.querySelector('#search-input');
-          const st = root.querySelector('#status-select');
-          if (si instanceof HTMLInputElement) si.value = '';
-          if (st instanceof HTMLSelectElement) st.value = 'all';
-          document.dispatchEvent(new CustomEvent('actions-filter-change', { detail: { search: '', status: 'all' } }));
-        } else {
-          currentSearch = '';
-          currentStatus = 'all';
-          updateActiveFilters(currentSearch, currentStatus);
-          filteredPagesCache = filterPages(currentSearch, currentStatus, currentBenef, currentSort);
-          renderPages(filteredPagesCache);
-        }
-      });
     } else {
       const totalPages = Math.max(1, Math.ceil(filteredPages.length / PAGE_SIZE));
       if (currentPage > totalPages) currentPage = totalPages;
@@ -498,7 +449,6 @@ if (Astro.request.method === "POST") {
                     <h3 class="card-title text-lg">${page.title}</h3>
                     <span class="badge ${badge.className}">${badge.label}</span>
                   </div>
-                  <p class="text-sm text-base-content/60 mb-2">/${page.slug}</p>
                   <p class="text-sm text-base-content/60 mb-2">Par ${page.authorName}</p>
                   <p class="text-sm text-base-content/60">${formatDate(page.updatedAt)}</p>
                   <div class="card-actions justify-end mt-4">
@@ -528,7 +478,6 @@ if (Astro.request.method === "POST") {
 
   // Initialisation
   const initCreationIndexHandlers = () => {
-    const clearFiltersBtn = document.getElementById('clear-filters');
     const pagesContainer = document.getElementById('pages-container');
 
     pagesContainer?.addEventListener('click', (event) => {
@@ -626,7 +575,6 @@ if (Astro.request.method === "POST") {
       // Préférer le statut fourni s'il existe, sinon conserver l'existant.
       if (typeof d.status !== 'undefined') currentStatus = d.status || 'all';
       currentPage = 1;
-      updateActiveFilters(currentSearch, currentStatus);
       filteredPagesCache = filterPages(currentSearch, currentStatus, currentBenef, currentSort);
       renderPages(filteredPagesCache);
     });
@@ -643,30 +591,8 @@ if (Astro.request.method === "POST") {
         renderPages(filteredPagesCache);
       });
     }
-    updateActiveFilters(currentSearch, currentStatus);
     filteredPagesCache = filterPages(currentSearch, currentStatus, currentBenef, currentSort);
     renderPages(filteredPagesCache);
-
-    clearFiltersBtn.addEventListener('click', () => {
-      // Réinitialiser les entrées du composant si présent
-      const root = document.querySelector('.actions-search');
-      if (root instanceof HTMLElement) {
-        const si = root.querySelector('#search-input');
-        const st = root.querySelector('#status-select');
-        if (si instanceof HTMLInputElement) si.value = '';
-        if (st instanceof HTMLSelectElement) st.value = 'all';
-        // Émettre l'état réinitialisé
-        document.dispatchEvent(new CustomEvent('actions-filter-change', { detail: { search: '', status: 'all' } }));
-      } else {
-        // cas de repli
-        currentSearch = '';
-        currentBenef = '';
-        currentStatus = 'all';
-        updateActiveFilters(currentSearch, currentStatus);
-        filteredPagesCache = filterPages(currentSearch, currentStatus, currentBenef, currentSort);
-        renderPages(filteredPagesCache);
-      }
-    });
   };
 
   if (document.readyState === "loading") {

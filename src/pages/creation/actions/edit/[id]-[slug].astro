@@ -31,6 +31,7 @@ import {
   getOverLimitPartTextFieldsAfterSubmit,
 } from "../../../../scripts/actionForm/validation.js";
 
+const currentUser = Astro.locals.pb.authStore.model;
 // Message d'erreur affiché dans le formulaire en cas d'échec serveur
 let error: string = "";
 // Construit une URL de redirection avec un message de succès uniforme.
@@ -605,6 +606,9 @@ if (Astro.request.method === "POST") {
         if (actionRecord?.[key] !== undefined && actionRecord?.[key] !== null) {
           publishPayload[key] = actionRecord[key];
         }
+      }
+      if (currentUser?.id) {
+        publishPayload.cree_par = currentUser.id;
       }
       const draftTypeActions = Array.isArray(actionRecord?.type_action)
         ? actionRecord.type_action

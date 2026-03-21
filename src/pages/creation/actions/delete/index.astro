@@ -6,6 +6,7 @@ import { formatDateShort } from "../../../../utils/utilitaires.js";
 import { getCreationViewUrl } from "../../../../utils/creationRoutes";
 import ActionsSearch from "../../../../components/ActionsSearch.astro";
 import { normalizeImageUrl } from "../../../../utils/utilitaires.js";
+import { ActionsTypeActionOptions } from "../../../../pocketbase-types";
 
 let error = "";
 let success = "";
@@ -29,6 +30,7 @@ const actions = actionsRaw.map((a: any) => ({
   subtitle: a.sous_titre,
   updated: a.updated,
   beneficiary: a.beneficiaire,
+  type_action: Array.isArray(a.type_action) ? a.type_action.map((value: unknown) => String(value)) : [],
   heroActionUrl: normalizeImageUrl(a.hero, a, Astro.locals.pb) || undefined,
   displayDate:
     a.date_debut || a.date_fin
@@ -36,6 +38,15 @@ const actions = actionsRaw.map((a: any) => ({
       : "",
   source: "action" as const,
 }));
+
+const typeOptions = Array.from(
+  new Set(
+    (Array.isArray(ActionsTypeActionOptions)
+      ? ActionsTypeActionOptions
+      : Object.values(ActionsTypeActionOptions)
+    ).map((value) => String(value)),
+  ),
+).sort((a, b) => a.localeCompare(b));
 
 // Gestion POST pour suppression multiple
 if (Astro.request.method === "POST") {
@@ -125,7 +136,7 @@ try {
             </div>
             <div class="flex flex-col gap-4">
               <div class="w-full">
-                <ActionsSearch embedded={true}>
+                <ActionsSearch embedded={true} typeOptions={typeOptions}>
                   <label
                     slot="secondary-extra"
                     class="form-control w-full gap-1"
@@ -174,7 +185,7 @@ try {
               slug={action.slug}
               source={action.source}
               photoUrl={action.heroActionUrl}
-              photoClass="h-44 object-cover! px-0! "
+              photoClass="h-56 md:h-64 object-cover! px-0! "
               showPhotoPlaceholder={true}
               subtitle={action.subtitle}
               beneficiary={action.beneficiary}
@@ -182,7 +193,7 @@ try {
               viewUrl={getCreationViewUrl("action", action.id, action.slug)}
               editUrl={getCreationViewUrl("action", action.id, action.slug)}
               showCheckbox={true}
-              checkboxSlot={`<input class="checkbox checkbox-primary shrink-0" type="checkbox" name="ids" id="id_${action.id}" value="${action.id}" data-item-id="${action.id}" data-title="${action.title}" data-updated="${action.updated}" />`}
+              checkboxSlot={`<input class="checkbox checkbox-primary shrink-0" type="checkbox" name="ids" id="id_${action.id}" value="${action.id}" data-item-id="${action.id}" data-title="${action.title}" data-beneficiary="${action.beneficiary || ""}" data-types="${(Array.isArray(action.type_action) ? action.type_action : []).join("||")}" data-updated="${action.updated}" data-updated-ts="${new Date(action.updated || 0).getTime()}" />`}
               maxHeightContent={true}
               deleteMode={true}
             />
@@ -200,6 +211,7 @@ try {
       cardSelector: "div[data-item-id]",
       itemSingular: "action",
       itemPlural: "actions",
+      sortSelectSelector: "#sort-select",
     });
   </script>
 </Layout>

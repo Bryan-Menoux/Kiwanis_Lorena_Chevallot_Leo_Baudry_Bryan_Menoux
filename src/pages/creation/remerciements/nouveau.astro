@@ -4,6 +4,7 @@ import Layout from "../../../layouts/Layout-back-office.astro";
 const asText = (value: FormDataEntryValue | null): string =>
   typeof value === "string" ? value.trim() : "";
 
+const currentUser = Astro.locals.pb.authStore.model;
 const redirectWith = (type: "success" | "error", message: string) =>
   Astro.redirect(`/creation/remerciements?${type}=${encodeURIComponent(message)}`);
 
@@ -48,6 +49,7 @@ if (Astro.request.method === "POST") {
       await Astro.locals.pb.collection("partenaires").create({
         nom: partenaireState.nom,
         logo,
+        ...(currentUser?.id ? { cree_par: currentUser.id } : {}),
       });
 
       return redirectWith("success", "Partenaire ajouté avec succès.");
@@ -67,6 +69,7 @@ if (Astro.request.method === "POST") {
         nom: contributeurState.nom,
         metier: contributeurState.metier,
         description: contributeurState.description,
+        ...(currentUser?.id ? { cree_par: currentUser.id } : {}),
       });
 
       return redirectWith("success", "Contributeur ajouté avec succès.");

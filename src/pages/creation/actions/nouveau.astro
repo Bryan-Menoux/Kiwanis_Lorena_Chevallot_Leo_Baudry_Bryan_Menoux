@@ -119,6 +119,7 @@ let typeActionOptions: string[] = (Array.isArray(ActionsTypeActionOptions)
 const previewPlaceholder: any = {
   ...previewDefaults,
 };
+const currentUser = Astro.locals.pb.authStore.model;
 // Gestion de la soumission du formulaire côté serveur (création)
 if (Astro.request.method === "POST") {
   try {
@@ -275,6 +276,7 @@ if (Astro.request.method === "POST") {
         slug: draftSlug,
         type: "action",
         type_actions: draftTypeAction,
+        ...(currentUser?.id ? { cree_par: currentUser.id } : {}),
         ...files,
       });
       let savedDraft;
@@ -319,7 +321,12 @@ if (Astro.request.method === "POST") {
       );
     }
 
-    const payload = applyPartTitleRule({ ...data, slug, ...files });
+    const payload = applyPartTitleRule({
+      ...data,
+      slug,
+      ...(currentUser?.id ? { cree_par: currentUser.id } : {}),
+      ...files,
+    });
     const newAction = await Astro.locals.pb.collection("actions").create(payload);
     await deleteDraftIfNeeded(draftId);
     return Astro.redirect(`/creation/actions/${newAction.id}-${slug}`);

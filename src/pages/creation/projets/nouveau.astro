@@ -8,6 +8,7 @@ import { countWords } from "../../../scripts/actionForm/validation.js";
 import { getCreationViewUrl } from "../../../utils/creationRoutes";
 
 let error = "";
+const currentUser = Astro.locals.pb.authStore.model;
 const MAX_DESCRIPTION_WORDS = 70;
 const MAX_DESCRIPTION_CHARS = MAX_DESCRIPTION_WORDS * 7;
 
@@ -83,6 +84,10 @@ if (Astro.request.method === "POST") {
 
     if (formState.type_action.length > 0) {
       payload.type_action = formState.type_action;
+    }
+
+    if (currentUser?.id) {
+      payload.cree_par = currentUser.id;
     }
 
     const createdProject = await Astro.locals.pb.collection("projets").create(payload);

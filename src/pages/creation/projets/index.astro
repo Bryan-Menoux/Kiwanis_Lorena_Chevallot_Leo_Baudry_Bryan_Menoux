@@ -1,8 +1,11 @@
 ---
 import Layout from "../../../layouts/Layout-back-office.astro";
+import ActionsSearch from "../../../components/ActionsSearch.astro";
 import ItemCard from "../../../components/ItemCard.astro";
+import SectionPaginator from "../../../components/SectionPaginator.astro";
 import slugify from "slugify";
-import { getCreationEditUrl, getCreationViewUrl } from "../../../utils/creationRoutes";
+import { getCreationEditUrl } from "../../../utils/creationRoutes";
+import { resolveCreatorName } from "../../../utils/utilitaires.js";
 
 interface ProjectItem {
   id: string;
@@ -12,13 +15,15 @@ interface ProjectItem {
   updated?: string;
   date?: string;
   beneficiary?: string;
+  authorName?: string;
 }
 
 const projetsRaw: any[] = await Astro.locals.pb
   .collection("projets")
-  .getFullList(200, { sort: "-updated" });
-const projets: ProjectItem[] = [
-  ...projetsRaw.map((p) => ({
+  .getFullList(200, { sort: "-updated", expand: "cree_par" });
+
+const projets: ProjectItem[] = projetsRaw
+  .map((p) => ({
     id: p.id,
     title: p.titre,
     slug: slugify(p.titre || "", { lower: true, strict: true }),
@@ -26,11 +31,9 @@ const projets: ProjectItem[] = [
     updated: p.updated,
     date: p.date,
     beneficiary: p.nom_adresse,
-  })),
-].sort(
-  (a, b) =>
-    new Date(b.updated || 0).getTime() - new Date(a.updated || 0).getTime(),
-);
+    authorName: resolveCreatorName(p) || "Auteur inconnu",
+  }))
+  .sort((a, b) => new Date(b.updated || 0).getTime() - new Date(a.updated || 0).getTime());
 
 function formatDate(dateStr?: string): string {
   if (!dateStr) return "";
@@ -49,7 +52,6 @@ function formatDate(dateStr?: string): string {
 
 <Layout>
   <div class="container mx-auto px-4 py-8 my-16 md:my-32">
-    {/* Titre et boutons d'action */}
     <div class="mb-10 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
       <div class="mb-0">
         <h1 class="mb-3 text-3xl font-bold text-accent font-poppins md:text-4xl">
@@ -67,6 +69,12 @@ function formatDate(dateStr?: string): string {
           Voir le site
         </a>
         <a
+          href="/creation/projets/delete"
+          class="btn btn-border btn-sm rounded-full flex-1 w-full md:flex-initial md:w-fit md:btn-md"
+        >
+          Supprimer des projets
+        </a>
+        <a
           href="/creation/projets/nouveau"
           class="btn btn-accent btn-sm rounded-full flex-1 w-full md:flex-initial md:w-fit md:btn-md"
         >
@@ -75,39 +83,77 @@ function formatDate(dateStr?: string): string {
       </div>
     </div>
 
-    {/* Statistique */}
     <div class="grid grid-cols-1 gap-4 mb-12">
       <div class="card bg-base-100 shadow-md">
         <div class="card-body text-center p-4">
-          <div class="text-4xl! font-bold text-base-content">
-            {projets.length}
-          </div>
+          <div class="text-4xl! font-bold text-base-content">{projets.length}</div>
           <div class="text-base-content">Projets</div>
         </div>
       </div>
     </div>
 
-    {/* Grille de projets */}
-    <div class="grid grid-cols-1 gap-4 md:grid-cols-3 md:gap-5 lg:grid-cols-3 lg:gap-6">
+    <div class="card mb-8 rounded-2xl border border-base-300 bg-base-100 shadow-sm">
+      <div class="card-body p-4 md:p-6">
+        <div class="mb-4">
+          <h2 class="card-title text-2xl">Rechercher</h2>
+          <p class="mt-1 text-sm text-base-content/60">
+            Filtrez rapidement vos projets puis triez l'affichage.
+          </p>
+        </div>
+
+        <div class="flex flex-col gap-4">
+          <div class="w-full">
+            <p class="mb-2 font-medium text-base-content/70">Filtres</p>
+            <ActionsSearch showBeneficiary={false} embedded={true}>
+              <label slot="secondary-extra" class="form-control w-full gap-1" for="sort-select">
+                <span class="text-sm! font-medium tracking-wide text-base-content">
+                  Trier par date
+                </span>
+                <select id="sort-select" class="select select-bordered w-full">
+                  <option value="updated_desc">Récent → Ancien</option>
+                  <option value="updated_asc">Ancien → Récent</option>
+                </select>
+              </label>
+            </ActionsSearch>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div
+      id="projects-grid"
+      class="grid grid-cols-1 gap-4 md:grid-cols-3 md:gap-5 lg:grid-cols-3 lg:gap-6"
+    >
       {projets.map((projet) => (
-        <ItemCard
-          id={projet.id}
-          title={projet.title}
-          slug={projet.slug}
-          source={projet.source}
-          beneficiary={projet.beneficiary}
-          formattedDate={formatDate(projet.date)}
-          viewUrl={getCreationViewUrl("projet", projet.id, projet.slug)}
-          editUrl={getCreationEditUrl("projet", projet.id, projet.slug)}
-          showDeleteButton={true}
-        />
+        <div
+          data-project-item
+          data-search={`${projet.title} ${projet.beneficiary || ""} ${projet.authorName || ""} ${formatDate(projet.date)}`}
+          data-updated={projet.updated}
+          class="h-full"
+        >
+          <ItemCard
+            class="h-full"
+            id={projet.id}
+            title={projet.title}
+            slug={projet.slug}
+            source={projet.source}
+            beneficiary={projet.beneficiary}
+            authorName={projet.authorName}
+            formattedDate={formatDate(projet.date)}
+            editUrl={getCreationEditUrl("projet", projet.id, projet.slug)}
+            showViewButton={false}
+            showDeleteButton={false}
+          />
+        </div>
       ))}
     </div>
 
-    {projets.length === 0 && (
-      <div class="text-center py-12">
-        <p class="text-base-content/60">Aucun projet trouvé</p>
-      </div>
-    )}
+    <SectionPaginator
+      itemAttr="data-project-item"
+      pageSize={9}
+      searchInputId="search-input"
+      sortSelectId="sort-select"
+      emptyMessage="Aucun projet trouvé"
+    />
   </div>
 </Layout>

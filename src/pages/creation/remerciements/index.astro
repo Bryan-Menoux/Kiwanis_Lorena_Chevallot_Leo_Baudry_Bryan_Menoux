@@ -2,7 +2,7 @@
 import Layout from "../../../layouts/Layout-back-office.astro";
 import ItemCard from "../../../components/ItemCard.astro";
 import SectionPaginator from "../../../components/SectionPaginator.astro";
-import { formatDateShort } from "../../../utils/utilitaires.js";
+import { formatDateShort, resolveCreatorName } from "../../../utils/utilitaires.js";
 
 interface PartenaireItem {
   id: string;
@@ -10,6 +10,7 @@ interface PartenaireItem {
   logo?: string;
   logoUrl?: string;
   updated?: string;
+  authorName?: string;
 }
 
 interface ContributeurItem {
@@ -18,6 +19,7 @@ interface ContributeurItem {
   metier?: string;
   description?: string;
   updated?: string;
+  authorName?: string;
 }
 
 const asText = (value: FormDataEntryValue | null): string =>
@@ -112,10 +114,10 @@ if (Astro.request.method === "POST") {
 
 const partenairesRaw: any[] = await Astro.locals.pb
   .collection("partenaires")
-  .getFullList(200, { sort: "-updated" });
+  .getFullList(200, { sort: "-updated", expand: "cree_par" });
 const contributeursRaw: any[] = await Astro.locals.pb
   .collection("contributeurs")
-  .getFullList(200, { sort: "-updated" });
+  .getFullList(200, { sort: "-updated", expand: "cree_par" });
 
 const partenaires: PartenaireItem[] = partenairesRaw.map((partenaire) => ({
   id: partenaire.id,
@@ -125,6 +127,7 @@ const partenaires: PartenaireItem[] = partenairesRaw.map((partenaire) => ({
     ? Astro.locals.pb.files.getURL(partenaire, partenaire.logo)
     : "",
   updated: partenaire.updated,
+  authorName: resolveCreatorName(partenaire) || "Auteur inconnu",
 }));
 
 const contributeurs: ContributeurItem[] = contributeursRaw.map(
@@ -134,6 +137,7 @@ const contributeurs: ContributeurItem[] = contributeursRaw.map(
     metier: contributeur.metier || "",
     description: contributeur.description || "",
     updated: contributeur.updated,
+    authorName: resolveCreatorName(contributeur) || "Auteur inconnu",
   }),
 );
 
@@ -266,7 +270,7 @@ const error = (Astro.url.searchParams.get("error") || "").trim();
                     photoUrl={partenaire.logoUrl}
                     showPhotoPlaceholder={true}
                     source="partenaire"
-                    formattedDate={formatDateShort(partenaire.updated)}
+                    authorName={partenaire.authorName}
                     viewUrl={`/creation/remerciements/edit/${partenaire.id}`}
                     editUrl={`/creation/remerciements/edit/${partenaire.id}`}
                     showDeleteButton={true}
@@ -328,7 +332,7 @@ const error = (Astro.url.searchParams.get("error") || "").trim();
                     title={contributeur.nom}
                     subtitle={contributeur.metier || contributeur.description}
                     source="contributeur"
-                    formattedDate={formatDateShort(contributeur.updated)}
+                    authorName={contributeur.authorName}
                     viewUrl={`/creation/remerciements/edit/${contributeur.id}`}
                     editUrl={`/creation/remerciements/edit/${contributeur.id}`}
                     showDeleteButton={true}

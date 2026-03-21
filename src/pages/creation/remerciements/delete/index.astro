@@ -1,6 +1,8 @@
 ---
 import Layout from "../../../../layouts/Layout-back-office.astro";
 import ItemCard from "../../../../components/ItemCard.astro";
+import ActionsSearch from "../../../../components/ActionsSearch.astro";
+import { resolveCreatorName } from "../../../../utils/utilitaires.js";
 
 let error = "";
 let success = "";
@@ -11,7 +13,7 @@ let contributeursRaw = [];
 try {
   partenairesRaw = await (Astro.locals as any).pb
     .collection("partenaires")
-    .getFullList(500, { sort: "-updated" });
+    .getFullList(500, { sort: "-updated", expand: "cree_par" });
 } catch (e) {
   console.error("Impossible de récupérer les partenaires:", e);
   error = "Impossible de charger la liste des partenaires.";
@@ -20,7 +22,7 @@ try {
 try {
   contributeursRaw = await (Astro.locals as any).pb
     .collection("contributeurs")
-    .getFullList(500, { sort: "-updated" });
+    .getFullList(500, { sort: "-updated", expand: "cree_par" });
 } catch (e) {
   console.error("Impossible de récupérer les contributeurs:", e);
   error = "Impossible de charger la liste des contributeurs.";
@@ -37,6 +39,7 @@ const partenaires = partenairesRaw.map((p: any) => {
     title: p.nom || "Partenaire sans nom",
     photoUrl,
     updated: p.updated,
+    authorName: resolveCreatorName(p) || "Auteur inconnu",
     type: "partenaire",
     source: "partenaire" as const,
   };
@@ -48,6 +51,7 @@ const contributeurs = contributeursRaw.map((c: any) => ({
   title: c.nom || "Contributeur sans nom",
   subtitle: c.metier || "",
   updated: c.updated,
+  authorName: resolveCreatorName(c) || "Auteur inconnu",
   type: "contributeur",
   source: "contributeur" as const,
 }));
@@ -57,20 +61,6 @@ const items = [...partenaires, ...contributeurs].sort(
   (a, b) =>
     new Date(b.updated || 0).getTime() - new Date(a.updated || 0).getTime(),
 );
-
-function formatDate(dateStr?: string): string {
-  if (!dateStr) return "";
-  try {
-    const date = new Date(dateStr);
-    return date.toLocaleDateString("fr-FR", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
-  } catch {
-    return dateStr;
-  }
-}
 
 // Gestion POST pour suppression multiple
 if (Astro.request.method === "POST") {
@@ -150,17 +140,7 @@ try {
                 Filtrez rapidement les partenaires ou contributeurs.
               </p>
             </div>
-            <div class="flex flex-col gap-4">
-              <div class="w-full">
-                <p class="mb-2 text-sm font-medium text-base-content">Recherche</p>
-                <input
-                  type="text"
-                  id="search-input"
-                  placeholder="Rechercher par nom..."
-                  class="input input-bordered w-full"
-                />
-              </div>
-            </div>
+            <ActionsSearch embedded={true} showBeneficiary={false} />
           </div>
         </div>
         <div class="w-full flex flex-wrap items-center gap-3 md:justify-end">
@@ -190,7 +170,8 @@ try {
               photoUrl={item.photoUrl}
               showPhotoPlaceholder={true}
               source={item.source}
-              formattedDate={formatDate(item.updated)}
+              authorName={item.authorName}
+              updatedAt={item.updated}
               viewUrl="/creation/remerciements"
               editUrl="/creation/remerciements"
               showCheckbox={true}

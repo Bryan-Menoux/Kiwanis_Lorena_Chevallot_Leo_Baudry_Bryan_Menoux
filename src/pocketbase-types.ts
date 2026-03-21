@@ -120,6 +120,7 @@ export type ActionsRecord<Trecadrage = unknown> = {
 	beneficiaire?: string
 	chiffre?: number
 	created: IsoAutoDateString
+	cree_par?: RecordIdString
 	date_debut?: IsoDateString
 	date_fin?: IsoDateString
 	description_hero?: string
@@ -169,6 +170,7 @@ export type BrouillonsRecord = {
 	beneficiaire?: string
 	chiffre?: number
 	created: IsoAutoDateString
+	cree_par?: RecordIdString
 	date_debut?: IsoDateString
 	date_fin?: IsoDateString
 	description_hero?: string
@@ -204,6 +206,7 @@ export type ContributeursRecord = {
 	id: string
 	metier?: string
 	nom?: string
+	cree_par?: RecordIdString
 	updated: IsoAutoDateString
 }
 
@@ -227,6 +230,7 @@ export type PartenairesRecord = {
 	id: string
 	logo?: FileNameString
 	nom?: string
+	cree_par?: RecordIdString
 	updated: IsoAutoDateString
 }
 
@@ -237,6 +241,7 @@ export type ProduitsRecord = {
 	photo?: FileNameString[]
 	prix?: number
 	titre?: string
+	cree_par?: RecordIdString
 	updated: IsoAutoDateString
 }
 
@@ -257,6 +262,7 @@ export type ProjetsRecord = {
 	nom_adresse?: string
 	titre?: string
 	type_action?: ProjetsTypeActionOptions[]
+	cree_par?: RecordIdString
 	updated: IsoAutoDateString
 	url_adresse?: string
 }

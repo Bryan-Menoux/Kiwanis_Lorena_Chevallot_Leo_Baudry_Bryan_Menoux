@@ -114,6 +114,17 @@ export function nowIso() {
   return new Date().toISOString();
 }
 
+export function resolveCreatorName(record) {
+  const creator = record?.expand?.cree_par;
+  if (typeof creator?.name === "string" && creator.name.trim() !== "") {
+    return creator.name.trim();
+  }
+  if (typeof creator?.email === "string" && creator.email.trim() !== "") {
+    return creator.email.trim();
+  }
+  return "";
+}
+
 // Exposer un objet global pratique pour les scripts client
 try {
   if (typeof globalThis !== "undefined") {
@@ -126,6 +137,7 @@ try {
       formatDateShort,
       formatDateWithTime,
       nowIso,
+      resolveCreatorName,
     });
   }
 } catch (error) {

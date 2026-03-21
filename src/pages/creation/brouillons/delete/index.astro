@@ -1,6 +1,7 @@
 ---
 import Layout from "../../../../layouts/Layout-back-office.astro";
 import ItemCard from "../../../../components/ItemCard.astro";
+import ActionsSearch from "../../../../components/ActionsSearch.astro";
 import slugify from "slugify";
 import { normalizeImageUrl } from "../../../../utils/utilitaires.js";
 import { getDraftEditUrl, getDraftViewUrl } from "../../../../utils/creationRoutes";
@@ -142,17 +143,7 @@ try {
                 Filtrez rapidement vos brouillons d'actions.
               </p>
             </div>
-            <div class="flex flex-col gap-4">
-              <div class="w-full">
-                <p class="mb-2 text-sm font-medium text-base-content">Recherche</p>
-                <input
-                  type="text"
-                  id="search-input"
-                  placeholder="Rechercher un brouillon..."
-                  class="input input-bordered w-full"
-                />
-              </div>
-            </div>
+            <ActionsSearch embedded={true} showBeneficiary={false} />
           </div>
         </div>
 

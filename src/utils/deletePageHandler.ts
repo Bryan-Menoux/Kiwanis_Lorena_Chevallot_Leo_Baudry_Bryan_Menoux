@@ -6,6 +6,7 @@ export interface DeletePageConfig {
   formSelector: string;
   gridSelector: string;
   searchInputSelector: string;
+  sortSelectSelector?: string;
   selectAllSelector: string;
   bulkDeleteSelector: string;
   paginationSelector: string;
@@ -25,6 +26,7 @@ const defaultConfig: DeletePageConfig = {
   formSelector: "#deleteForm",
   gridSelector: "#cards-grid",
   searchInputSelector: "#search-input",
+  sortSelectSelector: "#sort-select",
   selectAllSelector: "#selectAll",
   bulkDeleteSelector: "#bulkDelete",
   paginationSelector: "#cards-pagination",
@@ -64,6 +66,9 @@ export function initDeletePageHandler(config: Partial<DeletePageConfig> = {}) {
   const form = document.querySelector<HTMLFormElement>(cfg.formSelector);
   const grid = document.querySelector<HTMLElement>(cfg.gridSelector);
   const searchInput = document.querySelector<HTMLInputElement>(cfg.searchInputSelector);
+  const sortSelect = cfg.sortSelectSelector
+    ? document.querySelector<HTMLSelectElement>(cfg.sortSelectSelector)
+    : null;
   const selectAllCheckbox = document.querySelector<HTMLInputElement>(cfg.selectAllSelector);
   const pagination = document.querySelector<HTMLElement>(cfg.paginationSelector);
 
@@ -78,6 +83,18 @@ export function initDeletePageHandler(config: Partial<DeletePageConfig> = {}) {
   const selectedTypes = new Map<string, string>();
   let bypassConfirmSubmit = false;
   let currentPage = 1;
+  let currentSearch = "";
+  let currentBeneficiary = "";
+  let currentType = "";
+  let sortDirection: "asc" | "desc" = "desc";
+
+  const setSortDirectionFromValue = (value: string) => {
+    sortDirection = value === "updated_asc" || value === "asc" ? "asc" : "desc";
+  };
+
+  if (sortSelect instanceof HTMLSelectElement) {
+    setSortDirectionFromValue(sortSelect.value);
+  }
 
   function getCardCheckbox(card: HTMLElement): HTMLInputElement | null {
     const checkbox = card.querySelector<HTMLInputElement>('input[type="checkbox"][name="ids"]');
@@ -85,14 +102,52 @@ export function initDeletePageHandler(config: Partial<DeletePageConfig> = {}) {
   }
 
   function getFilteredCards(): HTMLElement[] {
-    const query = (searchInput instanceof HTMLInputElement ? searchInput.value : "")
+    const query = currentSearch ||
+      (searchInput instanceof HTMLInputElement ? searchInput.value : "")
       .toLowerCase()
       .trim();
 
     return allCards.filter((card) => {
       const title = (card.getAttribute(cfg.dataTitleAttribute) || "").toLowerCase();
-      return !query || title.includes(query);
+      const beneficiary =
+        (card.getAttribute("data-beneficiary") ||
+          card.querySelector<HTMLInputElement>('input[type="checkbox"][name="ids"]')?.dataset.beneficiary ||
+          "")
+          .toLowerCase();
+      const types = String(
+        card.getAttribute("data-types") ||
+          card.querySelector<HTMLInputElement>('input[type="checkbox"][name="ids"]')?.dataset.types ||
+          "",
+      )
+        .toLowerCase()
+        .split("||")
+        .map((value) => value.trim())
+        .filter(Boolean);
+      const typeFilter = currentType.toLowerCase().trim();
+      const beneficiaryFilter = currentBeneficiary.toLowerCase().trim();
+
+      if (query && !title.includes(query)) return false;
+      if (beneficiaryFilter && !beneficiary.includes(beneficiaryFilter)) return false;
+      if (typeFilter && !types.includes(typeFilter)) return false;
+      return true;
     });
+  }
+
+  function getCardUpdatedTime(card: HTMLElement): number {
+    const ts = card
+      .querySelector<HTMLInputElement>('input[type="checkbox"][name="ids"]')
+      ?.dataset.updatedTs;
+    if (ts) {
+      const parsedTs = Number(ts);
+      if (Number.isFinite(parsedTs)) return parsedTs;
+    }
+
+    const checkboxUpdated = card
+      .querySelector<HTMLInputElement>('input[type="checkbox"][name="ids"]')
+      ?.dataset.updated;
+    const rawUpdated = card.getAttribute(cfg.dataUpdatedAttribute) || checkboxUpdated || "";
+    const timestamp = new Date(rawUpdated).getTime();
+    return Number.isFinite(timestamp) ? timestamp : 0;
   }
 
   function updateDeleteButtonLabel() {
@@ -181,9 +236,10 @@ export function initDeletePageHandler(config: Partial<DeletePageConfig> = {}) {
 
   function updateView() {
     const visibleCards = getFilteredCards().sort((cardA, cardB) => {
-      const timeA = new Date(cardA.getAttribute(cfg.dataUpdatedAttribute) || "0").getTime();
-      const timeB = new Date(cardB.getAttribute(cfg.dataUpdatedAttribute) || "0").getTime();
-      return timeB - timeA;
+      const timeA = getCardUpdatedTime(cardA);
+      const timeB = getCardUpdatedTime(cardB);
+      const delta = timeB - timeA;
+      return sortDirection === "asc" ? -delta : delta;
     });
 
     const totalPages = Math.max(1, Math.ceil(visibleCards.length / cfg.pageSize));
@@ -260,10 +316,46 @@ export function initDeletePageHandler(config: Partial<DeletePageConfig> = {}) {
 
   if (searchInput instanceof HTMLInputElement) {
     searchInput.addEventListener("input", () => {
+      currentSearch = searchInput.value.trim().toLowerCase();
       currentPage = 1;
       updateView();
     });
   }
+
+  document.addEventListener("actions-filter-change", (event) => {
+    const custom = event as CustomEvent<{
+      search?: string;
+      beneficiary?: string;
+      type?: string;
+    }>;
+    currentSearch = (custom.detail?.search || "").toLowerCase().trim();
+    currentBeneficiary = (custom.detail?.beneficiary || "").toLowerCase().trim();
+    currentType = (custom.detail?.type || "").toLowerCase().trim();
+    currentPage = 1;
+    updateView();
+  });
+
+  if (sortSelect instanceof HTMLSelectElement) {
+    sortSelect.addEventListener("change", () => {
+      setSortDirectionFromValue(sortSelect.value);
+      currentPage = 1;
+      updateView();
+    });
+  }
+
+  document.addEventListener("change", (event) => {
+    if (!cfg.sortSelectSelector) return;
+
+    const target =
+      event.target instanceof HTMLElement
+        ? event.target.closest(cfg.sortSelectSelector)
+        : null;
+    if (!(target instanceof HTMLSelectElement)) return;
+
+    setSortDirectionFromValue(target.value);
+    currentPage = 1;
+    updateView();
+  });
 
   if (selectAllCheckbox instanceof HTMLInputElement) {
     selectAllCheckbox.addEventListener("change", () => {

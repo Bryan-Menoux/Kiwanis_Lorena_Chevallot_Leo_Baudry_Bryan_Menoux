@@ -11,6 +11,7 @@ import {
 const MAX_PRODUCT_PHOTOS = 4;
 
 let error = "";
+const currentUser = Astro.locals.pb.authStore.model;
 
 const formState = {
   titre: "",
@@ -54,6 +55,7 @@ if (Astro.request.method === "POST") {
     }
 
     const payload = preparePayload(textFields, {}, {
+      ...(currentUser?.id ? { cree_par: currentUser.id } : {}),
       ...(photoFiles.length ? { photo: photoFiles } : {}),
     });
 

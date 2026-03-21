@@ -5,7 +5,12 @@ interface Props {
   class?: string;
   searchInputId?: string;
   searchAttr?: string;
+  beneficiaryAttr?: string;
+  yearAttr?: string;
+  typeAttr?: string;
   emptyMessage?: string;
+  sortSelectId?: string;
+  filterEventName?: string;
 }
 
 const {
@@ -14,7 +19,12 @@ const {
   class: className = "mt-6",
   searchInputId = "",
   searchAttr = "data-search",
+  beneficiaryAttr = "",
+  yearAttr = "",
+  typeAttr = "",
   emptyMessage = "",
+  sortSelectId = "",
+  filterEventName = "",
 } = Astro.props;
 ---
 
@@ -25,7 +35,12 @@ const {
   data-page-size={pageSize}
   data-search-input-id={searchInputId}
   data-search-attr={searchAttr}
+  data-beneficiary-attr={beneficiaryAttr}
+  data-year-attr={yearAttr}
+  data-type-attr={typeAttr}
   data-empty-message={emptyMessage}
+  data-sort-select-id={sortSelectId}
+  data-filter-event-name={filterEventName}
 ></div>
 
 <script>
@@ -40,62 +55,106 @@ const {
         : 6;
     const searchInputId = root.dataset.searchInputId || "";
     const searchAttr = root.dataset.searchAttr || "data-search";
+    const beneficiaryAttr = root.dataset.beneficiaryAttr || "";
+    const yearAttr = root.dataset.yearAttr || "";
+    const typeAttr = root.dataset.typeAttr || "";
     const emptyMessage = root.dataset.emptyMessage || "";
+    const sortSelectId = root.dataset.sortSelectId || "";
+    const filterEventName = root.dataset.filterEventName || "";
 
     if (!itemAttr) return;
 
-    const items = Array.from(document.querySelectorAll(`[${itemAttr}]`)).filter(
-      (el): el is HTMLElement => el instanceof HTMLElement,
-    );
+    const getItems = () =>
+      Array.from(document.querySelectorAll(`[${itemAttr}]`)).filter(
+        (el): el is HTMLElement => el instanceof HTMLElement,
+      );
     const searchInput = searchInputId
       ? document.getElementById(searchInputId)
       : null;
+    const sortSelect = sortSelectId
+      ? document.getElementById(sortSelectId)
+      : null;
 
-    if (items.length === 0) return;
+    if (getItems().length === 0) return;
 
     let page = 1;
-    const scrollOffset = () => window.innerHeight * 0.15;
+    let currentSearch = "";
+    let currentBeneficiary = "";
+    let currentYear = "";
+    let currentType = "";
+
+    const getSortDirection = () => {
+      if (
+        sortSelect instanceof HTMLSelectElement &&
+        sortSelect.value === "updated_asc"
+      ) {
+        return "asc";
+      }
+      return "desc";
+    };
+
+    const getCardDate = (item: HTMLElement) =>
+      new Date(item.getAttribute("data-updated") || "0").getTime();
 
     const getFilteredItems = () => {
+      const items = getItems();
       const query =
         searchInput instanceof HTMLInputElement
           ? searchInput.value.trim().toLowerCase()
-          : "";
+          : currentSearch;
+      const beneficiaryQuery = currentBeneficiary;
+      const yearQuery = currentYear;
+      const typeQuery = currentType;
 
-      return items.filter((item) => {
+      const filtered = items.filter((item) => {
         const searchValue = (item.getAttribute(searchAttr) || "").toLowerCase();
-        return !query || searchValue.includes(query);
+        const beneficiaryValue = beneficiaryAttr
+          ? (item.getAttribute(beneficiaryAttr) || "").toLowerCase()
+          : "";
+        const yearValue = yearAttr ? (item.getAttribute(yearAttr) || "") : "";
+        const typeValue = typeAttr
+          ? String(item.getAttribute(typeAttr) || "")
+              .toLowerCase()
+              .split("||")
+              .map((value) => value.trim())
+              .filter(Boolean)
+          : [];
+
+        if (query && !searchValue.includes(query)) return false;
+        if (beneficiaryQuery && !beneficiaryValue.includes(beneficiaryQuery)) return false;
+        if (yearQuery && yearValue !== yearQuery) return false;
+        if (typeQuery && !typeValue.includes(typeQuery)) return false;
+        return true;
       });
+
+      filtered.sort((a, b) => {
+        const delta = getCardDate(a) - getCardDate(b);
+        return getSortDirection() === "asc" ? delta : -delta;
+      });
+
+      return filtered;
     };
 
-    const scrollToCurrentPageStart = (filteredItems: HTMLElement[], currentPage: number) => {
-      const start = (currentPage - 1) * pageSize;
-      const target = filteredItems[start];
-      if (!target) return;
-
-      requestAnimationFrame(() => {
-        const targetTop = window.scrollY + target.getBoundingClientRect().top - scrollOffset();
-        window.scrollTo({
-          top: Math.max(0, targetTop),
-          behavior: "smooth",
-        });
-      });
-    };
-
-    const render = (shouldScroll = false) => {
+    const render = () => {
       const filteredItems = getFilteredItems();
       const totalPages = Math.max(1, Math.ceil(filteredItems.length / pageSize));
       page = Math.min(page, totalPages);
       const start = (page - 1) * pageSize;
+      const pageItems = filteredItems.slice(start, start + pageSize);
+      const pageSet = new Set(pageItems);
+      const filteredSet = new Set(filteredItems);
+      const currentItems = getItems();
+      const itemsContainer = currentItems[0]?.parentElement;
 
-      items.forEach((el) => {
-        el.style.display = "none";
+      currentItems.forEach((el) => {
+        el.style.display = filteredSet.has(el) && pageSet.has(el) ? "" : "none";
       });
 
-      filteredItems.forEach((el, index) => {
-        el.style.display =
-          index >= start && index < start + pageSize ? "" : "none";
-      });
+      if (itemsContainer) {
+        pageItems.forEach((el) => {
+          itemsContainer.appendChild(el);
+        });
+      }
 
       if (filteredItems.length === 0) {
         root.innerHTML = emptyMessage
@@ -106,19 +165,12 @@ const {
 
       if (filteredItems.length <= pageSize) {
         root.innerHTML = "";
-        if (shouldScroll && filteredItems.length > 0) {
-          scrollToCurrentPageStart(filteredItems, page);
-        }
         return;
       }
 
       root.innerHTML = renderPagination(totalPages, page, {
         wrapperClass: "flex flex-wrap items-center justify-center gap-2",
       });
-
-      if (shouldScroll) {
-        scrollToCurrentPageStart(filteredItems, page);
-      }
     };
 
     root.addEventListener("click", (event) => {
@@ -140,14 +192,40 @@ const {
       }
 
       if (page !== previousPage) {
-        render(true);
+        render();
       }
     });
 
     if (searchInput instanceof HTMLInputElement) {
       searchInput.addEventListener("input", () => {
+        currentSearch = searchInput.value.trim().toLowerCase();
         page = 1;
-        render(true);
+        render();
+      });
+    }
+
+    if (sortSelect instanceof HTMLSelectElement) {
+      sortSelect.addEventListener("change", () => {
+        page = 1;
+        render();
+      });
+    }
+
+    if (filterEventName) {
+      document.addEventListener(filterEventName, (event) => {
+        const detail = (event as CustomEvent<{
+          search?: string;
+          beneficiary?: string;
+          year?: string;
+          type?: string;
+        }>).detail || {};
+
+        currentSearch = (detail.search || "").toLowerCase().trim();
+        currentBeneficiary = (detail.beneficiary || "").toLowerCase().trim();
+        currentYear = (detail.year || "").trim();
+        currentType = (detail.type || "").toLowerCase().trim();
+        page = 1;
+        render();
       });
     }
 

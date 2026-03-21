@@ -1,6 +1,7 @@
 ---
 import Layout from "../../../../layouts/Layout-back-office.astro";
 import ItemCard from "../../../../components/ItemCard.astro";
+import ActionsSearch from "../../../../components/ActionsSearch.astro";
 import { generateSlug } from "../../../../utils/editPageHandler";
 import { getCreationViewUrl } from "../../../../utils/creationRoutes";
 
@@ -128,17 +129,7 @@ try {
                 Filtrez rapidement vos produits.
               </p>
             </div>
-            <div class="flex flex-col gap-4">
-              <div class="w-full">
-                <p class="mb-2 text-sm font-medium text-base-content">Recherche</p>
-                <input
-                  type="text"
-                  id="search-input"
-                  placeholder="Rechercher un produit..."
-                  class="input input-bordered w-full"
-                />
-              </div>
-            </div>
+            <ActionsSearch embedded={true} showBeneficiary={false} />
           </div>
         </div>
 

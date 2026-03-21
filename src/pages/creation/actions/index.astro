@@ -1,15 +1,15 @@
 ---
 import Layout from "../../../layouts/Layout-back-office.astro";
+import ActionsSearch from "../../../components/ActionsSearch.astro";
 import ItemCard from "../../../components/ItemCard.astro";
+import SectionPaginator from "../../../components/SectionPaginator.astro";
 import slugify from "slugify";
 import FormSubmitOverlay from "../../../components/FormSubmitOverlay.astro";
 import { showConfirm } from "../../../utils/alerts";
 import { getCreationEditUrl, getCreationViewUrl } from "../../../utils/creationRoutes";
-import { formatDateShort, normalizeImageUrl } from "../../../utils/utilitaires.js";
+import { ActionsTypeActionOptions } from "../../../pocketbase-types";
+import { formatDateShort, normalizeImageUrl, resolveCreatorName } from "../../../utils/utilitaires.js";
 
-// Types et interfaces
-
-// Interface locale correspondant aux données après transformation
 interface ActionItem {
   id: string;
   title: string;
@@ -18,75 +18,112 @@ interface ActionItem {
   updated?: string;
   subtitle?: string;
   beneficiary?: string;
-  actionType?: string[];
+  type_action: string[];
   heroActionUrl?: string;
   displayDate?: string;
+  authorName: string;
+  year: string;
+  searchText: string;
 }
-
-// Récupération des données
 
 const actionsRaw: any[] = await Astro.locals.pb
   .collection("actions")
-  .getFullList(200, { sort: "-updated" });
+  .getFullList(200, { sort: "-updated", expand: "cree_par" });
 
 const brouillonsRaw: any[] = await Astro.locals.pb
   .collection("brouillons")
-  .getFullList(200, { sort: "-updated" });
+  .getFullList(200, { sort: "-updated", expand: "cree_par" });
 
-// Transformation des données
+const getRecordTypes = (record: any): string[] => {
+  const rawTypes = record?.type_action;
+  return Array.isArray(rawTypes) ? rawTypes.map((type: unknown) => String(type)) : [];
+};
+
+const getRecordYear = (record: any): string => {
+  const selectedDate = record?.date_debut || record?.date_fin || record?.updated;
+  return selectedDate ? new Date(selectedDate).getFullYear().toString() : "";
+};
+
+const getSearchText = (...parts: Array<string | undefined>): string =>
+  parts.filter(Boolean).join(" ");
 
 const actions: ActionItem[] = [
-  ...actionsRaw.map((a) => ({
-    id: a.id,
-    title: a.titre,
-    slug: slugify(a.titre || "", { lower: true, strict: true }),
-    source: "action" as const,
-    updated: a.updated,
-    subtitle: a.sous_titre,
-    beneficiary: a.beneficiaire,
-    actionType: a.type_action,
-    heroActionUrl: normalizeImageUrl(a.hero, a, Astro.locals.pb) || undefined,
-    displayDate:
+  ...actionsRaw.map((a) => {
+    const type_action = getRecordTypes(a);
+    const year = getRecordYear(a);
+    const displayDate =
       a.date_debut || a.date_fin
         ? `${a.date_debut ? formatDateShort(a.date_debut) : ""}${a.date_debut && a.date_fin ? " au " : ""}${a.date_fin ? formatDateShort(a.date_fin) : ""}`
-        : "",
-  })),
-  ...brouillonsRaw.map((b) => ({
-    id: b.id,
-    title: b.titre || "Brouillon sans titre",
-    slug: slugify(b.titre || "brouillon", { lower: true, strict: true }),
-    source: "brouillon" as const,
-    updated: b.updated,
-    subtitle: b.sous_titre,
-    beneficiary: b.beneficiaire,
-    actionType: b.type_action,
-    heroActionUrl: normalizeImageUrl(b.hero, b, Astro.locals.pb) || undefined,
-    displayDate: b.updated ? formatDateShort(b.updated) : "",
-  })),
-].sort(
-  (a, b) =>
-    new Date(b.updated || 0).getTime() - new Date(a.updated || 0).getTime(),
-);
+        : "";
+
+    return {
+      id: a.id,
+      title: a.titre,
+      slug: slugify(a.titre || "", { lower: true, strict: true }),
+      source: "action" as const,
+      updated: a.updated,
+      subtitle: a.sous_titre,
+      beneficiary: a.beneficiaire,
+      type_action,
+      heroActionUrl: normalizeImageUrl(a.hero, a, Astro.locals.pb) || undefined,
+      displayDate,
+      authorName: resolveCreatorName(a) || "Auteur inconnu",
+      year,
+      searchText: getSearchText(a.titre, a.sous_titre, a.beneficiaire, type_action.join(" "), displayDate),
+    };
+  }),
+  ...brouillonsRaw.map((b) => {
+    const type_action = getRecordTypes(b);
+    const year = getRecordYear(b);
+    const displayDate =
+      b.date_debut || b.date_fin
+        ? `${b.date_debut ? formatDateShort(b.date_debut) : ""}${b.date_debut && b.date_fin ? " au " : ""}${b.date_fin ? formatDateShort(b.date_fin) : ""}`
+        : b.updated
+          ? formatDateShort(b.updated)
+          : "";
+
+    return {
+      id: b.id,
+      title: b.titre || "Brouillon sans titre",
+      slug: slugify(b.titre || "brouillon", { lower: true, strict: true }),
+      source: "brouillon" as const,
+      updated: b.updated,
+      subtitle: b.sous_titre,
+      beneficiary: b.beneficiaire,
+      type_action,
+      heroActionUrl: normalizeImageUrl(b.hero, b, Astro.locals.pb) || undefined,
+      displayDate,
+      authorName: resolveCreatorName(b) || "Auteur inconnu",
+      year,
+      searchText: getSearchText(b.titre, b.sous_titre, b.beneficiaire, type_action.join(" "), displayDate),
+    };
+  }),
+].sort((a, b) => new Date(b.updated || 0).getTime() - new Date(a.updated || 0).getTime());
+
+const yearOptions = Array.from(
+  new Set(actions.map((action) => action.year).filter((value): value is string => Boolean(value))),
+).sort((a, b) => b.localeCompare(a));
+
+const typeOptions = Array.from(
+  new Set(
+    (Array.isArray(ActionsTypeActionOptions)
+      ? ActionsTypeActionOptions
+      : Object.values(ActionsTypeActionOptions)).map((value) => String(value)),
+  ),
+).sort((a, b) => a.localeCompare(b));
 
 const stats = { total: actions.length };
-
-// Construction des options de filtres
-
-const yearOptions: string[] = [];
-
-const allActions = actions;
 ---
 
 <Layout>
   <div class="container mx-auto px-4 py-8 my-16 md:my-32">
-    {/* Titre et boutons d'action */}
     <div class="mb-10 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
       <div class="mb-0">
         <h1 class="mb-3 text-3xl font-bold text-accent font-poppins md:text-4xl">
           Actions
         </h1>
         <p class="text-base text-base-content/70 md:text-lg">
-          Gérez vos actions, recherchez, filtrez et modifiez rapidement.
+          Gerez vos actions, recherchez, filtrez et modifiez rapidement.
         </p>
       </div>
       <div class="w-full flex flex-wrap items-center gap-3 md:justify-end">
@@ -94,12 +131,11 @@ const allActions = actions;
           Voir le site
         </a>
         <a href="/creation/actions/nouveau" class="btn btn-accent btn-sm rounded-full flex-1 w-full md:flex-initial md:w-fit md:btn-md">
-          Créer une action
+          Creer une action
         </a>
       </div>
     </div>
 
-    {/* Statistique */}
     <div class="grid grid-cols-1 gap-4 mb-12">
       <div class="card bg-base-100 shadow-md">
         <div class="card-body text-center p-4">
@@ -109,38 +145,74 @@ const allActions = actions;
       </div>
     </div>
 
-    {/* Grille d'actions */}
-    <div class="grid grid-cols-1 gap-4 md:grid-cols-3 md:gap-5 lg:grid-cols-3 lg:gap-6">
-      {actions.map((action) => (
-        <ItemCard
-          id={action.id}
-          title={action.title}
-          slug={action.slug}
-          source={action.source}
-          photoUrl={action.heroActionUrl}
-          photoClass="h-44 object-cover! px-0! "
-          showPhotoPlaceholder={true}
-          isDraft={action.source === "brouillon"}
-          subtitle={action.subtitle}
-          beneficiary={action.beneficiary}
-          formattedDate={action.displayDate}
-          viewUrl={
-            action.source === "brouillon"
-              ? `/creation/brouillons/${action.id}-${action.slug}`
-              : getCreationViewUrl("action", action.id, action.slug)
-          }
-          editUrl={getCreationEditUrl("action", action.id, action.slug)}
-          showDeleteButton={true}
-          maxHeightContent={true}
+    <div class="card mb-8 rounded-2xl border border-base-300 bg-base-100 shadow-sm">
+      <div class="card-body p-4 md:p-6">
+        <div class="mb-4">
+          <h2 class="card-title text-2xl">Rechercher</h2>
+          <p class="mt-1 text-sm text-base-content/60">
+            Filtrez rapidement vos actions puis parcourez les résultats page par page.
+          </p>
+        </div>
+
+        <ActionsSearch
+          showBeneficiary={true}
+          yearOptions={yearOptions}
+          typeOptions={typeOptions}
+          embedded={true}
         />
+      </div>
+    </div>
+
+    <div
+      id="actions-grid"
+      class="grid grid-cols-1 gap-4 md:grid-cols-3 md:gap-5 lg:grid-cols-3 lg:gap-6"
+    >
+      {actions.map((action) => (
+        <div
+          data-action-item
+          data-search={action.searchText}
+          data-beneficiary={action.beneficiary}
+          data-year={action.year}
+          data-types={(action.type_action || []).join("||")}
+          data-updated={action.updated}
+          class="h-full"
+        >
+          <ItemCard
+            id={action.id}
+            title={action.title}
+            slug={action.slug}
+            source={action.source}
+            photoUrl={action.heroActionUrl}
+            photoClass="h-56 md:h-64 object-cover! px-0! "
+            showPhotoPlaceholder={true}
+            isDraft={action.source === "brouillon"}
+            subtitle={action.subtitle}
+            beneficiary={action.beneficiary}
+            authorName={action.authorName}
+            formattedDate={action.displayDate}
+            viewUrl={
+              action.source === "brouillon"
+                ? `/creation/brouillons/${action.id}-${action.slug}`
+                : getCreationViewUrl("action", action.id, action.slug)
+            }
+            editUrl={getCreationEditUrl("action", action.id, action.slug)}
+            showDeleteButton={true}
+            maxHeightContent={true}
+          />
+        </div>
       ))}
     </div>
 
-    {actions.length === 0 && (
-      <div class="text-center py-12">
-        <p class="text-base-content/60">Aucune action trouvée</p>
-      </div>
-    )}
+    <SectionPaginator
+      itemAttr="data-action-item"
+      pageSize={9}
+      filterEventName="actions-filter-change"
+      searchAttr="data-search"
+      beneficiaryAttr="data-beneficiary"
+      yearAttr="data-year"
+      typeAttr="data-types"
+      emptyMessage="Aucune action trouvée"
+    />
   </div>
 
   <FormSubmitOverlay
@@ -153,9 +225,8 @@ const allActions = actions;
   import { initPublishHandlers } from "../../../utils/formHandlers";
   import { showConfirm } from "../../../utils/alerts";
 
-  // Initialize publish handlers
   initPublishHandlers(
     { formSelector: 'form[data-publish-action-form="true"]' },
-    showConfirm
+    showConfirm,
   );
 </script>

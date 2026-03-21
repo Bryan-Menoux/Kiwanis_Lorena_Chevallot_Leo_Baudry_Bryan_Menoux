@@ -23,6 +23,7 @@ export interface Props {
   photoUrl?: string;
   photoClass?: string;
   price?: number;
+  authorName?: string;
   deleteMode?: boolean;
   showDeleteButton?: boolean;
   showViewButton?: boolean;
@@ -50,6 +51,7 @@ const {
   photoUrl,
   photoClass = "",
   price,
+  authorName,
   deleteMode = false,
   showDeleteButton = false,
   showViewButton = true,
@@ -116,7 +118,22 @@ const {
   </div>
 
   <div slot="footer" class="flex w-full flex-wrap items-end gap-x-4 gap-y-2 mt-4">
-    {formattedDate && (
+    {authorName && formattedDate && (
+      <div class="flex w-full items-center justify-between gap-4">
+        <p class="max-w-full whitespace-nowrap text-xs leading-tight text-base-content/60">
+          Par {authorName}
+        </p>
+        <p class="max-w-full whitespace-nowrap text-xs leading-tight text-base-content/60">
+          {formattedDate}
+        </p>
+      </div>
+    )}
+    {authorName && !formattedDate && (
+      <p class="max-w-full whitespace-nowrap text-xs leading-tight text-base-content/60">
+        Par {authorName}
+      </p>
+    )}
+    {formattedDate && !authorName && (
       <p class="max-w-full whitespace-nowrap text-xs leading-tight text-base-content/60">
         {formattedDate}
       </p>

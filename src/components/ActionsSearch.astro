@@ -2,6 +2,7 @@
 const props = Astro.props || {};
 const {
   value = "",
+  showBeneficiary = true,
   showStatus = false,
   statusOptions = [],
   yearOptions = [],
@@ -43,7 +44,7 @@ const secondaryGridClass =
   data-initial-type={initialType}
 >
   <div class="flex w-full flex-col gap-3">
-    <div class="grid w-full grid-cols-1 gap-3 lg:grid-cols-2">
+    <div class:list={["grid w-full grid-cols-1 gap-3", showBeneficiary ? "lg:grid-cols-2" : "lg:grid-cols-1"]}>
       <label class="form-control w-full gap-1">
         <span class="text-sm! font-medium tracking-wide text-base-content">Titre</span>
         <input
@@ -53,15 +54,17 @@ const secondaryGridClass =
           placeholder="Rechercher par titre..."
         />
       </label>
-      <label class="form-control w-full gap-1">
-        <span class="text-sm! font-medium tracking-wide text-base-content">Bénéficiaire</span>
-        <input
-          id="beneficiary-input"
-          class="input input-bordered w-full"
-          type="text"
-          placeholder="Filtre bénéficiaire"
-        />
-      </label>
+      {showBeneficiary && (
+        <label class="form-control w-full gap-1">
+          <span class="text-sm! font-medium tracking-wide text-base-content">Bénéficiaire</span>
+          <input
+            id="beneficiary-input"
+            class="input input-bordered w-full"
+            type="text"
+            placeholder="Filtre bénéficiaire"
+          />
+        </label>
+      )}
     </div>
 
     {(yearOptions.length > 0 || typeOptions.length > 0 || showStatus || Astro.slots.has("secondary-extra")) && (
@@ -106,6 +109,16 @@ const secondaryGridClass =
       </div>
     )}
   </div>
+
+  <div class="mt-3 flex justify-end">
+    <button
+      type="button"
+      class="link link-primary text-sm font-medium"
+      data-reset-filters
+    >
+      Réinitialiser les filtres
+    </button>
+  </div>
 </div>
 
 <script>
@@ -123,6 +136,8 @@ const secondaryGridClass =
       const yearSelect = root.querySelector('#year-select');
       const typeSelect = root.querySelector('#type-select');
       const statusSelect = root.querySelector('#status-select');
+      const sortSelect = root.querySelector('#sort-select');
+      const resetButton = root.querySelector('[data-reset-filters]');
       const initialSearch = root.dataset.initialSearch || "";
 
       if (typeof console !== 'undefined' && console.debug) console.debug('ActionsSearch init');
@@ -145,6 +160,19 @@ const secondaryGridClass =
 
         if (typeof console !== 'undefined' && console.debug) console.debug('ActionsSearch emit', detail);
         document.dispatchEvent(new CustomEvent("actions-filter-change", { detail, bubbles: true }));
+      }
+
+      function resetFilters() {
+        if (searchInput instanceof HTMLInputElement) searchInput.value = "";
+        if (beneficiaryInput instanceof HTMLInputElement) beneficiaryInput.value = "";
+        if (yearSelect instanceof HTMLSelectElement) yearSelect.value = "";
+        if (typeSelect instanceof HTMLSelectElement) typeSelect.value = "";
+        if (statusSelect instanceof HTMLSelectElement) statusSelect.value = "all";
+        if (sortSelect instanceof HTMLSelectElement) {
+          sortSelect.selectedIndex = 0;
+          sortSelect.dispatchEvent(new Event("change", { bubbles: true }));
+        }
+        emit();
       }
 
       if (searchInput instanceof Element) {
@@ -171,6 +199,10 @@ const secondaryGridClass =
       }
       if (statusSelect instanceof Element) {
         statusSelect.addEventListener('change', emit);
+      }
+
+      if (resetButton instanceof HTMLButtonElement) {
+        resetButton.addEventListener("click", resetFilters);
       }
 
       emit();
