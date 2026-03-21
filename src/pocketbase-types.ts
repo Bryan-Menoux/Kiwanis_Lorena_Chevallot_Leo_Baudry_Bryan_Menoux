@@ -107,11 +107,13 @@ export enum ActionsTypeActionOptions {
 	"Atelier éducatif et culturel" = "Atelier éducatif et culturel",
 	"Animations" = "Animations",
 	"Rencontre intergénération" = "Rencontre intergénération",
+	"Culture et divertissement" = "Culture et divertissement",
 }
 
 export enum ActionsTypeDeChiffreOptions {
 	"dépenses" = "dépenses",
 	"récoltes" = "récoltes",
+	"don" = "don",
 }
 export type ActionsRecord = {
 	adresse_lieu?: string

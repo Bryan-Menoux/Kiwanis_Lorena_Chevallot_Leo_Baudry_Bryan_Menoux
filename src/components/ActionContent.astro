@@ -87,6 +87,7 @@ const hasPart1Section = hasNonEmptyText(action?.texte_partie_1);
 const hasPart2Section = hasNonEmptyText(action?.texte_partie_2);
 const hasPart3Section = hasNonEmptyText(action?.texte_partie_3);
 const hasThanksSection = hasNonEmptyText(action?.description_remerciements);
+const shouldPreviewMedia = forcePreviewLocationSection;
 ---
 
 <div
@@ -125,18 +126,23 @@ const hasThanksSection = hasNonEmptyText(action?.description_remerciements);
   {
     // N'afficher la section d'en-tête (image + description) que si une image existe ;
     // ne pas afficher la description si l'image est absente.
-    action && action.hero && (
-        <div class="flex flex-col items-end mt-6 mb-12 md:mt-12 md:mb-32">
-        <img loading="lazy"
+    (action?.hero || shouldPreviewMedia) && (
+      <div class="flex flex-col items-end mt-6 mb-12 md:mt-12 md:mb-32">
+        <img
           data-field="hero"
-          src={heroImg}
-          alt={action.description_hero}
+          src={heroImg || ""}
+          alt={action.description_hero || "Aperçu de l'image de l'en-tête"}
           loading="lazy"
           decoding="async"
+          style={heroImg ? "" : "display:none;"}
           class="w-full min-h-[50dvh] max-h-[80dvh] lg:max-h-[70dvh] object-cover object-center rounded-lg"
         />
-        {action.description_hero && (
-          <p data-field="description_hero" class="mt-4">
+        {(action.description_hero || shouldPreviewMedia) && (
+          <p
+            data-field="description_hero"
+            class="mt-4"
+            style={action.description_hero ? "" : "display:none;"}
+          >
             {action.description_hero}
           </p>
         )}
@@ -149,7 +155,7 @@ const hasThanksSection = hasNonEmptyText(action?.description_remerciements);
     (hasPart1Section || forcePreviewLocationSection) && (
       <div
         data-part-section="1"
-        style={hasPart1Section ? "" : "display:none;"}
+        style={hasPart1Section || shouldPreviewMedia ? "" : "display:none;"}
         class="flex flex-col w-full my-12 md:my-20 lg:mb-48 gap-4 min-h-fit"
       >
         {Object.prototype.hasOwnProperty.call(action, "titre_partie_1") && (
@@ -173,24 +179,29 @@ const hasThanksSection = hasNonEmptyText(action?.description_remerciements);
               </div>
             </div>
           )}
-          {(action.photo_partie_1 || forcePreviewLocationSection) && (
+          {(action.photo_partie_1 || shouldPreviewMedia) && (
             <div
               data-image-layout-media="photo_partie_1"
-              style={action.photo_partie_1 ? "" : "display:none;"}
+              style={action.photo_partie_1 || shouldPreviewMedia ? "" : "display:none;"}
               class="flex flex-col items-end w-full mx-auto h-fit lg:max-w-full"
             >
-              {action.photo_partie_1 && (
-                <img loading="lazy"
+              {(action.photo_partie_1 || shouldPreviewMedia) && (
+                <img
                   data-field="photo_partie_1"
-                  src={partie1Img}
-                  alt={action.description_photo_partie_1}
+                  src={partie1Img || ""}
+                  alt={action.description_photo_partie_1 || "Aperçu de la photo partie 1"}
                   loading="lazy"
                   decoding="async"
+                  style={action.photo_partie_1 ? "" : "display:none;"}
                   class="w-full h-[35dvh] md:h-[45dvh] lg:h-[50dvh] max-h-[35dvh] md:max-h-[45dvh] lg:max-h-[50dvh] object-cover rounded-lg"
                 />
               )}
-              {action.photo_partie_1 && action.description_photo_partie_1 && (
-                <p data-field="description_photo_partie_1" class="text-sm mt-4">
+              {(action.photo_partie_1 || shouldPreviewMedia) && action.description_photo_partie_1 && (
+                <p
+                  data-field="description_photo_partie_1"
+                  class="text-sm mt-4"
+                  style={action.description_photo_partie_1 ? "" : "display:none;"}
+                >
                   {action.description_photo_partie_1}
                 </p>
               )}
@@ -293,7 +304,7 @@ const hasThanksSection = hasNonEmptyText(action?.description_remerciements);
     (hasPart2Section || forcePreviewLocationSection) && (
       <div
         data-part-section="2"
-        style={hasPart2Section ? "" : "display:none;"}
+        style={hasPart2Section || shouldPreviewMedia ? "" : "display:none;"}
         data-image-layout="photo_partie_2"
         class={`grid grid-cols-1 ${action.photo_partie_2 ? "lg:grid-cols-[1fr_1fr] min-h-[40dvh]" : "lg:grid-cols-1"} gap-6 md:gap-8 lg:gap-16 my-12 md:my-20 lg:my-32 md:px-0`}
       >
@@ -317,29 +328,34 @@ const hasThanksSection = hasNonEmptyText(action?.description_remerciements);
             </div>
           )}
         </div>
-        {(action.photo_partie_2 || forcePreviewLocationSection) && (
-          <div
-            data-image-layout-media="photo_partie_2"
-            style={action.photo_partie_2 ? "" : "display:none;"}
-            class="flex flex-col items-end w-full mx-auto h-fit lg:max-w-full"
-          >
-            {action.photo_partie_2 && (
-              <img loading="lazy"
-                data-field="photo_partie_2"
-                src={partie2Img}
-                alt={action.description_photo_partie_2}
-                loading="lazy"
-                decoding="async"
-                class="w-full h-[35dvh] md:h-[45dvh] lg:h-[50dvh] max-h-[35dvh] md:max-h-[45dvh] lg:max-h-[50dvh] object-cover rounded-lg"
-              />
-            )}
-            {action.photo_partie_2 && action.description_photo_partie_2 && (
-              <p data-field="description_photo_partie_2" class="text-sm mt-4">
-                {action.description_photo_partie_2}
-              </p>
-            )}
-          </div>
-        )}
+          {(action.photo_partie_2 || shouldPreviewMedia) && (
+            <div
+              data-image-layout-media="photo_partie_2"
+              style={action.photo_partie_2 || shouldPreviewMedia ? "" : "display:none;"}
+              class="flex flex-col items-end w-full mx-auto h-fit lg:max-w-full"
+            >
+              {(action.photo_partie_2 || shouldPreviewMedia) && (
+                <img
+                  data-field="photo_partie_2"
+                  src={partie2Img || ""}
+                  alt={action.description_photo_partie_2 || "Aperçu de la photo partie 2"}
+                  loading="lazy"
+                  decoding="async"
+                  style={action.photo_partie_2 ? "" : "display:none;"}
+                  class="w-full h-[35dvh] md:h-[45dvh] lg:h-[50dvh] max-h-[35dvh] md:max-h-[45dvh] lg:max-h-[50dvh] object-cover rounded-lg"
+                />
+              )}
+              {(action.photo_partie_2 || shouldPreviewMedia) && action.description_photo_partie_2 && (
+                <p
+                  data-field="description_photo_partie_2"
+                  class="text-sm mt-4"
+                  style={action.description_photo_partie_2 ? "" : "display:none;"}
+                >
+                  {action.description_photo_partie_2}
+                </p>
+              )}
+            </div>
+          )}
       </div>
     )
   }
@@ -349,36 +365,38 @@ const hasThanksSection = hasNonEmptyText(action?.description_remerciements);
     (hasPart3Section || forcePreviewLocationSection) && (
       <div
         data-part-section="3"
-        style={hasPart3Section ? "" : "display:none;"}
+        style={hasPart3Section || shouldPreviewMedia ? "" : "display:none;"}
         data-image-layout="photo_partie_3"
         class={`flex flex-col-reverse lg:grid ${action.photo_partie_3 ? "lg:grid-cols-[1fr_1fr] min-h-[40dvh]" : "lg:grid-cols-1"} gap-6 md:gap-8 lg:gap-16 mt-12 mb-12 md:mt-12 md:mb-20 lg:mt-10 lg:mb-14 md:px-0`}
       >
-        {(action.photo_partie_3 || forcePreviewLocationSection) && (
-          <div
-            data-image-layout-media="photo_partie_3"
-            style={action.photo_partie_3 ? "" : "display:none;"}
-            class="flex flex-col w-full mx-auto h-fit lg:max-w-full"
-          >
-            {action.photo_partie_3 && (
-              <img loading="lazy"
-                data-field="photo_partie_3"
-                src={partie3Img}
-                alt={action.description_photo_partie_3}
-                loading="lazy"
-                decoding="async"
-                class="w-full h-[35dvh] md:h-[45dvh] lg:h-[50dvh] max-h-[35dvh] md:max-h-[45dvh] lg:max-h-[50dvh] object-cover rounded-lg"
-              />
-            )}
-            {action.photo_partie_3 && action.description_photo_partie_3 && (
-              <p
-                data-field="description_photo_partie_3"
-                class="text-sm mt-4 self-end lg:self-auto"
-              >
-                {action.description_photo_partie_3}
-              </p>
-            )}
-          </div>
-        )}
+          {(action.photo_partie_3 || shouldPreviewMedia) && (
+            <div
+              data-image-layout-media="photo_partie_3"
+              style={action.photo_partie_3 || shouldPreviewMedia ? "" : "display:none;"}
+              class="flex flex-col w-full mx-auto h-fit lg:max-w-full"
+            >
+              {(action.photo_partie_3 || shouldPreviewMedia) && (
+                <img
+                  data-field="photo_partie_3"
+                  src={partie3Img || ""}
+                  alt={action.description_photo_partie_3 || "Aperçu de la photo partie 3"}
+                  loading="lazy"
+                  decoding="async"
+                  style={action.photo_partie_3 ? "" : "display:none;"}
+                  class="w-full h-[35dvh] md:h-[45dvh] lg:h-[50dvh] max-h-[35dvh] md:max-h-[45dvh] lg:max-h-[50dvh] object-cover rounded-lg"
+                />
+              )}
+              {(action.photo_partie_3 || shouldPreviewMedia) && action.description_photo_partie_3 && (
+                <p
+                  data-field="description_photo_partie_3"
+                  class="text-sm mt-4 self-end lg:self-auto"
+                  style={action.description_photo_partie_3 ? "" : "display:none;"}
+                >
+                  {action.description_photo_partie_3}
+                </p>
+              )}
+            </div>
+          )}
         <div class="flex flex-col gap-8">
           {Object.prototype.hasOwnProperty.call(action, "titre_partie_3") && (
             <h2

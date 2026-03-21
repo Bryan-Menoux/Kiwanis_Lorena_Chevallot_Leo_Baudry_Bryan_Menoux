@@ -8,6 +8,7 @@ import FormSubmitOverlay from "../FormSubmitOverlay.astro";
 
 import imageIcon from "../../assets/image-icon.svg";
 import previewDefaults from "../../scripts/previewDefaults.js";
+import { ActionsTypeDeChiffreOptions } from "../../pocketbase-types";
 
 export interface Props {
   mode?: string;
@@ -43,8 +44,9 @@ const {
 // si aucune option n'est injectee par la page.
 const typeDeChiffreOptions = typeDeChiffreOptionsProp || [
   "type de chiffre",
-  "dépenses",
-  "récoltes",
+  ...(Array.isArray(ActionsTypeDeChiffreOptions)
+    ? ActionsTypeDeChiffreOptions
+    : Object.values(ActionsTypeDeChiffreOptions)),
 ];
 
 // Fusion placeholder "socle + surcharge eventuelle" pour garder
@@ -249,35 +251,39 @@ const unsavedModalSaveLabel =
       isMobileWizard ? "hidden lg:flex" : "flex",
     ]}
   >
-    {
-      mode === "create" && (
-        <button
-          type="submit"
-          name="save_as"
-          value="brouillon"
-          class="btn btn-ghost hover:text-accent text-base-100 px-4 py-2 rounded-md!"
-        >
-          Enregistrer en brouillon
-        </button>
-      )
-    }
-
     <div class="flex flex-col w-full gap-4">
-      <button
-        type="submit"
-        class="btn btn-border text-base-content px-4 py-2 rounded-md! flex-1"
-      >
-        {mode === "create" ? "Créer l'action" : "Enregistrer les modifications"}
-      </button>
       {
         mode === "edit" && isDraft && (
           <button
             type="submit"
             name="publish_action"
             value="true"
-            class="btn btn-ghost px-4 py-2 rounded-md! text-base-100 hover:text-accent"
+            class="btn text-accent px-4 py-2 rounded-md! flex-1"
           >
             Publier l'action
+          </button>
+        )
+      }
+      <button
+        type="submit"
+        class:list={[
+          "px-4 py-2 rounded-md! flex-1",
+          mode === "create"
+            ? "btn text-accent"
+            : "btn btn-outline text-base-100 hover:text-accent!",
+        ]}
+        >
+          {mode === "create" ? "Créer l'action" : "Enregistrer les modifications"}
+      </button>
+      {
+        mode === "create" && (
+          <button
+            type="submit"
+            name="save_as"
+            value="brouillon"
+            class="btn btn-outline text-base-100 hover:text-accent! px-4 py-2 rounded-md! w-full"
+          >
+            Enregistrer en brouillon
           </button>
         )
       }
@@ -309,21 +315,26 @@ const unsavedModalSaveLabel =
           <button
             type="submit"
             data-mobile-submit
-            class="btn btn-accent rounded-full flex-1 hidden"
+            class:list={[
+              "rounded-full flex-1 hidden",
+              mode === "create"
+                ? "btn text-accent"
+                : "btn btn-outline text-base-100 hover:text-accent!",
+            ]}
           >
             {mode === "create" ? "Créer l'action" : "Enregistrer"}
           </button>
         </div>
         <div class="flex gap-2">
           {
-            mode === "create" && (
+            mode === "edit" && isDraft && (
               <button
                 type="submit"
-                name="save_as"
-                value="brouillon"
-                class="btn btn-ghost rounded-full flex-1"
+                name="publish_action"
+                value="true"
+                class="btn btn-ghost rounded-full flex-1 text-base-100 hover:text-accent"
               >
-                Enregistrer en brouillon
+                Publier l'action
               </button>
             )
           }
@@ -331,11 +342,21 @@ const unsavedModalSaveLabel =
             mode === "edit" && isDraft && (
               <button
                 type="submit"
-                name="publish_action"
-                value="true"
-                class="btn btn-outline rounded-full flex-1"
+                class="btn btn-outline rounded-full flex-1 text-base-100"
               >
-                Publier
+                Enregistrer les modifications
+              </button>
+            )
+          }
+          {
+            mode === "create" && (
+              <button
+                type="submit"
+                name="save_as"
+                value="brouillon"
+                class="btn btn-outline rounded-full flex-1 text-base-100"
+              >
+                Enregistrer en brouillon
               </button>
             )
           }
