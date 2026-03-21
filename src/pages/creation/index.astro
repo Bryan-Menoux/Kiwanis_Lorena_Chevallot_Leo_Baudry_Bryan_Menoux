@@ -30,10 +30,8 @@ function safeSlug(value: unknown, fallback = "element"): string {
 }
 
 function formatActionDate(dateStart?: string, dateEnd?: string): string {
-  if (!dateStart && !dateEnd) return "";
-  const start = dateStart ? formatDateShort(dateStart) : "";
-  const end = dateEnd ? formatDateShort(dateEnd) : "";
-  return start && end ? `${start} au ${end}` : start || end;
+  if (!dateStart) return "";
+  return formatDateShort(dateStart);
 }
 
 const actions = await Astro.locals.pb.collection('actions').getFullList(200, { sort: '-updated', expand: 'cree_par' });

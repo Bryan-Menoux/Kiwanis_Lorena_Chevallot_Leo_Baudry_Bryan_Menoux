@@ -67,6 +67,7 @@ function initUnsavedChangesGuard() {
   let pendingNavigation = null;
   let ignoreNextPopState = false;
   let historyGuardInstalled = false;
+  let suppressBeforeUnloadOnce = false;
   let editInitialSignature = isEditMode ? serializeFormForDirtyCheck(form) : "";
   let editDirty = false;
 
@@ -117,6 +118,8 @@ function initUnsavedChangesGuard() {
   const continueNavigation = (navigation) => {
     const targetNavigation = navigation || pendingNavigation;
     if (!targetNavigation) return;
+
+    suppressBeforeUnloadOnce = true;
 
     if (targetNavigation.type === "reload") {
       window.location.reload();
@@ -189,6 +192,11 @@ function initUnsavedChangesGuard() {
   installHistoryGuard();
 
   window.addEventListener("beforeunload", (event) => {
+    if (suppressBeforeUnloadOnce) {
+      suppressBeforeUnloadOnce = false;
+      return;
+    }
+
     if (!isFormDirty() || isFormSubmitting()) return;
 
     // Le navigateur interdit un modal custom au refresh/close, donc on utilise

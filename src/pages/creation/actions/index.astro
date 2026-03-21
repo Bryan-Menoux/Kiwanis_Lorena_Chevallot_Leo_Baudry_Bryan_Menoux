@@ -51,10 +51,7 @@ const actions: ActionItem[] = [
   ...actionsRaw.map((a) => {
     const type_action = getRecordTypes(a);
     const year = getRecordYear(a);
-    const displayDate =
-      a.date_debut || a.date_fin
-        ? `${a.date_debut ? formatDateShort(a.date_debut) : ""}${a.date_debut && a.date_fin ? " au " : ""}${a.date_fin ? formatDateShort(a.date_fin) : ""}`
-        : "";
+    const displayDate = a.date_debut ? formatDateShort(a.date_debut) : "";
 
     return {
       id: a.id,
@@ -75,12 +72,11 @@ const actions: ActionItem[] = [
   ...brouillonsRaw.map((b) => {
     const type_action = getRecordTypes(b);
     const year = getRecordYear(b);
-    const displayDate =
-      b.date_debut || b.date_fin
-        ? `${b.date_debut ? formatDateShort(b.date_debut) : ""}${b.date_debut && b.date_fin ? " au " : ""}${b.date_fin ? formatDateShort(b.date_fin) : ""}`
-        : b.updated
-          ? formatDateShort(b.updated)
-          : "";
+    const displayDate = b.date_debut
+      ? formatDateShort(b.date_debut)
+      : b.updated
+        ? formatDateShort(b.updated)
+        : "";
 
     return {
       id: b.id,
