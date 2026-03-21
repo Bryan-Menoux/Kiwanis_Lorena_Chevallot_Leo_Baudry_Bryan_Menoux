@@ -5,6 +5,7 @@ import { getImage } from "astro:assets";
 import PocketBase from "pocketbase";
 import MembersGrid from "../components/Members-grid.astro";
 import DiagArrow from "../components/DiagArrow.astro";
+import membersTree from "../assets/members-page/kiwanis-membres-arbre.webp";
 import members1 from "../assets/members-page/members-1.webp";
 import members2 from "../assets/members-page/members-2.webp";
 import HeroMembres from "../assets/members-page/hero-member.png";
@@ -16,10 +17,30 @@ import {
   type MembresResponse,
 } from "../pocketbase-types";
 
-const lcpMobile = await getImage({ src: HeroMembresMobile, format: "webp", width: 440, quality: 68 });
-const lcpTablet = await getImage({ src: HeroMembresTablet, format: "webp", width: 1280, quality: 72 });
-const lcpDesktopMd = await getImage({ src: HeroMembres, format: "webp", width: 1440, quality: 80 });
-const lcpDesktop = await getImage({ src: HeroMembres, format: "webp", width: 1840, quality: 80 });
+const lcpMobile = await getImage({
+  src: HeroMembresMobile,
+  format: "webp",
+  width: 440,
+  quality: 68,
+});
+const lcpTablet = await getImage({
+  src: HeroMembresTablet,
+  format: "webp",
+  width: 1280,
+  quality: 72,
+});
+const lcpDesktopMd = await getImage({
+  src: HeroMembres,
+  format: "webp",
+  width: 1440,
+  quality: 80,
+});
+const lcpDesktop = await getImage({
+  src: HeroMembres,
+  format: "webp",
+  width: 1840,
+  quality: 80,
+});
 
 type PublicMember = {
   id: string;
@@ -72,10 +93,9 @@ async function loadMembersFromCollection(pbClient: PocketBase): Promise<PublicMe
       id: membreRecord.id,
       name: String(membreRecord.nom || "").trim() || defaultMemberName,
       status: roleLabels[role] || "Membre",
-      avatarUrl:
-        avatarFile
-          ? pbClient.files.getURL(membreRecord, avatarFile)
-          : null,
+      avatarUrl: avatarFile
+        ? pbClient.files.getURL(membreRecord, avatarFile)
+        : null,
     };
   });
 
@@ -96,9 +116,32 @@ members = sortMembers(members);
 
 <Layout>
   <Fragment slot="head">
-    <link rel="preload" as="image" href={lcpMobile.src} type="image/webp" media="(max-width: 767px)" fetchpriority="high" />
-    <link rel="preload" as="image" href={lcpTablet.src} type="image/webp" media="(min-width: 768px) and (max-width: 1023px)" fetchpriority="high" />
-    <link rel="preload" as="image" href={lcpDesktop.src} imagesrcset={`${lcpDesktopMd.src} 1440w, ${lcpDesktop.src} 1840w`} imagesizes="95vw" type="image/webp" media="(min-width: 1024px)" fetchpriority="high" />
+    <link
+      rel="preload"
+      as="image"
+      href={lcpMobile.src}
+      type="image/webp"
+      media="(max-width: 767px)"
+      fetchpriority="high"
+    />
+    <link
+      rel="preload"
+      as="image"
+      href={lcpTablet.src}
+      type="image/webp"
+      media="(min-width: 768px) and (max-width: 1023px)"
+      fetchpriority="high"
+    />
+    <link
+      rel="preload"
+      as="image"
+      href={lcpDesktop.src}
+      imagesrcset={`${lcpDesktopMd.src} 1440w, ${lcpDesktop.src} 1840w`}
+      imagesizes="95vw"
+      type="image/webp"
+      media="(min-width: 1024px)"
+      fetchpriority="high"
+    />
   </Fragment>
   <Hero
     image={HeroMembres}
@@ -119,47 +162,78 @@ members = sortMembers(members);
         >talents</b
       >.
     </h3>
-    <button class="btn btn-accent w-fit px-8 py-6 mx-auto mt-16 md:24 lg:32"
-      >Télécharger la liste des membres <DiagArrow /></button
+    <a
+      href={membersTree.src}
+      download="kiwanis-membres-arbre.webp"
+      class="btn btn-accent w-fit px-8 py-6 mx-auto mt-16 md:24 lg:32"
     >
+      Télécharger la liste des membres <DiagArrow />
+    </a>
   </div>
 
-  <!-- Bas de page -->
-   <div class="flex flex-col max-w-7xl mx-auto my-32 gap-8 px-8">
-      <div class="grid grid-cols-1 md:grid-cols-[1fr_1fr] gap-8 lg:gap-16 min-h-[40dvh]">
-          <div class="flex flex-col gap-4 mt-6">
-            <h4>Une histoire qui continue</h4>
-            <p>Le club évolue au fil des années : de nouvelles bénévoles nous rejoignent, de nouveaux projets naissent et notre façon d’agir s’enrichit des rencontres faites sur le territoire.</p>
-            <p>Bien que le club soit féminin, nos actions s’adressent à tous. Toute personne souhaitant participer, soutenir un projet ou nous rencontrer est la bienvenue lors de nos événements.</p>
-          </div>
-          <div class="flex flex-col w-full mx-auto md:max-w-full">
-            <img
-              src={members1.src}
-              alt="Photographie de collégiens avec les kiwaniens"
-              class="w-full flex-1 object-cover rounded-box max-h-80 object-top"
-             width={members1.width} height={members1.height}  loading="lazy"  decoding="async" />
-          </div>
+  <div class="flex flex-col max-w-7xl mx-auto my-32 gap-8 px-8">
+    <div class="grid grid-cols-1 md:grid-cols-[1fr_1fr] gap-8 lg:gap-16 min-h-[40dvh]">
+      <div class="flex flex-col gap-4 mt-6">
+        <h4>Une histoire qui continue</h4>
+        <p>
+          Le club évolue au fil des années : de nouvelles bénévoles nous rejoignent,
+          de nouveaux projets naissent et notre façon d’agir s’enrichit des rencontres
+          faites sur le territoire.
+        </p>
+        <p>
+          Bien que le club soit féminin, nos actions s’adressent à tous. Toute personne
+          souhaitant participer, soutenir un projet ou nous rencontrer est la bienvenue
+          lors de nos événements.
+        </p>
       </div>
-      <div class="grid grid-cols-1 md:grid-cols-[1fr_1fr] gap-8 lg:gap-16 min-h-[40dvh]">
-        <div class="flex-col w-full mx-auto md:max-w-full hidden md:flex">
-          <img
-            src={members2.src}
-            alt="Photographie des Kiwaniens avec Loïc Ballet"
-            class="w-full flex-1 object-cover rounded-box max-h-80 object-bottom"
-           width={members2.width} height={members2.height}  loading="lazy"  decoding="async" />
-        </div>
-        <div class="flex flex-col gap-4 mt-6">
-          <h4>Nous rejoindre</h4>
-          <p>Si vous partagez notre envie d’agir pour les enfants du Pays de Montbéliard et que vous avez un peu de temps à consacrer au bénévolat, vous pouvez nous rejoindre.</p>
-          <p>La première étape est simple : assister à une réunion ou échanger avec nous sur votre envie de vous engager. Il suffit de nous contacter via la page Contact du site, et nous reviendrons vers vous pour la suite.</p>
-        </div>
-        <div class="flex flex-col w-full mx-auto md:max-w-full md:hidden">
-          <img
-            src={members2.src}
-            alt="Photographie des Kiwaniens avec Loïc Ballet"
-            class="w-full flex-1 object-cover rounded-box max-h-80 object-bottom"
-           width={members2.width} height={members2.height}  loading="lazy"  decoding="async" />
-        </div>
+      <div class="flex flex-col w-full mx-auto md:max-w-full">
+        <img
+          src={members1.src}
+          alt="Photographie de collégiens avec les kiwaniens"
+          class="w-full flex-1 object-cover rounded-box max-h-80 object-top"
+          width={members1.width}
+          height={members1.height}
+          loading="lazy"
+          decoding="async"
+        />
       </div>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-[1fr_1fr] gap-8 lg:gap-16 min-h-[40dvh]">
+      <div class="flex-col w-full mx-auto md:max-w-full hidden md:flex">
+        <img
+          src={members2.src}
+          alt="Photographie des Kiwaniens avec Loïc Ballet"
+          class="w-full flex-1 object-cover rounded-box max-h-80 object-bottom"
+          width={members2.width}
+          height={members2.height}
+          loading="lazy"
+          decoding="async"
+        />
+      </div>
+      <div class="flex flex-col gap-4 mt-6">
+        <h4>Nous rejoindre</h4>
+        <p>
+          Si vous partagez notre envie d’agir pour les enfants du Pays de Montbéliard
+          et que vous avez un peu de temps à consacrer au bénévolat, vous pouvez nous
+          rejoindre.
+        </p>
+        <p>
+          La première étape est simple : assister à une réunion ou échanger avec nous
+          sur votre envie de vous engager. Il suffit de nous contacter via la page
+          Contact du site, et nous reviendrons vers vous pour la suite.
+        </p>
+      </div>
+      <div class="flex flex-col w-full mx-auto md:max-w-full md:hidden">
+        <img
+          src={members2.src}
+          alt="Photographie des Kiwaniens avec Loïc Ballet"
+          class="w-full flex-1 object-cover rounded-box max-h-80 object-bottom"
+          width={members2.width}
+          height={members2.height}
+          loading="lazy"
+          decoding="async"
+        />
+      </div>
+    </div>
   </div>
 </Layout>
