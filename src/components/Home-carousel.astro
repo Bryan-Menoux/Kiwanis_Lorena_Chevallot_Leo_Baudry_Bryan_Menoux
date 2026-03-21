@@ -11,7 +11,7 @@ const images = await Promise.all(
     .sort(([pathA], [pathB]) => pathA.localeCompare(pathB))
     .slice(0, MAX_VISIBLE_IMAGES)
     .map(async ([, module], index) => {
-      const srcSm = await getImage({ src: module.default, width: 320, format: "webp" });
+      const srcSm = await getImage({ src: module.default, width: 288, format: "webp" });
       const src = await getImage({ src: module.default, width: 500, format: "webp" });
       return {
         src,
@@ -26,27 +26,27 @@ const images = await Promise.all(
   <div class="home-carousel-track h-full">
     <div class="home-carousel-group flex gap-4 md:gap-8 h-full">
       {images.map((image) => (
-        <div class="home-carousel-item shrink-0 w-72 md:w-80 lg:w-104">
+        <div class="home-carousel-item shrink-0 w-[288px] md:w-80 lg:w-104">
           <img
             src={image.src.src}
-            srcset={`${image.srcSm.src} 320w, ${image.src.src} 500w`}
+            srcset={`${image.srcSm.src} 288w, ${image.src.src} 500w`}
             sizes="(min-width: 1024px) 416px, (min-width: 768px) 320px, 288px"
             alt={image.alt}
             width={image.src.attributes.width}
             height={image.src.attributes.height}
             loading="lazy"
             fetchpriority="low"
-            class="block h-56 w-full object-cover rounded-box md:h-64 lg:h-76"
+            class="block h-62.5 w-full object-cover rounded-box md:h-64 lg:h-76"
            decoding="async" />
         </div>
       ))}
     </div>
     <div class="home-carousel-group flex gap-4 md:gap-8 h-full" aria-hidden="true">
       {images.map((image) => (
-        <div class="home-carousel-item shrink-0 w-72 md:w-80 lg:w-104">
+        <div class="home-carousel-item shrink-0 w-[288px] md:w-80 lg:w-104">
           <img
             src={image.src.src}
-            srcset={`${image.srcSm.src} 320w, ${image.src.src} 500w`}
+            srcset={`${image.srcSm.src} 288w, ${image.src.src} 500w`}
             sizes="(min-width: 1024px) 416px, (min-width: 768px) 320px, 288px"
             alt=""
             aria-hidden="true"
@@ -54,7 +54,7 @@ const images = await Promise.all(
             height={image.src.attributes.height}
             loading="lazy"
             fetchpriority="low"
-            class="block h-56 w-full object-cover rounded-box md:h-64 lg:h-76"
+            class="block h-62.5 w-full object-cover rounded-box md:h-64 lg:h-76"
            decoding="async" />
         </div>
       ))}

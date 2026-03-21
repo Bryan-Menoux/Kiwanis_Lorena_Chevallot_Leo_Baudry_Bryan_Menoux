@@ -22,9 +22,9 @@ const lcpDesktopMd = await getImage({ src: heroLandingfinal, format: "webp", wid
 const lcpDesktop   = await getImage({ src: heroLandingfinal, format: "webp", width: 1840, quality: 80 });
 
 // landing-1 / membres : col 2fr dans grid [3fr_2fr], 85vw mobile → ~29vw desktop (~420px à 1440px)
-const landing1Sm = await getImage({ src: landing1, width: 480, format: "webp" });
+const landing1Sm = await getImage({ src: landing1, width: 350, format: "webp" });
 const landing1Lg = await getImage({ src: landing1, width: 640, format: "webp" });
-const membersPhotoXs = await getImage({ src: kiwanismembres1, width: 420, format: "webp" });
+const membersPhotoXs = await getImage({ src: kiwanismembres1, width: 350, format: "webp" });
 const membersPhotoSm = await getImage({ src: kiwanismembres1, width: 480, format: "webp" });
 const membersPhotoLg = await getImage({ src: kiwanismembres1, width: 640, format: "webp" });
 // rollup / fanion : 2 images côte à côte, max-w-[40dvw] → 20vw desktop
@@ -81,12 +81,12 @@ const mapAddress = "76 bis faubourg de Besançon, 25200 Montbéliard";
       </p>
     </div>
     <div
-      class="flex flex-col w-full mx-auto max-h-[40dvh] lg:max-h-[60dvh] max-w-full"
+      class="flex flex-col w-full mx-auto max-h-none md:max-h-[40dvh] lg:max-h-[60dvh] max-w-full"
     >
-      <div class="w-full aspect-565/569 overflow-hidden rounded-box">
+      <div class="home-landing-photo w-full aspect-565/569 overflow-hidden rounded-box mx-auto">
         <img
           src={landing1Lg.src}
-          srcset={`${landing1Sm.src} 480w, ${landing1Lg.src} 640w`}
+          srcset={`${landing1Sm.src} 350w, ${landing1Lg.src} 640w`}
           sizes="(min-width: 1024px) 29vw, 85vw"
           alt="Photographie de membres du Kiwanis aux 12 coups de Midi"
           loading="lazy"
@@ -131,17 +131,19 @@ const mapAddress = "76 bis faubourg de Besançon, 25200 Montbéliard";
       >
     </div>
     <div
-      class="flex flex-col w-full mx-auto max-h-[40dvh] lg:max-h-[60dvh] max-w-full"
+      class="flex flex-col w-full mx-auto max-h-none md:max-h-[40dvh] lg:max-h-[60dvh] max-w-full"
     >
-      <img
+      <div class="home-members-photo flex-1 overflow-hidden rounded-box mx-auto w-full">
+        <img
         src={membersPhotoLg.src}
-        srcset={`${membersPhotoSm.src} 480w, ${membersPhotoLg.src} 640w`}
+        srcset={`${membersPhotoXs.src} 350w, ${membersPhotoSm.src} 480w, ${membersPhotoLg.src} 640w`}
         sizes="(min-width: 1024px) 29vw, 85vw"
         alt="Photographie des membres du groupe Kiwanis Pays de Montbéliard"
         loading="lazy"
         fetchpriority="low"
-        class="w-full max-h-full flex-1 object-cover rounded-box"
-       width={membersPhotoLg.attributes.width} height={membersPhotoLg.attributes.height}  decoding="async" />
+        class="block h-full w-full object-cover"
+         width={membersPhotoLg.attributes.width} height={membersPhotoLg.attributes.height}  decoding="async" />
+      </div>
       <p class="text-sm mt-2">
         Les membres du groupe Kiwanis Pays de Montbéliard.
       </p>
@@ -417,4 +419,17 @@ const mapAddress = "76 bis faubourg de Besançon, 25200 Montbéliard";
       observer.observe(root);
     }
   </script>
+  <style>
+    @media (max-width: 767px) {
+      .home-landing-photo {
+        width: min(100%, 350px);
+        aspect-ratio: 350 / 323;
+      }
+
+      .home-members-photo {
+        width: min(100%, 350px);
+        aspect-ratio: 350 / 353;
+      }
+    }
+  </style>
 </Layout>
