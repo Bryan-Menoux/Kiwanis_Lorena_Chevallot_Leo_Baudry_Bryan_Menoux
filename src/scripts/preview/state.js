@@ -532,6 +532,11 @@ function hasTypeDeChiffreValue(value) {
   return normalized !== '' && normalized !== 'type de chiffre';
 }
 
+function hasSectionValue(value) {
+  const normalized = String(value ?? '').trim();
+  return normalized !== '' && normalized !== '0';
+}
+
 function isFieldTouched(prop) {
   const canonicalProp = normalizeProp(prop);
   if (!canonicalProp || previewMode !== 'create') return false;
@@ -581,10 +586,28 @@ function getDerivedState() {
     previewMode === 'create' && locationSectionTouched
       ? locationCardCount > 0
       : hasLocationSection;
-  const hasPart1Section = hasNonEmptyValue(values.texte_partie_1);
-  const hasPart2Section = hasNonEmptyValue(values.texte_partie_2);
-  const hasPart3Section = hasNonEmptyValue(values.texte_partie_3);
-  const hasThanksSection = hasNonEmptyValue(values.description_remerciements);
+  const hasPart1Section = [
+    values.titre_partie_1,
+    values.texte_partie_1,
+    values.photo_partie_1,
+    values.description_photo_partie_1,
+  ].some(hasSectionValue);
+  const hasPart2Section = [
+    values.titre_partie_2,
+    values.texte_partie_2,
+    values.photo_partie_2,
+    values.description_photo_partie_2,
+  ].some(hasSectionValue);
+  const hasPart3Section = [
+    values.titre_partie_3,
+    values.texte_partie_3,
+    values.photo_partie_3,
+    values.description_photo_partie_3,
+  ].some(hasSectionValue);
+  const hasThanksSection = [
+    values.titre_remerciements,
+    values.description_remerciements,
+  ].some(hasSectionValue);
 
   return {
     values,

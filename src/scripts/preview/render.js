@@ -1,3 +1,4 @@
+import PREVIEW_DEFAULTS from '../previewDefaults.js';
 import { formatDateRange, escapeHtml } from '../../utils/utilitaires.js';
 import {
   IMAGE_DESCRIPTION_MAP,
@@ -29,6 +30,14 @@ function renderField(prop) {
   const derived = getDerivedState();
   const value = derived.values[canonicalProp];
   const nodes = Array.from(document.querySelectorAll(`[data-field="${canonicalProp}"]`));
+  const sectionTitleFallback = PREVIEW_DEFAULTS[canonicalProp] || '';
+  const sectionTitleShouldShow = (() => {
+    if (canonicalProp === 'titre_partie_1') return Boolean(derived.visibility.parts[1]);
+    if (canonicalProp === 'titre_partie_2') return Boolean(derived.visibility.parts[2]);
+    if (canonicalProp === 'titre_partie_3') return Boolean(derived.visibility.parts[3]);
+    if (canonicalProp === 'titre_remerciements') return Boolean(derived.visibility.thanks);
+    return false;
+  })();
 
   if (!nodes.length) {
     if (Object.prototype.hasOwnProperty.call(IMAGE_DESCRIPTION_MAP, canonicalProp)) {
@@ -42,6 +51,19 @@ function renderField(prop) {
   }
 
   nodes.forEach((element) => {
+    if (
+      canonicalProp === 'titre_partie_1' ||
+      canonicalProp === 'titre_partie_2' ||
+      canonicalProp === 'titre_partie_3' ||
+      canonicalProp === 'titre_remerciements'
+    ) {
+      element.textContent = sectionTitleShouldShow
+        ? String(value ?? '').trim() || sectionTitleFallback
+        : '';
+      element.style.display = sectionTitleShouldShow ? '' : 'none';
+      return;
+    }
+
     if (element.tagName === 'IMG') {
       element.src = value || '';
       element.loading = 'lazy';
@@ -124,20 +146,44 @@ function renderField(prop) {
 
   if (
     canonicalProp === 'texte_partie_1' ||
+    canonicalProp === 'titre_partie_1' ||
     canonicalProp === 'photo_partie_1' ||
     canonicalProp === 'description_photo_partie_1' ||
     canonicalProp === 'texte_partie_2' ||
+    canonicalProp === 'titre_partie_2' ||
     canonicalProp === 'photo_partie_2' ||
     canonicalProp === 'description_photo_partie_2' ||
     canonicalProp === 'texte_partie_3' ||
+    canonicalProp === 'titre_partie_3' ||
     canonicalProp === 'photo_partie_3' ||
     canonicalProp === 'description_photo_partie_3'
   ) {
     syncPartSectionsVisibility();
   }
 
-  if (canonicalProp === 'description_remerciements') {
+  if (
+    canonicalProp === 'titre_remerciements' ||
+    canonicalProp === 'description_remerciements'
+  ) {
     syncThanksSectionVisibility();
+  }
+
+  const sectionTitleDependencies = {
+    texte_partie_1: 'titre_partie_1',
+    photo_partie_1: 'titre_partie_1',
+    description_photo_partie_1: 'titre_partie_1',
+    texte_partie_2: 'titre_partie_2',
+    photo_partie_2: 'titre_partie_2',
+    description_photo_partie_2: 'titre_partie_2',
+    texte_partie_3: 'titre_partie_3',
+    photo_partie_3: 'titre_partie_3',
+    description_photo_partie_3: 'titre_partie_3',
+    description_remerciements: 'titre_remerciements',
+  };
+
+  const titlePropToRefresh = sectionTitleDependencies[canonicalProp];
+  if (titlePropToRefresh && titlePropToRefresh !== canonicalProp) {
+    renderField(titlePropToRefresh);
   }
 }
 
