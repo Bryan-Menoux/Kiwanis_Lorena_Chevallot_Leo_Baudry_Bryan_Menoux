@@ -8,7 +8,12 @@ import FormSubmitOverlay from "../../../components/FormSubmitOverlay.astro";
 import { showConfirm } from "../../../utils/alerts";
 import { getCreationEditUrl, getCreationViewUrl } from "../../../utils/creationRoutes";
 import { ActionsTypeActionOptions } from "../../../pocketbase-types";
-import { formatDateShort, normalizeImageUrl, resolveCreatorName } from "../../../utils/utilitaires.js";
+import {
+  buildResponsiveImageSrcSet,
+  formatDateShort,
+  normalizeImageUrl,
+  resolveCreatorName,
+} from "../../../utils/utilitaires.js";
 
 interface ActionItem {
   id: string;
@@ -20,6 +25,7 @@ interface ActionItem {
   beneficiary?: string;
   type_action: string[];
   heroActionUrl?: string;
+  heroActionSrcSet?: string | null;
   displayDate?: string;
   authorName: string;
   year: string;
@@ -62,7 +68,8 @@ const actions: ActionItem[] = [
       subtitle: a.sous_titre,
       beneficiary: a.beneficiaire,
       type_action,
-      heroActionUrl: normalizeImageUrl(a.hero, a, Astro.locals.pb, { thumb: "800x0" }) || undefined,
+      heroActionUrl: normalizeImageUrl(a.hero, a, Astro.locals.pb, { thumb: "960x0" }) || undefined,
+      heroActionSrcSet: buildResponsiveImageSrcSet(a.hero, a, Astro.locals.pb, [480, 768, 960, 1280]),
       displayDate,
       authorName: resolveCreatorName(a) || "Auteur inconnu",
       year,
@@ -87,7 +94,8 @@ const actions: ActionItem[] = [
       subtitle: b.sous_titre,
       beneficiary: b.beneficiaire,
       type_action,
-      heroActionUrl: normalizeImageUrl(b.hero, b, Astro.locals.pb, { thumb: "800x0" }) || undefined,
+      heroActionUrl: normalizeImageUrl(b.hero, b, Astro.locals.pb, { thumb: "960x0" }) || undefined,
+      heroActionSrcSet: buildResponsiveImageSrcSet(b.hero, b, Astro.locals.pb, [480, 768, 960, 1280]),
       displayDate,
       authorName: resolveCreatorName(b) || "Auteur inconnu",
       year,
@@ -182,6 +190,10 @@ const stats = { total: actions.length };
             slug={action.slug}
             source={action.source}
             photoUrl={action.heroActionUrl}
+            photoSrcSet={action.heroActionSrcSet || undefined}
+            photoSizes="(min-width: 1024px) 33vw, (min-width: 768px) 50vw, 100vw"
+            photoWidth={960}
+            photoHeight={540}
             photoClass="h-56 md:h-64 object-cover! px-0! "
             photoLoading="lazy"
             photoFetchPriority="low"

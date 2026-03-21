@@ -189,3 +189,19 @@ export function normalizeImageUrl(value, record, pocketbaseClient, options) {
   return null;
 }
 
+export function buildResponsiveImageSrcSet(value, record, pocketbaseClient, widths = []) {
+  if (!value) return null;
+  if (!Array.isArray(widths) || widths.length === 0) return null;
+
+  const entries = widths
+    .map((width) => {
+      const numericWidth = Number(width);
+      if (!Number.isFinite(numericWidth) || numericWidth <= 0) return null;
+      const url = normalizeImageUrl(value, record, pocketbaseClient, { thumb: `${numericWidth}x0` });
+      return url ? `${url} ${numericWidth}w` : null;
+    })
+    .filter(Boolean);
+
+  return entries.length > 0 ? entries.join(", ") : null;
+}
+

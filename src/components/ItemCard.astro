@@ -21,6 +21,10 @@ export interface Props {
   checkboxSlot?: string;
   maxHeightContent?: boolean;
   photoUrl?: string;
+  photoSrcSet?: string;
+  photoSizes?: string;
+  photoWidth?: number;
+  photoHeight?: number;
   photoClass?: string;
   photoLoading?: "eager" | "lazy";
   photoFetchPriority?: "high" | "low" | "auto";
@@ -58,6 +62,10 @@ const {
   showDeleteButton = false,
   showViewButton = true,
   showPhotoPlaceholder = false,
+  photoSrcSet,
+  photoSizes,
+  photoWidth = 640,
+  photoHeight = 480,
   photoLoading = "lazy",
   photoFetchPriority = "low",
 } = Astro.props;
@@ -83,6 +91,10 @@ const {
     {photoUrl && (
       <img
         src={photoUrl}
+        srcset={photoSrcSet}
+        sizes={photoSizes}
+        width={photoWidth}
+        height={photoHeight}
         alt={title}
         loading={photoLoading}
         fetchpriority={photoFetchPriority}

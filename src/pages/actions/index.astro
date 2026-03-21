@@ -3,7 +3,11 @@ import Layout from "../../layouts/Layout.astro";
 import Hero from "../../components/Hero.astro";
 import SearchActions from "../../components/SearchActions.astro";
 import slugify from "slugify";
-import { formatDateShort, normalizeImageUrl } from "../../utils/utilitaires.js";
+import {
+  buildResponsiveImageSrcSet,
+  formatDateShort,
+  normalizeImageUrl,
+} from "../../utils/utilitaires.js";
 import HeroActions from "../../assets/action-page/hero-action-page.png";
 import HeroActionsMobile from "../../assets/action-page/hero-action-page-mobile.png";
 import HeroActionsTablet from "../../assets/action-page/hero-action-page-tablette.png";
@@ -50,7 +54,10 @@ const actionsWithUrls = actions.map((action) => {
     ...action,
     slug: slugify(action.titre || "action", { lower: true, strict: true }),
     heroUrl: action.hero
-      ? normalizeImageUrl(action.hero, action, Astro.locals.pb, { thumb: "800x0" })
+      ? normalizeImageUrl(action.hero, action, Astro.locals.pb, { thumb: "960x0" })
+      : null,
+    heroSrcSet: action.hero
+      ? buildResponsiveImageSrcSet(action.hero, action, Astro.locals.pb, [480, 768, 960, 1280])
       : null,
     dateLabel: formatActionDate(
       action.date_debut,
@@ -207,6 +214,10 @@ const lcpDesktop = await getImage({ src: HeroActions, format: "webp", width: 184
                         loading="lazy"
                         fetchpriority="low"
                         decoding="async"
+                        srcset={action.heroSrcSet || undefined}
+                        sizes="(min-width: 1024px) 50vw, 100vw"
+                        width="960"
+                        height="540"
                         class={`h-56 w-full object-cover md:h-[36dvh] lg:h-full lg:w-1/2 ${imageOrderClass}`}
                       />
                     ) : (

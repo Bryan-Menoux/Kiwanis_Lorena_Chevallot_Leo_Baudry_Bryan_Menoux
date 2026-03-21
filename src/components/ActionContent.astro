@@ -7,6 +7,7 @@ import galleryUrl from "../scripts/gallery.js?url";
 import galleryDisplayUrl from "../scripts/gallery-display.js?url";
 import previewDefaults from "../scripts/previewDefaults.js";
 import {
+  buildResponsiveImageSrcSet,
   formatDateLong,
   isDataUrl as isDataUrlRuntime,
   normalizeImageUrl,
@@ -33,26 +34,30 @@ const heroImg =
   action && action.hero
     ? isDataUrl(action.hero)
       ? action.hero
-      : normalizeImageUrl(action.hero, action, Astro.locals.pb, { thumb: "960x720" })
+      : normalizeImageUrl(action.hero, action, Astro.locals.pb, { thumb: "960x0" })
     : null;
+const heroSrcSet = buildResponsiveImageSrcSet(action?.hero, action, Astro.locals.pb, [480, 768, 960, 1280]);
 const partie1Img =
   action && action.photo_partie_1
     ? isDataUrl(action.photo_partie_1)
       ? action.photo_partie_1
       : normalizeImageUrl(action.photo_partie_1, action, Astro.locals.pb, { thumb: "800x0" })
     : null;
+const partie1SrcSet = buildResponsiveImageSrcSet(action?.photo_partie_1, action, Astro.locals.pb, [480, 768, 960]);
 const partie2Img =
   action && action.photo_partie_2
     ? isDataUrl(action.photo_partie_2)
       ? action.photo_partie_2
       : normalizeImageUrl(action.photo_partie_2, action, Astro.locals.pb, { thumb: "800x0" })
     : null;
+const partie2SrcSet = buildResponsiveImageSrcSet(action?.photo_partie_2, action, Astro.locals.pb, [480, 768, 960]);
 const partie3Img =
   action && action.photo_partie_3
     ? isDataUrl(action.photo_partie_3)
       ? action.photo_partie_3
       : normalizeImageUrl(action.photo_partie_3, action, Astro.locals.pb, { thumb: "800x0" })
     : null;
+const partie3SrcSet = buildResponsiveImageSrcSet(action?.photo_partie_3, action, Astro.locals.pb, [480, 768, 960]);
 const hasNonEmptyText = (value: unknown) => String(value ?? "").trim() !== "";
 const normalizeCropPoint = (value: unknown) => {
   if (!value) return null;
@@ -221,6 +226,10 @@ const getSectionTitle = (key: string, fallback: string) => {
           data-field="hero"
           data-preview-crop-field="hero"
           src={heroImg || ""}
+          srcset={heroSrcSet || undefined}
+          sizes="95vw"
+          width="960"
+          height="720"
           alt={action.description_hero || "Aperçu de l'image de l'en-tête"}
           loading="eager"
           fetchpriority="high"
@@ -280,6 +289,10 @@ const getSectionTitle = (key: string, fallback: string) => {
                   data-field="photo_partie_1"
                   data-preview-crop-field="photo_partie_1"
                   src={partie1Img || ""}
+                  srcset={partie1SrcSet || undefined}
+                  sizes="(min-width: 1024px) 50vw, 95vw"
+                  width="800"
+                  height="600"
                   alt={action.description_photo_partie_1 || "Aperçu de la photo partie 1"}
                   loading="lazy"
                   fetchpriority="low"
@@ -430,6 +443,10 @@ const getSectionTitle = (key: string, fallback: string) => {
                   data-field="photo_partie_2"
                   data-preview-crop-field="photo_partie_2"
                   src={partie2Img || ""}
+                  srcset={partie2SrcSet || undefined}
+                  sizes="(min-width: 1024px) 50vw, 95vw"
+                  width="800"
+                  height="600"
                   alt={action.description_photo_partie_2 || "Aperçu de la photo partie 2"}
                   loading="lazy"
                   fetchpriority="low"
@@ -474,6 +491,10 @@ const getSectionTitle = (key: string, fallback: string) => {
                   data-field="photo_partie_3"
                   data-preview-crop-field="photo_partie_3"
                   src={partie3Img || ""}
+                  srcset={partie3SrcSet || undefined}
+                  sizes="(min-width: 1024px) 50vw, 95vw"
+                  width="800"
+                  height="600"
                   alt={action.description_photo_partie_3 || "Aperçu de la photo partie 3"}
                   loading="lazy"
                   fetchpriority="low"
@@ -566,6 +587,8 @@ const getSectionTitle = (key: string, fallback: string) => {
                     loading="lazy"
                     fetchpriority="low"
                     src={photoURL}
+                    width="1200"
+                    height="800"
                     alt="Photo de la galerie"
                     class="w-full h-[60dvh] object-cover block"
                   />
@@ -626,6 +649,8 @@ const getSectionTitle = (key: string, fallback: string) => {
               fetchpriority="low"
               id="modalImage"
               src=""
+              width="1200"
+              height="800"
               alt="Image agrandie"
               class="h-[80dvh] max-w-[80dvw] w-auto object-contain"
             />

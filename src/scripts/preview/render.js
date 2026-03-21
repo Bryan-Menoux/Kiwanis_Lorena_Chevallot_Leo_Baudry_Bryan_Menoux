@@ -65,10 +65,21 @@ function renderField(prop) {
     }
 
     if (element.tagName === 'IMG') {
-      element.src = value || '';
+      const nextValue = typeof value === 'string' ? value.trim() : String(value || '').trim();
+      const shouldResetResponsiveAttrs =
+        nextValue === '' ||
+        nextValue.startsWith('data:') ||
+        nextValue.startsWith('blob:');
+
+      if (shouldResetResponsiveAttrs) {
+        element.removeAttribute('srcset');
+        element.removeAttribute('sizes');
+      }
+
+      element.src = nextValue || '';
       element.loading = 'lazy';
       element.decoding = 'async';
-      element.style.display = value ? '' : 'none';
+      element.style.display = nextValue ? '' : 'none';
       applyPreviewCropStyle(element, canonicalProp);
       if (Object.prototype.hasOwnProperty.call(IMAGE_DESCRIPTION_MAP, canonicalProp)) {
         syncImageDescriptionVisibility(canonicalProp);

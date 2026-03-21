@@ -2,10 +2,13 @@
 import Layout from "../../../../layouts/Layout-back-office.astro";
 import ItemCard from "../../../../components/ItemCard.astro";
 import slugify from "slugify";
-import { formatDateShort } from "../../../../utils/utilitaires.js";
+import {
+  buildResponsiveImageSrcSet,
+  formatDateShort,
+  normalizeImageUrl,
+} from "../../../../utils/utilitaires.js";
 import { getCreationViewUrl } from "../../../../utils/creationRoutes";
 import ActionsSearch from "../../../../components/ActionsSearch.astro";
-import { normalizeImageUrl } from "../../../../utils/utilitaires.js";
 import { ActionsTypeActionOptions } from "../../../../pocketbase-types";
 
 let error = "";
@@ -31,7 +34,8 @@ const actions = actionsRaw.map((a: any) => ({
   updated: a.updated,
   beneficiary: a.beneficiaire,
   type_action: Array.isArray(a.type_action) ? a.type_action.map((value: unknown) => String(value)) : [],
-  heroActionUrl: normalizeImageUrl(a.hero, a, Astro.locals.pb, { thumb: "800x0" }) || undefined,
+  heroActionUrl: normalizeImageUrl(a.hero, a, Astro.locals.pb, { thumb: "960x0" }) || undefined,
+  heroActionSrcSet: buildResponsiveImageSrcSet(a.hero, a, Astro.locals.pb, [480, 768, 960, 1280]),
   displayDate: a.date_debut ? formatDateShort(a.date_debut) : "",
   source: "action" as const,
 }));
@@ -182,6 +186,10 @@ try {
               slug={action.slug}
               source={action.source}
               photoUrl={action.heroActionUrl}
+              photoSrcSet={action.heroActionSrcSet || undefined}
+              photoSizes="(min-width: 1024px) 33vw, (min-width: 768px) 50vw, 100vw"
+              photoWidth={960}
+              photoHeight={540}
               photoClass="h-56 md:h-64 object-cover! px-0! "
               photoLoading="lazy"
               photoFetchPriority="low"
