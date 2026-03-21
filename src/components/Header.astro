@@ -278,7 +278,6 @@ const actionButtons = [{ href: "/contact", label: "Contact" }];
 
 <script>
   import {
-    preloadGsap,
     setupHeaderLogout,
     setupRedirectLinks,
   } from "../utils/headerUtils";
@@ -359,7 +358,6 @@ const actionButtons = [{ href: "/contact", label: "Contact" }];
       .catch(() => {});
   }
 
-  preloadGsap();
   window.addEventListener("resize", initMobileMenuWhenNeeded, {
     passive: true,
   });

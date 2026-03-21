@@ -144,11 +144,13 @@ import Alert from "./Alert.astro";
     let activeConfirm: ConfirmQueueItem | null = null;
     const confirmQueue: ConfirmQueueItem[] = [];
     let observedHeader: HTMLElement | null = null;
-    let headerResizeObserver: ResizeObserver | null = null;
+    let observedEditorTabList: HTMLElement | null = null;
+    let headerBottom = 0;
+    let editorTabBottom = 0;
+    let layoutResizeObserver: ResizeObserver | null = null;
     let alertOffsetFrame = 0;
-    const headerMutationObserver = new MutationObserver(() => {
-      scheduleAlertOffsetUpdate();
-    });
+    const editorTabStickyTop = 84;
+    const mobileOffsetQuery = window.matchMedia("(max-width: 1023px)");
 
     function ensureGsap() {
       if (gsapInstance) return Promise.resolve(gsapInstance);
@@ -268,79 +270,92 @@ import Alert from "./Alert.astro";
       return tabList instanceof HTMLElement ? tabList : null;
     }
 
-    function isVisibleElement(node: HTMLElement | null): boolean {
-      if (!(node instanceof HTMLElement)) return false;
-      const style = window.getComputedStyle(node);
-      if (style.display === "none" || style.visibility === "hidden") {
-        return false;
-      }
-      const rect = node.getBoundingClientRect();
-      return rect.width > 0 && rect.height > 0;
+    function getBlockSize(entry: ResizeObserverEntry): number {
+      const boxSize = Array.isArray(entry.borderBoxSize)
+        ? entry.borderBoxSize[0]
+        : entry.borderBoxSize;
+      return boxSize?.blockSize ?? entry.contentRect.height;
     }
 
-    function updateAlertOffset(): void {
-      const margin = window.matchMedia("(min-width: 1024px)").matches
-        ? ALERT_MARGIN_DESKTOP
-        : ALERT_MARGIN_MOBILE;
+    function syncAlertOffset(): void {
+      const margin = mobileOffsetQuery.matches
+        ? ALERT_MARGIN_MOBILE
+        : ALERT_MARGIN_DESKTOP;
+      const anchorBottom = Math.max(
+        headerBottom,
+        mobileOffsetQuery.matches ? editorTabStickyTop + editorTabBottom : 0,
+      );
 
-      const header = getMainHeader();
-      const editorTabList = getActionEditorTabList();
-      const headerBottom =
-        isVisibleElement(header) && header instanceof HTMLElement
-          ? Math.max(0, header.getBoundingClientRect().bottom)
-          : 0;
-      const editorTabBottom =
-        isVisibleElement(editorTabList) && editorTabList instanceof HTMLElement
-          ? Math.max(0, editorTabList.getBoundingClientRect().bottom)
-          : 0;
-      const anchorBottom = Math.max(headerBottom, editorTabBottom);
-
-      if (anchorBottom <= 0) {
-        rootEl.style.top = `${margin}px`;
-        return;
-      }
-      rootEl.style.top = `${Math.round(anchorBottom + margin)}px`;
+      rootEl.style.top =
+        anchorBottom > 0
+          ? `${Math.round(anchorBottom + margin)}px`
+          : `${margin}px`;
     }
 
     function scheduleAlertOffsetUpdate(): void {
       if (alertOffsetFrame) return;
       alertOffsetFrame = window.requestAnimationFrame(() => {
         alertOffsetFrame = 0;
-        updateAlertOffset();
+        syncAlertOffset();
       });
     }
 
-    function observeHeaderChanges(): void {
-      const header = getMainHeader();
-      if (!(header instanceof HTMLElement)) {
-        rootEl.style.top = `${ALERT_MARGIN_MOBILE}px`;
-        return;
-      }
+    function ensureAlertResizeObserver(): ResizeObserver | null {
+      if (layoutResizeObserver) return layoutResizeObserver;
+      if (!("ResizeObserver" in window)) return null;
 
-      if (observedHeader === header) return;
+      layoutResizeObserver = new ResizeObserver((entries) => {
+        let needsUpdate = false;
 
-      if (headerResizeObserver && observedHeader instanceof HTMLElement) {
-        headerResizeObserver.unobserve(observedHeader);
-      }
-      headerMutationObserver.disconnect();
+        for (const entry of entries) {
+          if (entry.target === observedHeader) {
+            headerBottom = getBlockSize(entry);
+            needsUpdate = true;
+          }
 
-      observedHeader = header;
+          if (entry.target === observedEditorTabList) {
+            editorTabBottom = getBlockSize(entry);
+            needsUpdate = true;
+          }
+        }
 
-      if ("ResizeObserver" in window && !headerResizeObserver) {
-        headerResizeObserver = new ResizeObserver(() => {
+        if (needsUpdate) {
           scheduleAlertOffsetUpdate();
-        });
+        }
+      });
+
+      return layoutResizeObserver;
+    }
+
+    function refreshAlertAnchors(): void {
+      const nextHeader = getMainHeader();
+      const nextEditorTabList = getActionEditorTabList();
+      const observer = ensureAlertResizeObserver();
+
+      if (observer && observedHeader && observedHeader !== nextHeader) {
+        observer.unobserve(observedHeader);
       }
-      if (headerResizeObserver) {
-        headerResizeObserver.observe(header);
+      if (observer && observedEditorTabList && observedEditorTabList !== nextEditorTabList) {
+        observer.unobserve(observedEditorTabList);
       }
 
-      headerMutationObserver.observe(header, {
-        attributes: true,
-        childList: true,
-        subtree: true,
-        attributeFilter: ["class", "style", "aria-expanded", "aria-hidden"],
-      });
+      observedHeader = nextHeader;
+      observedEditorTabList = nextEditorTabList;
+      if (!observedHeader) {
+        headerBottom = 0;
+      }
+      if (!observedEditorTabList) {
+        editorTabBottom = 0;
+      }
+
+      if (observer && observedHeader) {
+        observer.observe(observedHeader);
+      }
+      if (observer && observedEditorTabList) {
+        observer.observe(observedEditorTabList);
+      }
+
+      scheduleAlertOffsetUpdate();
     }
 
     function normalizeAlert(payload: AlertPayload | string): NormalizedAlertPayload {
@@ -543,8 +558,13 @@ import Alert from "./Alert.astro";
       }
     });
 
-    observeHeaderChanges();
-    updateAlertOffset();
+    mobileOffsetQuery.addEventListener("change", scheduleAlertOffsetUpdate);
+    window.addEventListener("resize", scheduleAlertOffsetUpdate, {
+      passive: true,
+    });
+    document.addEventListener("astro:page-load", refreshAlertAnchors);
+
+    refreshAlertAnchors();
 
     window.KiwanisAlert = {
       show,

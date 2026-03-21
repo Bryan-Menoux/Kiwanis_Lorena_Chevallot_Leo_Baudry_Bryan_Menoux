@@ -27,11 +27,3 @@ export function setupRedirectLinks() {
     }
   });
 }
-
-export function preloadGsap() {
-  void import("./loadGsap")
-    .then(({ loadGsap }) => {
-      void loadGsap();
-    })
-    .catch(() => {});
-}

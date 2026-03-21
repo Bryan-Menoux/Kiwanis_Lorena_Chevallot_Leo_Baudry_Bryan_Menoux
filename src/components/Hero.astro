@@ -83,8 +83,9 @@ const mobileSrcSet = mobileImage?.srcSet.attribute || mobileImage?.src;
       width={desktopImageLg.attributes.width}
       height={desktopImageLg.attributes.height}
       alt={imageAlt}
-      decoding="sync"
+      loading="eager"
       fetchpriority="high"
+      decoding="async"
       class="h-full w-full"
       style="height:100%;width:100%;object-fit:cover;object-position:center;"
     />

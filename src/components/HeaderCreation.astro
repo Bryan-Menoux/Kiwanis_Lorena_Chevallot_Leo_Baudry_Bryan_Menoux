@@ -124,7 +124,7 @@ const creationMenuSections = [
 </style>
 
 <script>
-  import { preloadGsap, setupHeaderLogout, setupRedirectLinks } from "../utils/headerUtils";
+  import { setupHeaderLogout, setupRedirectLinks } from "../utils/headerUtils";
   import { initMobileMenu } from "../utils/mobileMenu";
 
   function resetSubMenus() {
@@ -134,8 +134,6 @@ const creationMenuSections = [
         menu.removeAttribute("open");
       });
   }
-
-  preloadGsap();
 
   document.addEventListener("DOMContentLoaded", () => {
     setupHeaderLogout();

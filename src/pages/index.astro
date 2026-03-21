@@ -45,11 +45,11 @@ const mapGoogleUrl =
 const mapAddress = "76 bis faubourg de Besançon, 25200 Montbéliard";
 ---
 
-<Layout includeAlertProvider={false} loadPoppinsFont={false} includeManifest={false}>
+<Layout loadPoppinsFont={false} includeManifest={false}>
   <Fragment slot="head">
-    <link rel="preload" as="image" href={lcpMobile.src} type="image/webp" media="(max-width: 767px)"  />
-    <link rel="preload" as="image" href={lcpTablet.src} type="image/webp" media="(min-width: 768px) and (max-width: 1023px)"  />
-    <link rel="preload" as="image" href={lcpDesktop.src} imagesrcset={`${lcpDesktopMd.src} 1440w, ${lcpDesktop.src} 1840w`} imagesizes="95vw" type="image/webp" media="(min-width: 1024px)"  />
+    <link rel="preload" as="image" href={lcpMobile.src} type="image/webp" media="(max-width: 767px)" fetchpriority="high" />
+    <link rel="preload" as="image" href={lcpTablet.src} type="image/webp" media="(min-width: 768px) and (max-width: 1023px)" fetchpriority="high" />
+    <link rel="preload" as="image" href={lcpDesktop.src} imagesrcset={`${lcpDesktopMd.src} 1440w, ${lcpDesktop.src} 1840w`} imagesizes="95vw" type="image/webp" media="(min-width: 1024px)" fetchpriority="high" />
   </Fragment>
   <Hero
     image={heroLandingfinal}

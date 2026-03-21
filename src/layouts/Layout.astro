@@ -2,15 +2,12 @@
 import "../styles/global.css";
 import Footer from "../components/Footer.astro";
 import Header from "../components/Header.astro";
-import AlertProvider from "../components/AlertProvider.astro";
 
 interface Props {
-  includeAlertProvider?: boolean;
   includeManifest?: boolean;
 }
 
 const {
-  includeAlertProvider = true,
   includeManifest = true,
 } = Astro.props as Props;
 ---
@@ -59,9 +56,8 @@ const {
     <meta name="generator" content={Astro.generator} />
 
     <title>Kiwanis Pays de Montbéliard</title>
-  </head>
-  <body>
-    {includeAlertProvider && <AlertProvider />}
+</head>
+<body>
     <Header />
     <slot />
     <Footer />
