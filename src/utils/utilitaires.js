@@ -145,7 +145,9 @@ try {
 
 // Normalise référence d'image en URL en préférant l'API PocketBase.
 // Usage : `normalizeImageUrl(value, record, pocketbaseClient)` où `pocketbaseClient` est typiquement `Astro.locals.pb`.
-export function normalizeImageUrl(value, record, pocketbaseClient) {
+export function normalizeImageUrl(value, record, pocketbaseClient, options) {
+  const thumb = typeof options === "string" ? options : options?.thumb;
+
   if (!value) return null;
 
   if (Array.isArray(value)) {
@@ -168,7 +170,11 @@ export function normalizeImageUrl(value, record, pocketbaseClient) {
     if (pocketbaseClient && pocketbaseClient.files && typeof pocketbaseClient.files.getURL === "function" && record) {
       const fileReference =
         typeof value === "string" ? value : value && (value.filename ?? value.name ?? value.id);
-      if (fileReference) return pocketbaseClient.files.getURL(record, fileReference);
+      if (fileReference) {
+        return thumb
+          ? pocketbaseClient.files.getURL(record, fileReference, { thumb })
+          : pocketbaseClient.files.getURL(record, fileReference);
+      }
     }
   } catch (error) {
     // Ignorer l'erreur et essayer les solutions de repli

@@ -26,3 +26,4 @@ pnpm-debug.log*
 /.vscode/mcp.json
 
 encoding-report.txt
+/.unlighthouse

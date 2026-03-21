@@ -145,6 +145,7 @@ import Alert from "./Alert.astro";
     const confirmQueue: ConfirmQueueItem[] = [];
     let observedHeader: HTMLElement | null = null;
     let headerResizeObserver: ResizeObserver | null = null;
+    let alertOffsetFrame = 0;
     const headerMutationObserver = new MutationObserver(() => {
       scheduleAlertOffsetUpdate();
     });
@@ -302,9 +303,10 @@ import Alert from "./Alert.astro";
     }
 
     function scheduleAlertOffsetUpdate(): void {
-      requestAnimationFrame(() => {
+      if (alertOffsetFrame) return;
+      alertOffsetFrame = window.requestAnimationFrame(() => {
+        alertOffsetFrame = 0;
         updateAlertOffset();
-        window.setTimeout(updateAlertOffset, 120);
       });
     }
 
@@ -326,7 +328,7 @@ import Alert from "./Alert.astro";
 
       if ("ResizeObserver" in window && !headerResizeObserver) {
         headerResizeObserver = new ResizeObserver(() => {
-          updateAlertOffset();
+          scheduleAlertOffsetUpdate();
         });
       }
       if (headerResizeObserver) {
@@ -539,24 +541,6 @@ import Alert from "./Alert.astro";
       if (event instanceof CustomEvent) {
         show(event.detail as AlertPayload | string);
       }
-    });
-
-    window.addEventListener("resize", () => {
-      scheduleAlertOffsetUpdate();
-      observeHeaderChanges();
-    });
-    window.addEventListener("scroll", updateAlertOffset, { passive: true });
-    document.addEventListener(
-      "click",
-      () => {
-        scheduleAlertOffsetUpdate();
-        observeHeaderChanges();
-      },
-      true,
-    );
-    window.addEventListener("load", () => {
-      observeHeaderChanges();
-      updateAlertOffset();
     });
 
     observeHeaderChanges();

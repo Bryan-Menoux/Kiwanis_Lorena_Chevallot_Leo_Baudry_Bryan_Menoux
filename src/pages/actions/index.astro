@@ -3,7 +3,7 @@ import Layout from "../../layouts/Layout.astro";
 import Hero from "../../components/Hero.astro";
 import SearchActions from "../../components/SearchActions.astro";
 import slugify from "slugify";
-import { formatDateShort } from "../../utils/utilitaires.js";
+import { formatDateShort, normalizeImageUrl } from "../../utils/utilitaires.js";
 import HeroActions from "../../assets/action-page/hero-action-page.png";
 import HeroActionsMobile from "../../assets/action-page/hero-action-page-mobile.png";
 import HeroActionsTablet from "../../assets/action-page/hero-action-page-tablette.png";
@@ -50,7 +50,7 @@ const actionsWithUrls = actions.map((action) => {
     ...action,
     slug: slugify(action.titre || "action", { lower: true, strict: true }),
     heroUrl: action.hero
-      ? Astro.locals.pb.files.getURL(action, action.hero)
+      ? normalizeImageUrl(action.hero, action, Astro.locals.pb, { thumb: "800x0" })
       : null,
     dateLabel: formatActionDate(
       action.date_debut,

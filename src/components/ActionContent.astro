@@ -9,18 +9,21 @@ import previewDefaults from "../scripts/previewDefaults.js";
 import {
   formatDateLong,
   isDataUrl as isDataUrlRuntime,
+  normalizeImageUrl,
 } from "../utils/utilitaires.js";
 import type { ActionsResponse } from "../pocketbase-types";
 export interface Props {
   action: ActionsResponse;
   forcePreviewLocationSection?: boolean;
   tabletPreviewAsMobile?: boolean;
+  showCropCursor?: boolean;
 }
 
 const {
   action,
   forcePreviewLocationSection = false,
   tabletPreviewAsMobile = false,
+  showCropCursor = false,
 } = Astro.props;
 
 // Fonction utilitaire d'exécution importée (on conserve le garde TypeScript localement).
@@ -30,25 +33,25 @@ const heroImg =
   action && action.hero
     ? isDataUrl(action.hero)
       ? action.hero
-      : Astro.locals.pb.files.getURL(action, action.hero)
+      : normalizeImageUrl(action.hero, action, Astro.locals.pb, { thumb: "960x720" })
     : null;
 const partie1Img =
   action && action.photo_partie_1
     ? isDataUrl(action.photo_partie_1)
       ? action.photo_partie_1
-      : Astro.locals.pb.files.getURL(action, action.photo_partie_1)
+      : normalizeImageUrl(action.photo_partie_1, action, Astro.locals.pb, { thumb: "800x0" })
     : null;
 const partie2Img =
   action && action.photo_partie_2
     ? isDataUrl(action.photo_partie_2)
       ? action.photo_partie_2
-      : Astro.locals.pb.files.getURL(action, action.photo_partie_2)
+      : normalizeImageUrl(action.photo_partie_2, action, Astro.locals.pb, { thumb: "800x0" })
     : null;
 const partie3Img =
   action && action.photo_partie_3
     ? isDataUrl(action.photo_partie_3)
       ? action.photo_partie_3
-      : Astro.locals.pb.files.getURL(action, action.photo_partie_3)
+      : normalizeImageUrl(action.photo_partie_3, action, Astro.locals.pb, { thumb: "800x0" })
     : null;
 const hasNonEmptyText = (value: unknown) => String(value ?? "").trim() !== "";
 const normalizeCropPoint = (value: unknown) => {
@@ -222,9 +225,9 @@ const getSectionTitle = (key: string, fallback: string) => {
           loading="eager"
           fetchpriority="high"
           decoding="async"
-          title="Cliquer pour recadrer"
+          title={showCropCursor ? "Cliquer pour recadrer" : undefined}
           style={`${heroImg ? "" : "display:none;"}${cropStyle("hero")}`}
-          class="w-full min-h-[50dvh] max-h-[80dvh] lg:max-h-[70dvh] object-cover object-center rounded-lg cursor-zoom-in"
+          class={`w-full min-h-[50dvh] max-h-[80dvh] lg:max-h-[70dvh] object-cover object-center rounded-lg ${showCropCursor ? "cursor-zoom-in" : ""}`}
         />
         {(action.description_hero || shouldPreviewMedia) && (
           <p
@@ -281,9 +284,9 @@ const getSectionTitle = (key: string, fallback: string) => {
                   loading="lazy"
                   fetchpriority="low"
                   decoding="async"
-                  title="Cliquer pour recadrer"
+                  title={showCropCursor ? "Cliquer pour recadrer" : undefined}
                   style={`${action.photo_partie_1 ? "" : "display:none;"}${cropStyle("photo_partie_1")}`}
-                  class="w-full h-[35dvh] md:h-[45dvh] lg:h-[50dvh] max-h-[35dvh] md:max-h-[45dvh] lg:max-h-[50dvh] object-cover rounded-lg cursor-zoom-in"
+                  class={`w-full h-[35dvh] md:h-[45dvh] lg:h-[50dvh] max-h-[35dvh] md:max-h-[45dvh] lg:max-h-[50dvh] object-cover rounded-lg ${showCropCursor ? "cursor-zoom-in" : ""}`}
                 />
               )}
               {(action.photo_partie_1 || shouldPreviewMedia) && action.description_photo_partie_1 && (
@@ -431,9 +434,9 @@ const getSectionTitle = (key: string, fallback: string) => {
                   loading="lazy"
                   fetchpriority="low"
                   decoding="async"
-                  title="Cliquer pour recadrer"
+                  title={showCropCursor ? "Cliquer pour recadrer" : undefined}
                   style={`${action.photo_partie_2 ? "" : "display:none;"}${cropStyle("photo_partie_2")}`}
-                  class="w-full h-[35dvh] md:h-[45dvh] lg:h-[50dvh] max-h-[35dvh] md:max-h-[45dvh] lg:max-h-[50dvh] object-cover rounded-lg cursor-zoom-in"
+                  class={`w-full h-[35dvh] md:h-[45dvh] lg:h-[50dvh] max-h-[35dvh] md:max-h-[45dvh] lg:max-h-[50dvh] object-cover rounded-lg ${showCropCursor ? "cursor-zoom-in" : ""}`}
                 />
               )}
               {(action.photo_partie_2 || shouldPreviewMedia) && action.description_photo_partie_2 && (
@@ -475,9 +478,9 @@ const getSectionTitle = (key: string, fallback: string) => {
                   loading="lazy"
                   fetchpriority="low"
                   decoding="async"
-                  title="Cliquer pour recadrer"
+                  title={showCropCursor ? "Cliquer pour recadrer" : undefined}
                   style={`${action.photo_partie_3 ? "" : "display:none;"}${cropStyle("photo_partie_3")}`}
-                  class="w-full h-[35dvh] md:h-[45dvh] lg:h-[50dvh] max-h-[35dvh] md:max-h-[45dvh] lg:max-h-[50dvh] object-cover rounded-lg cursor-zoom-in"
+                  class={`w-full h-[35dvh] md:h-[45dvh] lg:h-[50dvh] max-h-[35dvh] md:max-h-[45dvh] lg:max-h-[50dvh] object-cover rounded-lg ${showCropCursor ? "cursor-zoom-in" : ""}`}
                 />
               )}
               {(action.photo_partie_3 || shouldPreviewMedia) && action.description_photo_partie_3 && (
@@ -552,13 +555,7 @@ const getSectionTitle = (key: string, fallback: string) => {
         >
           {action.galerie_photos &&
             action.galerie_photos.map((photo: string, index: number) => {
-              const photoURL =
-                typeof photo === "string" &&
-                (photo.startsWith("data:") ||
-                  photo.startsWith("blob:") ||
-                  photo.startsWith("http"))
-                  ? photo
-                  : Astro.locals.pb.files.getURL(action, photo);
+              const photoURL = normalizeImageUrl(photo, action, Astro.locals.pb, { thumb: "800x0" }) || "";
 
               return (
                 <div

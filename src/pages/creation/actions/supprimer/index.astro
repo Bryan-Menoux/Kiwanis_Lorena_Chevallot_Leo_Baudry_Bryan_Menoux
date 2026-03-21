@@ -31,7 +31,7 @@ const actions = actionsRaw.map((a: any) => ({
   updated: a.updated,
   beneficiary: a.beneficiaire,
   type_action: Array.isArray(a.type_action) ? a.type_action.map((value: unknown) => String(value)) : [],
-  heroActionUrl: normalizeImageUrl(a.hero, a, Astro.locals.pb) || undefined,
+  heroActionUrl: normalizeImageUrl(a.hero, a, Astro.locals.pb, { thumb: "800x0" }) || undefined,
   displayDate: a.date_debut ? formatDateShort(a.date_debut) : "",
   source: "action" as const,
 }));
