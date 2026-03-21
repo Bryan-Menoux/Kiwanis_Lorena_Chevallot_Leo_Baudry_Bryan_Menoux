@@ -1,4 +1,8 @@
-import { optimizeFileListForField, WEBP_PREOPTIMIZED_ATTR } from '../actionForm/convertToWebp.js';
+import {
+  isWebpFile,
+  optimizeFileListForField,
+  WEBP_PREOPTIMIZED_ATTR,
+} from '../actionForm/convertToWebp.js';
 import { dispatch } from './dispatcher.js';
 import { normalizeProp, resetImageCropValue } from './state.js';
 
@@ -58,7 +62,10 @@ function handleFileElement(inputElement) {
         const dataTransfer = new DataTransfer();
         dataTransfer.items.add(optimizedFile);
         inputElement.files = dataTransfer.files;
-        inputElement.setAttribute(WEBP_PREOPTIMIZED_ATTR, 'true');
+        inputElement.setAttribute(
+          WEBP_PREOPTIMIZED_ATTR,
+          isWebpFile(optimizedFile) ? 'true' : 'false',
+        );
         dispatch({
           type: 'SINGLE_IMAGE_FILE_REPLACED',
           prop,

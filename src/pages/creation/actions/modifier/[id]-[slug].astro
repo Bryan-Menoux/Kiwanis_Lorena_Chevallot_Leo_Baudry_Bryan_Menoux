@@ -30,6 +30,7 @@ import {
   getNormalizedSelectedTypeActionValues,
   getOverLimitPartTextFieldsAfterSubmit,
 } from "../../../../scripts/actionForm/validation.js";
+import { normalizeActionImagesForSave } from "../../../../utils/actionImageWebp";
 
 const currentUser = Astro.locals.pb.authStore.model;
 // Message d'erreur affiché dans le formulaire en cas d'échec serveur
@@ -160,106 +161,6 @@ const keepExistingImageFields = (payload: Record<string, any>, record: any) => {
   ) {
     payload.galerie_photos = [...record.galerie_photos];
   }
-  return payload;
-};
-const getRecordFileName = (value: any) => {
-  if (typeof value === "string") return value.trim();
-  if (Array.isArray(value)) return String(value[0] ?? "").trim();
-  return "";
-};
-const downloadRecordFile = async (
-  record: any,
-  fileName: string,
-  pocketbaseClient: any,
-) => {
-  const normalizedFileName = fileName.trim();
-  if (!normalizedFileName) return null;
-
-  const tryFetch = async (url: string) => {
-    const response = await fetch(url, {
-      headers: pocketbaseClient.authStore.token
-        ? { Authorization: `Bearer ${pocketbaseClient.authStore.token}` }
-        : undefined,
-    });
-
-    if (!response.ok) {
-      return null;
-    }
-
-    const blob = await response.blob();
-    return new File(
-      [blob],
-      normalizedFileName,
-      { type: blob.type || "application/octet-stream" },
-    );
-  };
-
-  let file = await tryFetch(pocketbaseClient.files.getURL(record, normalizedFileName));
-  if (file) return file;
-
-  try {
-    const token = await pocketbaseClient.files.getToken();
-    file = await tryFetch(
-      pocketbaseClient.files.getURL(record, normalizedFileName, { token }),
-    );
-  } catch {
-    // On laissera l'appelant décider quoi faire si le fichier n'est pas accessible.
-  }
-
-  return file;
-};
-const hydrateFilesForActionCreate = async (
-  payload: Record<string, any>,
-  record: any,
-  pocketbaseClient: any,
-) => {
-  const singleFileFields = [
-    "hero",
-    "photo_partie_1",
-    "photo_partie_2",
-    "photo_partie_3",
-  ];
-
-  for (const field of singleFileFields) {
-    const currentValue = payload[field];
-    if (currentValue instanceof File) continue;
-
-    const fileName = getRecordFileName(currentValue);
-    if (!fileName) continue;
-
-    const file = await downloadRecordFile(record, fileName, pocketbaseClient);
-    if (!file) {
-      throw new Error(`Impossible de récupérer le fichier "${fileName}" pour "${field}".`);
-    }
-
-    payload[field] = file;
-  }
-
-  if (Array.isArray(payload.galerie_photos)) {
-    const hydratedGallery: File[] = [];
-
-    for (const entry of payload.galerie_photos) {
-      if (entry instanceof File) {
-        hydratedGallery.push(entry);
-        continue;
-      }
-
-      const fileName = getRecordFileName(entry);
-      if (!fileName) continue;
-
-      const file = await downloadRecordFile(record, fileName, pocketbaseClient);
-      if (!file) {
-        throw new Error(
-          `Impossible de récupérer le fichier de galerie "${fileName}".`,
-        );
-      }
-
-      hydratedGallery.push(file);
-    }
-
-    payload.galerie_photos = hydratedGallery.length ? hydratedGallery : "";
-  }
-
   return payload;
 };
 const isFieldRemoved = (formData: FormData, fieldName: string) => {
@@ -620,7 +521,7 @@ if (Astro.request.method === "POST") {
       }
       publishPayload.slug = publishSlug;
       applyPartTitleRule(publishPayload);
-      await hydrateFilesForActionCreate(
+      await normalizeActionImagesForSave(
         publishPayload,
         actionRecord,
         Astro.locals.pb,
@@ -829,7 +730,7 @@ if (Astro.request.method === "POST") {
           if (Object.prototype.hasOwnProperty.call(publishPayload, "type")) {
             delete publishPayload.type;
           }
-          await hydrateFilesForActionCreate(
+          await normalizeActionImagesForSave(
             publishPayload,
             actionRecord,
             Astro.locals.pb,
@@ -860,6 +761,7 @@ if (Astro.request.method === "POST") {
         // Copier les références de fichiers existantes depuis le brouillon si aucun upload n'a été fait.
         // IMPORTANT : utiliser la règle "undefined seulement" pour ne pas écraser '' (suppression intentionnelle).
         keepExistingImageFields(payload, actionRecord);
+        await normalizeActionImagesForSave(payload, actionRecord, Astro.locals.pb);
 
         await Astro.locals.pb.collection("brouillons").update(idParam, payload);
 
@@ -868,6 +770,7 @@ if (Astro.request.method === "POST") {
 
       // Mise à jour classique d'une action
       try {
+        await normalizeActionImagesForSave(payload, actionRecord, Astro.locals.pb);
         await Astro.locals.pb.collection("actions").update(idParam, payload);
       } catch (updateErr: any) {
         // On enrichit l'erreur `type_action` pour faciliter le débogage côté back-office.
@@ -890,6 +793,7 @@ if (Astro.request.method === "POST") {
         ...data,
         ...files,
       });
+      await normalizeActionImagesForSave(createPayload, null, Astro.locals.pb);
       const newAction = await Astro.locals.pb.collection("actions").create({
         ...createPayload,
       });

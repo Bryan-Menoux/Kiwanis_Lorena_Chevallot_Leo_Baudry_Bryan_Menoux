@@ -14,6 +14,7 @@ import {
   getNormalizedSelectedTypeActionValues,
   getOverLimitPartTextFieldsAfterSubmit,
 } from "../../../scripts/actionForm/validation.js";
+import { normalizeActionImagesForSave } from "../../../utils/actionImageWebp";
 const previewDefaultsMap = previewDefaults as Record<string, unknown>;
 
 let error: string = "";
@@ -279,6 +280,7 @@ if (Astro.request.method === "POST") {
         ...(currentUser?.id ? { cree_par: currentUser.id } : {}),
         ...files,
       });
+      await normalizeActionImagesForSave(draftPayload, null, Astro.locals.pb);
       let savedDraft;
       let isNewDraft = false;
       if (draftId) {
@@ -327,6 +329,7 @@ if (Astro.request.method === "POST") {
       ...(currentUser?.id ? { cree_par: currentUser.id } : {}),
       ...files,
     });
+    await normalizeActionImagesForSave(payload, null, Astro.locals.pb);
     const newAction = await Astro.locals.pb.collection("actions").create(payload);
     await deleteDraftIfNeeded(draftId);
     return Astro.redirect(`/creation/actions/${newAction.id}-${slug}`);

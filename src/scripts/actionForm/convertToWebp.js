@@ -23,6 +23,14 @@ const CONSTRAINED_MAX_SCALE_PASSES = 3;
 const MAX_FILE_PROCESS_MS = 5000;
 const CONSTRAINED_MAX_FILE_PROCESS_MS = 2500;
 
+function isWebpFile(file) {
+  if (!(file instanceof File)) return false;
+  const type = String(file.type || "").trim().toLowerCase();
+  if (type === "image/webp") return true;
+  const name = String(file.name || "").trim().toLowerCase();
+  return name.endsWith(".webp");
+}
+
 function nowMs() {
   if (typeof performance !== 'undefined' && typeof performance.now === 'function') {
     return performance.now();
@@ -134,7 +142,7 @@ async function compressImageToMaxBytes(
 ) {
   if (!(file instanceof File)) return file;
   if (!file.type.startsWith('image/')) return file;
-  if (file.size <= maxBytes) {
+  if (file.size <= maxBytes && isWebpFile(file)) {
     notifyProgress(onProgress, 100);
     return file;
   }
@@ -273,7 +281,9 @@ async function processInputFiles(input, profile) {
   const dataTransfer = new DataTransfer();
   processedFiles.forEach((file) => dataTransfer.items.add(file));
   input.files = dataTransfer.files;
-  input.setAttribute(WEBP_PREOPTIMIZED_ATTR, 'true');
+  const allFilesAreWebp =
+    processedFiles.length > 0 && processedFiles.every((file) => isWebpFile(file));
+  input.setAttribute(WEBP_PREOPTIMIZED_ATTR, allFilesAreWebp ? 'true' : 'false');
 
   if (fieldName === 'galerie_photos') {
     setGalleryFiles(Array.from(input.files));
@@ -322,7 +332,12 @@ function getFileInputsRequiringProcessing(form) {
       input instanceof HTMLInputElement &&
       input.files instanceof FileList &&
       input.files.length > 0 &&
-      input.getAttribute(WEBP_PREOPTIMIZED_ATTR) !== 'true',
+      (
+        input.getAttribute(WEBP_PREOPTIMIZED_ATTR) !== 'true' ||
+        Array.from(input.files).some(
+          (file) => file instanceof File && file.type.startsWith('image/') && !isWebpFile(file),
+        )
+      ),
   );
 }
 
@@ -438,3 +453,5 @@ export function initWebpConversion() {
     form.removeAttribute(KEEP_OVERLAY_VISIBLE_ATTR);
   });
 }
+
+export { isWebpFile };

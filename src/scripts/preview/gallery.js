@@ -1,5 +1,9 @@
 import { isDataUrl } from '../../utils/utilitaires.js';
-import { optimizeFileListForField, WEBP_PREOPTIMIZED_ATTR } from '../actionForm/convertToWebp.js';
+import {
+  isWebpFile,
+  optimizeFileListForField,
+  WEBP_PREOPTIMIZED_ATTR,
+} from '../actionForm/convertToWebp.js';
 import { dispatch } from './dispatcher.js';
 import { galleryExistingUrls, galleryFiles, getStateSnapshot, normalizeProp } from './state.js';
 
@@ -133,7 +137,10 @@ function handleGalleryFileElement(inputElement) {
           active: false,
         });
       });
-      inputElement.setAttribute(WEBP_PREOPTIMIZED_ATTR, 'true');
+      inputElement.setAttribute(
+        WEBP_PREOPTIMIZED_ATTR,
+        optimizedFiles.every((file) => isWebpFile(file)) ? 'true' : 'false',
+      );
     }).catch(() => {
       if (inputElement.getAttribute(WEBP_BG_TOKEN_ATTR) !== asyncToken) return;
       newFiles.forEach((_, index) => {
@@ -144,7 +151,7 @@ function handleGalleryFileElement(inputElement) {
           active: false,
         });
       });
-      inputElement.setAttribute(WEBP_PREOPTIMIZED_ATTR, 'true');
+      inputElement.setAttribute(WEBP_PREOPTIMIZED_ATTR, 'false');
     });
   });
 }
