@@ -57,14 +57,14 @@ const stats = { total: produits.length };
           Gérez vos produits, recherchez, filtrez et modifiez rapidement.
         </p>
       </div>
-      <div class="w-full flex flex-wrap items-center gap-3 md:justify-end">
-        <a href="/produits" class="btn btn-border btn-sm rounded-full flex-1 w-full md:flex-initial md:w-fit md:btn-md">
+      <div class="w-full grid grid-cols-1 gap-3 [@media(min-width:420px)]:grid-cols-2 md:flex md:flex-wrap md:items-center md:justify-end">
+        <a href="/produits" class="btn btn-border btn-sm rounded-full w-full [@media(min-width:420px)]:col-span-2 md:flex-initial md:w-fit md:col-auto md:btn-md">
           Voir sur le site
         </a>
-        <a href="/creation/produits/supprimer" class="btn btn-border btn-sm rounded-full flex-1 w-full md:flex-initial md:w-fit md:btn-md">
+        <a href="/creation/produits/supprimer" class="btn btn-border btn-sm rounded-full w-full md:flex-initial md:w-fit md:btn-md">
           Supprimer des produits
         </a>
-        <a href="/creation/produits/nouveau" class="btn btn-accent btn-sm rounded-full flex-1 w-full md:flex-initial md:w-fit md:btn-md">
+        <a href="/creation/produits/nouveau" class="btn btn-accent btn-sm rounded-full w-full md:flex-initial md:w-fit md:btn-md">
           Créer un produit
         </a>
       </div>

@@ -111,10 +111,10 @@ if (Astro.request.method === "POST") {
         <h1 class="mb-3 text-3xl font-bold text-accent font-poppins md:text-4xl">Mes Pages</h1>
         <p class="text-base text-base-content/70 md:text-lg">Bienvenue dans votre tableau de bord de gestion</p>
       </div>
-      <div class="flex flex-wrap items-center gap-3 justify-between lg:justify-end">
+      <div class="grid w-full grid-cols-1 gap-3 [@media(min-width:420px)]:grid-cols-2 md:flex md:w-auto md:flex-wrap md:items-center md:justify-end">
         <!-- voir la page des actions -->
-        <a href="/actions" class="btn btn-border btn-sm rounded-full flex-1 md:w-fit md:btn-md whitespace-nowrap">Voir les actions</a>
-        <a href="/creation/actions/nouveau" class="btn btn-accent btn-sm rounded-full flex-1 md:w-fit md:btn-md whitespace-nowrap">Créer une action</a>
+        <a href="/actions" class="btn btn-border btn-sm rounded-full w-full md:w-fit md:flex-initial md:btn-md whitespace-nowrap">Voir les actions</a>
+        <a href="/creation/actions/nouveau" class="btn btn-accent btn-sm rounded-full w-full md:w-fit md:flex-initial md:btn-md whitespace-nowrap">Créer une action</a>
       </div>
     </div>
 
@@ -231,11 +231,7 @@ if (Astro.request.method === "POST") {
 <script>
   import "../../utils/utilitaires.js";
   import "../../utils/scroll.js";
-  import {
-    getTotalPages,
-    renderPagination,
-    resolveNextPage,
-  } from "../../utils/renderPagination";
+  import { renderPagination } from "../../utils/renderPagination";
   import {
     getCreationDashboardEditUrl,
     getCreationDashboardViewUrl,
@@ -257,6 +253,34 @@ if (Astro.request.method === "POST") {
   const PAGE_SIZE = 9;
   let currentPage = 1;
   let filteredPagesCache = pages.slice();
+
+  function computeTotalPages(totalItems, pageSize) {
+    const safeTotalItems = Number.isFinite(Number(totalItems)) ? Number(totalItems) : 0;
+    const safePageSize =
+      Number.isFinite(Number(pageSize)) && Number(pageSize) > 0 ? Number(pageSize) : 1;
+    return Math.max(1, Math.ceil(safeTotalItems / safePageSize));
+  }
+
+  function computeNextPage(current, totalPages, action, targetPage) {
+    const safeTotalPages =
+      Number.isFinite(Number(totalPages)) && Number(totalPages) > 0
+        ? Math.floor(Number(totalPages))
+        : 1;
+    const safeCurrent =
+      Number.isFinite(Number(current)) && Number(current) > 0
+        ? Math.min(safeTotalPages, Math.floor(Number(current)))
+        : 1;
+
+    if (action === "prev") return Math.max(1, safeCurrent - 1);
+    if (action === "next") return Math.min(safeTotalPages, safeCurrent + 1);
+    if (action === "go") {
+      const parsed = Number(targetPage ?? "1");
+      if (Number.isNaN(parsed)) return safeCurrent;
+      return Math.min(safeTotalPages, Math.max(1, Math.floor(parsed)));
+    }
+    return safeCurrent;
+  }
+
   // Au changement de page, on remonte en douceur vers le haut de la liste (et non en haut du document).
   const scrollTopOnPageChange = () => {
     const globalScrollUtils = window.scrollUtils;
@@ -350,7 +374,7 @@ if (Astro.request.method === "POST") {
       `;
       currentPage = 1;
     } else {
-      const totalPages = getTotalPages(filteredPages.length, PAGE_SIZE);
+      const totalPages = computeTotalPages(filteredPages.length, PAGE_SIZE);
       if (currentPage > totalPages) currentPage = totalPages;
       if (currentPage < 1) currentPage = 1;
       const startIndex = (currentPage - 1) * PAGE_SIZE;
@@ -459,9 +483,9 @@ if (Astro.request.method === "POST") {
       if (!(target instanceof HTMLElement)) return;
 
       const action = target.getAttribute('data-page-action');
-      const totalPages = getTotalPages(filteredPagesCache.length, PAGE_SIZE);
+      const totalPages = computeTotalPages(filteredPagesCache.length, PAGE_SIZE);
       const previousPage = currentPage;
-      currentPage = resolveNextPage(
+      currentPage = computeNextPage(
         currentPage,
         totalPages,
         action,

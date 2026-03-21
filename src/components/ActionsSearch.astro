@@ -123,14 +123,9 @@ const secondaryGridClass =
 
 <script>
   (function() {
-    function init() {
-      if (typeof console !== 'undefined' && console.debug) console.debug('ActionsSearch init');
-      const root = document.querySelector(".actions-search");
-      if (!(root instanceof HTMLElement)) {
-        if (typeof console !== 'undefined' && console.debug) console.debug('ActionsSearch: root not found');
-        return;
-      }
-
+    function initOne(root: HTMLElement) {
+      if (root.dataset.actionsSearchBound === "true") return;
+      root.dataset.actionsSearchBound = "true";
       const searchInput = root.querySelector("#search-input");
       const beneficiaryInput = root.querySelector("#beneficiary-input");
       const yearSelect = root.querySelector('#year-select');
@@ -140,14 +135,11 @@ const secondaryGridClass =
       const resetButton = root.querySelector('[data-reset-filters]');
       const initialSearch = root.dataset.initialSearch || "";
 
-      if (typeof console !== 'undefined' && console.debug) console.debug('ActionsSearch init');
-
       if (searchInput instanceof HTMLInputElement) searchInput.value = initialSearch;
       const initialYear = root.dataset.initialYear || "";
       const initialType = root.dataset.initialType || "";
       if (yearSelect instanceof HTMLSelectElement && initialYear) yearSelect.value = initialYear;
       if (typeSelect instanceof HTMLSelectElement && initialType) typeSelect.value = initialType;
-      if (typeof console !== 'undefined' && console.debug) console.debug('ActionsSearch inputs initialized');
 
       function emit() {
         const detail: any = {
@@ -158,7 +150,6 @@ const secondaryGridClass =
         if (typeSelect instanceof HTMLSelectElement) detail.type = typeSelect.value;
         if (statusSelect instanceof HTMLSelectElement) detail.status = statusSelect.value;
 
-        if (typeof console !== 'undefined' && console.debug) console.debug('ActionsSearch emit', detail);
         document.dispatchEvent(new CustomEvent("actions-filter-change", { detail, bubbles: true }));
       }
 
@@ -176,19 +167,11 @@ const secondaryGridClass =
       }
 
       if (searchInput instanceof Element) {
-        searchInput.addEventListener('input', (ev: Event) => {
-          const tgt = ev.target as HTMLElement & { value?: string; id?: string };
-          if (typeof console !== 'undefined' && console.debug) console.debug('ActionsSearch input event', { id: tgt?.id, value: tgt?.value });
-          emit();
-        });
+        searchInput.addEventListener('input', emit);
         searchInput.addEventListener('change', emit);
       }
       if (beneficiaryInput instanceof Element) {
-        beneficiaryInput.addEventListener('input', (ev: Event) => {
-          const tgt = ev.target as HTMLElement & { value?: string; id?: string };
-          if (typeof console !== 'undefined' && console.debug) console.debug('ActionsSearch beneficiary event', { id: tgt?.id, value: tgt?.value });
-          emit();
-        });
+        beneficiaryInput.addEventListener('input', emit);
         beneficiaryInput.addEventListener('change', emit);
       }
       if (yearSelect instanceof Element) {
@@ -208,10 +191,20 @@ const secondaryGridClass =
       emit();
     }
 
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', init);
-    } else {
-      init();
+    function initAll() {
+      document.querySelectorAll(".actions-search").forEach((node) => {
+        if (node instanceof HTMLElement) {
+          initOne(node);
+        }
+      });
     }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initAll, { once: true });
+    } else {
+      initAll();
+    }
+
+    document.addEventListener("astro:page-load", initAll);
   })();
 </script>

@@ -167,22 +167,22 @@ const error = (Astro.url.searchParams.get("error") || "").trim();
         </p>
       </div>
       <div class="flex flex-col gap-3">
-        <div class="w-full flex flex-wrap items-center gap-3 md:justify-end">
+        <div class="w-full grid grid-cols-1 gap-3 [@media(min-width:420px)]:grid-cols-2 md:flex md:flex-wrap md:items-center md:justify-end">
           <a
             href="/remerciements"
-            class="btn btn-border btn-sm rounded-full flex-1 w-full md:flex-initial md:w-fit md:btn-md"
+            class="btn btn-border btn-sm rounded-full w-full [@media(min-width:420px)]:col-span-2 md:flex-initial md:w-fit md:col-auto md:btn-md"
           >
             Voir sur le site
           </a>
           <a
             href="/creation/remerciements/nouveau?tab=partenaire"
-            class="btn btn-accent btn-sm rounded-full flex-1 w-full md:flex-initial md:w-fit md:btn-md"
+            class="btn btn-accent btn-sm rounded-full w-full md:flex-initial md:w-fit md:btn-md"
           >
             Ajouter un partenaire
           </a>
           <a
             href="/creation/remerciements/nouveau?tab=contributeur"
-            class="btn btn-accent btn-sm rounded-full flex-1 w-full md:flex-initial md:w-fit md:btn-md"
+            class="btn btn-accent btn-sm rounded-full w-full md:flex-initial md:w-fit md:btn-md"
           >
             Ajouter un contributeur
           </a>

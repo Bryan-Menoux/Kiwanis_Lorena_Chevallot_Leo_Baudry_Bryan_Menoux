@@ -51,6 +51,8 @@ const {
   } from "../utils/renderPagination";
 
   function initPaginator(root: HTMLElement) {
+    if (root.dataset.paginatorBound === "true") return;
+    root.dataset.paginatorBound = "true";
     const itemAttr = root.dataset.itemAttr;
     const parsedPageSize = Number(root.dataset.pageSize);
     const pageSize =
@@ -231,7 +233,17 @@ const {
     render();
   }
 
-  document.querySelectorAll("[data-section-paginator]").forEach((el) => {
-    if (el instanceof HTMLElement) initPaginator(el);
-  });
+  function initAllPaginators() {
+    document.querySelectorAll("[data-section-paginator]").forEach((el) => {
+      if (el instanceof HTMLElement) initPaginator(el);
+    });
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initAllPaginators, { once: true });
+  } else {
+    initAllPaginators();
+  }
+
+  document.addEventListener("astro:page-load", initAllPaginators);
 </script>

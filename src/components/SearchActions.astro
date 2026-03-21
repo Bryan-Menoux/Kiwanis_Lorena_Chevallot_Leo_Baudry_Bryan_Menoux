@@ -41,10 +41,9 @@ const {
 
 <script>
   (function() {
-    function init() {
-      const root = document.querySelector(".search-actions");
-      if (!(root instanceof HTMLElement)) return;
-
+    function initOne(root: HTMLElement) {
+      if (root.dataset.searchActionsBound === "true") return;
+      root.dataset.searchActionsBound = "true";
       const searchInput = root.querySelector("#search-input");
       const yearSelect = root.querySelector('#year-select');
       const typeSelect = root.querySelector('#type-select');
@@ -78,10 +77,21 @@ const {
 
       emit();
     }
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', init);
-    } else {
-      init();
+
+    function initAll() {
+      document.querySelectorAll(".search-actions").forEach((node) => {
+        if (node instanceof HTMLElement) {
+          initOne(node);
+        }
+      });
     }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initAll, { once: true });
+    } else {
+      initAll();
+    }
+
+    document.addEventListener("astro:page-load", initAll);
   })();
 </script>
