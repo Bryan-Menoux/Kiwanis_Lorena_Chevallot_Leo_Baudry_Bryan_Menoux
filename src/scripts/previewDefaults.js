@@ -32,6 +32,7 @@ const PREVIEW_DEFAULTS = {
     "Indiquez les résultats obtenus et les impacts de l'action. \n ex: ce qui a été accompli, les retours des bénéficiaires, les enseignements pour l'avenir...",
   photo_partie_3: placeholderImg,
   description_photo_partie_3: "Description de la photo",
+  recadrage: {},
   titre_remerciements: "Remerciements",
   description_remerciements: "Merci aux bénévoles et partenaires.",
   galerie_photos: [placeholderImg, placeholderImg, placeholderImg],

@@ -36,7 +36,8 @@ function syncImageSectionLayout(imageProp) {
   );
 
   layoutNodes.forEach((layoutNode) => {
-    layoutNode.style.gridTemplateColumns = hasImage ? '' : '1fr';
+    layoutNode.classList.toggle('lg:grid-cols-[1fr_1fr]', hasImage);
+    layoutNode.classList.toggle('lg:grid-cols-1', !hasImage);
     layoutNode.classList.toggle('min-h-[40dvh]', hasImage);
     layoutNode.style.minHeight = hasImage ? '' : 'fit-content';
 

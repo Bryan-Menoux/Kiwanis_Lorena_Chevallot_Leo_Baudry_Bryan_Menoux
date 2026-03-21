@@ -24,6 +24,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const manualToggle = document.getElementById('manual_toggle_link');
   const manualContainer = document.getElementById('manual_lien_lieu_container');
   const cancelBtn = document.getElementById('manual_cancel_btn');
+  const validateBtn = document.getElementById('manual_validate_btn');
 
   if (!(manualToggle instanceof HTMLElement)) return;
   if (!(manualContainer instanceof HTMLElement)) return;
@@ -45,6 +46,14 @@ document.addEventListener('DOMContentLoaded', () => {
   if (cancelBtn instanceof HTMLElement) {
     cancelBtn.addEventListener('click', (e) => {
       e.preventDefault();
+      closeEditor();
+    });
+  }
+
+  if (validateBtn instanceof HTMLElement) {
+    validateBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      updateBtn();
       closeEditor();
     });
   }

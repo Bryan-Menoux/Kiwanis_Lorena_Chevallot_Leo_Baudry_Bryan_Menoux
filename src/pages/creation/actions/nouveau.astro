@@ -309,9 +309,7 @@ if (Astro.request.method === "POST") {
 
     const payload = applyPartTitleRule({ ...data, slug, ...files });
     const newAction = await Astro.locals.pb.collection("actions").create(payload);
-    return Astro.redirect(
-      `/creation/actions/${newAction.id}-${slug}?success=${encodeURIComponent("Action créée")}`
-    );
+    return Astro.redirect(`/creation/actions/${newAction.id}-${slug}`);
   } catch (err) {
     console.error("Erreur lors de la création:", err);
     error = err instanceof Error ? err.message : "Une erreur inconnue est survenue";

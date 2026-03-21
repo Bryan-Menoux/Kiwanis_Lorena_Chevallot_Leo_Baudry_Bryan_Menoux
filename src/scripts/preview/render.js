@@ -19,6 +19,7 @@ import {
   renderFormGalleryThumbnails,
   renderGallery,
   renderGalleryThumbnailOptimizationProgress,
+  applyPreviewCropStyle,
   renderSingleImageOptimizationProgress,
   renderSingleImagePreview,
 } from './renderMedia.js';
@@ -46,6 +47,7 @@ function renderField(prop) {
       element.loading = 'lazy';
       element.decoding = 'async';
       element.style.display = value ? '' : 'none';
+      applyPreviewCropStyle(element, canonicalProp);
       if (Object.prototype.hasOwnProperty.call(IMAGE_DESCRIPTION_MAP, canonicalProp)) {
         syncImageDescriptionVisibility(canonicalProp);
         syncImageSectionLayout(canonicalProp);
@@ -122,8 +124,14 @@ function renderField(prop) {
 
   if (
     canonicalProp === 'texte_partie_1' ||
+    canonicalProp === 'photo_partie_1' ||
+    canonicalProp === 'description_photo_partie_1' ||
     canonicalProp === 'texte_partie_2' ||
-    canonicalProp === 'texte_partie_3'
+    canonicalProp === 'photo_partie_2' ||
+    canonicalProp === 'description_photo_partie_2' ||
+    canonicalProp === 'texte_partie_3' ||
+    canonicalProp === 'photo_partie_3' ||
+    canonicalProp === 'description_photo_partie_3'
   ) {
     syncPartSectionsVisibility();
   }

@@ -1,4 +1,5 @@
 import { dispatch } from '../preview/dispatcher.js';
+import { resetImageCropValue } from '../preview/state.js';
 
 document.addEventListener('DOMContentLoaded', () => {
   const form = document.getElementById('leftForm');
@@ -18,6 +19,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const fieldName = container.getAttribute('data-delete-image');
     if (!fieldName) return;
+
+    resetImageCropValue(fieldName);
 
     const fileInput = form.querySelector(`[data-prop-file="${fieldName}"]`);
     if (fileInput instanceof HTMLInputElement) {

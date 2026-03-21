@@ -75,6 +75,61 @@ const getNormalizedPreviewImage = (value: any, record: any, pocketbaseClient: an
   }
   return null;
 };
+const normalizeCropPoint = (value: any) => {
+  const source =
+    typeof value === "string"
+      ? (() => {
+          try {
+            return JSON.parse(value);
+          } catch {
+            return null;
+          }
+        })()
+      : value;
+
+  const x = Number(source?.x);
+  const y = Number(source?.y);
+  if (!Number.isFinite(x) || !Number.isFinite(y)) return null;
+  return {
+    x: Math.max(0, Math.min(100, Math.round(x))),
+    y: Math.max(0, Math.min(100, Math.round(y))),
+  };
+};
+const parseRecadrageValue = (value: any) => {
+  if (!value) return {};
+
+  const raw = typeof value === "string" ? (() => {
+    try {
+      return JSON.parse(value);
+    } catch {
+      return {};
+    }
+  })() : value;
+
+  if (!raw || typeof raw !== "object") return {};
+
+  const nextRecadrage: Record<string, { x: number; y: number }> = {};
+  for (const fieldName of ["hero", "photo_partie_1", "photo_partie_2", "photo_partie_3"]) {
+    const crop = normalizeCropPoint((raw as any)[fieldName]);
+    if (crop) {
+      nextRecadrage[fieldName] = crop;
+    }
+  }
+  return nextRecadrage;
+};
+const getActionRecadrage = (record: any) => {
+  const recadrage = parseRecadrageValue(record?.recadrage);
+  if (Object.keys(recadrage).length > 0) return recadrage;
+
+  const legacy: Record<string, { x: number; y: number }> = {};
+  for (const fieldName of ["hero", "photo_partie_1", "photo_partie_2", "photo_partie_3"]) {
+    const crop = normalizeCropPoint(record?.[`${fieldName}_crop`]);
+    if (crop) {
+      legacy[fieldName] = crop;
+    }
+  }
+  return legacy;
+};
 const keepExistingImageFields = (payload: Record<string, any>, record: any) => {
   if (payload.hero === undefined && isRecordValueFilled(record?.hero)) {
     payload.hero = record.hero;
@@ -345,6 +400,7 @@ const previewData: any = {
   date_debut: formatDateForInput(actionRecord?.date_debut) || "",
   date_fin: formatDateForInput(actionRecord?.date_fin) || "",
   description_hero: actionRecord?.description_hero ?? "",
+  recadrage: getActionRecadrage(actionRecord),
   hero:
     getNormalizedPreviewImage(actionRecord?.hero, actionRecord, Astro.locals.pb) ??
     null,
@@ -533,6 +589,7 @@ if (Astro.request.method === "POST") {
         "photo_partie_1",
         "photo_partie_2",
         "photo_partie_3",
+        "recadrage",
         "sous_titre",
         "texte_partie_1",
         "texte_partie_2",
@@ -592,12 +649,20 @@ if (Astro.request.method === "POST") {
       typeActionOptions,
       7,
     );
+    let recadrage: Record<string, { x: number; y: number }> = {};
+    try {
+      const rawRecadrage = formData.get("recadrage")?.toString() || "";
+      recadrage = rawRecadrage ? parseRecadrageValue(rawRecadrage) : {};
+    } catch {
+      recadrage = {};
+    }
 
     // Copier les champs texte (ignorer fichiers et flags 'remove_')
     for (const [key, value] of formData.entries()) {
       if (value instanceof File) continue; // Gérer les fichiers séparément
       if (
         key === "galerie_photos" ||
+        key === "recadrage" ||
         key === "remove_galerie_photos" ||
         key.startsWith("remove_") ||
         key === "save_as" ||
@@ -647,6 +712,7 @@ if (Astro.request.method === "POST") {
         data[key] = stringValue;
       }
     }
+    data.recadrage = recadrage;
     if (!actionRecordFromBrouillon || publishRequested) {
       data.type_action = selectedTypeActions;
     }

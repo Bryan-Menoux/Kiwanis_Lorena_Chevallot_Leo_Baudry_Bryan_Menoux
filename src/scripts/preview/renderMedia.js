@@ -3,6 +3,7 @@ import {
   galleryDataUrls,
   galleryExistingUrls,
   galleryOptimizationStates,
+  getImageCropStyle,
   getDerivedState,
   normalizeProp,
   previewState,
@@ -13,6 +14,7 @@ const GALLERY_THUMB_ATTR = 'data-gallery-thumb-index';
 const OPTIMIZE_OVERLAY_ATTR = 'data-optimize-overlay';
 const OPTIMIZE_FILL_ATTR = 'data-optimize-fill';
 const OPTIMIZE_LABEL_ATTR = 'data-optimize-label';
+const PREVIEW_CROP_FIELD_ATTR = 'data-preview-crop-field';
 
 function isDefaultPlaceholderImage(prop, value) {
   const canonicalProp = normalizeProp(prop);
@@ -79,6 +81,27 @@ function renderSingleImageOptimizationProgress(prop) {
   updateOptimizationOverlay(container, `[data-delete-image="${canonicalProp}"]`, progressState);
 }
 
+function applyPreviewCropStyle(imageElement, prop) {
+  if (!(imageElement instanceof HTMLImageElement)) return;
+  const canonicalProp = normalizeProp(prop);
+  if (!canonicalProp) return;
+
+  imageElement.style.objectFit = 'cover';
+  imageElement.style.objectPosition = getImageCropStyle(canonicalProp);
+}
+
+function syncPreviewCropStyles(prop) {
+  const canonicalProp = normalizeProp(prop);
+  if (!canonicalProp) return;
+
+  const cropImages = document.querySelectorAll(
+    `[${PREVIEW_CROP_FIELD_ATTR}="${canonicalProp}"]`,
+  );
+  cropImages.forEach((imageElement) => {
+    applyPreviewCropStyle(imageElement, canonicalProp);
+  });
+}
+
 function renderGalleryThumbnailOptimizationProgress(index) {
   if (!Number.isInteger(index) || index < 0) return;
 
@@ -124,9 +147,12 @@ function renderSingleImagePreview(prop) {
   const previewImage = document.createElement('img');
   previewImage.src = value;
   previewImage.alt = 'Aperçu';
-  previewImage.className = 'absolute inset-0 w-full h-full object-cover';
+  previewImage.className = 'absolute inset-0 w-full h-full object-cover cursor-zoom-in';
   previewImage.loading = 'lazy';
   previewImage.decoding = 'async';
+  previewImage.setAttribute(PREVIEW_CROP_FIELD_ATTR, canonicalProp);
+  previewImage.title = 'Cliquer pour recadrer';
+  applyPreviewCropStyle(previewImage, canonicalProp);
   previewWrap.appendChild(previewImage);
 
   const progressState = singleImageOptimizationStates[canonicalProp];
@@ -307,6 +333,8 @@ function renderExistingThumbnails(existingPhotoUrls = null) {
 
 export {
   createThumbnailOptimizationOverlay,
+  applyPreviewCropStyle,
+  syncPreviewCropStyles,
   renderSingleImageOptimizationProgress,
   renderGalleryThumbnailOptimizationProgress,
   renderSingleImagePreview,

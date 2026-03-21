@@ -1,6 +1,6 @@
 import { optimizeFileListForField, WEBP_PREOPTIMIZED_ATTR } from '../actionForm/convertToWebp.js';
 import { dispatch } from './dispatcher.js';
-import { normalizeProp } from './state.js';
+import { normalizeProp, resetImageCropValue } from './state.js';
 
 const WEBP_BG_TOKEN_ATTR = 'data-webp-bg-token';
 
@@ -19,6 +19,7 @@ function handleFileElement(inputElement) {
   if (!selectedFiles || selectedFiles.length === 0) return;
 
   const file = selectedFiles[0];
+  resetImageCropValue(prop);
   inputElement.setAttribute(WEBP_PREOPTIMIZED_ATTR, 'false');
 
   const asyncToken = createAsyncToken();
@@ -101,6 +102,8 @@ function bindExistingSingleRemoveButtons() {
 
     const prop = normalizeProp(removeButton.getAttribute('data-prop') || '');
     if (!prop) return;
+
+    resetImageCropValue(prop);
 
     const fileInput = document.querySelector(`[data-prop-file="${prop}"]`);
     if (fileInput instanceof HTMLInputElement) {

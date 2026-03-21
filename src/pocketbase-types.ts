@@ -115,7 +115,7 @@ export enum ActionsTypeDeChiffreOptions {
 	"récoltes" = "récoltes",
 	"don" = "don",
 }
-export type ActionsRecord = {
+export type ActionsRecord<Trecadrage = unknown> = {
 	adresse_lieu?: string
 	beneficiaire?: string
 	chiffre?: number
@@ -135,6 +135,7 @@ export type ActionsRecord = {
 	photo_partie_1?: FileNameString
 	photo_partie_2?: FileNameString
 	photo_partie_3?: FileNameString
+	recadrage?: null | Trecadrage
 	sous_titre?: string
 	texte_partie_1?: string
 	texte_partie_2?: string
@@ -288,7 +289,7 @@ export type ExternalauthsResponse<Texpand = unknown> = Required<ExternalauthsRec
 export type MfasResponse<Texpand = unknown> = Required<MfasRecord> & BaseSystemFields<Texpand>
 export type OtpsResponse<Texpand = unknown> = Required<OtpsRecord> & BaseSystemFields<Texpand>
 export type SuperusersResponse<Texpand = unknown> = Required<SuperusersRecord> & AuthSystemFields<Texpand>
-export type ActionsResponse<Texpand = unknown> = Required<ActionsRecord> & BaseSystemFields<Texpand>
+export type ActionsResponse<Trecadrage = unknown, Texpand = unknown> = Required<ActionsRecord<Trecadrage>> & BaseSystemFields<Texpand>
 export type BrouillonsResponse<Texpand = unknown> = Required<BrouillonsRecord> & BaseSystemFields<Texpand>
 export type ContributeursResponse<Texpand = unknown> = Required<ContributeursRecord> & BaseSystemFields<Texpand>
 export type MembresResponse<Texpand = unknown> = Required<MembresRecord> & BaseSystemFields<Texpand>

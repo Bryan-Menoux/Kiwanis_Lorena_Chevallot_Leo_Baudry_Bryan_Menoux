@@ -13,6 +13,7 @@ let lastValidationAlertMessage = "";
 let lastValidationAlertAt = 0;
 
 const PART_TEXT_LIMIT = 70;
+const SUBMITTING_ATTR = "data-action-form-submitting";
 
 function setClientValidationError(message) {
   if (!message) return;
@@ -36,6 +37,14 @@ function initActionFormRequiredValidation() {
   if (!(form instanceof HTMLFormElement)) return;
   if (form.dataset.requiredValidationInit === "true") return;
   form.dataset.requiredValidationInit = "true";
+
+  const markSubmitInProgress = () => {
+    form.setAttribute(SUBMITTING_ATTR, "true");
+  };
+
+  const clearSubmitInProgress = () => {
+    form.removeAttribute(SUBMITTING_ATTR);
+  };
 
   const updatePartWordCounters = () => {
     [1, 2, 3].forEach((partNumber) => {
@@ -63,6 +72,8 @@ function initActionFormRequiredValidation() {
   });
 
   form.addEventListener("submit", (event) => {
+    clearSubmitInProgress();
+
     if (event.defaultPrevented) return;
 
     const submitter = event.submitter;
@@ -79,12 +90,14 @@ function initActionFormRequiredValidation() {
       !isPublishSubmit;
 
     if (isDraftSave || isEditDraftSubmit) {
+      markSubmitInProgress();
       setClientValidationError("");
       return;
     }
 
     const overLimitFields = getOverLimitPartTextFieldsFromForm(form, PART_TEXT_LIMIT);
     if (overLimitFields.length > 0) {
+      clearSubmitInProgress();
       event.preventDefault();
       setClientValidationError(
         buildWordLimitMessage(overLimitFields, PART_TEXT_LIMIT),
@@ -105,6 +118,7 @@ function initActionFormRequiredValidation() {
     const missingHeaderFields = getMissingHeaderFields(form);
     const missingPart = !hasAtLeastOnePart(form);
     if (missingHeaderFields.length > 0 || missingPart) {
+      clearSubmitInProgress();
       event.preventDefault();
       setClientValidationError(
         buildRequiredMessage(missingHeaderFields, missingPart),
@@ -155,6 +169,7 @@ function initActionFormRequiredValidation() {
       return;
     }
 
+    markSubmitInProgress();
     setClientValidationError("");
   });
 }

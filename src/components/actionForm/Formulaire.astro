@@ -64,10 +64,27 @@ const showUnsavedModal = mode === "create" || mode === "edit";
 const unsavedModalTitle = "Modifications non enregistrées";
 const unsavedModalMessage =
   mode === "create"
-    ? "Tu peux enregistrer un brouillon avant de quitter, ou abandonner les modifications."
-    : "Tu peux enregistrer les modifications avant de quitter, ou abandonner les changements.";
+    ? "Vous pouvez enregistrer un brouillon avant de quitter, ou abandonner les modifications."
+    : "Vous pouvez enregistrer les modifications avant de quitter, ou abandonner les changements.";
 const unsavedModalSaveLabel =
   mode === "create" ? "Enregistrer brouillon" : "Enregistrer les modifications";
+const initialRecadrageValue = (() => {
+  const value = previewData?.recadrage;
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    return trimmed || "{}";
+  }
+
+  if (value && typeof value === "object") {
+    try {
+      return JSON.stringify(value);
+    } catch {
+      return "{}";
+    }
+  }
+
+  return "{}";
+})();
 ---
 
 <form
@@ -116,6 +133,12 @@ const unsavedModalSaveLabel =
       <input type="hidden" name="draft_id" data-autodraft-id value="" />
     )
   }
+  <input
+    type="hidden"
+    name="recadrage"
+    data-recadrage-input
+    value={initialRecadrageValue}
+  />
   {
     mode === "create" && (
       <p data-autodraft-status class="text-xs text-base-100/70">
@@ -366,6 +389,57 @@ const unsavedModalSaveLabel =
   }
 </form>
 
+<dialog id="preview-image-crop-modal" class="modal">
+  <div class="modal-box max-w-4xl">
+    <div class="flex items-start justify-between gap-4">
+      <div>
+        <h3 class="text-xl font-bold">Recadrer l'image</h3>
+        <p class="mt-2 text-sm text-base-content/70">
+          Cliquez sur l'image pour déplacer le cadrage.
+        </p>
+      </div>
+      <button type="button" class="btn btn-ghost btn-sm" data-crop-close>
+        Enregistrer
+      </button>
+    </div>
+
+    <div class="mt-4 overflow-hidden rounded-2xl border border-base-300 bg-base-100">
+      <div
+        data-crop-canvas
+        class="relative cursor-crosshair select-none overflow-hidden bg-base-200"
+      >
+        <img
+          data-crop-modal-image
+          alt="Aperçu du recadrage"
+          class="block h-[65dvh] w-full object-cover"
+          draggable="false"
+        />
+        <span
+          data-crop-marker
+          class="pointer-events-none absolute h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white bg-accent shadow-lg"
+        ></span>
+      </div>
+    </div>
+
+    <div class="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <p data-crop-position class="text-sm text-base-content/70">
+        Cliquez sur l'image pour déplacer le cadrage
+      </p>
+      <div class="flex flex-wrap gap-2">
+        <button type="button" class="btn btn-outline btn-sm" data-crop-reset>
+          Réinitialiser
+        </button>
+        <button type="button" class="btn btn-accent btn-sm" data-crop-close>
+          Enregistrer
+        </button>
+      </div>
+    </div>
+  </div>
+  <form method="dialog" class="modal-backdrop">
+    <button type="button" data-crop-close>Enregistrer</button>
+  </form>
+</dialog>
+
 {
   showUnsavedModal && (
     <dialog id="unsaved-changes-modal" class="modal">
@@ -444,6 +518,7 @@ const unsavedModalSaveLabel =
   import "../../scripts/actionForm/unsavedChangesGuard.js";
   import "../../scripts/actionForm/mobileWizard.js";
   import "../../scripts/preview/index.js";
+  import "../../scripts/preview/cropper.js";
   import { initWebpConversion } from "../../scripts/actionForm/convertToWebp.js";
   initWebpConversion();
 </script>

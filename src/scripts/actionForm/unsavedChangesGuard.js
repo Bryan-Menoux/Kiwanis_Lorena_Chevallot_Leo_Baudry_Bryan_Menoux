@@ -6,6 +6,7 @@ const TECHNICAL_FIELDS = new Set([
   "autosave",
   "leave_after_save",
 ]);
+const SUBMITTING_ATTR = "data-action-form-submitting";
 
 function isLeavingLink(anchor) {
   if (!(anchor instanceof HTMLAnchorElement)) return false;
@@ -88,6 +89,10 @@ function initUnsavedChangesGuard() {
     return editDirty;
   };
 
+  const isFormSubmitting = () =>
+    form.getAttribute(SUBMITTING_ATTR) === "true" ||
+    form.getAttribute("data-submit-overlay-in-flight") === "true";
+
   const closeModal = () => {
     if (modal.open) modal.close();
   };
@@ -103,8 +108,8 @@ function initUnsavedChangesGuard() {
     }
     if (messageNode instanceof HTMLElement) {
       messageNode.textContent = isCreateMode
-        ? "Tu peux enregistrer un brouillon avant de quitter, ou abandonner les modifications."
-        : "Tu peux enregistrer les modifications avant de quitter, ou abandonner les changements.";
+        ? "Vous pouvez enregistrer un brouillon avant de quitter, ou abandonner les modifications."
+        : "Vous pouvez enregistrer les modifications avant de quitter, ou abandonner les changements.";
     }
     if (!modal.open) modal.showModal();
   };
@@ -182,6 +187,16 @@ function initUnsavedChangesGuard() {
   };
 
   installHistoryGuard();
+
+  window.addEventListener("beforeunload", (event) => {
+    if (!isFormDirty() || isFormSubmitting()) return;
+
+    // Le navigateur interdit un modal custom au refresh/close, donc on utilise
+    // la confirmation native pour couvrir la flèche d'actualisation aussi.
+    event.preventDefault();
+    event.returnValue = "";
+    return "";
+  });
 
   window.addEventListener(
     "click",

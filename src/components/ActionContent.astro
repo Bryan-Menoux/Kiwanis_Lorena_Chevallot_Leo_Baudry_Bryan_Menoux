@@ -5,6 +5,7 @@ import backArrow from "../assets/arrow-previous-small.svg";
 import crossCircle from "../assets/cross-circle.svg";
 import galleryUrl from "../scripts/gallery.js?url";
 import galleryDisplayUrl from "../scripts/gallery-display.js?url";
+import previewDefaults from "../scripts/previewDefaults.js";
 import {
   formatDateLong,
   isDataUrl as isDataUrlRuntime,
@@ -50,6 +51,73 @@ const partie3Img =
       : Astro.locals.pb.files.getURL(action, action.photo_partie_3)
     : null;
 const hasNonEmptyText = (value: unknown) => String(value ?? "").trim() !== "";
+const normalizeCropPoint = (value: unknown) => {
+  if (!value) return null;
+
+  const source =
+    typeof value === "string"
+      ? (() => {
+          try {
+            return JSON.parse(value);
+          } catch {
+            return null;
+          }
+        })()
+      : value;
+
+  if (!source || typeof source !== "object") return null;
+
+  const x = Number((source as any)?.x);
+  const y = Number((source as any)?.y);
+  if (!Number.isFinite(x) || !Number.isFinite(y)) return null;
+  return {
+    x: Math.max(0, Math.min(100, Math.round(x))),
+    y: Math.max(0, Math.min(100, Math.round(y))),
+  };
+};
+const parseRecadrageMap = (value: unknown) => {
+  if (!value) return {};
+
+  const raw = typeof value === "string"
+    ? (() => {
+        try {
+          return JSON.parse(value);
+        } catch {
+          return {};
+        }
+      })()
+    : value;
+
+  if (!raw || typeof raw !== "object") return {};
+
+  const nextRecadrage: Record<string, { x: number; y: number }> = {};
+  for (const fieldName of ["hero", "photo_partie_1", "photo_partie_2", "photo_partie_3"]) {
+    const crop = normalizeCropPoint((raw as any)[fieldName]);
+    if (crop) {
+      nextRecadrage[fieldName] = crop;
+    }
+  }
+  return nextRecadrage;
+};
+const getLegacyRecadrageMap = () => {
+  const record = action as Record<string, unknown>;
+  const nextRecadrage: Record<string, { x: number; y: number }> = {};
+  for (const fieldName of ["hero", "photo_partie_1", "photo_partie_2", "photo_partie_3"]) {
+    const crop = normalizeCropPoint(record?.[`${fieldName}_crop`]);
+    if (crop) {
+      nextRecadrage[fieldName] = crop;
+    }
+  }
+  return nextRecadrage;
+};
+const recadrageMap = (() => {
+  const parsed = parseRecadrageMap(action?.recadrage);
+  return Object.keys(parsed).length > 0 ? parsed : getLegacyRecadrageMap();
+})();
+const cropStyle = (fieldName: string) => {
+  const crop = recadrageMap[fieldName];
+  return crop ? `object-position:${crop.x}% ${crop.y}%;` : "";
+};
 const hasChiffreValue = (value: unknown) => {
   if (typeof value === "number") return Number.isFinite(value);
   if (typeof value === "string") return value.trim() !== "";
@@ -83,11 +151,29 @@ const locationBeneficiaryCardClass =
   locationCardCount === 3 ? "md:col-span-2 lg:col-span-1" : "";
 const shouldRenderLocationSection =
   hasLocationSection || forcePreviewLocationSection;
-const hasPart1Section = hasNonEmptyText(action?.texte_partie_1);
-const hasPart2Section = hasNonEmptyText(action?.texte_partie_2);
-const hasPart3Section = hasNonEmptyText(action?.texte_partie_3);
-const hasThanksSection = hasNonEmptyText(action?.description_remerciements);
+const hasPart1Section =
+  hasNonEmptyText(action?.titre_partie_1) ||
+  hasNonEmptyText(action?.texte_partie_1) ||
+  hasNonEmptyText(action?.photo_partie_1) ||
+  hasNonEmptyText(action?.description_photo_partie_1);
+const hasPart2Section =
+  hasNonEmptyText(action?.titre_partie_2) ||
+  hasNonEmptyText(action?.texte_partie_2) ||
+  hasNonEmptyText(action?.photo_partie_2) ||
+  hasNonEmptyText(action?.description_photo_partie_2);
+const hasPart3Section =
+  hasNonEmptyText(action?.titre_partie_3) ||
+  hasNonEmptyText(action?.texte_partie_3) ||
+  hasNonEmptyText(action?.photo_partie_3) ||
+  hasNonEmptyText(action?.description_photo_partie_3);
+const hasThanksSection =
+  hasNonEmptyText(action?.titre_remerciements) ||
+  hasNonEmptyText(action?.description_remerciements);
 const shouldPreviewMedia = forcePreviewLocationSection;
+const getSectionTitle = (key: string, fallback: string) => {
+  const value = String((action as Record<string, any>)?.[key] ?? "").trim();
+  return value || fallback;
+};
 ---
 
 <div
@@ -109,7 +195,7 @@ const shouldPreviewMedia = forcePreviewLocationSection;
   }
 
   <div
-    class="flex flex-col md:flex-row items-start md:items-center w-full justify-between"
+    class="flex flex-col md:flex-row items-start md:items-center w-full justify-between mt-2 lg:mt-4"
   >
     {
       Object.prototype.hasOwnProperty.call(action, "sous_titre") && (
@@ -130,12 +216,14 @@ const shouldPreviewMedia = forcePreviewLocationSection;
       <div class="flex flex-col items-end mt-6 mb-12 md:mt-12 md:mb-32">
         <img
           data-field="hero"
+          data-preview-crop-field="hero"
           src={heroImg || ""}
           alt={action.description_hero || "Aperçu de l'image de l'en-tête"}
           loading="lazy"
           decoding="async"
-          style={heroImg ? "" : "display:none;"}
-          class="w-full min-h-[50dvh] max-h-[80dvh] lg:max-h-[70dvh] object-cover object-center rounded-lg"
+          title="Cliquer pour recadrer"
+          style={`${heroImg ? "" : "display:none;"}${cropStyle("hero")}`}
+          class="w-full min-h-[50dvh] max-h-[80dvh] lg:max-h-[70dvh] object-cover object-center rounded-lg cursor-zoom-in"
         />
         {(action.description_hero || shouldPreviewMedia) && (
           <p
@@ -158,14 +246,12 @@ const shouldPreviewMedia = forcePreviewLocationSection;
         style={hasPart1Section || shouldPreviewMedia ? "" : "display:none;"}
         class="flex flex-col w-full my-12 md:my-20 lg:mb-48 gap-4 min-h-fit"
       >
-        {Object.prototype.hasOwnProperty.call(action, "titre_partie_1") && (
-          <h2
-            data-field="titre_partie_1"
-            class="uppercase text-2xl md:text-3xl"
-          >
-            {action.titre_partie_1}
-          </h2>
-        )}
+        <h2
+          data-field="titre_partie_1"
+          class="uppercase text-2xl md:text-3xl"
+        >
+          {getSectionTitle("titre_partie_1", previewDefaults.titre_partie_1)}
+        </h2>
         <div
           data-image-layout="photo_partie_1"
           class={`grid grid-cols-1 ${action.photo_partie_1 ? "lg:grid-cols-[1fr_1fr] min-h-[40dvh]" : "lg:grid-cols-1"} gap-8 lg:gap-16`}
@@ -188,12 +274,14 @@ const shouldPreviewMedia = forcePreviewLocationSection;
               {(action.photo_partie_1 || shouldPreviewMedia) && (
                 <img
                   data-field="photo_partie_1"
+                  data-preview-crop-field="photo_partie_1"
                   src={partie1Img || ""}
                   alt={action.description_photo_partie_1 || "Aperçu de la photo partie 1"}
                   loading="lazy"
                   decoding="async"
-                  style={action.photo_partie_1 ? "" : "display:none;"}
-                  class="w-full h-[35dvh] md:h-[45dvh] lg:h-[50dvh] max-h-[35dvh] md:max-h-[45dvh] lg:max-h-[50dvh] object-cover rounded-lg"
+                  title="Cliquer pour recadrer"
+                  style={`${action.photo_partie_1 ? "" : "display:none;"}${cropStyle("photo_partie_1")}`}
+                  class="w-full h-[35dvh] md:h-[45dvh] lg:h-[50dvh] max-h-[35dvh] md:max-h-[45dvh] lg:max-h-[50dvh] object-cover rounded-lg cursor-zoom-in"
                 />
               )}
               {(action.photo_partie_1 || shouldPreviewMedia) && action.description_photo_partie_1 && (
@@ -309,14 +397,12 @@ const shouldPreviewMedia = forcePreviewLocationSection;
         class={`grid grid-cols-1 ${action.photo_partie_2 ? "lg:grid-cols-[1fr_1fr] min-h-[40dvh]" : "lg:grid-cols-1"} gap-6 md:gap-8 lg:gap-16 my-12 md:my-20 lg:my-32 md:px-0`}
       >
         <div class="flex flex-col gap-8">
-          {Object.prototype.hasOwnProperty.call(action, "titre_partie_2") && (
-            <h2
-              data-field="titre_partie_2"
-              class="uppercase text-2xl md:text-3xl"
-            >
-              {action.titre_partie_2}
-            </h2>
-          )}
+          <h2
+            data-field="titre_partie_2"
+            class="uppercase text-2xl md:text-3xl"
+          >
+            {getSectionTitle("titre_partie_2", previewDefaults.titre_partie_2)}
+          </h2>
 
           {Object.prototype.hasOwnProperty.call(action, "texte_partie_2") && (
             <div data-field="texte_partie_2" class="flex flex-col gap-8">
@@ -337,12 +423,14 @@ const shouldPreviewMedia = forcePreviewLocationSection;
               {(action.photo_partie_2 || shouldPreviewMedia) && (
                 <img
                   data-field="photo_partie_2"
+                  data-preview-crop-field="photo_partie_2"
                   src={partie2Img || ""}
                   alt={action.description_photo_partie_2 || "Aperçu de la photo partie 2"}
                   loading="lazy"
                   decoding="async"
-                  style={action.photo_partie_2 ? "" : "display:none;"}
-                  class="w-full h-[35dvh] md:h-[45dvh] lg:h-[50dvh] max-h-[35dvh] md:max-h-[45dvh] lg:max-h-[50dvh] object-cover rounded-lg"
+                  title="Cliquer pour recadrer"
+                  style={`${action.photo_partie_2 ? "" : "display:none;"}${cropStyle("photo_partie_2")}`}
+                  class="w-full h-[35dvh] md:h-[45dvh] lg:h-[50dvh] max-h-[35dvh] md:max-h-[45dvh] lg:max-h-[50dvh] object-cover rounded-lg cursor-zoom-in"
                 />
               )}
               {(action.photo_partie_2 || shouldPreviewMedia) && action.description_photo_partie_2 && (
@@ -378,12 +466,14 @@ const shouldPreviewMedia = forcePreviewLocationSection;
               {(action.photo_partie_3 || shouldPreviewMedia) && (
                 <img
                   data-field="photo_partie_3"
+                  data-preview-crop-field="photo_partie_3"
                   src={partie3Img || ""}
                   alt={action.description_photo_partie_3 || "Aperçu de la photo partie 3"}
                   loading="lazy"
                   decoding="async"
-                  style={action.photo_partie_3 ? "" : "display:none;"}
-                  class="w-full h-[35dvh] md:h-[45dvh] lg:h-[50dvh] max-h-[35dvh] md:max-h-[45dvh] lg:max-h-[50dvh] object-cover rounded-lg"
+                  title="Cliquer pour recadrer"
+                  style={`${action.photo_partie_3 ? "" : "display:none;"}${cropStyle("photo_partie_3")}`}
+                  class="w-full h-[35dvh] md:h-[45dvh] lg:h-[50dvh] max-h-[35dvh] md:max-h-[45dvh] lg:max-h-[50dvh] object-cover rounded-lg cursor-zoom-in"
                 />
               )}
               {(action.photo_partie_3 || shouldPreviewMedia) && action.description_photo_partie_3 && (
@@ -398,14 +488,12 @@ const shouldPreviewMedia = forcePreviewLocationSection;
             </div>
           )}
         <div class="flex flex-col gap-8">
-          {Object.prototype.hasOwnProperty.call(action, "titre_partie_3") && (
-            <h2
-              data-field="titre_partie_3"
-              class="uppercase text-2xl md:text-3xl"
-            >
-              {action.titre_partie_3}
-            </h2>
-          )}
+          <h2
+            data-field="titre_partie_3"
+            class="uppercase text-2xl md:text-3xl"
+          >
+            {getSectionTitle("titre_partie_3", previewDefaults.titre_partie_3)}
+          </h2>
 
           {Object.prototype.hasOwnProperty.call(action, "texte_partie_3") && (
             <div data-field="texte_partie_3" class="flex flex-col gap-8">
@@ -429,14 +517,12 @@ const shouldPreviewMedia = forcePreviewLocationSection;
         style={hasThanksSection ? "" : "display:none;"}
         class="flex flex-col max-w-full md:max-w-1/2 md:px-0 gap-4 md:gap-8 my-16 md:my-32"
       >
-        {action.titre_remerciements && (
-          <h2
-            data-field="titre_remerciements"
-            class="uppercase text-2xl md:text-3xl"
-          >
-            {action.titre_remerciements}
-          </h2>
-        )}
+        <h2
+          data-field="titre_remerciements"
+          class="uppercase text-2xl md:text-3xl"
+        >
+          {getSectionTitle("titre_remerciements", previewDefaults.titre_remerciements)}
+        </h2>
         <div data-field="description_remerciements" class="flex flex-col gap-4">
           {action.description_remerciements.split("\n").map((line: string) => (
             <p>{line}</p>

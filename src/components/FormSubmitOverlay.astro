@@ -33,6 +33,7 @@ const {
 <script define:vars={{ formSelector, overlayId: id }}>
   const PENDING_ATTR = "data-submit-overlay-pending";
   const IN_FLIGHT_ATTR = "data-submit-overlay-in-flight";
+  const SUBMITTING_ATTR = "data-action-form-submitting";
   const READY_ATTR = "data-submit-overlay-ready";
   const REQUIRES_READY_ATTR = "data-submit-overlay-requires-ready";
   const DISABLED_BY_OVERLAY_ATTR = "data-disabled-by-submit-overlay";
@@ -140,6 +141,7 @@ const {
       if (!(form instanceof HTMLFormElement)) return;
       form.removeAttribute(PENDING_ATTR);
       form.removeAttribute(IN_FLIGHT_ATTR);
+      form.removeAttribute(SUBMITTING_ATTR);
       form.removeAttribute(READY_ATTR);
       form.removeAttribute(KEEP_VISIBLE_ATTR);
       form.removeAttribute(FALLBACK_TOKEN_ATTR);
@@ -158,6 +160,7 @@ const {
       hasMatchedForm = true;
       form.removeAttribute(PENDING_ATTR);
       form.removeAttribute(IN_FLIGHT_ATTR);
+      form.removeAttribute(SUBMITTING_ATTR);
       form.removeAttribute(READY_ATTR);
       form.removeAttribute(KEEP_VISIBLE_ATTR);
       form.removeAttribute(FALLBACK_TOKEN_ATTR);
@@ -223,11 +226,13 @@ const {
             // Cas special (ex: pre-traitement images): garder/afficher l'overlay
             // meme si la soumission native est temporairement annulee.
             target.removeAttribute(READY_ATTR);
+            target.removeAttribute(SUBMITTING_ATTR);
             showOverlay();
             scheduleFallbackReset(target);
             return;
           }
           target.removeAttribute(IN_FLIGHT_ATTR);
+          target.removeAttribute(SUBMITTING_ATTR);
           target.removeAttribute(READY_ATTR);
           target.removeAttribute(FALLBACK_TOKEN_ATTR);
           restoreSubmitControls(target);
@@ -236,6 +241,7 @@ const {
         }
         if (!overlayReady) {
           target.removeAttribute(IN_FLIGHT_ATTR);
+          target.removeAttribute(SUBMITTING_ATTR);
           target.removeAttribute(READY_ATTR);
           target.removeAttribute(FALLBACK_TOKEN_ATTR);
           restoreSubmitControls(target);
@@ -243,6 +249,7 @@ const {
           return;
         }
         // Soumission valide: afficher l'overlay seulement a partir de ce point.
+        target.setAttribute(SUBMITTING_ATTR, "true");
         target.removeAttribute(READY_ATTR);
         showOverlay();
         scheduleFallbackReset(target);

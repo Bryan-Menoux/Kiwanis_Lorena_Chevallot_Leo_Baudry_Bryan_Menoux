@@ -19,12 +19,40 @@ const {
 
 const inputId = fieldName === "hero" ? "input_hero_file" : `input_${fieldName}`;
 const blockHeight = heightClass || (fieldName === "hero" ? "h-40" : "h-36");
+const normalizeCropPoint = (value: any) => {
+  const x = Number(value?.x);
+  const y = Number(value?.y);
+  if (!Number.isFinite(x) || !Number.isFinite(y)) return null;
+  return {
+    x: Math.max(0, Math.min(100, Math.round(x))),
+    y: Math.max(0, Math.min(100, Math.round(y))),
+  };
+};
+const getRecadrageMap = (value: any) => {
+  if (!value) return {};
+  if (typeof value === "string") {
+    try {
+      const parsed = JSON.parse(value);
+      return parsed && typeof parsed === "object" ? parsed : {};
+    } catch {
+      return {};
+    }
+  }
+  return typeof value === "object" ? value : {};
+};
 const currentImage =
   mode === "edit" &&
   typeof previewData?.[fieldName] === "string" &&
-  previewData[fieldName].trim() !== ""
+    previewData[fieldName].trim() !== ""
     ? previewData[fieldName]
     : null;
+const currentCropValue = normalizeCropPoint(
+  getRecadrageMap(previewData?.recadrage)?.[fieldName],
+);
+const currentCropStyle = (() => {
+  if (!currentCropValue) return "";
+  return `object-position:${currentCropValue.x}% ${currentCropValue.y}%;`;
+})();
 ---
 
 <label
@@ -65,7 +93,10 @@ const currentImage =
           loading="lazy"
           src={currentImage}
           alt="Aperçu"
-          class="absolute inset-0 w-full h-full object-cover"
+          data-preview-crop-field={fieldName}
+          title="Cliquer pour recadrer"
+          style={currentCropStyle}
+          class="absolute inset-0 w-full h-full object-cover cursor-zoom-in"
           decoding="async"
         />
         <button

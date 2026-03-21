@@ -1,6 +1,4 @@
-import PREVIEW_DEFAULTS from '../previewDefaults.js';
 import {
-  NO_DEFAULT_FALLBACK_PROPS,
   previewState,
 } from './state.js';
 import { dispatch } from './dispatcher.js';
@@ -26,14 +24,6 @@ function readPlaceholderData(placeholderScript) {
   if (typeof fromWindow === 'string') return safeParseJson(fromWindow, {});
   if (placeholderScript) return safeParseJson(placeholderScript.textContent || '{}', {});
   return {};
-}
-
-function getPreviewFallbackValue(prop) {
-  if (NO_DEFAULT_FALLBACK_PROPS.has(prop)) return '';
-  if (Object.prototype.hasOwnProperty.call(PREVIEW_DEFAULTS, prop)) {
-    return PREVIEW_DEFAULTS[prop];
-  }
-  return '';
 }
 
 function syncInitialFormValues(formElement) {
@@ -91,9 +81,7 @@ function handleInputElement(inputElement) {
     ? rawValue.length === 0
     : String(rawValue).trim() === '';
 
-  const previewValue = isMultiSelect
-    ? rawValue
-    : (isEmpty ? getPreviewFallbackValue(prop) : rawValue);
+  const previewValue = isMultiSelect ? rawValue : (isEmpty ? '' : rawValue);
 
   dispatch({
     type: 'FIELD_CHANGED',
@@ -112,6 +100,7 @@ function initPreview() {
   dispatch({
     type: 'INIT_STATE',
     value: Object.assign({}, placeholder),
+    mode: isEditMode ? 'edit' : 'create',
   });
 
   // En création, on garde les inputs vides et on laisse uniquement les placeholders HTML.

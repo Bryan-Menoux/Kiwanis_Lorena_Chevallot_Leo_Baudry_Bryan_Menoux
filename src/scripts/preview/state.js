@@ -54,18 +54,26 @@ const PREVIEW_FALLBACKS = {
   texte_partie_3: '',
   photo_partie_3: '',
   description_photo_partie_3: '',
+  recadrage: {},
   titre_remerciements: '',
   description_remerciements: '',
   galerie_photos: [],
 };
+const DEFAULT_IMAGE_CROP = {
+  x: 50,
+  y: 50,
+};
 
 // Source canonique de l'éditeur de preview.
 let previewState = {};
+let previewMode = 'create';
+let touchedFields = new Set();
 
 // Fichiers image sélectionnés côté client. Le state garde les fichiers, pas le DOM.
 let singleImageFiles = {};
 let singleImageRemoved = {};
 let singleImageOptimizationStates = {};
+let imageCropState = {};
 
 // Galerie client.
 let galleryFiles = [];
@@ -86,6 +94,83 @@ function cloneObject(value) {
   return value && typeof value === 'object' && !Array.isArray(value)
     ? { ...value }
     : {};
+}
+
+function normalizeCropPoint(value) {
+  const safeX = Number.isFinite(Number(value?.x)) ? Number(value.x) : DEFAULT_IMAGE_CROP.x;
+  const safeY = Number.isFinite(Number(value?.y)) ? Number(value.y) : DEFAULT_IMAGE_CROP.y;
+  return {
+    x: Math.max(0, Math.min(100, Math.round(safeX))),
+    y: Math.max(0, Math.min(100, Math.round(safeY))),
+  };
+}
+
+function parseCropValue(value) {
+  if (!value) return null;
+
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    if (!trimmed) return null;
+
+    try {
+      const parsed = JSON.parse(trimmed);
+      if (parsed && typeof parsed === 'object') {
+        return normalizeCropPoint(parsed);
+      }
+    } catch {
+      return null;
+    }
+  }
+
+  if (value && typeof value === 'object') {
+    return normalizeCropPoint(value);
+  }
+
+  return null;
+}
+
+function normalizeRecadrageMap(value) {
+  let source = value;
+  if (typeof source === 'string') {
+    try {
+      source = JSON.parse(source);
+    } catch {
+      source = {};
+    }
+  }
+  source = cloneObject(source);
+  const nextRecadrage = {};
+
+  SINGLE_IMAGE_FIELDS.forEach((prop) => {
+    const cropValue = parseCropValue(source[prop]);
+    if (cropValue) {
+      nextRecadrage[prop] = cropValue;
+    }
+  });
+
+  return nextRecadrage;
+}
+
+function serializeRecadrageMap(value) {
+  const source = normalizeRecadrageMap(value);
+  return Object.fromEntries(
+    Object.entries(source).map(([key, crop]) => [
+      key,
+      {
+        x: crop.x,
+        y: crop.y,
+      },
+    ]),
+  );
+}
+
+function syncRecadrageInputValue() {
+  if (typeof document === 'undefined') return;
+
+  const recadrageInput = document.querySelector('[data-recadrage-input]');
+  if (!(recadrageInput instanceof HTMLInputElement)) return;
+
+  recadrageInput.value = JSON.stringify(serializeRecadrageMap(imageCropState));
 }
 
 function syncGalleryPreviewState() {
@@ -115,6 +200,18 @@ function normalizePreviewState(value) {
     nextState.galerie_photos = [];
   }
 
+  const legacyRecadrage = {};
+  SINGLE_IMAGE_FIELDS.forEach((prop) => {
+    const cropValue = parseCropValue(nextState[`${prop}_crop`]);
+    if (cropValue) {
+      legacyRecadrage[prop] = cropValue;
+    }
+  });
+  const normalizedRecadrage = normalizeRecadrageMap(nextState.recadrage);
+  nextState.recadrage = Object.keys(normalizedRecadrage).length
+    ? normalizedRecadrage
+    : legacyRecadrage;
+
   SINGLE_IMAGE_FIELDS.forEach((prop) => {
     if (!Object.prototype.hasOwnProperty.call(nextState, prop)) {
       nextState[prop] = '';
@@ -130,8 +227,21 @@ function normalizePreviewState(value) {
   return nextState;
 }
 
-function setPreviewState(value) {
+function setPreviewState(value, mode = 'create') {
+  previewMode = mode === 'edit' ? 'edit' : 'create';
   previewState = normalizePreviewState(value);
+  touchedFields = new Set();
+  imageCropState = {};
+  SINGLE_IMAGE_FIELDS.forEach((prop) => {
+    const cropValue = parseCropValue(previewState.recadrage?.[prop]);
+    if (cropValue) {
+      imageCropState[prop] = {
+        ...cropValue,
+        active: true,
+      };
+    }
+  });
+  previewState.recadrage = serializeRecadrageMap(imageCropState);
   galleryExistingUrls = cloneArray(previewState.galerie_photos).filter(
     (item) => typeof item === 'string' && !isDataUrl(item),
   );
@@ -142,6 +252,7 @@ function setPreviewState(value) {
   singleImageFiles = {};
   singleImageRemoved = {};
   singleImageOptimizationStates = {};
+  syncRecadrageInputValue();
 }
 
 function setField(prop, value) {
@@ -150,6 +261,25 @@ function setField(prop, value) {
     ...previewState,
     [canonicalProp]: value,
   };
+
+  if (canonicalProp === 'recadrage') {
+    imageCropState = {};
+    const nextRecadrage = normalizeRecadrageMap(value);
+    Object.entries(nextRecadrage).forEach(([key, crop]) => {
+      imageCropState[key] = {
+        ...crop,
+        active: true,
+      };
+    });
+    previewState = {
+      ...previewState,
+      recadrage: serializeRecadrageMap(imageCropState),
+    };
+    syncRecadrageInputValue();
+    return;
+  }
+
+  touchedFields = new Set(touchedFields).add(canonicalProp);
 
   const alias = CANONICAL_TO_ALIAS[canonicalProp];
   if (alias) {
@@ -218,6 +348,62 @@ function setSingleImageOptimizationProgress(prop, progress, isActive) {
       progress: safeProgress,
     },
   };
+}
+
+function getImageCropValue(prop) {
+  const canonicalProp = normalizeProp(prop);
+  if (!canonicalProp) return { ...DEFAULT_IMAGE_CROP };
+
+  const crop = imageCropState[canonicalProp];
+  if (!crop) return { ...DEFAULT_IMAGE_CROP, active: false };
+  return {
+    ...normalizeCropPoint(crop),
+    active: Boolean(crop.active),
+  };
+}
+
+function setImageCropValue(prop, value) {
+  const canonicalProp = normalizeProp(prop);
+  if (!canonicalProp) return;
+
+  imageCropState = {
+    ...imageCropState,
+    [canonicalProp]: {
+      ...normalizeCropPoint(value),
+      active: true,
+    },
+  };
+  previewState = {
+    ...previewState,
+    recadrage: serializeRecadrageMap(imageCropState),
+  };
+  syncRecadrageInputValue();
+}
+
+function resetImageCropValue(prop) {
+  const canonicalProp = normalizeProp(prop);
+  if (!canonicalProp) return;
+
+  const nextCropState = { ...imageCropState };
+  delete nextCropState[canonicalProp];
+  imageCropState = nextCropState;
+  previewState = {
+    ...previewState,
+    recadrage: serializeRecadrageMap(imageCropState),
+  };
+  syncRecadrageInputValue();
+}
+
+function getImageCropStyle(prop) {
+  const { x, y } = getImageCropValue(prop);
+  return `${x}% ${y}%`;
+}
+
+function hasImageCropValue(prop) {
+  const canonicalProp = normalizeProp(prop);
+  if (!canonicalProp) return false;
+
+  return Boolean(imageCropState[canonicalProp]?.active);
 }
 
 function removeImage(field) {
@@ -321,6 +507,8 @@ function getStateSnapshot() {
     singleImageFiles: { ...singleImageFiles },
     singleImageRemoved: { ...singleImageRemoved },
     singleImageOptimizationStates: { ...singleImageOptimizationStates },
+    recadrage: serializeRecadrageMap(imageCropState),
+    imageCropState: { ...imageCropState },
     galleryFiles: galleryFiles.slice(),
     galleryDataUrls: galleryDataUrls.slice(),
     galleryExistingUrls: galleryExistingUrls.slice(),
@@ -344,6 +532,16 @@ function hasTypeDeChiffreValue(value) {
   return normalized !== '' && normalized !== 'type de chiffre';
 }
 
+function isFieldTouched(prop) {
+  const canonicalProp = normalizeProp(prop);
+  if (!canonicalProp || previewMode !== 'create') return false;
+  return touchedFields.has(canonicalProp);
+}
+
+function isAnyFieldTouched(props) {
+  return props.some((prop) => isFieldTouched(prop));
+}
+
 function getDerivedState() {
   const values = normalizePreviewState(previewState);
   const galleryPreviewUrls = Array.isArray(values.galerie_photos)
@@ -357,7 +555,32 @@ function getDerivedState() {
   const hasChiffre = chiffreIsZero ? false : hasChiffreValue(chiffreRaw);
   const hasBeneficiaire = hasNonEmptyValue(values.beneficiaire);
   const hasLocationSection = hasLieu || hasChiffre || hasBeneficiaire;
-  const locationCardCount = [hasLieu, hasChiffre, hasBeneficiaire].filter(Boolean).length;
+  const locationSectionTouched =
+    previewMode === 'create' &&
+    isAnyFieldTouched([
+      'nom_lieu',
+      'adresse_lieu',
+      'lien_lieu',
+      'chiffre',
+      'type_de_chiffre',
+      'beneficiaire',
+    ]);
+  const locationCards = locationSectionTouched
+    ? {
+        lieu: isAnyFieldTouched(['nom_lieu', 'adresse_lieu', 'lien_lieu']) ? hasLieu : false,
+        chiffre: isAnyFieldTouched(['chiffre', 'type_de_chiffre']) ? hasChiffre : false,
+        beneficiaire: isFieldTouched('beneficiaire') ? hasBeneficiaire : false,
+      }
+    : {
+        lieu: hasLieu,
+        chiffre: hasChiffre,
+        beneficiaire: hasBeneficiaire,
+      };
+  const locationCardCount = [locationCards.lieu, locationCards.chiffre, locationCards.beneficiaire].filter(Boolean).length;
+  const locationSectionVisible =
+    previewMode === 'create' && locationSectionTouched
+      ? locationCardCount > 0
+      : hasLocationSection;
   const hasPart1Section = hasNonEmptyValue(values.texte_partie_1);
   const hasPart2Section = hasNonEmptyValue(values.texte_partie_2);
   const hasPart3Section = hasNonEmptyValue(values.texte_partie_3);
@@ -385,12 +608,8 @@ function getDerivedState() {
         3: hasPart3Section,
       },
       thanks: hasThanksSection,
-      locationSection: hasLocationSection,
-      locationCards: {
-        lieu: hasLieu,
-        chiffre: hasChiffre,
-        beneficiaire: hasBeneficiaire,
-      },
+      locationSection: locationSectionVisible,
+      locationCards,
       locationCardCount,
       locationFields: {
         nom_lieu: hasNonEmptyValue(values.nom_lieu),
@@ -424,9 +643,17 @@ export {
   normalizeProp,
   setPreviewState,
   setField,
+  isFieldTouched,
+  isAnyFieldTouched,
   setSingleImageFile,
   markSingleImageRemoved,
   setSingleImageOptimizationProgress,
+  parseCropValue,
+  getImageCropValue,
+  getImageCropStyle,
+  hasImageCropValue,
+  setImageCropValue,
+  resetImageCropValue,
   removeImage,
   addGalleryFiles,
   setGalleryFiles,

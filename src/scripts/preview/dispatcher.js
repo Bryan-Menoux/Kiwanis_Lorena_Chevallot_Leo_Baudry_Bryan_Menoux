@@ -43,7 +43,7 @@ function dispatch(action) {
 
   switch (action.type) {
     case 'INIT_STATE': {
-      setPreviewState(action.value || {});
+      setPreviewState(action.value || {}, action.mode || 'create');
       renderAll();
       return;
     }
