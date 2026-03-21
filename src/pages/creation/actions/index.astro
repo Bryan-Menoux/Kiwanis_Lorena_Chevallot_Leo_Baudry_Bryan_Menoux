@@ -5,7 +5,7 @@ import slugify from "slugify";
 import FormSubmitOverlay from "../../../components/FormSubmitOverlay.astro";
 import { showConfirm } from "../../../utils/alerts";
 import { getCreationEditUrl, getCreationViewUrl } from "../../../utils/creationRoutes";
-import { normalizeImageUrl } from "../../../utils/utilitaires.js";
+import { formatDateShort, normalizeImageUrl } from "../../../utils/utilitaires.js";
 
 // Types et interfaces
 
@@ -20,6 +20,7 @@ interface ActionItem {
   beneficiary?: string;
   actionType?: string[];
   heroActionUrl?: string;
+  displayDate?: string;
 }
 
 // Récupération des données
@@ -45,6 +46,10 @@ const actions: ActionItem[] = [
     beneficiary: a.beneficiaire,
     actionType: a.type_action,
     heroActionUrl: normalizeImageUrl(a.hero, a, Astro.locals.pb) || undefined,
+    displayDate:
+      a.date_debut || a.date_fin
+        ? `${a.date_debut ? formatDateShort(a.date_debut) : ""}${a.date_debut && a.date_fin ? " au " : ""}${a.date_fin ? formatDateShort(a.date_fin) : ""}`
+        : "",
   })),
   ...brouillonsRaw.map((b) => ({
     id: b.id,
@@ -56,6 +61,7 @@ const actions: ActionItem[] = [
     beneficiary: b.beneficiaire,
     actionType: b.type_action,
     heroActionUrl: normalizeImageUrl(b.hero, b, Astro.locals.pb) || undefined,
+    displayDate: b.updated ? formatDateShort(b.updated) : "",
   })),
 ].sort(
   (a, b) =>
@@ -68,19 +74,6 @@ const stats = { total: actions.length };
 
 const yearOptions: string[] = [];
 
-function formatDate(dateStr?: string): string {
-  if (!dateStr) return "";
-  try {
-    const date = new Date(dateStr);
-    return date.toLocaleDateString("fr-FR", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
-  } catch {
-    return dateStr;
-  }
-}
 const allActions = actions;
 ---
 
@@ -130,7 +123,7 @@ const allActions = actions;
           isDraft={action.source === "brouillon"}
           subtitle={action.subtitle}
           beneficiary={action.beneficiary}
-          formattedDate={formatDate(action.updated)}
+          formattedDate={action.displayDate}
           viewUrl={
             action.source === "brouillon"
               ? `/creation/brouillons/${action.id}-${action.slug}`

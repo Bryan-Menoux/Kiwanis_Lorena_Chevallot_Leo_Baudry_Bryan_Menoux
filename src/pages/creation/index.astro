@@ -1,7 +1,7 @@
 ---
 import Layout from "../../layouts/Layout-back-office.astro";
 import ActionsSearch from "../../components/ActionsSearch.astro";
-import { formatDateWithTime } from "../../utils/utilitaires.js";
+import { formatDateShort, formatDateWithTime } from "../../utils/utilitaires.js";
 import slugify from 'slugify';
 import {
   getCreationDashboardEditUrl,
@@ -16,6 +16,7 @@ interface Page {
   updatedAt: string;
   authorName: string;
   beneficiary?: string;
+  displayDate?: string;
 }
 
 function asSafeText(value: unknown, fallback = ""): string {
@@ -26,6 +27,13 @@ function safeSlug(value: unknown, fallback = "element"): string {
   const base = asSafeText(value, fallback);
   const slug = slugify(base, { lower: true, strict: true });
   return slug || fallback;
+}
+
+function formatActionDate(dateStart?: string, dateEnd?: string): string {
+  if (!dateStart && !dateEnd) return "";
+  const start = dateStart ? formatDateShort(dateStart) : "";
+  const end = dateEnd ? formatDateShort(dateEnd) : "";
+  return start && end ? `${start} au ${end}` : start || end;
 }
 
 const actions = await Astro.locals.pb.collection('actions').getFullList(200, { sort: '-updated' });
@@ -42,7 +50,8 @@ const pages: Page[] = [
     status: 'actions' as const,
     updatedAt: action.updated,
     authorName: 'Admin', // Valeur par défaut
-    beneficiary: action.beneficiaire
+    beneficiary: action.beneficiaire,
+    displayDate: formatActionDate(action.date_debut, action.date_fin),
   })),
   ...projets.map(projet => ({
     id: projet.id,
@@ -50,7 +59,8 @@ const pages: Page[] = [
     slug: safeSlug(projet.titre, "projet"),
     status: 'projets' as const,
     updatedAt: projet.updated,
-    authorName: 'Admin' // Valeur par défaut
+    authorName: 'Admin', // Valeur par défaut
+    displayDate: projet.date ? formatDateShort(projet.date) : "",
   })),
   ...produits.map(produit => ({
     id: produit.id,
@@ -58,7 +68,8 @@ const pages: Page[] = [
     slug: safeSlug(produit.titre, "produit"),
     status: 'produits' as const,
     updatedAt: produit.updated,
-    authorName: 'Admin' // Valeur par défaut
+    authorName: 'Admin', // Valeur par défaut
+    displayDate: formatDateWithTime(produit.updated),
   })),
   ...brouillons.map(brouillon => {
     return ({
@@ -68,6 +79,7 @@ const pages: Page[] = [
       status: 'brouillon' as const,
       updatedAt: brouillon.updated,
       authorName: 'Admin', // Valeur par défaut
+      displayDate: formatDateWithTime(brouillon.updated),
     });
   })
 ];
@@ -274,7 +286,7 @@ if (Astro.request.method === "POST") {
                       </div>
                       <p class="text-sm text-base-content/60 mb-2">/{page.slug}</p>
                       <p class="text-sm text-base-content/60 mb-2">Par {page.authorName}</p>
-                      <p class="text-sm text-base-content/60">{formatDateWithTime(page.updatedAt)}</p>
+                      <p class="text-sm text-base-content/60">{page.displayDate || formatDateWithTime(page.updatedAt)}</p>
                       <div class="card-actions justify-end mt-4">
                         <button
                           type="button"

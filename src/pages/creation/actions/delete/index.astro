@@ -30,22 +30,12 @@ const actions = actionsRaw.map((a: any) => ({
   updated: a.updated,
   beneficiary: a.beneficiaire,
   heroActionUrl: normalizeImageUrl(a.hero, a, Astro.locals.pb) || undefined,
+  displayDate:
+    a.date_debut || a.date_fin
+      ? `${a.date_debut ? formatDateShort(a.date_debut) : ""}${a.date_debut && a.date_fin ? " au " : ""}${a.date_fin ? formatDateShort(a.date_fin) : ""}`
+      : "",
   source: "action" as const,
 }));
-
-function formatDate(dateStr?: string): string {
-  if (!dateStr) return "";
-  try {
-    const date = new Date(dateStr);
-    return date.toLocaleDateString("fr-FR", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
-  } catch {
-    return dateStr;
-  }
-}
 
 // Gestion POST pour suppression multiple
 if (Astro.request.method === "POST") {
@@ -188,7 +178,7 @@ try {
               showPhotoPlaceholder={true}
               subtitle={action.subtitle}
               beneficiary={action.beneficiary}
-              formattedDate={formatDate(action.updated)}
+              formattedDate={action.displayDate}
               viewUrl={getCreationViewUrl("action", action.id, action.slug)}
               editUrl={getCreationViewUrl("action", action.id, action.slug)}
               showCheckbox={true}

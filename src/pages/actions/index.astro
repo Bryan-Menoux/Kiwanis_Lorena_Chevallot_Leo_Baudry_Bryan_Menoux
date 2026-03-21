@@ -32,16 +32,12 @@ const actions = [...actionsRaw].sort(
 const formatActionDate = (
   dateDebut: string | null | undefined,
   dateFin: string | null | undefined,
-  updated: string | null | undefined,
 ) => {
   if (dateDebut && dateFin) {
     return `${formatDateShort(dateDebut)} au ${formatDateShort(dateFin)}`;
   }
   if (dateDebut) {
     return formatDateShort(dateDebut);
-  }
-  if (updated) {
-    return `Mise à jour le ${formatDateShort(updated)}`;
   }
   return "";
 };
@@ -59,7 +55,6 @@ const actionsWithUrls = actions.map((action) => {
     dateLabel: formatActionDate(
       action.date_debut,
       action.date_fin,
-      action.updated,
     ),
     year: selectedDate ? new Date(selectedDate).getFullYear().toString() : "",
     typeActionSafe: safeTypes,
@@ -225,9 +220,21 @@ const lcpDesktop = await getImage({ src: HeroActions, format: "webp", width: 184
                       class={`flex flex-1 flex-col gap-4 p-4 md:gap-5 md:p-6 lg:w-1/2 ${contentOrderClass}`}
                     >
                       <div class="space-y-2">
-                        <h3 class="text-xl font-bold leading-tight text-base-content md:text-2xl">
+                        <h3 class="text-xl font-bold leading-tight text-base-content md:text-2xl capitalize mb-4 md:mb-8">
                           {action.titre}
                         </h3>
+                        <div class="flex flex-wrap gap-2 md:gap-2.5">
+                        {action.typeActionSafe.slice(0, 3).map((type: unknown) => (
+                          <span class="badge badge-secondary  text-xs! font-bold! md:text-sm!">
+                            {String(type)}
+                          </span>
+                        ))}
+                        {action.typeActionSafe.length === 0 && (
+                          <span class="badge badge-secondary  text-xs! font-bold! md:text-sm!">
+                            Action solidaire
+                          </span>
+                        )}
+                      </div>
                         {action.sous_titre && (
                           <p class="text-sm leading-relaxed text-base-content/75 md:text-base">
                             {action.sous_titre}
@@ -235,18 +242,7 @@ const lcpDesktop = await getImage({ src: HeroActions, format: "webp", width: 184
                         )}
                       </div>
 
-                      <div class="flex flex-wrap gap-2 md:gap-2.5">
-                        {action.typeActionSafe.slice(0, 3).map((type: unknown) => (
-                          <span class="badge badge-secondary badge-outline text-xs! md:text-sm!">
-                            {String(type)}
-                          </span>
-                        ))}
-                        {action.typeActionSafe.length === 0 && (
-                          <span class="badge badge-secondary badge-outline text-xs! md:text-sm!">
-                            Action solidaire
-                          </span>
-                        )}
-                      </div>
+                      
 
                       <div class="mt-auto flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
                         <div class="space-y-1 text-sm text-base-content/65 md:text-base">
