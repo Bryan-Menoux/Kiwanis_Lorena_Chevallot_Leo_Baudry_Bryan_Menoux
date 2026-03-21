@@ -289,6 +289,11 @@ const lcpDesktop = await getImage({ src: HeroActions, format: "webp", width: 184
 
 <script>
   import { scrollToTarget } from "../../utils/scroll.js";
+  import {
+    getTotalPages,
+    renderPagination,
+    resolveNextPage,
+  } from "../../utils/renderPagination";
 
   (() => {
     const PAGE_SIZE = 9;
@@ -298,26 +303,6 @@ const lcpDesktop = await getImage({ src: HeroActions, format: "webp", width: 184
       String(value || "")
         .toLowerCase()
         .trim();
-
-    function renderPagination(container: HTMLElement | null, totalPages: number, currentPage: number) {
-      if (!(container instanceof HTMLElement) || totalPages <= 1) {
-        if (container instanceof HTMLElement) container.innerHTML = "";
-        return;
-      }
-
-      const pageButtons = Array.from({ length: totalPages }, (_, index) => {
-        const pageNumber = index + 1;
-        const activeClass =
-          pageNumber === currentPage ? "btn-accent" : "btn-ghost";
-        return `<button type="button" class="btn btn-sm ${activeClass}" data-page-action="go" data-page="${pageNumber}">${pageNumber}</button>`;
-      }).join("");
-
-      container.innerHTML = `
-        <button type="button" class="btn btn-sm btn-ghost" data-page-action="prev" ${currentPage === 1 ? "disabled" : ""}>Précédent</button>
-        ${pageButtons}
-        <button type="button" class="btn btn-sm btn-ghost" data-page-action="next" ${currentPage === totalPages ? "disabled" : ""}>Suivant</button>
-      `;
-    }
 
     function init() {
       const grid = byId("actions-grid");
@@ -360,10 +345,7 @@ const lcpDesktop = await getImage({ src: HeroActions, format: "webp", width: 184
           return matchSearch && matchYear && matchType;
         });
 
-        const totalPages = Math.max(
-          1,
-          Math.ceil(filteredCards.length / PAGE_SIZE),
-        );
+        const totalPages = getTotalPages(filteredCards.length, PAGE_SIZE);
         if (currentPage > totalPages) currentPage = totalPages;
         if (currentPage < 1) currentPage = 1;
 
@@ -383,7 +365,13 @@ const lcpDesktop = await getImage({ src: HeroActions, format: "webp", width: 184
         }
         grid.classList.toggle("hidden", filteredCards.length === 0);
 
-        renderPagination(pagination, totalPages, currentPage);
+        if (pagination instanceof HTMLElement) {
+          pagination.innerHTML = renderPagination(totalPages, currentPage, {
+            wrapperClass: "contents",
+            buttonClass: "btn btn-sm btn-ghost",
+            activeButtonClass: "btn btn-sm btn-accent",
+          });
+        }
       };
 
       if (pagination instanceof HTMLElement) {
@@ -394,25 +382,15 @@ const lcpDesktop = await getImage({ src: HeroActions, format: "webp", width: 184
               : null;
           if (!(target instanceof HTMLElement)) return;
 
-          const totalPages = Math.max(
-            1,
-            Math.ceil(filteredCards.length / PAGE_SIZE),
-          );
+          const totalPages = getTotalPages(filteredCards.length, PAGE_SIZE);
           const action = target.getAttribute("data-page-action");
           const previousPage = currentPage;
-
-          if (action === "prev") {
-            currentPage = Math.max(1, currentPage - 1);
-          } else if (action === "next") {
-            currentPage = Math.min(totalPages, currentPage + 1);
-          } else if (action === "go") {
-            const nextPage = Number(target.getAttribute("data-page") || "1");
-            if (!Number.isNaN(nextPage)) {
-              currentPage = Math.min(totalPages, Math.max(1, nextPage));
-            }
-          } else {
-            return;
-          }
+          currentPage = resolveNextPage(
+            currentPage,
+            totalPages,
+            action,
+            target.getAttribute("data-page"),
+          );
 
           if (currentPage !== previousPage) {
             // Remonte légèrement au-dessus de la liste pour conserver un contexte visuel (10% de viewport).

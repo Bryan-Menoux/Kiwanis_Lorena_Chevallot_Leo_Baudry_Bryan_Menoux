@@ -1,5 +1,5 @@
 import { showAlert, showConfirm } from "./alerts";
-import { renderPagination } from "./renderPagination";
+import { getTotalPages, renderPagination, resolveNextPage } from "./renderPagination";
 
 export interface DeletePageConfig {
   flashFlagsSelector: string;
@@ -393,22 +393,15 @@ export function initDeletePageHandler(config: Partial<DeletePageConfig> = {}) {
           : null;
       if (!(target instanceof HTMLElement)) return;
 
-      const totalPages = Math.max(1, Math.ceil(getFilteredCards().length / cfg.pageSize));
+      const totalPages = getTotalPages(getFilteredCards().length, cfg.pageSize);
       const previousPage = currentPage;
       const action = target.getAttribute("data-page-action");
-
-      if (action === "prev") {
-        currentPage = Math.max(1, currentPage - 1);
-      } else if (action === "next") {
-        currentPage = Math.min(totalPages, currentPage + 1);
-      } else if (action === "go") {
-        const nextPage = Number(target.getAttribute("data-page") || "1");
-        if (!Number.isNaN(nextPage)) {
-          currentPage = Math.min(totalPages, Math.max(1, nextPage));
-        }
-      } else {
-        return;
-      }
+      currentPage = resolveNextPage(
+        currentPage,
+        totalPages,
+        action,
+        target.getAttribute("data-page"),
+      );
 
       if (currentPage !== previousPage) {
         scrollToGridTop();

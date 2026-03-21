@@ -263,7 +263,11 @@ try {
 
 <script>
   import { showAlert, showConfirm } from "../utils/alerts";
-  import { renderPagination } from "../utils/renderPagination";
+  import {
+    getTotalPages,
+    renderPagination,
+    resolveNextPage,
+  } from "../utils/renderPagination";
 
   const handoverButton = document.getElementById("handover-btn") as HTMLButtonElement | null;
   const handoverSearch = document.getElementById("handover-search") as HTMLInputElement | null;
@@ -288,7 +292,7 @@ try {
   }
 
   function updatePagination() {
-    const totalPages = Math.max(1, Math.ceil(filteredCards.length / PAGE_SIZE));
+    const totalPages = getTotalPages(filteredCards.length, PAGE_SIZE);
     if (currentPage > totalPages) currentPage = totalPages;
     if (currentPage < 1) currentPage = 1;
 
@@ -342,11 +346,9 @@ try {
           : null;
       if (!(btn instanceof HTMLElement)) return;
       const action = btn.getAttribute("data-page-action");
-      const totalPages = Math.max(1, Math.ceil(filteredCards.length / PAGE_SIZE));
+      const totalPages = getTotalPages(filteredCards.length, PAGE_SIZE);
       const prev = currentPage;
-      if (action === "prev") currentPage = Math.max(1, currentPage - 1);
-      else if (action === "next") currentPage = Math.min(totalPages, currentPage + 1);
-      else if (action === "go") currentPage = Math.min(totalPages, Math.max(1, Number(btn.dataset.page)));
+      currentPage = resolveNextPage(currentPage, totalPages, action, btn.dataset.page);
       if (currentPage !== prev) updatePagination();
     });
   }

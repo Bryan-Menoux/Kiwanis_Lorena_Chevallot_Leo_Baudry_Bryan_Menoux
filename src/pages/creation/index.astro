@@ -1,106 +1,32 @@
 ---
 import Layout from "../../layouts/Layout-back-office.astro";
 import ActionsSearch from "../../components/ActionsSearch.astro";
-import { formatDateShort, formatDateWithTime } from "../../utils/utilitaires.js";
-import slugify from 'slugify';
+import { formatDateWithTime } from "../../utils/utilitaires.js";
 import {
   getCreationDashboardEditUrl,
   getCreationDashboardViewUrl,
 } from "../../utils/creationRoutes";
-
-interface Page {
-  id: string;
-  title: string;
-  slug: string;
-  status: 'actions' | 'projets' | 'produits' | 'brouillon';
-  updatedAt: string;
-  authorName: string;
-  beneficiary?: string;
-  displayDate?: string;
-}
-
-function asSafeText(value: unknown, fallback = ""): string {
-  return typeof value === "string" && value.trim() !== "" ? value.trim() : fallback;
-}
-
-function safeSlug(value: unknown, fallback = "element"): string {
-  const base = asSafeText(value, fallback);
-  const slug = slugify(base, { lower: true, strict: true });
-  return slug || fallback;
-}
-
-function formatActionDate(dateStart?: string, dateEnd?: string): string {
-  if (!dateStart) return "";
-  return formatDateShort(dateStart);
-}
+import {
+  computeCreationDashboardStats,
+  mapCreationDashboardPages,
+  type CreationDashboardPage,
+} from "../../services/creationDashboard";
 
 const actions = await Astro.locals.pb.collection('actions').getFullList(200, { sort: '-updated', expand: 'cree_par' });
 const projets = await Astro.locals.pb.collection('projets').getFullList(200, { sort: '-updated', expand: 'cree_par' });
 const produits = await Astro.locals.pb.collection('produits').getFullList(200, { sort: '-updated', expand: 'cree_par' });
 const brouillons = await Astro.locals.pb.collection('brouillons').getFullList(200, { sort: '-updated', expand: 'cree_par' });
 
-const resolveCreatorName = (record: any) => {
-  const creator = record?.expand?.cree_par;
-  if (typeof creator?.name === "string" && creator.name.trim() !== "") {
-    return creator.name.trim();
-  }
-  if (typeof creator?.email === "string" && creator.email.trim() !== "") {
-    return creator.email.trim();
-  }
-  return "";
-};
-
-// Combiner toutes les pages des différentes collections
-const pages: Page[] = [
-  ...actions.map(action => ({
-    id: action.id,
-    title: asSafeText(action.titre, "Action sans titre"),
-    slug: safeSlug(action.titre, "action"),
-    status: 'actions' as const,
-    updatedAt: action.updated,
-    authorName: resolveCreatorName(action) || "Auteur inconnu",
-    beneficiary: action.beneficiaire,
-    displayDate: formatActionDate(action.date_debut, action.date_fin),
-  })),
-  ...projets.map(projet => ({
-    id: projet.id,
-    title: asSafeText(projet.titre, "Projet sans titre"),
-    slug: safeSlug(projet.titre, "projet"),
-    status: 'projets' as const,
-    updatedAt: projet.updated,
-    authorName: resolveCreatorName(projet) || "Auteur inconnu",
-    displayDate: projet.date ? formatDateShort(projet.date) : "",
-  })),
-  ...produits.map(produit => ({
-    id: produit.id,
-    title: asSafeText(produit.titre, "Produit sans titre"),
-    slug: safeSlug(produit.titre, "produit"),
-    status: 'produits' as const,
-    updatedAt: produit.updated,
-    authorName: resolveCreatorName(produit) || "Auteur inconnu",
-    displayDate: formatDateWithTime(produit.updated),
-  })),
-  ...brouillons.map(brouillon => {
-    return ({
-      id: brouillon.id,
-      title: asSafeText(brouillon.titre, "Brouillon sans titre"),
-      slug: safeSlug(brouillon.titre, "brouillon"),
-      status: 'brouillon' as const,
-      updatedAt: brouillon.updated,
-      authorName: resolveCreatorName(brouillon) || "Auteur inconnu",
-      displayDate: formatDateWithTime(brouillon.updated),
-    });
-  })
-];
-
-// Base de données factice : uniquement "pages" (id, titre, slug, statut, updatedAt, authorName)
-const db: { pages: Page[] } = {
-  pages: pages
-};
+const pages: CreationDashboardPage[] = mapCreationDashboardPages({
+  actions,
+  projets,
+  produits,
+  brouillons,
+});
 
 // Utilisation de l'utilitaire partagé
 
-function getStatusBadge(status: Page['status']) {
+function getStatusBadge(status: CreationDashboardPage["status"]) {
   if (status === 'actions') return { label: 'Actions', className: 'badge badge-success' };
   if (status === 'projets') return { label: 'Projets', className: 'badge badge-primary' };
   if (status === 'produits') return { label: 'Produits', className: 'badge badge-secondary' };
@@ -108,22 +34,12 @@ function getStatusBadge(status: Page['status']) {
   return { label: status, className: 'badge' };
 }
 
-function getEditUrl(status: Page['status'], id: string, slug: string): string {
+function getEditUrl(status: CreationDashboardPage["status"], id: string, slug: string): string {
   return getCreationDashboardEditUrl(status, id, slug);
 }
 
-function getViewUrl(status: Page['status'], id: string, slug: string): string {
+function getViewUrl(status: CreationDashboardPage["status"], id: string, slug: string): string {
   return getCreationDashboardViewUrl(status, id, slug);
-}
-
-function computeStats(pages: Page[]): { actions: number; projets: number; produits: number; brouillons: number; total: number; } {
-  return {
-    actions: pages.filter(p => p.status === 'actions').length,
-    projets: pages.filter(p => p.status === 'projets').length,
-    produits: pages.filter(p => p.status === 'produits').length,
-    brouillons: pages.filter(p => p.status === 'brouillon').length,
-    total: pages.length
-  };
 }
 
 // Lecture des paramètres de requête (recherche via GET)
@@ -132,23 +48,23 @@ const q = (params.get('q') || '').trim();
 const status = params.get('status') || 'all';
 
 // Filtrage côté serveur (pour l'initialisation)
-let list = db.pages.slice();
+let list = pages.slice();
 if (status && status !== 'all') list = list.filter(p => p.status === status);
 if (q) {
   const token = q.toLowerCase();
   list = list.filter((p) =>
-    asSafeText(p.title).toLowerCase().includes(token) ||
-    asSafeText(p.slug).toLowerCase().includes(token),
+    String(p.title || "").toLowerCase().includes(token) ||
+    String(p.slug || "").toLowerCase().includes(token),
   );
 }
 // tri par updatedAt desc
 list.sort((a,b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
 // Limiter à 9
 const recent = list.slice(0,9);
-const stats = computeStats(db.pages);
+const stats = computeCreationDashboardStats(pages);
 
 // Données pour le JavaScript côté client
-const allPages = db.pages;
+const allPages = pages;
 
 if (Astro.request.method === "POST") {
   try {
@@ -315,7 +231,11 @@ if (Astro.request.method === "POST") {
 <script>
   import "../../utils/utilitaires.js";
   import "../../utils/scroll.js";
-  import { renderPagination } from "../../utils/renderPagination";
+  import {
+    getTotalPages,
+    renderPagination,
+    resolveNextPage,
+  } from "../../utils/renderPagination";
   import {
     getCreationDashboardEditUrl,
     getCreationDashboardViewUrl,
@@ -430,7 +350,7 @@ if (Astro.request.method === "POST") {
       `;
       currentPage = 1;
     } else {
-      const totalPages = Math.max(1, Math.ceil(filteredPages.length / PAGE_SIZE));
+      const totalPages = getTotalPages(filteredPages.length, PAGE_SIZE);
       if (currentPage > totalPages) currentPage = totalPages;
       if (currentPage < 1) currentPage = 1;
       const startIndex = (currentPage - 1) * PAGE_SIZE;
@@ -539,24 +459,14 @@ if (Astro.request.method === "POST") {
       if (!(target instanceof HTMLElement)) return;
 
       const action = target.getAttribute('data-page-action');
-      const totalPages = Math.max(
-        1,
-        Math.ceil(filteredPagesCache.length / PAGE_SIZE),
-      );
+      const totalPages = getTotalPages(filteredPagesCache.length, PAGE_SIZE);
       const previousPage = currentPage;
-
-      if (action === 'prev') {
-        currentPage = Math.max(1, currentPage - 1);
-      } else if (action === 'next') {
-        currentPage = Math.min(totalPages, currentPage + 1);
-      } else if (action === 'go') {
-        const nextPage = Number(target.getAttribute('data-page') || '1');
-        if (!Number.isNaN(nextPage)) {
-          currentPage = Math.min(totalPages, Math.max(1, nextPage));
-        }
-      } else {
-        return;
-      }
+      currentPage = resolveNextPage(
+        currentPage,
+        totalPages,
+        action,
+        target.getAttribute("data-page"),
+      );
 
       if (currentPage !== previousPage) {
         // Défile uniquement si la page visible a réellement changé.
@@ -599,5 +509,6 @@ if (Astro.request.method === "POST") {
     initCreationIndexHandlers();
   }
 </script>
+
 
 

@@ -51,6 +51,37 @@ export function renderPagination(
   return `<div class="${wrapperClass}">${nav}</div>`;
 }
 
+export type PaginationAction = "prev" | "next" | "go";
+
+export function getTotalPages(totalItems: number, pageSize: number): number {
+  if (!Number.isFinite(totalItems) || totalItems <= 0) return 1;
+  if (!Number.isFinite(pageSize) || pageSize <= 0) return 1;
+  return Math.max(1, Math.ceil(totalItems / pageSize));
+}
+
+export function resolveNextPage(
+  currentPage: number,
+  totalPages: number,
+  action: string | null,
+  targetPage?: string | number | null,
+): number {
+  const safeTotal = Math.max(1, Number.isFinite(totalPages) ? Math.floor(totalPages) : 1);
+  const safeCurrent = Math.min(
+    safeTotal,
+    Math.max(1, Number.isFinite(currentPage) ? Math.floor(currentPage) : 1),
+  );
+
+  if (action === "prev") return Math.max(1, safeCurrent - 1);
+  if (action === "next") return Math.min(safeTotal, safeCurrent + 1);
+  if (action === "go") {
+    const parsedTarget = Number(targetPage ?? "1");
+    if (Number.isNaN(parsedTarget)) return safeCurrent;
+    return Math.min(safeTotal, Math.max(1, Math.floor(parsedTarget)));
+  }
+
+  return safeCurrent;
+}
+
 // Initialise une page de listing avec filtrage, pagination et rendu
 export interface ListingPageOptions<T extends Record<string, any>> {
   items: T[];
@@ -70,7 +101,10 @@ export interface ListingPageState {
 export function initListingPage<T extends Record<string, any>>(
   config: ListingPageOptions<T>
 ): ListingPageState {
-  const PAGE_SIZE = config.pageSize || 9;
+  const PAGE_SIZE =
+    Number.isFinite(config.pageSize) && Number(config.pageSize) > 0
+      ? Number(config.pageSize)
+      : 9;
   const container = document.getElementById(config.containerSelector.replace("#", ""));
 
   const state: ListingPageState = {
@@ -87,20 +121,6 @@ export function initListingPage<T extends Record<string, any>>(
     }
   }
 
-  function updateFilters(filters: Record<string, string>) {
-    state.currentFilters = filters;
-    state.currentPage = 1;
-    if (config.onFilterChange) {
-      config.onFilterChange(filters);
-    }
-    applyAndRender();
-  }
-
-  function goToPage(page: number) {
-    state.currentPage = page;
-    applyAndRender();
-  }
-
   // Gestion de la pagination au clic
   container?.addEventListener("click", (event) => {
     const target =
@@ -110,21 +130,14 @@ export function initListingPage<T extends Record<string, any>>(
     if (!(target instanceof HTMLElement)) return;
 
     const action = target.getAttribute("data-page-action");
-    const totalPages = Math.max(1, Math.ceil(state.filteredItems.length / PAGE_SIZE));
+    const totalPages = getTotalPages(state.filteredItems.length, PAGE_SIZE);
     const previousPage = state.currentPage;
-
-    if (action === "prev") {
-      state.currentPage = Math.max(1, state.currentPage - 1);
-    } else if (action === "next") {
-      state.currentPage = Math.min(totalPages, state.currentPage + 1);
-    } else if (action === "go") {
-      const nextPage = Number(target.getAttribute("data-page") || "1");
-      if (!Number.isNaN(nextPage)) {
-        state.currentPage = Math.min(totalPages, Math.max(1, nextPage));
-      }
-    } else {
-      return;
-    }
+    state.currentPage = resolveNextPage(
+      state.currentPage,
+      totalPages,
+      action,
+      target.getAttribute("data-page"),
+    );
 
     if (state.currentPage !== previousPage) {
       applyAndRender();
