@@ -60,47 +60,34 @@
 :root {
   --font-sans-fallback:
     ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-serif-fallback:
+    ui-serif, Georgia, Cambria, "Times New Roman", serif;
 }
 
-/* Rendu initial: fallback systeme pour limiter la pression reseau critique */
+body {
+  font-family: "Poppins", var(--font-sans-fallback);
+}
+
+h1 {
+  font-family: "Merriweather", var(--font-serif-fallback);
+}
+
 h2,
 h3,
 h4,
 h5,
 h6,
-body,
 a,
-.nav-item,
-.font-poppins {
-  font-family: var(--font-sans-fallback);
-}
-
-/* Activation de Poppins apres chargement differe */
-html.fonts-ready h2,
-html.fonts-ready h3,
-html.fonts-ready h4,
-html.fonts-ready h5,
-html.fonts-ready h6,
-html.fonts-ready body,
-html.fonts-ready a,
-html.fonts-ready .nav-item {
+.nav-item {
   font-family: "Poppins", var(--font-sans-fallback);
 }
 
-html.fonts-ready .font-poppins {
-  font-family: "Poppins", var(--font-sans-fallback) !important;
-}
-
-h1 {
-  font-family: "Merriweather", serif;
-}
-
 .font-merriweather {
-  font-family: "Merriweather", serif;
+  font-family: "Merriweather", var(--font-serif-fallback) !important;
 }
 
 .font-poppins {
-  font-family: var(--font-sans-fallback) !important;
+  font-family: "Poppins", var(--font-sans-fallback) !important;
 }
 
 h1 {
@@ -237,6 +224,7 @@ span {
   scrollbar-width: none;
   -ms-overflow-style: none;
 }
+
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
 }

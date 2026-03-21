@@ -67,8 +67,6 @@ const produits: ProductCard[] = produitsRaw.map((produit) => {
   <Hero
     image={HeroProducts}
     title="NOS PRODUITS"
-    loading="lazy"
-    fetchpriority="low"
   />
 
   <AdminEditBanner
@@ -95,7 +93,7 @@ const produits: ProductCard[] = produitsRaw.map((produit) => {
               data-product-card
               data-search={produit.title}
             >
-              <figure class="relative aspect-[5/4] w-full bg-base-200">
+              <figure class="relative aspect-5/4 w-full bg-base-200">
                 {produit.photoUrl ? (
                   <img
                     src={produit.photoUrl}
@@ -122,7 +120,7 @@ const produits: ProductCard[] = produitsRaw.map((produit) => {
 
               <div class="card-body gap-4 p-5 md:p-6">
                 <div class="space-y-2">
-                  <h2 class="min-h-[3.25rem] font-semibold md:min-h-[3.5rem]">
+                  <h2 class="min-h-13 font-semibold md:min-h-14">
                     {produit.title}
                   </h2>
                 </div>
@@ -201,14 +199,14 @@ const produits: ProductCard[] = produitsRaw.map((produit) => {
             alt="Membres Kiwanis lors d'une action"
             loading="lazy"
             decoding="async"
-            class="h-[16rem] w-full rounded-box object-cover shadow-md md:h-[18rem] lg:h-[35dvh]"
+            class="h-64 w-full rounded-box object-cover shadow-md md:h-72 lg:h-[35dvh]"
           />
           <img
             src={KiwanisPoupee1.src}
             alt="Roll-up Kiwanis lors d'un événement"
             loading="lazy"
             decoding="async"
-            class="h-[16rem] w-full rounded-box object-cover shadow-md md:h-[18rem] lg:h-[35dvh]"
+            class="h-64 w-full rounded-box object-cover shadow-md md:h-72 lg:h-[35dvh]"
           />
         </div>
       </div>
