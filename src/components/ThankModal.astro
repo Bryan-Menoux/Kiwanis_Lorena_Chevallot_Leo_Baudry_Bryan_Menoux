@@ -35,10 +35,10 @@ const showInlineForm = Boolean(formId);
 
 <dialog id={id} class="modal">
   <div class={`modal-box ${boxClass} max-h-[90dvh] overflow-y-auto min-w-0`}>
-    <h3 class="text-xl font-bold leading-tight break-words">{title}</h3>
+    <h3 class="text-xl font-bold leading-tight wrap-break-word">{title}</h3>
     {
       subtitle && (
-        <p class="mt-1 text-sm text-base-content/60 break-words whitespace-pre-wrap">
+        <p class="mt-1 text-sm text-base-content/60 wrap-break-word whitespace-pre-wrap">
           {subtitle}
         </p>
       )

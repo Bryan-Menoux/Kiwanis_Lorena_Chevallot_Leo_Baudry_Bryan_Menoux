@@ -173,7 +173,7 @@ if (Astro.request.method === "POST") {
               : "brouillons";
 
       await Astro.locals.pb.collection(collection).delete(id);
-      return Astro.redirect("/creation?success=Element supprime avec succes.");
+      return Astro.redirect("/creation?success=Élément supprimé avec succès.");
     }
   } catch (caughtError) {
     return Astro.redirect(
@@ -198,7 +198,7 @@ if (Astro.request.method === "POST") {
       <div class="flex flex-wrap items-center gap-3 justify-between lg:justify-end">
         <!-- voir la page des actions -->
         <a href="/actions" class="btn btn-border btn-sm rounded-full flex-1 md:w-fit md:btn-md whitespace-nowrap">Voir les actions</a>
-        <a href="/creation/actions/nouveau" class="btn btn-accent btn-sm rounded-full flex-1 md:w-fit md:btn-md whitespace-nowrap">Creer une action</a>
+        <a href="/creation/actions/nouveau" class="btn btn-accent btn-sm rounded-full flex-1 md:w-fit md:btn-md whitespace-nowrap">Créer une action</a>
       </div>
     </div>
 
@@ -253,8 +253,8 @@ if (Astro.request.method === "POST") {
               <label slot="secondary-extra" class="form-control w-full gap-1" for="sort-select">
                 <span class="text-sm! font-medium tracking-wide text-base-content">Trier par date</span>
                 <select id="sort-select" class="select select-bordered w-full">
-                  <option value="updated_desc">Recent -> Ancien</option>
-                  <option value="updated_asc">Ancien -> Recent</option>
+                  <option value="updated_desc">Récent → Ancien</option>
+                  <option value="updated_asc">Ancien → Récent</option>
                 </select>
               </label>
             </ActionsSearch>
@@ -290,7 +290,7 @@ if (Astro.request.method === "POST") {
                       <div class="card-actions justify-end mt-4">
                         <button
                           type="button"
-                          class="btn btn-sm btn-error rounded-full"
+                          class="btn btn-sm btn-error !text-sm !font-normal !normal-case rounded-full"
                           data-page-delete-btn
                           data-page-id={page.id}
                           data-page-title={page.title}
@@ -298,8 +298,8 @@ if (Astro.request.method === "POST") {
                         >
                           Supprimer
                         </button>
-                        <a href={getViewUrl(page.status, page.id, page.slug)} class="btn btn-sm">Voir</a>
-                        <a href={getEditUrl(page.status, page.id, page.slug)} class="btn btn-sm">Modifier</a>
+                        <a href={getViewUrl(page.status, page.id, page.slug)} class="btn btn-sm btn-ghost !text-sm !font-normal !normal-case">Voir</a>
+                        <a href={getEditUrl(page.status, page.id, page.slug)} class="btn btn-sm btn-accent !text-sm !font-normal !normal-case">Modifier</a>
                       </div>
                     </div>
                   </div>
@@ -452,7 +452,7 @@ if (Astro.request.method === "POST") {
                   <div class="card-actions justify-end mt-4">
                     <button
                       type="button"
-                      class="btn btn-sm btn-error rounded-full"
+                      class="btn btn-sm btn-error !text-sm !font-normal !normal-case rounded-full"
                       data-page-delete-btn
                       data-page-id="${page.id}"
                       data-page-title="${page.title}"
@@ -460,8 +460,8 @@ if (Astro.request.method === "POST") {
                     >
                       Supprimer
                     </button>
-                    <a href="${getViewUrl(page.status, page.id, page.slug)}" class="btn btn-sm">Voir</a>
-                    <a href="${getEditUrl(page.status, page.id, page.slug)}" class="btn btn-sm">Modifier</a>
+                    <a href="${getViewUrl(page.status, page.id, page.slug)}" class="btn btn-sm btn-ghost !text-sm !font-normal !normal-case">Voir</a>
+                    <a href="${getEditUrl(page.status, page.id, page.slug)}" class="btn btn-sm btn-accent !text-sm !font-normal !normal-case">Modifier</a>
                   </div>
                 </div>
               </div>
