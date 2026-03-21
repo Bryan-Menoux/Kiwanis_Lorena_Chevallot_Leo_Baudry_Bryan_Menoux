@@ -1,7 +1,7 @@
 ---
 import Layout from "../../../../layouts/Layout-back-office.astro";
 import ItemCard from "../../../../components/ItemCard.astro";
-import ActionsSearch from "../../../../components/ActionsSearch.astro";
+import SectionPaginator from "../../../../components/SectionPaginator.astro";
 import { normalizeImageUrl, resolveCreatorName } from "../../../../utils/utilitaires.js";
 
 let error = "";
@@ -31,15 +31,17 @@ try {
 // Mapper les partenaires
 const partenaires = partenairesRaw.map((p: any) => {
   const photoUrl = normalizeImageUrl(p.logo, p, (Astro.locals as any).pb) || "";
-  
+
   return {
     id: p.id,
     title: p.nom || "Partenaire sans nom",
+    nom: p.nom || "Partenaire sans nom",
     photoUrl,
     updated: p.updated,
     authorName: resolveCreatorName(p) || "Auteur inconnu",
     type: "partenaire",
     source: "partenaire" as const,
+    search: `${p.nom || ""} ${resolveCreatorName(p) || ""} ${p.updated || ""}`.trim(),
   };
 });
 
@@ -47,18 +49,14 @@ const partenaires = partenairesRaw.map((p: any) => {
 const contributeurs = contributeursRaw.map((c: any) => ({
   id: c.id,
   title: c.nom || "Contributeur sans nom",
+  nom: c.nom || "Contributeur sans nom",
   subtitle: c.metier || "",
   updated: c.updated,
   authorName: resolveCreatorName(c) || "Auteur inconnu",
   type: "contributeur",
   source: "contributeur" as const,
+  search: `${c.nom || ""} ${c.metier || ""} ${c.description || ""} ${resolveCreatorName(c) || ""} ${c.updated || ""}`.trim(),
 }));
-
-// Combiner et trier
-const items = [...partenaires, ...contributeurs].sort(
-  (a, b) =>
-    new Date(b.updated || 0).getTime() - new Date(a.updated || 0).getTime(),
-);
 
 // Gestion POST pour suppression multiple
 if (Astro.request.method === "POST") {
@@ -113,7 +111,7 @@ try {
       <div class="mb-0">
         <h1 class="mb-3 text-3xl font-bold text-accent font-poppins md:text-4xl">Supprimer des remerciements</h1>
         <p class="text-base text-base-content md:text-lg">
-          Sélectionnez plusieurs partenaires ou contributeurs puis cliquez sur "Supprimer sélection".
+          Sélectionnez les partenaires ou les contributeurs à supprimer puis cliquez sur "Supprimer sélection".
         </p>
       </div>
       <div class="w-full flex flex-wrap items-center gap-3 md:justify-end">
@@ -129,68 +127,228 @@ try {
     ></div>
 
     <form method="POST" id="deleteForm">
-      <div class="mb-4 space-y-4">
-        <div class="card rounded-2xl border border-base-300 bg-base-100 shadow-sm">
-          <div class="card-body p-4 md:p-6">
-            <div class="mb-4">
-              <h2 class="card-title text-2xl">Filtrer</h2>
-              <p class="mt-1 text-sm text-base-content">
-                Filtrez rapidement les partenaires ou contributeurs.
-              </p>
-            </div>
-            <ActionsSearch embedded={true} showBeneficiary={false} />
-          </div>
-        </div>
-        <div class="w-full flex flex-wrap items-center gap-3 md:justify-end">
-          <label class="flex items-center gap-2">
-            <input type="checkbox" id="selectAll" />
-            <span class="text-sm">Tout sélectionner</span>
-          </label>
-          <button
-            type="submit"
-            id="bulkDelete"
-            class="btn btn-error btn-sm rounded-full flex-1 w-full md:flex-initial md:w-fit md:btn-md"
-            >Supprimer sélection</button
-          >
-        </div>
+      <div class="mb-6 flex flex-wrap items-center justify-end gap-3">
+        <label class="flex items-center gap-2">
+          <input type="checkbox" id="selectAll" />
+          <span class="text-sm">Tout sélectionner</span>
+        </label>
+        <button
+          type="submit"
+          id="bulkDelete"
+          class="btn btn-error btn-sm rounded-full flex-1 w-full md:flex-initial md:w-fit md:btn-md"
+        >
+          Supprimer sélection
+        </button>
       </div>
 
-      <div
-        id="cards-grid"
-        class="grid grid-cols-1 gap-4 md:grid-cols-3 md:gap-5 lg:grid-cols-3 lg:gap-6"
-      >
+      <section class="mb-12">
+        <div class="mb-6 flex items-center justify-between gap-4">
+          <h2 class="text-2xl font-bold">Partenaires</h2>
+        </div>
+
         {
-          items.map((item: any) => (
-            <ItemCard
-              id={item.id}
-              title={item.title}
-              subtitle={item.subtitle}
-              photoUrl={item.photoUrl}
-              showPhotoPlaceholder={true}
-              source={item.source}
-              authorName={item.authorName}
-              updatedAt={item.updated}
-              viewUrl="/creation/remerciements"
-              editUrl="/creation/remerciements"
-              showCheckbox={true}
-              checkboxSlot={`<input class="checkbox checkbox-primary shrink-0" type="checkbox" name="ids" id="id_${item.id}" value="${item.id}" data-item-id="${item.id}" data-title="${item.title}" data-updated="${item.updated}" />`}
-              maxHeightContent={true}
-              deleteMode={true}
-            />
-          ))
+          partenaires.length === 0 ? (
+            <div class="rounded-xl border border-base-300 bg-base-100 p-6 text-base-content/60">
+              Aucun partenaire pour le moment.
+            </div>
+          ) : (
+            <>
+              <div class="mb-6">
+                <label class="form-control w-full gap-2 md:max-w-md">
+                  <span class="label-text font-medium">
+                    Rechercher un partenaire
+                  </span>
+                  <input
+                    id="partenaires-search-input"
+                    type="text"
+                    class="input input-bordered w-full"
+                    placeholder="Filtrer par nom du partenaire"
+                  />
+                </label>
+              </div>
+
+              <div
+                class="grid grid-cols-1 gap-4 md:grid-cols-3 lg:grid-cols-3"
+                id="partenaires-grid"
+              >
+                {partenaires.map((partenaire, partenaireIndex) => (
+                  <div
+                    data-partenaire-item={partenaireIndex}
+                    data-search={partenaire.search}
+                    class="space-y-3"
+                  >
+                    <ItemCard
+                      id={partenaire.id}
+                      title={partenaire.title}
+                      photoUrl={partenaire.photoUrl}
+                      showPhotoPlaceholder={true}
+                      source="partenaire"
+                      authorName={partenaire.authorName}
+                      viewUrl={`/creation/remerciements/modifier/${partenaire.id}`}
+                      editUrl={`/creation/remerciements/modifier/${partenaire.id}`}
+                      showCheckbox={true}
+                      checkboxSlot={`<input class="checkbox checkbox-primary shrink-0" type="checkbox" name="ids" id="id_${partenaire.id}" value="${partenaire.id}" data-item-id="${partenaire.id}" data-title="${partenaire.title}" data-updated="${partenaire.updated}" />`}
+                      maxHeightContent={true}
+                      deleteMode={true}
+                    />
+                  </div>
+                ))}
+              </div>
+
+              <SectionPaginator
+                itemAttr="data-partenaire-item"
+                pageSize={6}
+                searchInputId="partenaires-search-input"
+                emptyMessage="Aucun partenaire ne correspond à la recherche."
+              />
+            </>
+          )
         }
-      </div>
-      <div id="cards-pagination" class="mt-6 flex justify-center"></div>
+      </section>
+
+      <section>
+        <div class="mb-6 flex items-center justify-between gap-4">
+          <h2 class="text-2xl font-bold">Contributeurs</h2>
+        </div>
+
+        {
+          contributeurs.length === 0 ? (
+            <div class="rounded-xl border border-base-300 bg-base-100 p-6 text-base-content/60">
+              Aucun contributeur pour le moment.
+            </div>
+          ) : (
+            <>
+              <div class="mb-6">
+                <label class="form-control w-full gap-2 md:max-w-md">
+                  <span class="label-text font-medium">
+                    Rechercher un contributeur
+                  </span>
+                  <input
+                    id="contributeurs-search-input"
+                    type="text"
+                    class="input input-bordered w-full"
+                    placeholder="Filtrer par nom, métier ou description"
+                  />
+                </label>
+              </div>
+
+              <div
+                class="grid grid-cols-1 gap-4 md:grid-cols-3 lg:grid-cols-3"
+                id="contributeurs-grid"
+              >
+                {contributeurs.map((contributeur, contributeurIndex) => (
+                  <div
+                    data-contributeur-item={contributeurIndex}
+                    data-search={contributeur.search}
+                    class="space-y-3"
+                  >
+                    <ItemCard
+                      id={contributeur.id}
+                      title={contributeur.title}
+                      subtitle={contributeur.subtitle}
+                      source="contributeur"
+                      authorName={contributeur.authorName}
+                      viewUrl={`/creation/remerciements/modifier/${contributeur.id}`}
+                      editUrl={`/creation/remerciements/modifier/${contributeur.id}`}
+                      showCheckbox={true}
+                      checkboxSlot={`<input class="checkbox checkbox-primary shrink-0" type="checkbox" name="ids" id="id_${contributeur.id}" value="${contributeur.id}" data-item-id="${contributeur.id}" data-title="${contributeur.title}" data-updated="${contributeur.updated}" />`}
+                      maxHeightContent={true}
+                      deleteMode={true}
+                    />
+                  </div>
+                ))}
+              </div>
+
+              <SectionPaginator
+                itemAttr="data-contributeur-item"
+                pageSize={6}
+                searchInputId="contributeurs-search-input"
+                emptyMessage="Aucun contributeur ne correspond à la recherche."
+              />
+            </>
+          )
+        }
+      </section>
     </form>
   </div>
 
   <script>
-    import { initDeletePageHandler } from "../../../../utils/deletePageHandler";
+    import { showAlert, showConfirm } from "../../../../utils/alerts";
 
-    initDeletePageHandler({
-      cardSelector: "div[data-item-id]",
-      itemSingular: "élément",
-      itemPlural: "éléments",
+    const form = document.getElementById("deleteForm");
+    const selectAllCheckbox = document.getElementById("selectAll");
+
+    const updateSelectAllState = () => {
+      if (!(selectAllCheckbox instanceof HTMLInputElement)) return;
+      const checkboxes = Array.from(
+        document.querySelectorAll<HTMLInputElement>('input[name="ids"]'),
+      );
+      const checkedCount = checkboxes.filter((checkbox) => checkbox.checked).length;
+
+      if (checkboxes.length === 0) {
+        selectAllCheckbox.checked = false;
+        selectAllCheckbox.indeterminate = false;
+        return;
+      }
+
+      if (checkedCount === checkboxes.length) {
+        selectAllCheckbox.checked = true;
+        selectAllCheckbox.indeterminate = false;
+        return;
+      }
+
+      if (checkedCount > 0) {
+        selectAllCheckbox.checked = false;
+        selectAllCheckbox.indeterminate = true;
+        return;
+      }
+
+      selectAllCheckbox.checked = false;
+      selectAllCheckbox.indeterminate = false;
+    };
+
+    if (selectAllCheckbox instanceof HTMLInputElement) {
+      selectAllCheckbox.addEventListener("change", () => {
+        const shouldSelect = selectAllCheckbox.checked;
+        document.querySelectorAll<HTMLInputElement>('input[name="ids"]').forEach((checkbox) => {
+          checkbox.checked = shouldSelect;
+        });
+        updateSelectAllState();
+      });
+    }
+
+    document.addEventListener("change", (event) => {
+      if (!(event.target instanceof HTMLInputElement)) return;
+      if (event.target.name !== "ids") return;
+      updateSelectAllState();
     });
+
+    if (form instanceof HTMLFormElement) {
+      form.addEventListener("submit", async (event) => {
+        const selectedCount = document.querySelectorAll('input[name="ids"]:checked').length;
+        if (selectedCount === 0) {
+          event.preventDefault();
+          showAlert({
+            type: "warning",
+            message: "Sélectionnez au moins un élément avant de lancer la suppression.",
+          });
+          return;
+        }
+
+        event.preventDefault();
+        const confirmed = await showConfirm({
+          title: "Confirmer la suppression",
+          message: `Confirmez-vous la suppression de ${selectedCount} ${selectedCount > 1 ? "éléments" : "élément"} ? Cette action est irréversible.`,
+          type: "warning",
+          confirmLabel: "Supprimer",
+          cancelLabel: "Annuler",
+        });
+
+        if (!confirmed) return;
+        form.submit();
+      });
+    }
+
+    updateSelectAllState();
   </script>
 </Layout>
