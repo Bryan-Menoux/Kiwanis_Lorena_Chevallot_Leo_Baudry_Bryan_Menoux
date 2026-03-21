@@ -2,7 +2,7 @@
 import Layout from "../../../../layouts/Layout-back-office.astro";
 import ItemCard from "../../../../components/ItemCard.astro";
 import ActionsSearch from "../../../../components/ActionsSearch.astro";
-import { resolveCreatorName } from "../../../../utils/utilitaires.js";
+import { normalizeImageUrl, resolveCreatorName } from "../../../../utils/utilitaires.js";
 
 let error = "";
 let success = "";
@@ -30,9 +30,7 @@ try {
 
 // Mapper les partenaires
 const partenaires = partenairesRaw.map((p: any) => {
-  const photoUrl = Array.isArray(p.logo) && p.logo.length > 0
-    ? (Astro.locals as any).pb.files.getURL(p, p.logo[0])
-    : "";
+  const photoUrl = normalizeImageUrl(p.logo, p, (Astro.locals as any).pb) || "";
   
   return {
     id: p.id,
