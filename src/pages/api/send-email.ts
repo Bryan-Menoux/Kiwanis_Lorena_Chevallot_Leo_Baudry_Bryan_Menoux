@@ -118,7 +118,7 @@ export const POST: APIRoute = async ({ request }) => {
     });
 
     await resend.emails.send({
-      from: "onboarding@resend.dev",
+      from: "contact@bryan-menoux.fr",
       to: [email],
       subject: "Nous avons bien reçu votre message",
       html: userHtml,
