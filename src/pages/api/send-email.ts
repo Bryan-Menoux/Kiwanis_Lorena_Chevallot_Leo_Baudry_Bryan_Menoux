@@ -118,7 +118,7 @@ export const POST: APIRoute = async ({ request }) => {
     });
 
     await resend.emails.send({
-      from: "contact@bryan-menoux.fr",
+      from: "contact@kiwanis-pays-de-montbeliard.fr",
       to: [email],
       subject: "Nous avons bien reçu votre message",
       html: userHtml,
