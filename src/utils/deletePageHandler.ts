@@ -19,6 +19,7 @@ export interface DeletePageConfig {
   itemPlural: string;
   pageSize: number;
   scrollTargetSelector: string;
+  emptyStateMessage?: string;
 }
 
 const defaultConfig: DeletePageConfig = {
@@ -38,6 +39,7 @@ const defaultConfig: DeletePageConfig = {
   itemPlural: "elements",
   pageSize: 9,
   scrollTargetSelector: "#cards-grid",
+  emptyStateMessage: "",
 };
 
 export function initDeletePageHandler(config: Partial<DeletePageConfig> = {}) {
@@ -235,6 +237,21 @@ export function initDeletePageHandler(config: Partial<DeletePageConfig> = {}) {
   }
 
   function updateView() {
+    if (allCards.length === 0) {
+      grid!.innerHTML = cfg.emptyStateMessage
+        ? `<div class="rounded-2xl border border-base-300 bg-base-100 p-6 text-base-content/70 shadow-sm">${cfg.emptyStateMessage}</div>`
+        : "";
+      if (pagination instanceof HTMLElement) {
+        pagination.innerHTML = "";
+      }
+      if (selectAllCheckbox instanceof HTMLInputElement) {
+        selectAllCheckbox.checked = false;
+        selectAllCheckbox.indeterminate = false;
+      }
+      updateDeleteButtonLabel();
+      return;
+    }
+
     const visibleCards = getFilteredCards().sort((cardA, cardB) => {
       const timeA = getCardUpdatedTime(cardA);
       const timeB = getCardUpdatedTime(cardB);

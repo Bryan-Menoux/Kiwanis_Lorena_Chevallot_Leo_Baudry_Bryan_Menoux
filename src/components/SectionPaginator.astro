@@ -81,8 +81,6 @@ const {
       ? document.getElementById(sortSelectId)
       : null;
 
-    if (getItems().length === 0) return;
-
     let page = 1;
     let currentSearch = "";
     let currentBeneficiary = "";
@@ -143,13 +141,21 @@ const {
 
     const render = () => {
       const filteredItems = getFilteredItems();
+      const currentItems = getItems();
+
+      if (currentItems.length === 0) {
+        root.innerHTML = emptyMessage
+          ? `<div class="rounded-xl border border-base-300 bg-base-100 p-6 text-center text-base-content/60">${emptyMessage}</div>`
+          : "";
+        return;
+      }
+
       const totalPages = getTotalPages(filteredItems.length, pageSize);
       page = Math.min(page, totalPages);
       const start = (page - 1) * pageSize;
       const pageItems = filteredItems.slice(start, start + pageSize);
       const pageSet = new Set(pageItems);
       const filteredSet = new Set(filteredItems);
-      const currentItems = getItems();
       const itemsContainer = currentItems[0]?.parentElement;
 
       currentItems.forEach((el) => {

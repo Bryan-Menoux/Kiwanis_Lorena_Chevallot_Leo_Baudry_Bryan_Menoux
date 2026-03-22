@@ -67,37 +67,80 @@ const stats = computeCreationDashboardStats(pages);
 const allPages = pages;
 
 if (Astro.request.method === "POST") {
+  let expectsJson = false;
+
   try {
-    const formData = await Astro.request.formData();
-    const action = formData.get("_action")?.toString();
+    const contentType = (Astro.request.headers.get("content-type") || "").toLowerCase();
+    expectsJson = contentType.includes("application/json");
 
-    if (action === "delete") {
-      const id = formData.get("id")?.toString().trim();
-      const status = formData.get("status")?.toString().trim();
+    let action = "";
+    let id = "";
+    let statusValue = "";
 
-      if (!id || !status) {
-        throw new Error("Élément introuvable.");
-      }
-
-      const collection =
-        status === "actions"
-          ? "actions"
-          : status === "projets"
-            ? "projets"
-            : status === "produits"
-              ? "produits"
-              : "brouillons";
-
-      await Astro.locals.pb.collection(collection).delete(id);
-      return Astro.redirect("/creation?success=Élément supprimé avec succès.");
+    if (expectsJson) {
+      const body = await Astro.request.json();
+      action = String(body?._action || "").trim();
+      id = String(body?.id || "").trim();
+      statusValue = String(body?.status || "").trim();
+    } else {
+      const formData = await Astro.request.formData();
+      action = formData.get("_action")?.toString().trim() || "";
+      id = formData.get("id")?.toString().trim() || "";
+      statusValue = formData.get("status")?.toString().trim() || "";
     }
-  } catch (caughtError) {
+
+    if (action !== "delete") {
+      throw new Error("Action invalide.");
+    }
+
+    if (!id || !statusValue) {
+      throw new Error("Element introuvable.");
+    }
+
+    const statusKey = statusValue.toLowerCase();
+    const collectionMap: Record<string, string> = {
+      actions: "actions",
+      projets: "projets",
+      produits: "produits",
+      brouillon: "brouillons",
+      brouillons: "brouillons",
+    };
+    const collection = collectionMap[statusKey];
+
+    if (!collection) {
+      throw new Error("Type d'element invalide.");
+    }
+
+    await Astro.locals.pb.collection(collection).delete(id);
+
+    if (expectsJson) {
+      return new Response(JSON.stringify({ success: true }), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
     return Astro.redirect(
-      `/creation?error=${encodeURIComponent(
-        caughtError instanceof Error
-          ? caughtError.message
-          : "La suppression a échoué.",
-      )}`,
+      "/creation?success=" + encodeURIComponent("Element supprime avec succes."),
+    );
+  } catch (caughtError) {
+    const errorMessage =
+      caughtError instanceof Error
+        ? caughtError.message
+        : "La suppression a echoue.";
+
+    if (expectsJson) {
+      return new Response(
+        JSON.stringify({ success: false, error: errorMessage }),
+        {
+          status: 400,
+          headers: { "Content-Type": "application/json" },
+        },
+      );
+    }
+
+    return Astro.redirect(
+      "/creation?error=" + encodeURIComponent(errorMessage),
     );
   }
 }
@@ -188,7 +231,7 @@ if (Astro.request.method === "POST") {
         <div id="pages-container">
           {recent.length === 0 ? (
             <div class="text-center py-12">
-              <p class="text-base-content/60 mb-4">Aucune page trouvée</p>
+              <p class="text-base-content/60 mb-4">Aucune page disponible pour le moment.</p>
             </div>
           ) : (
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -369,7 +412,7 @@ if (Astro.request.method === "POST") {
     if (filteredPages.length === 0) {
       container.innerHTML = `
         <div class="text-center py-12">
-          <p class="text-base-content/60 mb-4">Aucune page trouvée</p>
+          <p class="text-base-content/60 mb-4">Aucune page disponible pour le moment.</p>
         </div>
       `;
       currentPage = 1;
@@ -445,34 +488,51 @@ if (Astro.request.method === "POST") {
             })
           : Promise.resolve(window.confirm(`Supprimer "${itemTitle}" ?`));
 
-        void confirmDelete.then((confirmed) => {
+        void confirmDelete.then(async (confirmed) => {
           if (!confirmed) return;
 
-          const tempForm = document.createElement("form");
-          tempForm.method = "POST";
-          tempForm.action = window.location.pathname;
-          tempForm.style.display = "none";
+          const pageId = deleteButton.getAttribute("data-page-id") || "";
+          if (!pageId) return;
 
-          const actionInput = document.createElement("input");
-          actionInput.type = "hidden";
-          actionInput.name = "_action";
-          actionInput.value = "delete";
-          tempForm.appendChild(actionInput);
+          try {
+            const response = await fetch(window.location.pathname, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "X-Requested-With": "XMLHttpRequest",
+              },
+              body: JSON.stringify({
+                _action: "delete",
+                id: pageId,
+                status: itemStatus,
+              }),
+            });
 
-          const idInput = document.createElement("input");
-          idInput.type = "hidden";
-          idInput.name = "id";
-          idInput.value = deleteButton.getAttribute("data-page-id") || "";
-          tempForm.appendChild(idInput);
+            if (!response.ok) {
+              const payload = await response.json().catch(() => null);
+              const serverMessage =
+                payload && typeof payload.error === "string"
+                  ? payload.error
+                  : "La suppression a echoue.";
+              throw new Error(serverMessage);
+            }
 
-          const statusInput = document.createElement("input");
-          statusInput.type = "hidden";
-          statusInput.name = "status";
-          statusInput.value = itemStatus;
-          tempForm.appendChild(statusInput);
+            const nextUrl = new URL(window.location.href);
+            nextUrl.searchParams.set("success", "Element supprime avec succes.");
+            window.location.href = `${nextUrl.pathname}?${nextUrl.searchParams.toString()}`;
+          } catch (error) {
+            const message =
+              error instanceof Error ? error.message : "La suppression a echoue.";
 
-          document.body.appendChild(tempForm);
-          tempForm.submit();
+            if (window.KiwanisAlert?.show) {
+              window.KiwanisAlert.show({
+                message,
+                type: "error",
+              });
+            } else {
+              window.alert(message);
+            }
+          }
         });
         return;
       }

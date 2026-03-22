@@ -1,0 +1,210 @@
+---
+import Layout from "../layouts/Layout.astro";
+
+const siteName = "Kiwanis Pays de Montbeliard";
+const contactEmail = "kiwanisfeminin.montbeliard@gmail.com";
+const contactAddress = "76 bis faubourg de Besancon, 25200 Montbeliard";
+const publicDomain = "https://www.kiwanis-pays-de-montbeliard.fr";
+const legalUpdateDate = "22 mars 2026";
+---
+
+<Layout>
+  <Fragment slot="head">
+    <title>Mentions legales | Kiwanis Pays de Montbeliard</title>
+    <meta
+      name="description"
+      content="Mentions legales du site Kiwanis Pays de Montbeliard : editeur, hebergement, propriete intellectuelle, donnees personnelles, cookies et contact."
+    />
+  </Fragment>
+
+  <main class="max-w-[85dvw]! md:max-w-[80dvw]! mx-auto my-24 md:my-32 lg:my-40">
+    <section class="rounded-box bg-base-100 p-6 md:p-8 lg:p-10 shadow-md border border-base-300/60 flex flex-col gap-5">
+      <h1>Mentions legales</h1>
+      <p>
+        Le present document precise les informations legales applicables au site
+        {siteName}, accessible notamment a l&apos;adresse {publicDomain}.
+      </p>
+      <p class="text-base-content/70">
+        Derniere mise a jour : {legalUpdateDate}
+      </p>
+      <div class="rounded-box bg-base-200 border border-base-300 p-4 md:p-5">
+        <p class="font-semibold">Informations a completer avant mise en production finale :</p>
+        <ul class="mt-3 list-disc pl-5 space-y-1">
+          <li>Nom et qualite du ou de la responsable de publication</li>
+          <li>Numero RNA et, le cas echeant, numero SIREN de l&apos;association</li>
+          <li>Identite complete de l&apos;hebergeur (raison sociale, adresse, telephone)</li>
+          <li>Duree de conservation detaillee par categorie de donnees</li>
+        </ul>
+      </div>
+    </section>
+
+    <div class="mt-8 md:mt-10 lg:mt-12 grid grid-cols-1 gap-6 md:gap-8">
+      <section class="rounded-box bg-base-100 p-6 md:p-8 shadow-md border border-base-300/60">
+        <h2>1. Editeur du site</h2>
+        <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <p class="font-semibold">Association</p>
+            <p>Kiwanis Pays de Montbeliard</p>
+          </div>
+          <div>
+            <p class="font-semibold">Statut</p>
+            <p>Association locale a but non lucratif de type loi 1901 <span class="font-semibold">[a confirmer]</span></p>
+          </div>
+          <div>
+            <p class="font-semibold">Adresse du siege</p>
+            <p>{contactAddress}</p>
+          </div>
+          <div>
+            <p class="font-semibold">Responsable de publication</p>
+            <p><span class="font-semibold">[Nom, prenom et fonction a completer]</span></p>
+          </div>
+          <div>
+            <p class="font-semibold">Contact principal</p>
+            <p>
+              <a class="link link-hover" href={`mailto:${contactEmail}`}>{contactEmail}</a>
+            </p>
+          </div>
+          <div>
+            <p class="font-semibold">Identification administrative</p>
+            <p>RNA : <span class="font-semibold">[a completer]</span> | SIREN : <span class="font-semibold">[a completer si applicable]</span></p>
+          </div>
+        </div>
+      </section>
+
+      <section class="rounded-box bg-base-100 p-6 md:p-8 shadow-md border border-base-300/60">
+        <h2>2. Hebergement</h2>
+        <div class="mt-4 flex flex-col gap-3">
+          <p>
+            Le site est exploite sur une architecture serveur Astro (mode serveur Node.js) derriere un serveur web Apache sur infrastructure VPS.
+          </p>
+          <p>
+            Une instance PocketBase est utilisee pour la gestion des donnees et de l&apos;authentification.
+          </p>
+          <p>
+            Hebergeur : <span class="font-semibold">[raison sociale a completer]</span> -
+            <span class="font-semibold"> [adresse postale a completer]</span> -
+            <span class="font-semibold"> [telephone a completer]</span>
+          </p>
+        </div>
+      </section>
+
+      <section class="rounded-box bg-base-100 p-6 md:p-8 shadow-md border border-base-300/60">
+        <h2>3. Propriete intellectuelle</h2>
+        <div class="mt-4 flex flex-col gap-3">
+          <p>
+            L&apos;ensemble des contenus presents sur ce site (textes, images, graphismes, logos, documents, structure et code source specifique) est protege par le droit de la propriete intellectuelle.
+          </p>
+          <p>
+            Sauf autorisation ecrite prealable, toute reproduction, representation, diffusion, adaptation ou exploitation, totale ou partielle, est interdite.
+          </p>
+          <p>
+            Les marques, noms et logos cites restent la propriete de leurs titulaires respectifs.
+          </p>
+        </div>
+      </section>
+
+      <section class="rounded-box bg-base-100 p-6 md:p-8 shadow-md border border-base-300/60">
+        <h2>4. Donnees personnelles (RGPD)</h2>
+        <div class="mt-4 flex flex-col gap-4">
+          <p>
+            Le traitement des donnees personnelles est effectue conformement au Reglement (UE) 2016/679 (RGPD) et a la loi Informatique et Libertes modifiee.
+          </p>
+          <div>
+            <h3 class="font-semibold">Donnees collectees</h3>
+            <ul class="mt-2 list-disc pl-5 space-y-1">
+              <li>Formulaires de contact : prenom, nom, email, telephone, message, photos eventuelles</li>
+              <li>Inscription et gestion de compte : nom, email, mot de passe, genre, informations de verification</li>
+              <li>Administration interne : donnees necessaires a la validation des comptes membres</li>
+            </ul>
+          </div>
+          <div>
+            <h3 class="font-semibold">Finalites</h3>
+            <ul class="mt-2 list-disc pl-5 space-y-1">
+              <li>Repondre aux demandes de contact</li>
+              <li>Gerer les adhesions et les acces a l&apos;espace membre/administration</li>
+              <li>Assurer la securite de l&apos;application et la tracabilite minimale des operations</li>
+            </ul>
+          </div>
+          <div>
+            <h3 class="font-semibold">Base technique</h3>
+            <p class="mt-2">
+              Les donnees sont gerees via PocketBase, utilise comme solution d&apos;authentification et de stockage applicatif.
+            </p>
+          </div>
+          <div>
+            <h3 class="font-semibold">Destinataires</h3>
+            <p class="mt-2">
+              Les donnees sont accessibles uniquement aux personnes habilitees de l&apos;association et, si necessaire, aux prestataires techniques dans la limite de leurs missions.
+            </p>
+          </div>
+          <div>
+            <h3 class="font-semibold">Duree de conservation</h3>
+            <p class="mt-2">
+              Les durees de conservation sont definies selon la nature des donnees et les obligations legales applicables.
+              Detail par categorie : <span class="font-semibold">[a completer]</span>.
+            </p>
+          </div>
+          <div>
+            <h3 class="font-semibold">Droits des personnes</h3>
+            <p class="mt-2">
+              Conformement au RGPD, vous disposez des droits d&apos;acces, de rectification, d&apos;effacement, de limitation, d&apos;opposition et de portabilite lorsque ce droit est applicable.
+              Vous pouvez exercer vos droits a l&apos;adresse suivante :
+              <a class="link link-hover" href={`mailto:${contactEmail}`}> {contactEmail}</a>.
+            </p>
+            <p class="mt-2">
+              En cas de difficultes non resolues, vous pouvez introduire une reclamation aupres de la CNIL : <a class="link link-hover" href="https://www.cnil.fr" target="_blank" rel="noopener noreferrer">www.cnil.fr</a>.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section class="rounded-box bg-base-100 p-6 md:p-8 shadow-md border border-base-300/60">
+        <h2>5. Cookies</h2>
+        <div class="mt-4 flex flex-col gap-3">
+          <p>
+            Le site utilise des cookies strictement necessaires au fonctionnement du service, notamment pour la gestion de session et l&apos;authentification des utilisateurs connectes.
+          </p>
+          <p>
+            A la date du {legalUpdateDate}, aucun cookie de suivi publicitaire ou de mesure d&apos;audience tiers n&apos;est implemente dans le code applicatif.
+          </p>
+          <p>
+            Des mecanismes de stockage local technique (localStorage/sessionStorage) peuvent etre utilises pour des fonctions d&apos;interface sans finalite publicitaire.
+          </p>
+        </div>
+      </section>
+
+      <section class="rounded-box bg-base-100 p-6 md:p-8 shadow-md border border-base-300/60">
+        <h2>6. Responsabilites</h2>
+        <div class="mt-4 flex flex-col gap-3">
+          <p>
+            L&apos;association s&apos;efforce d&apos;assurer l&apos;exactitude et la mise a jour des informations publiees. Elle ne peut toutefois garantir l&apos;absence d&apos;erreurs, d&apos;omissions ou d&apos;indisponibilite temporaire.
+          </p>
+          <p>
+            Les liens vers des sites tiers sont fournis a titre informatif. L&apos;association n&apos;exerce aucun controle sur ces contenus et decline toute responsabilite quant a leur disponibilite ou leur contenu.
+          </p>
+          <p>
+            L&apos;utilisateur du site s&apos;engage a ne pas porter atteinte au bon fonctionnement du service et a respecter la legislation en vigueur.
+          </p>
+        </div>
+      </section>
+
+      <section class="rounded-box bg-base-100 p-6 md:p-8 shadow-md border border-base-300/60">
+        <h2>7. Contact</h2>
+        <div class="mt-4 flex flex-col gap-3">
+          <p>
+            Pour toute question relative aux presentes mentions legales ou a vos donnees personnelles, vous pouvez nous contacter :
+          </p>
+          <p>
+            Par email :
+            <a class="link link-hover" href={`mailto:${contactEmail}`}> {contactEmail}</a>
+          </p>
+          <p>Par courrier : {contactAddress}</p>
+          <p>
+            Via le formulaire de la page
+            <a class="link link-hover" href="/contact"> /contact</a>.
+          </p>
+        </div>
+      </section>
+    </div>
+  </main>
+</Layout>
