@@ -1,16 +1,16 @@
 ---
 import Layout from "../layouts/Layout.astro";
 
+import arrow from "../assets/arrow-previous-small.svg";
+import circleCheck from "../assets/circle-check.svg";
+import edit from "../assets/edit.svg";
+import help from "../assets/help.svg";
+import logout from "../assets/logout.svg";
+import user from "../assets/user.svg";
 import AccountSection from "../components/Account-section.astro";
-import VerificationSection from "../components/Verification-Account-section.astro";
 import HelpAccountSection from "../components/Help-Account-section.astro";
 import ModificationSection from "../components/Modification-Account-section.astro";
-import user from "../assets/user.svg";
-import circleCheck from "../assets/circle-check.svg";
-import help from "../assets/help.svg";
-import edit from "../assets/edit.svg";
-import logout from "../assets/logout.svg";
-import arrow from "../assets/arrow-previous-small.svg";
+import VerificationSection from "../components/Verification-Account-section.astro";
 
 // Redirige vers la page de connexion si l'utilisateur n'est pas authentifié
 if (!Astro.locals.pb.authStore.isValid) {

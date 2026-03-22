@@ -152,7 +152,9 @@ function persistStep(form, step) {
   try {
     // Erreur de storage non bloquante : on continue sans casser l'UI.
     localStorage.setItem(getStorageKey(form), String(step));
-  } catch (e) {}
+  } catch (e) {
+    console.debug(e);
+  }
 }
 
 function initMobileWizard() {

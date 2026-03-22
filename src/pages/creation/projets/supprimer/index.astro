@@ -9,7 +9,7 @@ let error = "";
 let success = "";
 
 // Récupérer la liste des projets
-let projetsRaw = [];
+let projetsRaw;
 try {
   projetsRaw = await (Astro.locals as any).pb
     .collection("projets")
@@ -18,6 +18,8 @@ try {
   console.error("Impossible de récupérer les projets:", e);
   error = "Impossible de charger la liste des projets.";
 }
+
+projetsRaw = projetsRaw || [];
 
 // Mapper les données essentielles
 const projets = projetsRaw.map((p: any) => ({
@@ -82,7 +84,9 @@ if (Astro.request.method === "POST") {
 try {
   const s = Astro.url.searchParams.get("success");
   if (s) success = s;
-} catch (e) {}
+} catch (e) {
+  console.debug(e);
+}
 ---
 
 <Layout>

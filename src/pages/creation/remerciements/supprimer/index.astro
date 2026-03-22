@@ -32,8 +32,8 @@ type DeleteContributeur = {
 };
 
 // Récupérer la liste des partenaires et contributeurs
-let partenairesRaw = [];
-let contributeursRaw = [];
+let partenairesRaw;
+let contributeursRaw;
 try {
   partenairesRaw = await (Astro.locals as any).pb
     .collection("partenaires")
@@ -51,6 +51,9 @@ try {
   console.error("Impossible de récupérer les contributeurs:", e);
   error = "Impossible de charger la liste des contributeurs.";
 }
+
+partenairesRaw = partenairesRaw || [];
+contributeursRaw = contributeursRaw || [];
 
 // Mapper les partenaires
 const partenaires: DeletePartenaire[] = partenairesRaw.map((p: any) => {
@@ -126,7 +129,9 @@ if (Astro.request.method === "POST") {
 try {
   const s = Astro.url.searchParams.get("success");
   if (s) success = s;
-} catch (e) {}
+} catch (e) {
+  console.debug(e);
+}
 ---
 
 <Layout>

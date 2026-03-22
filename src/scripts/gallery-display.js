@@ -18,7 +18,7 @@ document.addEventListener("DOMContentLoaded", function () {
     if (typeof window === 'undefined' || typeof window.setGridStyles !== 'function') {
       return false;
     }
-    try { window.setGridStyles(); } catch (e) {}
+    try { window.setGridStyles(); } catch (e) { console.debug(e); }
     return true;
   };
 

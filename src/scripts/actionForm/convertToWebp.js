@@ -259,6 +259,7 @@ export async function optimizeFileListForField(
         reportProgress(100);
         return optimizedFile;
       } catch (error) {
+        console.debug(error);
         reportProgress(100);
         return file;
       }

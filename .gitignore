@@ -28,3 +28,6 @@ pnpm-debug.log*
 encoding-report.txt
 /.unlighthouse
 docs/audit-technique.md
+.eslintignore
+eslint.config.js
+fix-encoding.js

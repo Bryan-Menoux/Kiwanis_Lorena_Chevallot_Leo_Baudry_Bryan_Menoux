@@ -1,13 +1,12 @@
 ---
-import Layout from "../layouts/Layout.astro";
-import Hero from "../components/Hero.astro";
-import slugify from "slugify";
-import { formatDateShort } from "../utils/utilitaires.js";
-import HeroActions from "../assets/projects-page/hero-project-page.png";
+import { getImage } from "astro:assets";
 import HeroActionsMobile from "../assets/projects-page/hero-project-page-mobile.png";
 import HeroActionsTablet from "../assets/projects-page/hero-project-page-tablette.png";
-import { getImage } from "astro:assets";
+import HeroActions from "../assets/projects-page/hero-project-page.png";
 import AdminEditBanner from "../components/AdminEditBanner.astro";
+import Hero from "../components/Hero.astro";
+import Layout from "../layouts/Layout.astro";
+import { formatDateShort } from "../utils/utilitaires.js";
 
 const currentUser = Astro.locals.pb.authStore.record;
 const canEditProjets =

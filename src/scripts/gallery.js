@@ -138,7 +138,7 @@
 
   // Réagir uniquement au redimensionnement ici (pas d'appel de layout au DOMContentLoaded).
   window.addEventListener('resize', function () {
-    try { setGridStyles(); } catch (e) {}
+    try { setGridStyles(); } catch (e) { console.debug(e); }
   });
 
   // Délégation de clic minimale pour l'ouverture de la modale (séparée de la logique de layout).
@@ -149,6 +149,6 @@
         const url = target.getAttribute('data-photo-url');
         if (url && typeof window.openModal === 'function') window.openModal(url);
       }
-    } catch (err) {}
+    } catch (err) { console.debug(err); }
   });
 })();

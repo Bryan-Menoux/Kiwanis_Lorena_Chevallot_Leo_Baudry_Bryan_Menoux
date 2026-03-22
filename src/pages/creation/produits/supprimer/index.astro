@@ -8,7 +8,7 @@ import { getCreationViewUrl } from "../../../../utils/creationRoutes";
 let error = "";
 let success = "";
 
-let produitsRaw = [];
+let produitsRaw;
 try {
   produitsRaw = await (Astro.locals as any).pb
     .collection("produits")
@@ -17,6 +17,8 @@ try {
   console.error("Impossible de récupérer les produits :", e);
   error = "Impossible de charger la liste des produits.";
 }
+
+produitsRaw = produitsRaw || [];
 
 const produits = produitsRaw.map((p: any) => {
   const photoUrl = Array.isArray(p.photo) && p.photo.length > 0

@@ -2,11 +2,10 @@
 import LogoKiwanisSvg from "../assets/logo-kiwanis-full.svg";
 import ArrowPreviousSvg from "../assets/arrow-previous-small.svg";
 import UserSvg from "../assets/user.svg";
-import UserWhiteSvg from "../assets/user-white.svg"
 import HamburgerToggle from "./HamburgerToggle.astro";
 import MobileMenu from "./MobileMenu.astro";
 
-const userDataUri = `data:image/svg+xml,${encodeURIComponent("<svg>user</svg>")}`;
+/* user data URI removed (unused) */
 
 const currentUser = Astro.locals.pb.authStore.record;
 

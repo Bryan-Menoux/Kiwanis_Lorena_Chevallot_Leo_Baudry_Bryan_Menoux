@@ -638,7 +638,7 @@ function setupSearch(searchInputId, listId) {
 
 // Recréer la pagination avec des cartes filtrées
 // Remarque : cette fonction est maintenant obsolète car setupPagination() gère tout
-function recreatePagination(listId, cards) {
+function recreatePagination(listId) {
   // Cette fonction est conservée pour compatibilité mais n'est plus utilisée
   // setupPagination() gère maintenant toute la logique de pagination
   console.warn('recreatePagination() est obsolète, utilisez setupPagination() à la place');
@@ -686,5 +686,4 @@ export function initVerifications() {
   // Mise à jour initiale des badges depuis le DOM
   updateBadges();
 }
-
 

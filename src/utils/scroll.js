@@ -185,4 +185,5 @@ try {
     });
   }
 } catch (error) {
+  console.debug(error);
 }

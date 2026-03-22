@@ -15,7 +15,7 @@ let error = "";
 let success = "";
 
 // Récupérer la liste des actions
-let actionsRaw = [];
+let actionsRaw;
 try {
   actionsRaw = await (Astro.locals as any).pb
     .collection("actions")
@@ -24,6 +24,8 @@ try {
   console.error("Impossible de récupérer les actions:", e);
   error = "Impossible de charger la liste des actions.";
 }
+
+actionsRaw = actionsRaw || [];
 
 // Mapper les données essentielles
 const actions = actionsRaw.map((a: any) => ({
@@ -88,7 +90,9 @@ if (Astro.request.method === "POST") {
 try {
   const s = Astro.url.searchParams.get("success");
   if (s) success = s;
-} catch (e) {}
+} catch (e) {
+  console.debug(e);
+}
 ---
 
 <Layout>

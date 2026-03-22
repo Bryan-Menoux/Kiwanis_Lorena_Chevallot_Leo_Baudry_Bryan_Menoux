@@ -3,8 +3,8 @@ import {
   galleryDataUrls,
   galleryExistingUrls,
   galleryOptimizationStates,
-  getImageCropStyle,
   getDerivedState,
+  getImageCropStyle,
   normalizeProp,
   previewState,
   singleImageOptimizationStates,
@@ -229,7 +229,7 @@ function renderGallery(photoUrls = null) {
       try {
         window.setGridStyles();
       } catch (error) {
-        // no-op
+        console.debug(error);
       }
     }
 
@@ -248,7 +248,7 @@ function renderGallery(photoUrls = null) {
           try {
             window.openModal(photoUrl);
           } catch (error) {
-            // no-op
+            console.debug(error);
           }
         }
       });
@@ -332,14 +332,6 @@ function renderExistingThumbnails(existingPhotoUrls = null) {
 }
 
 export {
-  createThumbnailOptimizationOverlay,
-  applyPreviewCropStyle,
-  syncPreviewCropStyles,
-  renderSingleImageOptimizationProgress,
-  renderGalleryThumbnailOptimizationProgress,
-  renderSingleImagePreview,
-  renderGallery,
-  renderFormGalleryThumbnails,
-  renderExistingThumbnails,
-  isDefaultPlaceholderImage,
+  applyPreviewCropStyle, createThumbnailOptimizationOverlay, isDefaultPlaceholderImage, renderExistingThumbnails, renderFormGalleryThumbnails, renderGallery, renderGalleryThumbnailOptimizationProgress, renderSingleImageOptimizationProgress, renderSingleImagePreview, syncPreviewCropStyles
 };
+

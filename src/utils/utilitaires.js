@@ -37,6 +37,7 @@ export function formatDateForInput(dateValue) {
     if (isNaN(dateObj.getTime())) return "";
     return dateObj.toISOString().slice(0, 10);
   } catch (error) {
+    console.debug(error);
     return "";
   }
 }
@@ -50,6 +51,7 @@ export function formatDateLong(dateValue) {
       year: "numeric",
     });
   } catch (error) {
+    console.debug(error);
     return "";
   }
 }
@@ -63,6 +65,7 @@ export function formatDateShort(dateValue) {
       year: "numeric",
     });
   } catch (error) {
+    console.debug(error);
     return "";
   }
 }
@@ -75,6 +78,7 @@ export function formatDateWithTime(dateValue) {
       timeStyle: "short",
     });
   } catch (error) {
+    console.debug(error);
     return "";
   }
 }
@@ -92,6 +96,7 @@ export function formatDateRange(dateStart, dateEnd) {
       ? `${startFormatted} au ${endFormatted}`
       : startFormatted || endFormatted;
   } catch (error) {
+    console.debug(error);
     return "";
   }
 }
@@ -141,6 +146,7 @@ try {
     });
   }
 } catch (error) {
+  console.debug(error);
 }
 
 // Normalise référence d'image en URL en préférant l'API PocketBase.
@@ -177,6 +183,7 @@ export function normalizeImageUrl(value, record, pocketbaseClient, options) {
       }
     }
   } catch (error) {
+    console.debug(error);
     // Ignorer l'erreur et essayer les solutions de repli
   }
 

@@ -813,7 +813,9 @@ if (Astro.request.method === "POST") {
       if (details) {
         console.error("Détails PocketBase:", JSON.stringify(details, null, 2));
       }
-    } catch (logErr) {}
+    } catch (logErr) {
+      console.debug(logErr);
+    }
     error =
       err instanceof Error ? err.message : "Une erreur inconnue est survenue";
   }

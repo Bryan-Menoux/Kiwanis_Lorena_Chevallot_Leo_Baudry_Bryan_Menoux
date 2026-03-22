@@ -1,10 +1,14 @@
+import { escapeHtml, formatDateRange } from '../../utils/utilitaires.js';
 import PREVIEW_DEFAULTS from '../previewDefaults.js';
-import { formatDateRange, escapeHtml } from '../../utils/utilitaires.js';
 import {
-  IMAGE_DESCRIPTION_MAP,
-  getDerivedState,
-  normalizeProp,
-} from './state.js';
+  applyPreviewCropStyle,
+  renderExistingThumbnails,
+  renderFormGalleryThumbnails,
+  renderGallery,
+  renderGalleryThumbnailOptimizationProgress,
+  renderSingleImageOptimizationProgress,
+  renderSingleImagePreview,
+} from './renderMedia.js';
 import {
   hasImageValue,
   syncAllImageDescriptionVisibility,
@@ -16,14 +20,10 @@ import {
   syncThanksSectionVisibility,
 } from './renderVisibility.js';
 import {
-  renderExistingThumbnails,
-  renderFormGalleryThumbnails,
-  renderGallery,
-  renderGalleryThumbnailOptimizationProgress,
-  applyPreviewCropStyle,
-  renderSingleImageOptimizationProgress,
-  renderSingleImagePreview,
-} from './renderMedia.js';
+  IMAGE_DESCRIPTION_MAP,
+  getDerivedState,
+  normalizeProp,
+} from './state.js';
 
 function renderField(prop) {
   const canonicalProp = normalizeProp(prop);
@@ -92,7 +92,9 @@ function renderField(prop) {
       try {
         element.href = value || '#';
         element.style.display = value ? '' : 'none';
-      } catch (err) {}
+      } catch (err) {
+        console.debug(err);
+      }
       return;
     }
 
@@ -223,20 +225,7 @@ function renderAll() {
 
 export {
   IMAGE_DESCRIPTION_MAP,
-  hasImageValue,
-  syncImageDescriptionVisibility,
-  syncAllImageDescriptionVisibility,
-  syncImageSectionLayout,
-  syncAllImageSectionLayouts,
-  syncPartSectionsVisibility,
-  syncThanksSectionVisibility,
-  syncLocationCardsVisibility,
-  renderField,
-  renderAll,
-  renderGallery,
-  renderFormGalleryThumbnails,
-  renderExistingThumbnails,
-  renderGalleryThumbnailOptimizationProgress,
-  renderSingleImagePreview,
-  renderSingleImageOptimizationProgress,
+  hasImageValue, renderAll, renderExistingThumbnails, renderField, renderFormGalleryThumbnails, renderGallery, renderGalleryThumbnailOptimizationProgress, renderSingleImageOptimizationProgress, renderSingleImagePreview, syncAllImageDescriptionVisibility, syncAllImageSectionLayouts, syncImageDescriptionVisibility, syncImageSectionLayout, syncLocationCardsVisibility, syncPartSectionsVisibility,
+  syncThanksSectionVisibility
 };
+

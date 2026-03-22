@@ -133,6 +133,7 @@ function initActionFormAutoDraftAutosave() {
         pendingChanges = false;
       }
     } catch (error) {
+      console.debug(error);
       setStatus(statusNode, AUTOSAVE_STATUS_ERROR, "error");
     } finally {
       inFlight = false;

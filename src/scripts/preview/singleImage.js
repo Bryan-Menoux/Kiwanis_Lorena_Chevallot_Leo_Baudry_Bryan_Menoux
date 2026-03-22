@@ -127,4 +127,4 @@ function bindExistingSingleRemoveButtons() {
   document.__existingRemoveBound = true;
 }
 
-export { handleFileElement, bindExistingSingleRemoveButtons };
+export { bindExistingSingleRemoveButtons, handleFileElement };

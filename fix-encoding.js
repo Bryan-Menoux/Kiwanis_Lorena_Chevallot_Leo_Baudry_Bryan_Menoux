@@ -50,6 +50,7 @@ function fixFile(filePath) {
 
     console.log("fixed:", filePath);
   } catch (err) {
+    console.debug(err);
     console.log("error:", filePath);
   }
 }

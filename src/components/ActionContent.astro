@@ -1,6 +1,5 @@
 ---
 import DiagArrow from "./DiagArrow.astro";
-import imageIcon from "../assets/image-icon.svg";
 import backArrow from "../assets/arrow-previous-small.svg";
 import crossCircle from "../assets/cross-circle.svg";
 import galleryUrl from "../scripts/gallery.js?url";
@@ -575,7 +574,7 @@ const getSectionTitle = (key: string, fallback: string) => {
           data-photo-count={action.galerie_photos.length}
         >
           {action.galerie_photos &&
-            action.galerie_photos.map((photo: string, index: number) => {
+            action.galerie_photos.map((photo: string, _index: number) => {
               const photoURL = normalizeImageUrl(photo, action, Astro.locals.pb, { thumb: "800x0" }) || "";
 
               return (

@@ -159,12 +159,6 @@ function syncLocationCardsVisibility() {
 }
 
 export {
-  hasImageValue,
-  syncImageDescriptionVisibility,
-  syncAllImageDescriptionVisibility,
-  syncImageSectionLayout,
-  syncAllImageSectionLayouts,
-  syncPartSectionsVisibility,
-  syncThanksSectionVisibility,
-  syncLocationCardsVisibility,
+  hasImageValue, syncAllImageDescriptionVisibility, syncAllImageSectionLayouts, syncImageDescriptionVisibility, syncImageSectionLayout, syncLocationCardsVisibility, syncPartSectionsVisibility,
+  syncThanksSectionVisibility
 };

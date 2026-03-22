@@ -253,8 +253,6 @@ if (document.readyState === 'loading') {
 document.addEventListener('astro:page-load', initPreviewImageCropper);
 
 export {
-  initPreviewImageCropper,
-  openCropModal,
-  closeCropModal,
-  syncAllCropStyles,
+  closeCropModal, initPreviewImageCropper,
+  openCropModal, syncAllCropStyles
 };

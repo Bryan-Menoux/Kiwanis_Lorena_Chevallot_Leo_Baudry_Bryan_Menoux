@@ -1,4 +1,14 @@
 import {
+  renderAll,
+  renderExistingThumbnails,
+  renderField,
+  renderFormGalleryThumbnails,
+  renderGallery,
+  renderGalleryThumbnailOptimizationProgress,
+  renderSingleImageOptimizationProgress,
+  renderSingleImagePreview,
+} from './render.js';
+import {
   addGalleryFiles,
   markSingleImageRemoved,
   normalizeProp,
@@ -8,23 +18,13 @@ import {
   setField,
   setGalleryDataUrls,
   setGalleryExistingUrls,
-  setGalleryOptimizationStates,
   setGalleryFiles,
+  setGalleryOptimizationStates,
   setGalleryThumbnailOptimizationProgress,
   setPreviewState,
-  setSingleImageOptimizationProgress,
   setSingleImageFile,
+  setSingleImageOptimizationProgress,
 } from './state.js';
-import {
-  renderAll,
-  renderExistingThumbnails,
-  renderField,
-  renderFormGalleryThumbnails,
-  renderGallery,
-  renderGalleryThumbnailOptimizationProgress,
-  renderSingleImagePreview,
-  renderSingleImageOptimizationProgress,
-} from './render.js';
 
 function renderSingleImageDependencies(prop) {
   if (!prop) return;

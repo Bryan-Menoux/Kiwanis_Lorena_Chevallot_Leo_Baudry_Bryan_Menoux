@@ -63,7 +63,7 @@ if (isPostForm) {
     Astro.response.status = 302;
     Astro.response.headers.set("Location", dest);
   } catch (error) {
-    
+    console.debug(error);
     if (userVerificated === true) {
       userVerificated = false;
       serverMessage =

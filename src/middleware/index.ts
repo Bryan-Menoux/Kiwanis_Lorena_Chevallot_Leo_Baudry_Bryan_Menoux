@@ -137,7 +137,7 @@ export const onRequest = defineMiddleware(
         if (locals.pb.authStore.isValid) {
           await locals.pb.collection("users").authRefresh();
         }
-      } catch (_) {
+      } catch {
         locals.pb.authStore.clear();
       }
 

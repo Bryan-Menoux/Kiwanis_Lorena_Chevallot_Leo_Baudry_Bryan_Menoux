@@ -154,6 +154,8 @@ try {
   if (typeof window !== 'undefined') {
     window.__initPreview = initPreview;
   }
-} catch (e) {}
+} catch (e) {
+  console.debug(e);
+}
 
 export { initPreview, handleInputElement };

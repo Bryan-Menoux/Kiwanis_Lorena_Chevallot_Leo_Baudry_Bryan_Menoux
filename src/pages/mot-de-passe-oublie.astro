@@ -1,12 +1,11 @@
 ---
 import Layout from "../layouts/Layout-login.astro";
 
+import backArrow from "../assets/back-arrow.svg";
 import shapesLeft from "../assets/login-page/shapes-left.svg";
 import shapesRight from "../assets/login-page/shapes-right.svg";
-import logo from "../assets/logo-kiwanis-full.svg";
-import backArrow from "../assets/back-arrow.svg";
 import userIcon from "../assets/login-page/user.svg";
-import lockIcon from "../assets/login-page/lock.svg";
+import logo from "../assets/logo-kiwanis-full.svg";
 
 // Si l'utilisateur est déjà connecté, le rediriger vers la page d'accueil
 if (Astro.locals.pb.authStore.isValid) {
@@ -35,6 +34,7 @@ if (isPostForm) {
     serverMessage =
       "Si ce compte existe, un e-mail de réinitialisation vient d'être envoyé.";
   } catch (error) {
+    console.debug(error);
     resetRequested = false;
     serverMessage =
       "La demande de réinitialisation n'a pas pu être traitée. Veuillez réessayer.";

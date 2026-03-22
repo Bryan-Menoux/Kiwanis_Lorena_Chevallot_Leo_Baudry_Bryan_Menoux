@@ -1,11 +1,11 @@
 ---
-import Layout from "../layouts/Layout.astro";
-import Hero from "../components/Hero.astro";
-import heroRemerciments from "../assets/remerciements-page/hero-remerciements.png";
-import heroRemercimentsTablette from "../assets/remerciements-page/hero-remerciements-tablette.png";
-import heroRemercimentsMobile from "../assets/remerciements-page/hero-remerciements-mobile.png";
 import { getImage } from "astro:assets";
-import Logo from "../assets/logo-kiwanis-full.svg";
+import heroRemercimentsMobile from "../assets/remerciements-page/hero-remerciements-mobile.png";
+import heroRemercimentsTablette from "../assets/remerciements-page/hero-remerciements-tablette.png";
+import heroRemerciments from "../assets/remerciements-page/hero-remerciements.png";
+import AdminEditBanner from "../components/AdminEditBanner.astro";
+import Hero from "../components/Hero.astro";
+import Layout from "../layouts/Layout.astro";
 
 const currentUser = Astro.locals.pb.authStore.record;
 const canEditRemerciments =
@@ -67,7 +67,6 @@ const lcpDesktop = await getImage({
       type="image/webp"
       media="(max-width: 767px)"
       fetchpriority="high"
-      
     />
     <link
       rel="preload"
@@ -76,7 +75,6 @@ const lcpDesktop = await getImage({
       type="image/webp"
       media="(min-width: 768px) and (max-width: 1023px)"
       fetchpriority="high"
-      
     />
     <link
       rel="preload"
@@ -87,7 +85,6 @@ const lcpDesktop = await getImage({
       type="image/webp"
       media="(min-width: 1024px)"
       fetchpriority="high"
-      
     />
   </Fragment>
   <Hero
@@ -96,35 +93,13 @@ const lcpDesktop = await getImage({
     subtitle="Nous tenons à exprimer notre profonde gratitude envers tous ceux qui ont contribué à la réussite de nos projets."
   />
 
-  <div class="mx-auto mt-8 md:mt-12 lg:mt-16 w-full max-w-[95dvw] md:max-w-[90dvw] xl:max-w-7xl rounded-2xl bg-secondary px-4 py-6 sm:px-6 sm:py-8 md:px-10 lg:px-16 flex flex-col gap-6 md:gap-8 lg:flex-row lg:gap-12">
-    <img
-      src={Logo.src}
-      alt="Logo Kiwanis Pays de Montbéliard"
-      class="h-24 w-24 sm:h-32 sm:w-32 md:h-40 md:w-40 lg:h-48 lg:w-48 shrink-0 mx-auto lg:mx-0"
-    />
-    <div class="flex flex-col justify-between items-start min-h-full w-full gap-6">
-      <div class="flex flex-col gap-3 md:gap-4 max-w-none lg:max-w-[45dvw]">
-        <h2 class="text-xl md:text-2xl font-bold">Modifier les remerciements</h2>
-        <p class="text-sm md:text-base leading-relaxed">
-          Cet espace vous permet de mettre à jour les remerciements du club à
-          tout moment. Vous pouvez y ajouter, modifier ou supprimer les contenus
-          en fonction des actions, des soutiens et de la vie du club.
-        </p>
-      </div>
-      {
-        canEditRemerciments && (
-          <section class="self-stretch md:self-end">
-            <a
-              href="/creation/remerciements"
-              class="btn btn-accent btn-sm md:btn-md rounded-full w-full md:w-auto"
-            >
-              Modifier les remerciements
-            </a>
-          </section>
-        )
-      }
-    </div>
-  </div>
+  <AdminEditBanner
+    canEdit={canEditRemerciments}
+    title="Modifier les remerciements"
+    description="Cet espace vous permet de mettre à jour les remerciements du club à tout moment. Vous pouvez y ajouter, modifier ou supprimer les contenus en fonction des actions, des soutiens et de la vie du club."
+    buttonLabel="Modifier les remerciements"
+    href="/creation/remerciements"
+  />
 
   <section class="max-w-[85dvw]! md:max-w-[80dvw]! mx-auto my-32">
     <div class="mb-24">
@@ -137,45 +112,59 @@ const lcpDesktop = await getImage({
       <div
         class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-8 items-center"
       >
-        {partenaires.length === 0 ? (
-          <p class="col-span-full text-sm text-gray-500">Aucun partenaire pour le moment.</p>
-        ) : (
-          partenaires.map((partenaire) => (
-            <div class="group p-6 bg-white rounded-2xl ring-1 ring-gray-100 shadow-sm hover:shadow-md transition-shadow">
-              {partenaire.logoUrl ? (
-                <img
-                  src={partenaire.logoUrl}
-                  alt="Logo partenaire"
-                  class="w-full h-20 object-contain"
-                  loading="lazy"
-                  decoding="async"
-                />
-              ) : (
-                <div class="w-full h-20 flex items-center justify-center text-xs text-gray-400">Logo manquant</div>
-              )}
-            </div>
-          ))
-        )}
+        {
+          partenaires.length === 0 ? (
+            <p class="col-span-full text-sm text-gray-500">
+              Aucun partenaire pour le moment.
+            </p>
+          ) : (
+            partenaires.map((partenaire) => (
+              <div class="group p-6 bg-white rounded-2xl ring-1 ring-gray-100 shadow-sm hover:shadow-md transition-shadow">
+                {partenaire.logoUrl ? (
+                  <img
+                    src={partenaire.logoUrl}
+                    alt="Logo partenaire"
+                    class="w-full h-20 object-contain"
+                    loading="lazy"
+                    decoding="async"
+                  />
+                ) : (
+                  <div class="w-full h-20 flex items-center justify-center text-xs text-gray-400">
+                    Logo manquant
+                  </div>
+                )}
+              </div>
+            ))
+          )
+        }
       </div>
     </div>
 
     <div>
       <h2 class="text-3xl md:text-4xl font-bold mb-12">Nos Contributeurs</h2>
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {contributeurs.length === 0 ? (
-          <p class="col-span-full text-sm text-gray-500">Aucun contributeur pour le moment.</p>
-        ) : (
-          contributeurs.map((contributeur) => (
-            <div class="p-6 bg-white rounded-3xl ring-1 ring-gray-100 shadow-sm">
-              <h3 class="font-bold text-lg mb-1 capitalize">{contributeur.nom}</h3>
-              {(contributeur.metier || contributeur.description) && (
-                <p class="text-[10px] md:text-xs text-gray-500 capitalize">
-                  {[contributeur.metier, contributeur.description].filter(Boolean).join(" - ")}
-                </p>
-              )}
-            </div>
-          ))
-        )}
+        {
+          contributeurs.length === 0 ? (
+            <p class="col-span-full text-sm text-gray-500">
+              Aucun contributeur pour le moment.
+            </p>
+          ) : (
+            contributeurs.map((contributeur) => (
+              <div class="p-6 bg-white rounded-3xl ring-1 ring-gray-100 shadow-sm">
+                <h3 class="font-bold text-lg mb-1 capitalize">
+                  {contributeur.nom}
+                </h3>
+                {(contributeur.metier || contributeur.description) && (
+                  <p class="text-[10px] md:text-xs text-gray-500 capitalize">
+                    {[contributeur.metier, contributeur.description]
+                      .filter(Boolean)
+                      .join(" - ")}
+                  </p>
+                )}
+              </div>
+            ))
+          )
+        }
       </div>
     </div>
   </section>

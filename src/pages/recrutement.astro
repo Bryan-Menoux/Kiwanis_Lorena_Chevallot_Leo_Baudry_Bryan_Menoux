@@ -1,17 +1,17 @@
 ---
-import Layout from "../layouts/Layout.astro";
-import heroRecrutement from "../assets/recrutement-page/hero-recrutement.png";
-import heroRecrutementTablette from "../assets/recrutement-page/hero-recrutement-tablette.png";
-import heroRecrutementMobile from "../assets/recrutement-page/hero-recrutement-mobile.png";
-import Hero from "../components/Hero.astro";
-import recrutement1 from "../assets/recrutement-page/recrutement1.webp";
-import recrutement2 from "../assets/recrutement-page/recrutement2.webp";
-import recrutement3 from "../assets/recrutement-page/recrutement3.webp";
+import { getImage } from "astro:assets";
 import etrekiwanienne1 from "../assets/recrutement-page/etrekiwanienne1.webp";
 import etrekiwanienne2 from "../assets/recrutement-page/etrekiwanienne2.webp";
 import etrekiwanienne3 from "../assets/recrutement-page/etrekiwanienne3.webp";
+import heroRecrutementMobile from "../assets/recrutement-page/hero-recrutement-mobile.png";
+import heroRecrutementTablette from "../assets/recrutement-page/hero-recrutement-tablette.png";
+import heroRecrutement from "../assets/recrutement-page/hero-recrutement.png";
+import recrutement1 from "../assets/recrutement-page/recrutement1.webp";
+import recrutement2 from "../assets/recrutement-page/recrutement2.webp";
+import recrutement3 from "../assets/recrutement-page/recrutement3.webp";
 import DiagArrow from "../components/DiagArrow.astro";
-import { getImage } from "astro:assets";
+import Hero from "../components/Hero.astro";
+import Layout from "../layouts/Layout.astro";
 
 const lcpMobile = await getImage({ src: heroRecrutementMobile, format: "webp", width: 440, quality: 68 });
 const lcpTablet = await getImage({ src: heroRecrutementTablette, format: "webp", width: 1280, quality: 72 });

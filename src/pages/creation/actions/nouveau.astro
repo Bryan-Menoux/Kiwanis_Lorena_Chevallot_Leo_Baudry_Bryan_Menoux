@@ -218,6 +218,7 @@ if (Astro.request.method === "POST") {
               .slice(0, 7)
             : [];
         } catch (e) {
+          console.debug(e);
           data[key] = [];
         }
         continue;
