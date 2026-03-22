@@ -7,6 +7,7 @@ import AdminEditBanner from "../components/AdminEditBanner.astro";
 import Hero from "../components/Hero.astro";
 import Layout from "../layouts/Layout.astro";
 import { formatDateShort } from "../utils/utilitaires.js";
+import DiagArrow from "../components/DiagArrow.astro";
 
 const currentUser = Astro.locals.pb.authStore.record;
 const canEditProjets =
@@ -14,16 +15,39 @@ const canEditProjets =
   currentUser?.verified === true &&
   currentUser?.administrateur === true;
 
-const lcpMobile = await getImage({ src: HeroActionsMobile, format: "webp", width: 440, quality: 68 });
-const lcpTablet = await getImage({ src: HeroActionsTablet, format: "webp", width: 1280, quality: 72 });
-const lcpDesktopMd = await getImage({ src: HeroActions, format: "webp", width: 1440, quality: 80 });
-const lcpDesktop = await getImage({ src: HeroActions, format: "webp", width: 1840, quality: 80 });
+const lcpMobile = await getImage({
+  src: HeroActionsMobile,
+  format: "webp",
+  width: 440,
+  quality: 68,
+});
+const lcpTablet = await getImage({
+  src: HeroActionsTablet,
+  format: "webp",
+  width: 1280,
+  quality: 72,
+});
+const lcpDesktopMd = await getImage({
+  src: HeroActions,
+  format: "webp",
+  width: 1440,
+  quality: 80,
+});
+const lcpDesktop = await getImage({
+  src: HeroActions,
+  format: "webp",
+  width: 1840,
+  quality: 80,
+});
 
-const projects = await Astro.locals.pb.collection("projets").getFullList({ sort: "-date" });
+const projetsRaw: any[] = await Astro.locals.pb
+  .collection("projets")
+  .getFullList({ sort: "-date" });
 
-import DiagArrow from "../components/DiagArrow.astro";
-
-const projets = await Astro.locals.pb.collection("projets").getFullList({ sort: "-date" });
+const projets = (projetsRaw || []).map((projet) => ({
+  ...projet,
+  typeActionSafe: Array.isArray(projet.type_action) ? projet.type_action : [],
+}));
 
 function truncateWords(text: string, limit = 70): string {
   const normalized = text.trim();
@@ -38,14 +62,35 @@ function truncateWords(text: string, limit = 70): string {
 
 <Layout>
   <Fragment slot="head">
-    <link rel="preload" as="image" href={lcpMobile.src} type="image/webp" media="(max-width: 767px)" fetchpriority="high" />
-    <link rel="preload" as="image" href={lcpTablet.src} type="image/webp" media="(min-width: 768px) and (max-width: 1023px)" fetchpriority="high" />
-    <link rel="preload" as="image" href={lcpDesktop.src} imagesrcset={`${lcpDesktopMd.src} 1440w, ${lcpDesktop.src} 1840w`} imagesizes="95vw" type="image/webp" media="(min-width: 1024px)" fetchpriority="high" />
+    <link
+      rel="preload"
+      as="image"
+      href={lcpMobile.src}
+      type="image/webp"
+      media="(max-width: 767px)"
+      fetchpriority="high"
+    />
+    <link
+      rel="preload"
+      as="image"
+      href={lcpTablet.src}
+      type="image/webp"
+      media="(min-width: 768px) and (max-width: 1023px)"
+      fetchpriority="high"
+    />
+    <link
+      rel="preload"
+      as="image"
+      href={lcpDesktop.src}
+      imagesrcset={`${lcpDesktopMd.src} 1440w, ${lcpDesktop.src} 1840w`}
+      imagesizes="95vw"
+      type="image/webp"
+      media="(min-width: 1024px)"
+      fetchpriority="high"
+    />
   </Fragment>
-  <Hero
-    image={HeroActions}
-    title="Nos projets"
-  />
+
+  <Hero image={HeroActions} title="Nos projets" />
 
   <AdminEditBanner
     canEdit={canEditProjets}
@@ -55,49 +100,292 @@ function truncateWords(text: string, limit = 70): string {
     href="/creation/projets"
   />
 
-  <section class="min-h-[80dvh] h-fit w-full mt-64 flex">
-    <div class="w-1/2 min-h-[80dvh] rounded-tr-box rounded-br-box bg-accent flex flex-col justify-between items-center px-8 py-16 text-base-100 sticky top-[15dvh] self-start">
+  <section class="min-h-[80dvh] h-fit w-full mt-20 lg:mt-64 lg:flex">
+    <div
+      class="w-full bg-accent px-6 py-10 text-base-100 md:px-8 md:py-12 lg:sticky lg:top-[15dvh] lg:w-1/2 lg:min-h-[80dvh] lg:self-start lg:rounded-tr-box lg:rounded-br-box lg:px-8 lg:py-16 lg:flex lg:flex-col lg:justify-between lg:items-center"
+    >
       <div class="flex flex-col gap-8">
-        <p class="text-sm font-bold" >Prochaines actions</p>
-      <h2 class="text-5xl!">Découvrez nos projets futurs !</h2>
-      <p>Découvrez les initiatives que nous préparons avec nos partenaires pour répondre à des besoins concrets sur le territoire. Chaque projet est pensé pour créer du lien, soutenir des publics fragilisés et renforcer la solidarité locale, avec des actions claires, des objectifs simples et un impact réel.</p>
+        <p class="text-sm font-bold">Prochaines actions</p>
+        <h2 class="text-4xl! md:text-5xl!">Découvrez nos projets futurs !</h2>
+        <p>
+          Découvrez les initiatives que nous préparons avec nos partenaires pour
+          répondre à des besoins concrets sur le territoire. Chaque projet est
+          pensé pour créer du lien, soutenir des publics fragilisés et renforcer
+          la solidarité locale, avec des actions claires, des objectifs simples
+          et un impact réel.
+        </p>
       </div>
-      <a href="/actions" class="btn btn-block flex items-center gap-2 uppercase w-fit self-end" >Découvrez nos actions passées <DiagArrow class="h-3 w-auto invert" /></a>
-    </div>
-    <div class="w-1/2 min-h-fit flex flex-col gap-16 px-16 py-32">
-      {
-        projets.map((projet) => (
-          <div class="w-full h-[50dvh] bg-base-100 shadow-2xl rounded-box p-8 flex flex-col justify-between items-end">
-            <div class="flex flex-col w-full min-w-0" >
-              <ul class="flex gap-2">
-              {
-                projet.type_action.map((type) => (
-                  <li class="bg-secondary px-4 py-2 rounded-full text-accent">{type}</li>
-                ))
-              }
-            </ul>
-            <h2
-              class="font-medium! mt-4"
-              style="overflow-wrap:anywhere; word-break:break-word;"
-            >
-              {projet.titre}
-            </h2>
-            <p style="overflow-wrap:anywhere; word-break:break-word;">
-              {projet.description ? truncateWords(projet.description, 70) : ""}
-            </p>
-            </div>
-            <div class="flex w-full items-end justify-between" >
-              <p>{projet.date ? formatDateShort(new Date(projet.date)) : ""}</p>
-              {projet.date && projet.nom_adresse ? (
-              <button class="btn btn-accent mt-4">Ajouter à l'agenda <DiagArrow class="h-3 w-auto ml-2" /></button>
-            ) : !projet.date && projet.nom_adresse ? (
-              <a href={projet.url_adresse} target="_blank" rel="noopener noreferrer" class="btn btn-accent mt-4">Voir sur Maps <DiagArrow class="h-3 w-auto ml-2" /></a>
-            ) : null}
-            </div>
-          </div>
-        ))
-      }
+      <a
+        href="/actions"
+        class="btn mt-8 flex w-full items-center gap-2 uppercase md:w-fit lg:mt-0 lg:self-end"
+      >
+        Découvrez nos actions passées <DiagArrow class="h-3 w-auto invert" />
+      </a>
     </div>
 
+    <div class="w-full lg:w-1/2">
+      {
+        projets.length === 0 ? (
+          <div class="mx-4 my-8 rounded-box bg-base-100 px-6 py-10 text-center shadow-2xl md:mx-8 lg:mx-16 lg:my-32">
+            Aucun projet disponible pour le moment.
+          </div>
+        ) : (
+          <>
+            {/*
+            CORRECTIONS :
+            1. scroll-px-4 / md:scroll-px-8 : correspond exactement au px-4/px-8 existant
+               → le navigateur aligne les snap points en tenant compte du padding visible
+            2. snap-start conservé (cohérent avec px aligné à gauche)
+            3. Suppression du gap entre cartes non nul qui suffisait, gap-4/md:gap-6 conservés
+          */}
+            <div
+              id="projects-carousel-track"
+              class="no-scrollbar flex gap-4 overflow-x-auto px-4 py-8 snap-x snap-mandatory scroll-smooth scroll-px-4 md:gap-6 md:px-8 md:scroll-px-8 lg:flex-col lg:gap-16 lg:overflow-visible lg:px-16 lg:py-32 lg:snap-none lg:scroll-px-0"
+            >
+              {projets.map((projet) => (
+                <article
+                  data-project-card
+                  class="flex h-[52dvh] w-[86vw] shrink-0 snap-start flex-col justify-between items-end rounded-box bg-base-100 p-6 shadow-2xl md:w-[72vw] md:p-8 lg:h-[50dvh] lg:w-full"
+                >
+                  <div class="flex min-w-0 w-full flex-col">
+                    <ul class="flex flex-wrap gap-2">
+                      {projet.typeActionSafe.map((type: unknown) => (
+                        <li class="rounded-full bg-secondary px-4 py-2 text-accent">
+                          {String(type)}
+                        </li>
+                      ))}
+                    </ul>
+
+                    <h2
+                      class="font-medium! mt-4"
+                      style="overflow-wrap:anywhere; word-break:break-word;"
+                    >
+                      {projet.titre}
+                    </h2>
+
+                    <p style="overflow-wrap:anywhere; word-break:break-word;">
+                      {projet.description
+                        ? truncateWords(projet.description, 70)
+                        : ""}
+                    </p>
+                  </div>
+
+                  <div class="flex w-full items-end justify-between gap-3">
+                    <p>
+                      {projet.date
+                        ? formatDateShort(new Date(projet.date))
+                        : ""}
+                    </p>
+                    {projet.date && projet.nom_adresse ? (
+                      <a
+                        href={(() => {
+                          const start =
+                            new Date(projet.date)
+                              .toISOString()
+                              .replace(/[-:]/g, "")
+                              .split(".")[0] + "Z";
+                          const end =
+                            new Date(
+                              new Date(projet.date).getTime() + 60 * 60 * 1000,
+                            )
+                              .toISOString()
+                              .replace(/[-:]/g, "")
+                              .split(".")[0] + "Z";
+                          const params = new URLSearchParams({
+                            action: "TEMPLATE",
+                            text: projet.titre,
+                            dates: `${start}/${end}`,
+                            details: projet.description ?? "",
+                            location: projet.url_adresse ?? "",
+                          });
+                          return `https://calendar.google.com/calendar/render?${params}`;
+                        })()}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="btn btn-accent mt-4"
+                      >
+                        Ajouter à l'agenda <DiagArrow class="ml-2 h-3 w-auto" />
+                      </a>
+                    ) : !projet.date && projet.nom_adresse ? (
+                      <a
+                        href={projet.url_adresse}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="btn btn-accent mt-4"
+                      >
+                        Voir sur Maps <DiagArrow class="ml-2 h-3 w-auto" />
+                      </a>
+                    ) : null}
+                  </div>
+                </article>
+              ))}
+            </div>
+
+            {projets.length > 1 && (
+              <div
+                id="projects-carousel-controls"
+                class="flex items-center justify-between gap-3 px-4 pb-8 md:px-8 lg:hidden"
+              >
+                <button
+                  id="projects-carousel-prev"
+                  type="button"
+                  class="btn btn-sm btn-ghost"
+                  aria-label="Projet précédent"
+                >
+                  Précédent
+                </button>
+                <div
+                  id="projects-carousel-dots"
+                  class="flex items-center gap-1.5"
+                />
+                <button
+                  id="projects-carousel-next"
+                  type="button"
+                  class="btn btn-sm btn-accent"
+                  aria-label="Projet suivant"
+                >
+                  Suivant
+                </button>
+              </div>
+            )}
+          </>
+        )
+      }
+    </div>
   </section>
 </Layout>
+
+<script>
+  (() => {
+    const DESKTOP_QUERY = "(min-width: 1024px)";
+
+    function initProjectCarousel() {
+      if (window.matchMedia(DESKTOP_QUERY).matches) return;
+
+      const track = document.getElementById("projects-carousel-track");
+      const prevBtn = document.getElementById("projects-carousel-prev");
+      const nextBtn = document.getElementById("projects-carousel-next");
+      const dots = document.getElementById("projects-carousel-dots");
+
+      if (!(track instanceof HTMLElement)) return;
+      if (!(prevBtn instanceof HTMLButtonElement)) return;
+      if (!(nextBtn instanceof HTMLButtonElement)) return;
+      if (!(dots instanceof HTMLElement)) return;
+
+      const cards = Array.from(
+        track.querySelectorAll("[data-project-card]"),
+      ).filter((card): card is HTMLElement => card instanceof HTMLElement);
+      if (cards.length <= 1) return;
+
+      let currentIndex = 0;
+
+      dots.innerHTML = cards
+        .map(
+          (_, index) =>
+            `<button type="button" class="h-2 w-2 rounded-full bg-base-300 transition-colors" data-project-dot="${index}" aria-label="Aller au projet ${index + 1}"></button>`,
+        )
+        .join("");
+
+      const dotButtons = Array.from(
+        dots.querySelectorAll<HTMLButtonElement>("[data-project-dot]"),
+      );
+
+      const clampIndex = (index: number) =>
+        Math.max(0, Math.min(index, cards.length - 1));
+
+      const renderState = () => {
+        prevBtn.disabled = currentIndex <= 0;
+        nextBtn.disabled = currentIndex >= cards.length - 1;
+
+        dotButtons.forEach((button, index) => {
+          const isActive = index === currentIndex;
+          button.classList.toggle("bg-accent", isActive);
+          button.classList.toggle("bg-base-300", !isActive);
+        });
+      };
+
+      const scrollToIndex = (index: number) => {
+        currentIndex = clampIndex(index);
+        // scrollIntoView respecte automatiquement le scroll-padding du container,
+        // contrairement à scrollTo({ left: card.offsetLeft }) qui l'ignorait.
+        cards[currentIndex].scrollIntoView({
+          behavior: "smooth",
+          block: "nearest",
+          inline: "start",
+        });
+        renderState();
+      };
+
+      const getClosestIndex = () => {
+        const scrollLeft = track.scrollLeft;
+        const scrollPadding =
+          parseInt(getComputedStyle(track).scrollPaddingLeft, 10) || 0;
+        const target = scrollLeft + scrollPadding;
+
+        let closestIndex = 0;
+        let closestDistance = Number.POSITIVE_INFINITY;
+
+        cards.forEach((card, index) => {
+          const distance = Math.abs(card.offsetLeft - target);
+          if (distance < closestDistance) {
+            closestDistance = distance;
+            closestIndex = index;
+          }
+        });
+
+        return closestIndex;
+      };
+
+      prevBtn.addEventListener("click", () => {
+        scrollToIndex(currentIndex - 1);
+      });
+
+      nextBtn.addEventListener("click", () => {
+        scrollToIndex(currentIndex + 1);
+      });
+
+      dots.addEventListener("click", (event) => {
+        const button =
+          event.target instanceof HTMLElement
+            ? event.target.closest("[data-project-dot]")
+            : null;
+        if (!(button instanceof HTMLButtonElement)) return;
+
+        const dotValue = Number(button.dataset.projectDot);
+        if (!Number.isFinite(dotValue)) return;
+
+        scrollToIndex(dotValue);
+      });
+
+      let scrollTimer = 0;
+      track.addEventListener("scroll", () => {
+        window.clearTimeout(scrollTimer);
+        scrollTimer = window.setTimeout(() => {
+          currentIndex = getClosestIndex();
+          renderState();
+        }, 80);
+      });
+
+      renderState();
+    }
+
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", initProjectCarousel, {
+        once: true,
+      });
+    } else {
+      initProjectCarousel();
+    }
+  })();
+</script>
+
+<style>
+  .no-scrollbar {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+</style>

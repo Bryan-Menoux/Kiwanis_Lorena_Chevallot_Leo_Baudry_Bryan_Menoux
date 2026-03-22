@@ -21,14 +21,12 @@ const canEditActions =
   currentUser?.verified === true &&
   currentUser?.administrateur === true;
 
-let actionsRaw: any[];
+let actionsRaw: any[] = [];
 try {
   actionsRaw = await Astro.locals.pb.collection("actions").getFullList();
 } catch (error) {
-  console.debug(error);
+  actionsRaw = [];
 }
-
-actionsRaw = actionsRaw || [];
 
 const actions = [...actionsRaw].sort(
   (a, b) =>
@@ -71,14 +69,12 @@ const actionsWithUrls = actions.map((action) => {
   };
 });
 
-let membres: any[];
+let membres: any[] = [];
 try {
   membres = await Astro.locals.pb.collection("membres").getFullList();
 } catch (error) {
-  console.debug(error);
+  membres = [];
 }
-
-membres = membres || [];
 
 const date = new Date().getFullYear();
 const dureeEngagement = Math.max(0, date - 2019);
