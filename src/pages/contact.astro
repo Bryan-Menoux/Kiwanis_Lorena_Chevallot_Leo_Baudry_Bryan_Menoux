@@ -1,31 +1,177 @@
----
+﻿---
 import Layout from "../layouts/Layout.astro";
 import DiagArrow from "../components/DiagArrow.astro";
 import shapes from "../assets/contact/shapes.svg";
 
 const contactEmail = "kiwanisfeminin.montbeliard@gmail.com";
-const contactPhone = "06 49 72 92 58";
+const contactTelephone = "06 49 72 92 58";
 const contactTelHref = "tel:+33649729258";
-const contactAddress = "76 bis faubourg de Besancon, 25200 Montbeliard";
+const contactAddress = "76 bis faubourg de Besançon, 25200 Montbéliard";
 const facebookUrl = "https://www.facebook.com/profile.php?id=61575848495298";
+const MAX_CONTACT_PHOTOS = 4;
+const MAX_CONTACT_PHOTO_BYTES = 2 * 1024 * 1024;
+
+const createContactRecord = async (payload: FormData, pocketbaseClient: any) => {
+  const baseUrl = String(pocketbaseClient?.baseUrl || "").trim();
+  const endpoint = baseUrl
+    ? new URL("/api/collections/contact/records", baseUrl).toString()
+    : "/api/collections/contact/records";
+  const headers: Record<string, string> = {};
+  const token = pocketbaseClient?.authStore?.token;
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+  }
+
+  const response = await fetch(endpoint, {
+    method: "POST",
+    body: payload,
+    headers,
+  });
+
+  const rawText = await response.text();
+  let data: any = null;
+  if (rawText) {
+    try {
+      data = JSON.parse(rawText);
+    } catch {
+      data = rawText;
+    }
+  }
+
+  if (!response.ok) {
+    const err: any = new Error(
+      typeof data === "object" && data?.message
+        ? data.message
+        : "Failed to create record.",
+    );
+    err.status = response.status;
+    err.response = { data };
+    throw err;
+  }
+
+  return data;
+};
+
+const extractPocketbaseErrorDetails = (err: unknown) => {
+  const responseData = (err as any)?.response?.data;
+  if (typeof responseData === "string") {
+    const trimmed = responseData.trim();
+    return trimmed ? trimmed : "";
+  }
+
+  const data = responseData?.data;
+  if (!data || typeof data !== "object") {
+    return "";
+  }
+
+  const messages: string[] = [];
+
+  for (const [field, raw] of Object.entries(data as Record<string, any>)) {
+    if (raw && typeof raw === "object" && typeof raw.message === "string") {
+      messages.push(`${field} : ${raw.message}`);
+      continue;
+    }
+
+    if (Array.isArray(raw)) {
+      for (const item of raw) {
+        if (item && typeof item === "object" && typeof item.message === "string") {
+          messages.push(`${field} : ${item.message}`);
+        }
+      }
+    }
+  }
+
+  return messages.join(" ");
+};
+
+let successMessage: string | null = null;
+let errorMessage: string | null = null;
+
+if (Astro.request.method === "POST") {
+  try {
+    const formData = await Astro.request.formData();
+
+    const prenom = formData.get("prenom")?.toString().trim() ?? "";
+    const nom = formData.get("nom")?.toString().trim() ?? "";
+    const email = formData.get("email")?.toString().trim() ?? "";
+    const telephone = formData.get("telephone")?.toString().trim() ?? "";
+    const message = formData.get("message")?.toString().trim() ?? "";
+    const photos = formData
+      .getAll("photos")
+      .filter(
+        (entry): entry is File =>
+          entry instanceof File &&
+          entry.size > 0 &&
+          entry.type.startsWith("image/"),
+      );
+
+    if (!email && !telephone) {
+      errorMessage = "Veuillez renseigner un email ou un numéro de téléphone.";
+    } else {
+      if (photos.length > MAX_CONTACT_PHOTOS) {
+        throw new Error(
+          `Vous pouvez envoyer jusqu'à ${MAX_CONTACT_PHOTOS} images.`,
+        );
+      }
+      const oversized = photos.find((photo) => photo.size > MAX_CONTACT_PHOTO_BYTES);
+      if (oversized) {
+        throw new Error(
+          `Chaque photo doit faire moins de 2 Mo. Fichier refusé : ${oversized.name}.`,
+        );
+      }
+
+      const normalizedTelephone = telephone.replace(/\D+/g, "");
+      const payload = new FormData();
+
+      if (normalizedTelephone) {
+        payload.append("numero_de_telephone", normalizedTelephone);
+      }
+
+      if (prenom) payload.append("prenom", prenom);
+      if (nom) payload.append("nom", nom);
+      if (email) payload.append("email", email);
+      if (message) payload.append("message", message);
+
+      if (photos.length > 0) {
+        for (const photo of photos) {
+          payload.append("photos", photo, photo.name);
+        }
+      }
+
+      await createContactRecord(payload, Astro.locals.pb);
+      successMessage = "Votre message a bien été envoyé. Nous vous répondrons rapidement !";
+    }
+  } catch (err: unknown) {
+    const details = extractPocketbaseErrorDetails(err);
+    console.error("Erreur soumission contact:", {
+      status: (err as any)?.status,
+      message: (err as any)?.message,
+      details,
+      data: (err as any)?.response?.data?.data,
+    });
+    errorMessage = details
+      ? `Envoi impossible : ${details}`
+      : "Une erreur est survenue lors de l'envoi. Veuillez réessayer.";
+  }
+}
 ---
 
 <Layout>
   <Fragment slot="head">
-    <title>Contact | Kiwanis Pays de Montbeliard</title>
+    <title>Contact | Kiwanis Pays de Montbéliard</title>
     <meta
       name="description"
-      content="Contactez le Kiwanis Pays de Montbeliard pour toute question, proposition de partenariat ou demande d'information."
+      content="Contactez le Kiwanis Pays de Montbéliard pour toute question, proposition de partenariat ou demande d'information."
     />
   </Fragment>
 
   <div class="flex flex-col gap-14 md:gap-16 lg:gap-20 max-w-[85dvw]! md:max-w-[80dvw]! mx-auto my-24 md:my-32 lg:my-40">
     <section class="flex flex-col gap-4 md:gap-6">
       <h1>Nous contacter</h1>
-      <h3>Echanger avec le Kiwanis feminin Pays de Montbeliard</h3>
+      <h3>Échanger avec le Kiwanis Féminin Pays de Montbéliard</h3>
       <p class="max-w-3xl">
-        Une question, besoin d&apos;informations ou envie de proposer un projet ou un
-        partenariat ? Utilisez le formulaire de contact ou les coordonnees ci-dessous,
+        Une question, besoin d'informations ou envie de proposer un projet ou un
+        partenariat ? Utilisez le formulaire de contact ou les coordonnées ci-dessous,
         nous reviendrons vers vous rapidement.
       </p>
     </section>
@@ -50,7 +196,7 @@ const facebookUrl = "https://www.facebook.com/profile.php?id=61575848495298";
                 <svg viewBox="0 0 24 24" class="mt-1 h-6 w-6 shrink-0 fill-current text-white" aria-hidden="true">
                   <path d="M6.62 10.79a15.05 15.05 0 0 0 6.59 6.59l2.2-2.2a1 1 0 0 1 1-.24 11.72 11.72 0 0 0 3.67.59 1 1 0 0 1 1 1V21a1 1 0 0 1-1 1A17 17 0 0 1 2 4a1 1 0 0 1 1-1h3.47a1 1 0 0 1 1 1 11.72 11.72 0 0 0 .59 3.67 1 1 0 0 1-.24 1z"></path>
                 </svg>
-                <a href={contactTelHref} class="hover:opacity-80 transition-opacity">{contactPhone}</a>
+                <a href={contactTelHref} class="hover:opacity-80 transition-opacity">{contactTelephone}</a>
               </div>
 
               <div class="flex items-start gap-4">
@@ -71,7 +217,7 @@ const facebookUrl = "https://www.facebook.com/profile.php?id=61575848495298";
             </div>
 
             <div class="mt-auto flex flex-col gap-4">
-              <p>Suivez-nous aussi sur les reseaux !</p>
+              <p>Suivez-nous aussi sur les réseaux !</p>
               <a
                 href={facebookUrl}
                 target="_blank"
@@ -85,16 +231,32 @@ const facebookUrl = "https://www.facebook.com/profile.php?id=61575848495298";
           </div>
         </aside>
 
-        <form data-contact-form class="rounded-box bg-base-100 p-6 md:p-8 lg:p-10 shadow-md flex flex-col gap-6">
+        <form
+          method="POST"
+          enctype="multipart/form-data"
+          data-contact-form
+          class="rounded-box bg-base-100 p-6 md:p-8 lg:p-10 shadow-md flex flex-col gap-6"
+        >
+          {successMessage && (
+            <div role="alert" class="alert alert-success text-sm">
+              {successMessage}
+            </div>
+          )}
+          {errorMessage && (
+            <div role="alert" class="alert alert-error text-sm">
+              {errorMessage}
+            </div>
+          )}
+
           <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
             <label class="form-control w-full gap-2">
-              <span class="label-text text-base-content/60">Prenom</span>
-              <input type="text" name="firstName" autocomplete="given-name" class="input input-bordered w-full" />
+              <span class="label-text text-base-content/60">Prénom</span>
+              <input type="text" name="prenom" autocomplete="given-name" class="input input-bordered w-full" />
             </label>
 
             <label class="form-control w-full gap-2">
               <span class="label-text text-base-content/60">Nom</span>
-              <input type="text" name="lastName" autocomplete="family-name" class="input input-bordered w-full" />
+              <input type="text" name="nom" autocomplete="family-name" class="input input-bordered w-full" />
             </label>
           </div>
 
@@ -105,8 +267,8 @@ const facebookUrl = "https://www.facebook.com/profile.php?id=61575848495298";
             </label>
 
             <label class="form-control w-full gap-2">
-              <span class="label-text text-base-content/60">Numero de telephone</span>
-              <input type="tel" name="phone" autocomplete="tel" class="input input-bordered w-full" />
+              <span class="label-text text-base-content/60">Numéro de téléphone</span>
+              <input type="tel" name="telephone" autocomplete="tel" class="input input-bordered w-full" />
             </label>
           </div>
 
@@ -116,7 +278,7 @@ const facebookUrl = "https://www.facebook.com/profile.php?id=61575848495298";
           </label>
 
           <label class="form-control w-full gap-2">
-            <span class="label-text text-base-content/60">Ajouter des photos (optionnel)</span>
+            <span class="label-text text-base-content/60">Ajouter des photos (4 max)</span>
             <div
               data-photo-dropzone
               role="button"
@@ -129,15 +291,20 @@ const facebookUrl = "https://www.facebook.com/profile.php?id=61575848495298";
                 <path d="M5 5h6V3H3v8h2z"></path>
                 <path d="M19 19H5V9H3v12h18V11h-2z"></path>
               </svg>
-              <span class="text-sm text-base-content/60">Cliquez pour ajouter des photos ou glissez-deposez</span>
+              <span class="text-sm text-base-content/60">Cliquez pour ajouter des photos <span class="hidden lg:block" >ou glissez-déposez</span></span>
               <input data-photo-input type="file" name="photos" accept="image/*" multiple class="sr-only" />
             </div>
-            <p data-photo-summary class="text-sm text-base-content/60">Aucune image ajoutee</p>
-            <ul data-photo-list class="flex flex-col gap-2"></ul>
+            <div data-photo-loader class="hidden items-center gap-2 text-xs text-base-content/70">
+              <span class="loading loading-spinner loading-xs"></span>
+              <span>Traitement des images en cours...</span>
+            </div>
+            <p data-photo-summary class="text-sm text-base-content/60">Aucune image ajoutée</p>
+            <p data-photo-error class="hidden text-xs text-error"></p>
+            <ul data-photo-list class="grid grid-cols-1 gap-2 lg:grid-cols-2"></ul>
           </label>
 
           <div class="flex justify-end">
-            <button type="button" class="btn btn-accent w-full md:w-fit px-8">
+            <button type="submit" class="btn btn-accent w-full md:w-fit px-8">
               Envoyer
             </button>
           </div>
@@ -148,80 +315,245 @@ const facebookUrl = "https://www.facebook.com/profile.php?id=61575848495298";
     <section class="rounded-box bg-base-100 p-6 md:p-8 lg:p-10 shadow-md flex flex-col gap-6">
       <h2>Contactez-nous autrement</h2>
       <p class="max-w-3xl">
-        Vous pouvez aussi nous ecrire par courrier ou deposer un mot dans notre boite
-        aux lettres a l&apos;adresse de notre siege : 76 bis faubourg de Besancon,
-        25200 Montbeliard.
+        Vous pouvez aussi nous écrire par courrier ou déposer un mot dans notre boîte
+        aux lettres à l'adresse de notre siège : 76 bis faubourg de Besançon,
+        25200 Montbéliard.
       </p>
       <p class="max-w-3xl">
-        Il est egalement possible de nous joindre par telephone au {contactPhone}
-        mais aussi via l&apos;adresse mail : {contactEmail}
+        Il est également possible de nous joindre par téléphone au {contactTelephone},
+        ainsi que via l'adresse e-mail : {contactEmail}.
       </p>
     </section>
   </div>
 
-  <script>
-    const form = document.querySelector<HTMLFormElement>("[data-contact-form]");
-    if (form) {
-      const photoInput = form.querySelector<HTMLInputElement>("[data-photo-input]");
-      const dropzone = form.querySelector<HTMLElement>("[data-photo-dropzone]");
-      const summary = form.querySelector<HTMLElement>("[data-photo-summary]");
-      const list = form.querySelector<HTMLUListElement>("[data-photo-list]");
+  <script define:vars={{ maxContactPhotoBytes: MAX_CONTACT_PHOTO_BYTES, maxContactPhotos: MAX_CONTACT_PHOTOS }}>
+  const MAX_PHOTO_BYTES = Number(maxContactPhotoBytes) || 2097152;
+  const MAX_PHOTOS = Number(maxContactPhotos) || 4;
+  const form = document.querySelector("[data-contact-form]");
+  if (form && form.dataset.photoPickerInit !== "true") {
+    form.dataset.photoPickerInit = "true";
 
-      let selectedFiles: File[] = [];
+    const photoInput = form.querySelector("[data-photo-input]");
+    const dropzone = form.querySelector("[data-photo-dropzone]");
+    const summary = form.querySelector("[data-photo-summary]");
+    const errorMessage = form.querySelector("[data-photo-error]");
+    const loader = form.querySelector("[data-photo-loader]");
+    const list = form.querySelector("[data-photo-list]");
 
-      const formatSize = (bytes: number): string => {
-        if (bytes < 1024) return `${bytes} o`;
-        if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} Ko`;
-        return `${(bytes / (1024 * 1024)).toFixed(1)} Mo`;
-      };
+    let selectedFiles = [];
+    let isProcessing = false;
+    const previewUrls = new Map();
+    const QUALITY_STEPS = [0.86, 0.74, 0.62, 0.5, 0.38];
+    const SCALE_FACTOR = 0.82;
+    const MAX_DIMENSION = 2000;
+    const MAX_SCALE_PASSES = 4;
 
-      const getFileKey = (file: File): string =>
-        `${file.name}-${file.size}-${file.lastModified}`;
+    const formatSize = (bytes) => {
+      if (bytes < 1024) return `${bytes} o`;
+      if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} Ko`;
+      return `${(bytes / (1024 * 1024)).toFixed(1)} Mo`;
+    };
 
-      const syncInputFiles = (): void => {
-        if (!photoInput) return;
-        const dataTransfer = new DataTransfer();
-        selectedFiles.forEach((file: File) => dataTransfer.items.add(file));
-        photoInput.files = dataTransfer.files;
-      };
+    const getFileKey = (file) => `${file.name}-${file.size}-${file.lastModified}`;
 
-      const renderSelectedFiles = (): void => {
-        if (!summary || !list) return;
+    const toWebpName = (fileName) => {
+      const trimmed = String(fileName || "").trim();
+      if (!trimmed) return "image.webp";
+      if (trimmed.includes(".")) return trimmed.replace(/\.[^.]+$/, ".webp");
+      return `${trimmed}.webp`;
+    };
 
-        if (selectedFiles.length === 0) {
-          summary.textContent = "Aucune image ajoutee";
-          list.innerHTML = "";
-          return;
+    const loadImageFromFile = (file) =>
+      new Promise((resolve) => {
+        const image = new Image();
+        const objectUrl = URL.createObjectURL(file);
+
+        image.onload = () => {
+          resolve({
+            image,
+            width: image.naturalWidth || image.width,
+            height: image.naturalHeight || image.height,
+            dispose: () => URL.revokeObjectURL(objectUrl),
+          });
+        };
+
+        image.onerror = () => {
+          URL.revokeObjectURL(objectUrl);
+          resolve(null);
+        };
+
+        image.src = objectUrl;
+      });
+
+    const canvasToWebpBlob = (canvas, quality) =>
+      new Promise((resolve) => {
+        canvas.toBlob((blob) => resolve(blob || null), "image/webp", quality);
+      });
+
+    const compressImageToMaxBytes = async (file) => {
+      if (!(file instanceof File)) return null;
+      if (!file.type.startsWith("image/")) return file;
+      if (file.size <= MAX_PHOTO_BYTES) return file;
+
+      const loaded = await loadImageFromFile(file);
+      if (!loaded || !loaded.width || !loaded.height) return null;
+
+      const outputName = toWebpName(file.name);
+      let bestBlob = null;
+      let scale = 1;
+
+      const largestSide = Math.max(loaded.width, loaded.height);
+      if (largestSide > MAX_DIMENSION) {
+        scale = MAX_DIMENSION / largestSide;
+      }
+
+      try {
+        let passIndex = 0;
+        while (passIndex < MAX_SCALE_PASSES) {
+          const targetWidth = Math.max(1, Math.round(loaded.width * scale));
+          const targetHeight = Math.max(1, Math.round(loaded.height * scale));
+          const canvas = document.createElement("canvas");
+          canvas.width = targetWidth;
+          canvas.height = targetHeight;
+
+          const context = canvas.getContext("2d");
+          if (!context) break;
+          context.drawImage(loaded.image, 0, 0, targetWidth, targetHeight);
+
+          for (const quality of QUALITY_STEPS) {
+            const blob = await canvasToWebpBlob(canvas, quality);
+            if (!blob) continue;
+            if (!bestBlob || blob.size < bestBlob.size) {
+              bestBlob = blob;
+            }
+            if (blob.size <= MAX_PHOTO_BYTES) {
+              return new File([blob], outputName, { type: "image/webp" });
+            }
+          }
+
+          if (targetWidth === 1 && targetHeight === 1) break;
+          scale *= SCALE_FACTOR;
+          passIndex += 1;
+        }
+      } finally {
+        loaded.dispose();
+      }
+
+      if (bestBlob) {
+        return new File([bestBlob], outputName, { type: "image/webp" });
+      }
+
+      return null;
+    };
+
+    const syncInputFiles = () => {
+      if (!photoInput) return;
+      const dataTransfer = new DataTransfer();
+      selectedFiles.forEach((file) => dataTransfer.items.add(file));
+      photoInput.files = dataTransfer.files;
+    };
+
+    const setProcessingState = (active) => {
+      isProcessing = active;
+      if (photoInput) {
+        photoInput.disabled = active;
+      }
+      if (dropzone) {
+        dropzone.classList.toggle("pointer-events-none", active);
+        dropzone.classList.toggle("opacity-70", active);
+      }
+      if (loader) {
+        loader.classList.toggle("hidden", !active);
+        loader.classList.toggle("flex", active);
+      }
+    };
+
+    const renderSelectedFiles = () => {
+      if (!summary || !list) return;
+
+      if (selectedFiles.length === 0) {
+        summary.textContent = "Aucune image ajoutée";
+        if (errorMessage) {
+          errorMessage.textContent = "";
+          errorMessage.classList.add("hidden");
+        }
+        for (const url of previewUrls.values()) {
+          URL.revokeObjectURL(url);
+        }
+        previewUrls.clear();
+        list.innerHTML = "";
+        return;
+      }
+
+      summary.textContent =
+        selectedFiles.length === 1
+          ? "1 image ajoutée"
+          : `${selectedFiles.length} images ajoutées`;
+
+      const nextKeys = new Set();
+      selectedFiles.forEach((file) => nextKeys.add(getFileKey(file)));
+
+      for (const [key, url] of previewUrls.entries()) {
+        if (!nextKeys.has(key)) {
+          URL.revokeObjectURL(url);
+          previewUrls.delete(key);
+        }
+      }
+
+      list.innerHTML = selectedFiles
+        .map((file, index) => {
+          const key = getFileKey(file);
+          let previewUrl = previewUrls.get(key);
+          if (!previewUrl) {
+            previewUrl = URL.createObjectURL(file);
+            previewUrls.set(key, previewUrl);
+          }
+
+          return `
+            <li class="flex items-center gap-3 rounded-box bg-base-200 p-2">
+              <img src="${previewUrl}" alt="" class="h-12 w-12 rounded-md object-cover" loading="lazy" />
+              <div class="min-w-0 flex-1">
+                <p class="truncate text-sm text-base-content">${file.name}</p>
+                <p class="text-xs text-base-content/60">${formatSize(file.size)}</p>
+              </div>
+              <button type="button" data-remove-photo="${index}" class="btn btn-ghost btn-xs">Retirer</button>
+            </li>
+          `;
+        })
+        .join("");
+    };
+
+    const addFiles = async (incoming) => {
+      if (isProcessing) return;
+      setProcessingState(true);
+      const imageFiles = Array.from(incoming).filter((file) =>
+        file.type.startsWith("image/"),
+      );
+      const oversizeFiles = [];
+      const acceptedFiles = [];
+      const maxRemaining = Math.max(0, MAX_PHOTOS - selectedFiles.length);
+
+      try {
+        for (const file of imageFiles) {
+          if (acceptedFiles.length >= maxRemaining) {
+            limitReached = true;
+            break;
+          }
+          if (file.size <= MAX_PHOTO_BYTES) {
+            acceptedFiles.push(file);
+            continue;
+          }
+          const compressed = await compressImageToMaxBytes(file);
+          if (compressed && compressed.size <= MAX_PHOTO_BYTES) {
+            acceptedFiles.push(compressed);
+          } else {
+            oversizeFiles.push(file);
+          }
         }
 
-        summary.textContent =
-          selectedFiles.length === 1
-            ? "1 image ajoutee"
-            : `${selectedFiles.length} images ajoutees`;
+        const knownKeys = new Set(selectedFiles.map((file) => getFileKey(file)));
 
-        list.innerHTML = selectedFiles
-          .map(
-            (file: File, index: number) => `
-              <li class="flex items-center justify-between rounded-box bg-base-200 px-3 py-2">
-                <div class="min-w-0">
-                  <p class="truncate text-sm text-base-content">${file.name}</p>
-                  <p class="text-xs text-base-content/60">${formatSize(file.size)}</p>
-                </div>
-                <button type="button" data-remove-photo="${index}" class="btn btn-ghost btn-xs">Retirer</button>
-              </li>
-            `,
-          )
-          .join("");
-      };
-
-      const addFiles = (incoming: FileList | File[]): void => {
-        const imageFiles = Array.from(incoming).filter((file: File) =>
-          file.type.startsWith("image/"),
-        );
-
-        const knownKeys = new Set(selectedFiles.map((file: File) => getFileKey(file)));
-
-        imageFiles.forEach((file: File) => {
+        acceptedFiles.forEach((file) => {
           const fileKey = getFileKey(file);
           if (!knownKeys.has(fileKey)) {
             knownKeys.add(fileKey);
@@ -229,68 +561,80 @@ const facebookUrl = "https://www.facebook.com/profile.php?id=61575848495298";
           }
         });
 
+        if (errorMessage) {
+          if (oversizeFiles.length > 0) {
+            errorMessage.textContent =
+              oversizeFiles.length === 1
+                ? `Le fichier "${oversizeFiles[0].name}" n'a pas pu être compressé sous 2 Mo.`
+                : `${oversizeFiles.length} fichiers n'ont pas pu être compressés sous 2 Mo.`;
+            errorMessage.classList.remove("hidden");
+          } else {
+            errorMessage.textContent = "";
+            errorMessage.classList.add("hidden");
+          }
+        }
+
         syncInputFiles();
         renderSelectedFiles();
+      } finally {
+        setProcessingState(false);
+      }
+    };
+
+    if (photoInput) {
+      photoInput.addEventListener("change", () => {
+        if (photoInput.files) {
+          void addFiles(photoInput.files);
+        }
+      });
+    }
+
+    if (dropzone && photoInput) {
+      dropzone.addEventListener("keydown", (event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          photoInput.click();
+        }
+      });
+
+      const onDragOver = (event) => {
+        event.preventDefault();
+        dropzone.classList.add("border-accent", "bg-base-200");
       };
 
-      if (photoInput) {
-        photoInput.addEventListener("change", () => {
-          if (photoInput.files) {
-            addFiles(photoInput.files);
-          }
-        });
-      }
+      const onDragLeave = (event) => {
+        event.preventDefault();
+        dropzone.classList.remove("border-accent", "bg-base-200");
+      };
 
-      if (dropzone && photoInput) {
-        dropzone.addEventListener("keydown", (event: KeyboardEvent) => {
-          if (event.key === "Enter" || event.key === " ") {
-            event.preventDefault();
-            photoInput.click();
-          }
-        });
-
-        const onDragOver = (event: DragEvent): void => {
-          event.preventDefault();
-          dropzone.classList.add("border-accent");
-          dropzone.classList.add("bg-base-200");
-        };
-
-        const onDragLeave = (event: DragEvent): void => {
-          event.preventDefault();
-          dropzone.classList.remove("border-accent");
-          dropzone.classList.remove("bg-base-200");
-        };
-
-        dropzone.addEventListener("dragenter", onDragOver);
-        dropzone.addEventListener("dragover", onDragOver);
-        dropzone.addEventListener("dragleave", onDragLeave);
-        dropzone.addEventListener("drop", (event: DragEvent) => {
-          event.preventDefault();
-          dropzone.classList.remove("border-accent");
-          dropzone.classList.remove("bg-base-200");
-
-          if (event.dataTransfer?.files?.length) {
-            addFiles(event.dataTransfer.files);
-          }
-        });
-      }
-
-      if (list) {
-        list.addEventListener("click", (event: MouseEvent) => {
-          const target = event.target;
-          if (!(target instanceof HTMLElement)) return;
-
-          const removeIndex = target.getAttribute("data-remove-photo");
-          if (removeIndex === null) return;
-
-          const index = Number(removeIndex);
-          if (Number.isNaN(index)) return;
-
-          selectedFiles = selectedFiles.filter((_: File, fileIndex: number) => fileIndex !== index);
-          syncInputFiles();
-          renderSelectedFiles();
-        });
-      }
+      dropzone.addEventListener("dragenter", onDragOver);
+      dropzone.addEventListener("dragover", onDragOver);
+      dropzone.addEventListener("dragleave", onDragLeave);
+      dropzone.addEventListener("drop", (event) => {
+        event.preventDefault();
+        dropzone.classList.remove("border-accent", "bg-base-200");
+        if (event.dataTransfer?.files?.length) {
+          void addFiles(event.dataTransfer.files);
+        }
+      });
     }
-  </script>
+
+    if (list) {
+      list.addEventListener("click", (event) => {
+        const target = event.target;
+        if (!(target instanceof HTMLElement)) return;
+
+        const removeIndex = target.getAttribute("data-remove-photo");
+        if (removeIndex === null) return;
+
+        const index = Number(removeIndex);
+        if (Number.isNaN(index)) return;
+
+        selectedFiles = selectedFiles.filter((_, i) => i !== index);
+        syncInputFiles();
+        renderSelectedFiles();
+      });
+    }
+  }
+</script>
 </Layout>

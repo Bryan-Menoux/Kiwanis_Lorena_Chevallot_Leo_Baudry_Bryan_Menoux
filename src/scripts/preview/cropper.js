@@ -13,6 +13,17 @@ const MODAL_CANVAS_SELECTOR = '[data-crop-canvas]';
 const MODAL_MARKER_SELECTOR = '[data-crop-marker]';
 const MODAL_POSITION_SELECTOR = '[data-crop-position]';
 
+function resolveModalRoot() {
+  const modal = document.getElementById(MODAL_ID);
+  if (!(modal instanceof HTMLDialogElement)) return null;
+
+  if (modal.parentElement !== document.body) {
+    document.body.appendChild(modal);
+  }
+
+  return modal;
+}
+
 function clampPercent(value) {
   const numericValue = Number(value);
   if (!Number.isFinite(numericValue)) return 50;
@@ -120,7 +131,7 @@ function updateModalState(modal, prop, sourceImage) {
 }
 
 function openCropModal(sourceImage) {
-  const modal = document.getElementById(MODAL_ID);
+  const modal = resolveModalRoot();
   if (!(modal instanceof HTMLDialogElement)) return;
   if (!(sourceImage instanceof HTMLImageElement)) return;
 
@@ -185,7 +196,7 @@ function closeCropModal(modal) {
 }
 
 function initPreviewImageCropper() {
-  const modal = document.getElementById(MODAL_ID);
+  const modal = resolveModalRoot();
   if (!(modal instanceof HTMLDialogElement)) return;
   if (document.__previewImageCropperBound === 'true') {
     syncAllCropStyles();

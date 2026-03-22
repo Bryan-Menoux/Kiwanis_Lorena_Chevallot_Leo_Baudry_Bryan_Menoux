@@ -19,6 +19,7 @@
     "leaflet": "^1.9.4",
     "nodemailer": "^7.0.12",
     "pocketbase": "^0.26.8",
+    "resend": "^6.9.4",
     "sharp": "^0.34.5",
     "slugify": "^1.6.6",
     "tailwindcss": "^4.1.18"

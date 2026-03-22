@@ -18,7 +18,7 @@ const images = partenairesRaw
   <div class="partner-carousel-track h-full">
     <div class="partner-carousel-group flex items-center gap-10 md:gap-14 lg:gap-20 h-full">
       {images.map((image) => (
-        <div class="partner-carousel-item shrink-0 flex w-32 items-center justify-center md:w-40 lg:w-48">
+        <div class="partner-carousel-item shrink-0 flex w-[80dvw] items-center justify-center md:w-40 lg:w-48">
           <img
             src={image.src}
             alt={image.alt}
@@ -31,7 +31,7 @@ const images = partenairesRaw
     </div>
     <div class="partner-carousel-group flex items-center gap-10 md:gap-14 lg:gap-20 h-full" aria-hidden="true">
       {images.map((image) => (
-        <div class="partner-carousel-item shrink-0 flex w-32 items-center justify-center md:w-40 lg:w-48">
+        <div class="partner-carousel-item shrink-0 flex w-[80dvw] items-center justify-center md:w-40 lg:w-48">
           <img
             src={image.src}
             alt=""

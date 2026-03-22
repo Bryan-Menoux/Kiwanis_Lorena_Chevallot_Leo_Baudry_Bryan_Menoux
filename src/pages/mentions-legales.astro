@@ -1,62 +1,62 @@
----
+﻿---
 import Layout from "../layouts/Layout.astro";
 
-const siteName = "Kiwanis Pays de Montbeliard";
+const siteName = "Kiwanis Pays de Montbéliard";
 const contactEmail = "kiwanisfeminin.montbeliard@gmail.com";
-const contactAddress = "76 bis faubourg de Besancon, 25200 Montbeliard";
+const contactAddress = "76 bis faubourg de Besançon, 25200 Montbéliard";
 const publicDomain = "https://www.kiwanis-pays-de-montbeliard.fr";
 const legalUpdateDate = "22 mars 2026";
 ---
 
 <Layout>
   <Fragment slot="head">
-    <title>Mentions legales | Kiwanis Pays de Montbeliard</title>
+    <title>Mentions légales | Kiwanis Pays de Montbéliard</title>
     <meta
       name="description"
-      content="Mentions legales du site Kiwanis Pays de Montbeliard : editeur, hebergement, propriete intellectuelle, donnees personnelles, cookies et contact."
+      content="Mentions légales du site Kiwanis Pays de Montbéliard : éditeur, hébergement, propriété intellectuelle, données personnelles, cookies et contact."
     />
   </Fragment>
 
   <main class="max-w-[85dvw]! md:max-w-[80dvw]! mx-auto my-24 md:my-32 lg:my-40">
     <section class="rounded-box bg-base-100 p-6 md:p-8 lg:p-10 shadow-md border border-base-300/60 flex flex-col gap-5">
-      <h1>Mentions legales</h1>
+      <h1>Mentions légales</h1>
       <p>
-        Le present document precise les informations legales applicables au site
-        {siteName}, accessible notamment a l&apos;adresse {publicDomain}.
+        Le présent document précise les informations légales applicables au site
+        {siteName}, accessible notamment à l'adresse {publicDomain}.
       </p>
       <p class="text-base-content/70">
-        Derniere mise a jour : {legalUpdateDate}
+        Dernière mise à jour : {legalUpdateDate}
       </p>
       <div class="rounded-box bg-base-200 border border-base-300 p-4 md:p-5">
-        <p class="font-semibold">Informations a completer avant mise en production finale :</p>
+        <p class="font-semibold">Informations à compléter avant mise en production finale :</p>
         <ul class="mt-3 list-disc pl-5 space-y-1">
-          <li>Nom et qualite du ou de la responsable de publication</li>
-          <li>Numero RNA et, le cas echeant, numero SIREN de l&apos;association</li>
-          <li>Identite complete de l&apos;hebergeur (raison sociale, adresse, telephone)</li>
-          <li>Duree de conservation detaillee par categorie de donnees</li>
+          <li>Nom et qualité du ou de la responsable de publication</li>
+          <li>Numéro RNA et, le cas échéant, numéro SIREN de l'association</li>
+          <li>Identité complète de l'hébergeur (raison sociale, adresse, téléphone)</li>
+          <li>Durée de conservation détaillée par catégorie de données</li>
         </ul>
       </div>
     </section>
 
     <div class="mt-8 md:mt-10 lg:mt-12 grid grid-cols-1 gap-6 md:gap-8">
       <section class="rounded-box bg-base-100 p-6 md:p-8 shadow-md border border-base-300/60">
-        <h2>1. Editeur du site</h2>
+        <h2>1. Éditeur du site</h2>
         <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <p class="font-semibold">Association</p>
-            <p>Kiwanis Pays de Montbeliard</p>
+            <p>Kiwanis Pays de Montbéliard</p>
           </div>
           <div>
             <p class="font-semibold">Statut</p>
-            <p>Association locale a but non lucratif de type loi 1901 <span class="font-semibold">[a confirmer]</span></p>
+            <p>Association locale à but non lucratif de type loi 1901 <span class="font-semibold">[à confirmer]</span></p>
           </div>
           <div>
-            <p class="font-semibold">Adresse du siege</p>
+            <p class="font-semibold">Adresse du siège</p>
             <p>{contactAddress}</p>
           </div>
           <div>
             <p class="font-semibold">Responsable de publication</p>
-            <p><span class="font-semibold">[Nom, prenom et fonction a completer]</span></p>
+            <p><span class="font-semibold">[Nom, prénom et fonction à compléter]</span></p>
           </div>
           <div>
             <p class="font-semibold">Contact principal</p>
@@ -66,93 +66,93 @@ const legalUpdateDate = "22 mars 2026";
           </div>
           <div>
             <p class="font-semibold">Identification administrative</p>
-            <p>RNA : <span class="font-semibold">[a completer]</span> | SIREN : <span class="font-semibold">[a completer si applicable]</span></p>
+            <p>RNA : <span class="font-semibold">[à compléter]</span> | SIREN : <span class="font-semibold">[à compléter si applicable]</span></p>
           </div>
         </div>
       </section>
 
       <section class="rounded-box bg-base-100 p-6 md:p-8 shadow-md border border-base-300/60">
-        <h2>2. Hebergement</h2>
+        <h2>2. Hébergement</h2>
         <div class="mt-4 flex flex-col gap-3">
           <p>
-            Le site est exploite sur une architecture serveur Astro (mode serveur Node.js) derriere un serveur web Apache sur infrastructure VPS.
+            Le site est exploité sur une architecture serveur Astro (mode serveur Node.js) derrière un serveur web Apache sur infrastructure VPS.
           </p>
           <p>
-            Une instance PocketBase est utilisee pour la gestion des donnees et de l&apos;authentification.
+            Une instance PocketBase est utilisée pour la gestion des données et de l'authentification.
           </p>
           <p>
-            Hebergeur : <span class="font-semibold">[raison sociale a completer]</span> -
-            <span class="font-semibold"> [adresse postale a completer]</span> -
-            <span class="font-semibold"> [telephone a completer]</span>
+            Hébergeur : <span class="font-semibold">[raison sociale à compléter]</span> -
+            <span class="font-semibold"> [adresse postale à compléter]</span> -
+            <span class="font-semibold"> [téléphone à compléter]</span>
           </p>
         </div>
       </section>
 
       <section class="rounded-box bg-base-100 p-6 md:p-8 shadow-md border border-base-300/60">
-        <h2>3. Propriete intellectuelle</h2>
+        <h2>3. Propriété intellectuelle</h2>
         <div class="mt-4 flex flex-col gap-3">
           <p>
-            L&apos;ensemble des contenus presents sur ce site (textes, images, graphismes, logos, documents, structure et code source specifique) est protege par le droit de la propriete intellectuelle.
+            L'ensemble des contenus présents sur ce site (textes, images, graphismes, logos, documents, structure et code source spécifique) est protégé par le droit de la propriété intellectuelle.
           </p>
           <p>
-            Sauf autorisation ecrite prealable, toute reproduction, representation, diffusion, adaptation ou exploitation, totale ou partielle, est interdite.
+            Sauf autorisation écrite préalable, toute reproduction, représentation, diffusion, adaptation ou exploitation, totale ou partielle, est interdite.
           </p>
           <p>
-            Les marques, noms et logos cites restent la propriete de leurs titulaires respectifs.
+            Les marques, noms et logos cités restent la propriété de leurs titulaires respectifs.
           </p>
         </div>
       </section>
 
       <section class="rounded-box bg-base-100 p-6 md:p-8 shadow-md border border-base-300/60">
-        <h2>4. Donnees personnelles (RGPD)</h2>
+        <h2>4. Données personnelles (RGPD)</h2>
         <div class="mt-4 flex flex-col gap-4">
           <p>
-            Le traitement des donnees personnelles est effectue conformement au Reglement (UE) 2016/679 (RGPD) et a la loi Informatique et Libertes modifiee.
+            Le traitement des données personnelles est effectué conformément au Règlement (UE) 2016/679 (RGPD) et à la loi Informatique et Libertés modifiée.
           </p>
           <div>
-            <h3 class="font-semibold">Donnees collectees</h3>
+            <h3 class="font-semibold">Données collectées</h3>
             <ul class="mt-2 list-disc pl-5 space-y-1">
-              <li>Formulaires de contact : prenom, nom, email, telephone, message, photos eventuelles</li>
-              <li>Inscription et gestion de compte : nom, email, mot de passe, genre, informations de verification</li>
-              <li>Administration interne : donnees necessaires a la validation des comptes membres</li>
+              <li>Formulaires de contact : prénom, nom, email, téléphone, message, photos éventuelles</li>
+              <li>Inscription et gestion de compte : nom, email, mot de passe, genre, informations de vérification</li>
+              <li>Administration interne : données nécessaires à la validation des comptes membres</li>
             </ul>
           </div>
           <div>
-            <h3 class="font-semibold">Finalites</h3>
+            <h3 class="font-semibold">Finalités</h3>
             <ul class="mt-2 list-disc pl-5 space-y-1">
-              <li>Repondre aux demandes de contact</li>
-              <li>Gerer les adhesions et les acces a l&apos;espace membre/administration</li>
-              <li>Assurer la securite de l&apos;application et la tracabilite minimale des operations</li>
+              <li>Répondre aux demandes de contact</li>
+              <li>Gérer les adhésions et les accès à l'espace membre/administration</li>
+              <li>Assurer la sécurité de l'application et la traçabilité minimale des opérations</li>
             </ul>
           </div>
           <div>
             <h3 class="font-semibold">Base technique</h3>
             <p class="mt-2">
-              Les donnees sont gerees via PocketBase, utilise comme solution d&apos;authentification et de stockage applicatif.
+              Les données sont gérées via PocketBase, utilisée comme solution d'authentification et de stockage applicatif.
             </p>
           </div>
           <div>
             <h3 class="font-semibold">Destinataires</h3>
             <p class="mt-2">
-              Les donnees sont accessibles uniquement aux personnes habilitees de l&apos;association et, si necessaire, aux prestataires techniques dans la limite de leurs missions.
+              Les données sont accessibles uniquement aux personnes habilitées de l'association et, si nécessaire, aux prestataires techniques dans la limite de leurs missions.
             </p>
           </div>
           <div>
-            <h3 class="font-semibold">Duree de conservation</h3>
+            <h3 class="font-semibold">Durée de conservation</h3>
             <p class="mt-2">
-              Les durees de conservation sont definies selon la nature des donnees et les obligations legales applicables.
-              Detail par categorie : <span class="font-semibold">[a completer]</span>.
+              Les durées de conservation sont définies selon la nature des données et les obligations légales applicables.
+              Détail par catégorie : <span class="font-semibold">[à compléter]</span>.
             </p>
           </div>
           <div>
             <h3 class="font-semibold">Droits des personnes</h3>
             <p class="mt-2">
-              Conformement au RGPD, vous disposez des droits d&apos;acces, de rectification, d&apos;effacement, de limitation, d&apos;opposition et de portabilite lorsque ce droit est applicable.
-              Vous pouvez exercer vos droits a l&apos;adresse suivante :
+              Conformément au RGPD, vous disposez des droits d'accès, de rectification, d'effacement, de limitation, d'opposition et de portabilité lorsque ce droit est applicable.
+              Vous pouvez exercer vos droits à l'adresse suivante :
               <a class="link link-hover" href={`mailto:${contactEmail}`}> {contactEmail}</a>.
             </p>
             <p class="mt-2">
-              En cas de difficultes non resolues, vous pouvez introduire une reclamation aupres de la CNIL : <a class="link link-hover" href="https://www.cnil.fr" target="_blank" rel="noopener noreferrer">www.cnil.fr</a>.
+              En cas de difficultés non résolues, vous pouvez introduire une réclamation auprès de la CNIL : <a class="link link-hover" href="https://www.cnil.fr" target="_blank" rel="noopener noreferrer">www.cnil.fr</a>.
             </p>
           </div>
         </div>
@@ -162,28 +162,28 @@ const legalUpdateDate = "22 mars 2026";
         <h2>5. Cookies</h2>
         <div class="mt-4 flex flex-col gap-3">
           <p>
-            Le site utilise des cookies strictement necessaires au fonctionnement du service, notamment pour la gestion de session et l&apos;authentification des utilisateurs connectes.
+            Le site utilise des cookies strictement nécessaires au fonctionnement du service, notamment pour la gestion de session et l'authentification des utilisateurs connectés.
           </p>
           <p>
-            A la date du {legalUpdateDate}, aucun cookie de suivi publicitaire ou de mesure d&apos;audience tiers n&apos;est implemente dans le code applicatif.
+            À la date du {legalUpdateDate}, aucun cookie de suivi publicitaire ou de mesure d'audience tiers n'est implémenté dans le code applicatif.
           </p>
           <p>
-            Des mecanismes de stockage local technique (localStorage/sessionStorage) peuvent etre utilises pour des fonctions d&apos;interface sans finalite publicitaire.
+            Des mécanismes de stockage local technique (localStorage/sessionStorage) peuvent être utilisés pour des fonctions d'interface sans finalité publicitaire.
           </p>
         </div>
       </section>
 
       <section class="rounded-box bg-base-100 p-6 md:p-8 shadow-md border border-base-300/60">
-        <h2>6. Responsabilites</h2>
+        <h2>6. Responsabilités</h2>
         <div class="mt-4 flex flex-col gap-3">
           <p>
-            L&apos;association s&apos;efforce d&apos;assurer l&apos;exactitude et la mise a jour des informations publiees. Elle ne peut toutefois garantir l&apos;absence d&apos;erreurs, d&apos;omissions ou d&apos;indisponibilite temporaire.
+            L'association s'efforce d'assurer l'exactitude et la mise à jour des informations publiées. Elle ne peut toutefois garantir l'absence d'erreurs, d'omissions ou d'indisponibilité temporaire.
           </p>
           <p>
-            Les liens vers des sites tiers sont fournis a titre informatif. L&apos;association n&apos;exerce aucun controle sur ces contenus et decline toute responsabilite quant a leur disponibilite ou leur contenu.
+            Les liens vers des sites tiers sont fournis à titre informatif. L'association n'exerce aucun contrôle sur ces contenus et décline toute responsabilité quant à leur disponibilité ou leur contenu.
           </p>
           <p>
-            L&apos;utilisateur du site s&apos;engage a ne pas porter atteinte au bon fonctionnement du service et a respecter la legislation en vigueur.
+            L'utilisateur du site s'engage à ne pas porter atteinte au bon fonctionnement du service et à respecter la législation en vigueur.
           </p>
         </div>
       </section>
@@ -192,7 +192,7 @@ const legalUpdateDate = "22 mars 2026";
         <h2>7. Contact</h2>
         <div class="mt-4 flex flex-col gap-3">
           <p>
-            Pour toute question relative aux presentes mentions legales ou a vos donnees personnelles, vous pouvez nous contacter :
+            Pour toute question relative aux présentes mentions légales ou à vos données personnelles, vous pouvez nous contacter :
           </p>
           <p>
             Par email :
@@ -208,3 +208,4 @@ const legalUpdateDate = "22 mars 2026";
     </div>
   </main>
 </Layout>
+

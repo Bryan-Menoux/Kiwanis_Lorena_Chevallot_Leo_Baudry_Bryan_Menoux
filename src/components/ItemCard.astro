@@ -91,7 +91,7 @@ const {
     {photoUrl && (
       <img
         src={photoUrl}
-        srcset={photoSrcSet}
+        srcset={photoSrcSet || undefined}
         sizes={photoSizes}
         width={photoWidth}
         height={photoHeight}

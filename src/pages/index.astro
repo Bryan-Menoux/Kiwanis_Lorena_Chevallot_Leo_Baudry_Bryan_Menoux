@@ -16,17 +16,57 @@ import why2 from "../assets/landing-page/why-2.webp";
 import why3 from "../assets/landing-page/why-3.webp";
 import HomePartner from "../components/Home-partner.astro";
 
-const lcpMobile = await getImage({ src: heroLandingfinalMobile, format: "webp", width: 440, quality: 68 });
-const lcpTablet = await getImage({ src: heroLandingfinalTablet, format: "webp", width: 1280, quality: 72 });
-const lcpDesktopMd = await getImage({ src: heroLandingfinal, format: "webp", width: 1440, quality: 80 });
-const lcpDesktop   = await getImage({ src: heroLandingfinal, format: "webp", width: 1840, quality: 80 });
+const lcpMobile = await getImage({
+  src: heroLandingfinalMobile,
+  format: "webp",
+  width: 440,
+  quality: 68,
+});
+const lcpTablet = await getImage({
+  src: heroLandingfinalTablet,
+  format: "webp",
+  width: 1280,
+  quality: 72,
+});
+const lcpDesktopMd = await getImage({
+  src: heroLandingfinal,
+  format: "webp",
+  width: 1440,
+  quality: 80,
+});
+const lcpDesktop = await getImage({
+  src: heroLandingfinal,
+  format: "webp",
+  width: 1840,
+  quality: 80,
+});
 
 // landing-1 / membres : col 2fr dans grid [3fr_2fr], 85vw mobile → ~29vw desktop (~420px à 1440px)
-const landing1Sm = await getImage({ src: landing1, width: 350, format: "webp" });
-const landing1Lg = await getImage({ src: landing1, width: 640, format: "webp" });
-const membersPhotoXs = await getImage({ src: kiwanismembres1, width: 350, format: "webp" });
-const membersPhotoSm = await getImage({ src: kiwanismembres1, width: 480, format: "webp" });
-const membersPhotoLg = await getImage({ src: kiwanismembres1, width: 640, format: "webp" });
+const landing1Sm = await getImage({
+  src: landing1,
+  width: 350,
+  format: "webp",
+});
+const landing1Lg = await getImage({
+  src: landing1,
+  width: 640,
+  format: "webp",
+});
+const membersPhotoXs = await getImage({
+  src: kiwanismembres1,
+  width: 350,
+  format: "webp",
+});
+const membersPhotoSm = await getImage({
+  src: kiwanismembres1,
+  width: 480,
+  format: "webp",
+});
+const membersPhotoLg = await getImage({
+  src: kiwanismembres1,
+  width: 640,
+  format: "webp",
+});
 // rollup / fanion : 2 images côte à côte, max-w-[40dvw] → 20vw desktop
 const rollUpSm = await getImage({ src: rollUp, width: 280, format: "webp" });
 const rollUpLg = await getImage({ src: rollUp, width: 480, format: "webp" });
@@ -47,9 +87,32 @@ const mapAddress = "76 bis faubourg de Besançon, 25200 Montbéliard";
 
 <Layout loadPoppinsFont={false} includeManifest={false}>
   <Fragment slot="head">
-    <link rel="preload" as="image" href={lcpMobile.src} type="image/webp" media="(max-width: 767px)" fetchpriority="high" />
-    <link rel="preload" as="image" href={lcpTablet.src} type="image/webp" media="(min-width: 768px) and (max-width: 1023px)" fetchpriority="high" />
-    <link rel="preload" as="image" href={lcpDesktop.src} imagesrcset={`${lcpDesktopMd.src} 1440w, ${lcpDesktop.src} 1840w`} imagesizes="95vw" type="image/webp" media="(min-width: 1024px)" fetchpriority="high" />
+    <link
+      rel="preload"
+      as="image"
+      href={lcpMobile.src}
+      type="image/webp"
+      media="(max-width: 767px)"
+      fetchpriority="high"
+    />
+    <link
+      rel="preload"
+      as="image"
+      href={lcpTablet.src}
+      type="image/webp"
+      media="(min-width: 768px) and (max-width: 1023px)"
+      fetchpriority="high"
+    />
+    <link
+      rel="preload"
+      as="image"
+      href={lcpDesktop.src}
+      imagesrcset={`${lcpDesktopMd.src} 1440w, ${lcpDesktop.src} 1840w`}
+      imagesizes="95vw"
+      type="image/webp"
+      media="(min-width: 1024px)"
+      fetchpriority="high"
+    />
   </Fragment>
   <Hero
     image={heroLandingfinal}
@@ -58,7 +121,7 @@ const mapAddress = "76 bis faubourg de Besançon, 25200 Montbéliard";
   />
   <!-- Section qui sommes nous -->
   <div
-    class="grid grid-cols-1 lg:grid-cols-[3fr_2fr] gap-8 lg:gap-32 min-h-[40dvh] max-w-[85dvw]! md:max-w-[80dvw]! mx-auto my-32"
+    class="grid grid-cols-1 lg:grid-cols-[3fr_2fr] gap-8 lg:gap-32 min-h-[40dvh] max-w-[85dvw]! md:max-w-[80dvw]! mx-auto my-20 md:my-24 lg:my-32"
   >
     <div class="flex flex-col gap-6 md:gap-8 lg:mt-8">
       <div class="flex flex-col gap-2 md:gap-4">
@@ -83,7 +146,9 @@ const mapAddress = "76 bis faubourg de Besançon, 25200 Montbéliard";
     <div
       class="flex flex-col w-full mx-auto max-h-none md:max-h-[40dvh] lg:max-h-[60dvh] max-w-full"
     >
-      <div class="home-landing-photo w-full aspect-565/569 overflow-hidden rounded-box mx-auto">
+      <div
+        class="home-landing-photo w-full aspect-565/569 overflow-hidden rounded-box mx-auto"
+      >
         <img
           src={landing1Lg.src}
           srcset={`${landing1Sm.src} 350w, ${landing1Lg.src} 640w`}
@@ -93,18 +158,21 @@ const mapAddress = "76 bis faubourg de Besançon, 25200 Montbéliard";
           fetchpriority="low"
           decoding="async"
           class="block h-full w-full object-cover"
-          width={landing1Lg.attributes.width} height={landing1Lg.attributes.height} />
+          width={landing1Lg.attributes.width}
+          height={landing1Lg.attributes.height}
+        />
       </div>
       <p class="text-sm mt-2">Le Kiwanis Féminin aux 12 coups de Midi</p>
     </div>
   </div>
 
-  <div class="defer-render">
+  <div class="defer-render h-fit">
     <HomeCarousel />
+  </div>
 
   <!-- Section Membres -->
   <div
-    class="grid grid-cols-1 lg:grid-cols-[3fr_2fr] gap-8 lg:gap-32 min-h-[40dvh] max-w-[85dvw]! md:max-w-[80dvw]! mx-auto my-32"
+    class="grid grid-cols-1 lg:grid-cols-[3fr_2fr] gap-8 lg:gap-32 md:min-h-[40dvh] max-w-[85dvw]! md:max-w-[80dvw]! mx-auto my-20 md:my-24 lg:my-32"
   >
     <div class="flex flex-col gap-6 md:gap-8 lg:mt-8">
       <div class="flex flex-col gap-2 md:gap-4">
@@ -123,8 +191,8 @@ const mapAddress = "76 bis faubourg de Besançon, 25200 Montbéliard";
         en restant fidèles aux valeurs que nous défendons.
       </p>
       <p>
-        <span class="highlight">Notre règle d’or</span> : « Fais à autrui ce que tu
-        voudrais qu’il te fasse. »
+        <span class="highlight">Notre règle d’or</span> : « Faites à autrui ce que
+        vous voudriez qu’il vous soit fait. »
       </p>
       <a href="/membres" class="btn btn-accent w-fit px-8 py-6 mt-auto self-end"
         >Voir tous les membres <DiagArrow /></a
@@ -133,16 +201,21 @@ const mapAddress = "76 bis faubourg de Besançon, 25200 Montbéliard";
     <div
       class="flex flex-col w-full mx-auto max-h-none md:max-h-[40dvh] lg:max-h-[60dvh] max-w-full"
     >
-      <div class="home-members-photo flex-1 overflow-hidden rounded-box mx-auto w-full">
+      <div
+        class="home-members-photo flex-1 overflow-hidden rounded-box mx-auto w-full"
+      >
         <img
-        src={membersPhotoLg.src}
-        srcset={`${membersPhotoXs.src} 350w, ${membersPhotoSm.src} 480w, ${membersPhotoLg.src} 640w`}
-        sizes="(min-width: 1024px) 29vw, 85vw"
-        alt="Photographie des membres du groupe Kiwanis Pays de Montbéliard"
-        loading="lazy"
-        fetchpriority="low"
-        class="block h-full w-full object-cover"
-         width={membersPhotoLg.attributes.width} height={membersPhotoLg.attributes.height}  decoding="async" />
+          src={membersPhotoLg.src}
+          srcset={`${membersPhotoXs.src} 350w, ${membersPhotoSm.src} 480w, ${membersPhotoLg.src} 640w`}
+          sizes="(min-width: 1024px) 29vw, 85vw"
+          alt="Photographie des membres du groupe Kiwanis Pays de Montbéliard"
+          loading="lazy"
+          fetchpriority="low"
+          class="block h-full w-full object-cover"
+          width={membersPhotoLg.attributes.width}
+          height={membersPhotoLg.attributes.height}
+          decoding="async"
+        />
       </div>
       <p class="text-sm mt-2">
         Les membres du groupe Kiwanis Pays de Montbéliard.
@@ -150,12 +223,10 @@ const mapAddress = "76 bis faubourg de Besançon, 25200 Montbéliard";
     </div>
   </div>
 
-  </div>
-
   <!-- Section nous retrouver -->
 
   <div
-    class="grid grid-cols-1 lg:grid-cols-[1fr_1fr] gap-8 lg:gap-32 max-w-[85dvw]! md:max-w-[80dvw]! mx-auto my-32"
+    class="grid grid-cols-1 lg:grid-cols-[1fr_1fr] gap-8 lg:gap-32 max-w-[85dvw]! md:max-w-[80dvw]! mx-auto my-20 md:my-24 lg:my-32"
   >
     <div class="flex flex-col gap-8">
       <h2>Nous retrouver</h2>
@@ -189,23 +260,33 @@ const mapAddress = "76 bis faubourg de Besançon, 25200 Montbéliard";
         data-map-placeholder
         class="flex h-full min-h-96 flex-col items-center justify-center gap-3 px-6 py-8 text-center"
       >
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-10 h-10 text-accent opacity-70" aria-hidden="true">
-          <path fill-rule="evenodd" d="M11.54 22.351l.07.04.028.016a.76.76 0 00.723 0l.028-.015.071-.041a16.975 16.975 0 001.144-.742 19.58 19.58 0 002.683-2.282c1.944-2.034 3.97-5.122 3.97-9.077a8.25 8.25 0 00-16.5 0c0 3.955 2.026 7.043 3.97 9.077a19.58 19.58 0 002.683 2.282 16.975 16.975 0 001.144.742zM12 13.5a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd" />
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+          fill="currentColor"
+          class="w-10 h-10 text-accent opacity-70"
+          aria-hidden="true"
+        >
+          <path
+            fill-rule="evenodd"
+            d="M11.54 22.351l.07.04.028.016a.76.76 0 00.723 0l.028-.015.071-.041a16.975 16.975 0 001.144-.742 19.58 19.58 0 002.683-2.282c1.944-2.034 3.97-5.122 3.97-9.077a8.25 8.25 0 00-16.5 0c0 3.955 2.026 7.043 3.97 9.077a19.58 19.58 0 002.683 2.282 16.975 16.975 0 001.144.742zM12 13.5a3 3 0 100-6 3 3 0 000 6z"
+            clip-rule="evenodd"></path>
         </svg>
         <p class="font-semibold text-sm">{mapAddress}</p>
         <a
           href={mapGoogleUrl}
           target="_blank"
           rel="noopener noreferrer"
-          class="btn btn-accent btn-sm px-5"
-        >Ouvrir dans Google Maps ↗</a>
+          class="btn btn-accent btn-sm px-5">Ouvrir dans Google Maps ↗</a
+        >
       </div>
       <!-- Conteneur Leaflet -->
       <div
         data-map-target
         class="hidden w-full h-full"
         style="min-height:24rem;"
-      ></div>
+      >
+      </div>
       <!-- Bouton overlay affiché une fois la carte chargée -->
       <a
         data-map-gmaps-btn
@@ -221,7 +302,7 @@ const mapAddress = "76 bis faubourg de Besançon, 25200 Montbéliard";
 
   <!-- Section banderole -->
   <div
-    class="flex flex-col max-w-[85dvw]! md:max-w-[80dvw]! mx-auto my-16 gap-4"
+    class="flex flex-col max-w-[85dvw]! md:max-w-[80dvw]! mx-auto my-20 md:my-24 lg:my-32 gap-4"
   >
     <div
       class="grid grid-cols-1 lg:grid-cols-[1fr_1fr] gap-8 lg:gap-16 min-h-[40dvh]"
@@ -247,7 +328,10 @@ const mapAddress = "76 bis faubourg de Besançon, 25200 Montbéliard";
           loading="lazy"
           fetchpriority="low"
           class="flex-1 h-auto object-contain w-fit max-w-[40dvw] lg:w-1/2 max-h-[50dvh] lg:max-h-[65dvh]"
-          width={rollUpLg.attributes.width} height={rollUpLg.attributes.height} decoding="async" />
+          width={rollUpLg.attributes.width}
+          height={rollUpLg.attributes.height}
+          decoding="async"
+        />
         <img
           src={fanionLg.src}
           srcset={`${fanionSm.src} 280w, ${fanionLg.src} 480w`}
@@ -256,14 +340,17 @@ const mapAddress = "76 bis faubourg de Besançon, 25200 Montbéliard";
           loading="lazy"
           fetchpriority="low"
           class="flex-1 h-auto object-contain w-fit max-w-[40dvw] lg:w-1/2 max-h-[50dvh] lg:max-h-[65dvh] mix-blend-multiply"
-          width={fanionLg.attributes.width} height={fanionLg.attributes.height} decoding="async" />
+          width={fanionLg.attributes.width}
+          height={fanionLg.attributes.height}
+          decoding="async"
+        />
       </div>
     </div>
   </div>
 
   <!-- Section pourquoi soutenir -->
   <div
-    class="flex flex-col max-w-[85dvw]! md:max-w-[80dvw]! mx-auto my-32 gap-8 lg:gap-24"
+    class="flex flex-col max-w-[85dvw]! md:max-w-[80dvw]! mx-auto my-20 md:my-24 lg:my-32 gap-8 lg:gap-24"
   >
     <div class="flex flex-col gap-2 md:gap-4">
       <h2>Pourquoi soutenir le Kiwanis féminin Pays de Montbéliard ?</h2>
@@ -294,13 +381,18 @@ const mapAddress = "76 bis faubourg de Besançon, 25200 Montbéliard";
           loading="lazy"
           fetchpriority="low"
           class="w-full flex-1 object-cover rounded-box min-h-[30dvh] md:min-h-[40dvh]"
-          width={why1Lg.attributes.width} height={why1Lg.attributes.height} decoding="async" />
+          width={why1Lg.attributes.width}
+          height={why1Lg.attributes.height}
+          decoding="async"
+        />
       </div>
     </div>
     <div
       class="grid grid-cols-1 lg:grid-cols-[1fr_1fr] gap-8 lg:gap-16 min-h-[40dvh]"
     >
-      <div class="flex flex-col w-full mx-auto lg:max-w-full order-2 lg:order-1">
+      <div
+        class="flex flex-col w-full mx-auto lg:max-w-full order-2 lg:order-1"
+      >
         <img
           src={why2Lg.src}
           srcset={`${why2Sm.src} 480w, ${why2Lg.src} 640w`}
@@ -309,7 +401,10 @@ const mapAddress = "76 bis faubourg de Besançon, 25200 Montbéliard";
           loading="lazy"
           fetchpriority="low"
           class="w-full flex-1 object-cover rounded-box min-h-[30dvh] md:min-h-[40dvh]"
-          width={why2Lg.attributes.width} height={why2Lg.attributes.height} decoding="async" />
+          width={why2Lg.attributes.width}
+          height={why2Lg.attributes.height}
+          decoding="async"
+        />
       </div>
       <div class="flex flex-col gap-4 mt-6 order-1 lg:order-2">
         <h3>Plusieurs façons de vous engager à nos côtés</h3>
@@ -342,12 +437,15 @@ const mapAddress = "76 bis faubourg de Besançon, 25200 Montbéliard";
           loading="lazy"
           fetchpriority="low"
           class="w-full flex-1 object-cover rounded-box min-h-[30dvh] md:min-h-[40dvh]"
-          width={why3Lg.attributes.width} height={why3Lg.attributes.height} decoding="async" />
+          width={why3Lg.attributes.width}
+          height={why3Lg.attributes.height}
+          decoding="async"
+        />
       </div>
     </div>
   </div>
 
-    <HomePartner />
+  <HomePartner />
   <script>
     // CSS Leaflet inliné dans le bundle → 0 requête réseau supplémentaire
     import leafletCss from "leaflet/dist/leaflet.css?inline";
@@ -355,7 +453,9 @@ const mapAddress = "76 bis faubourg de Besançon, 25200 Montbéliard";
     const root = document.querySelector<HTMLElement>("[data-map-loader]");
     if (root) {
       const target = root.querySelector<HTMLElement>("[data-map-target]");
-      const placeholder = root.querySelector<HTMLElement>("[data-map-placeholder]");
+      const placeholder = root.querySelector<HTMLElement>(
+        "[data-map-placeholder]",
+      );
       const gmapsBtn = root.querySelector<HTMLElement>("[data-map-gmaps-btn]");
       let loaded = false;
 
@@ -390,19 +490,20 @@ const mapAddress = "76 bis faubourg de Besançon, 25200 Montbéliard";
           popupAnchor: [1, -34],
         });
 
-        const map = L.map(target, { scrollWheelZoom: false })
-          .setView([47.5098546, 6.781242], 16);
-        L.tileLayer(
-          "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
-          {
-            maxZoom: 19,
-            attribution:
-              '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-          }
-        ).addTo(map);
+        const map = L.map(target, { scrollWheelZoom: false }).setView(
+          [47.5098546, 6.781242],
+          16,
+        );
+        L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+          maxZoom: 19,
+          attribution:
+            '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+        }).addTo(map);
         L.marker([47.5098546, 6.781242], { icon: pinIcon })
           .addTo(map)
-          .bindPopup("<b>Kiwanis Pays de Montbéliard</b><br>76 bis faubourg de Besançon, 25200 Montbéliard")
+          .bindPopup(
+            "<b>Kiwanis Pays de Montbéliard</b><br>76 bis faubourg de Besançon, 25200 Montbéliard",
+          )
           .openPopup();
         setTimeout(() => map.invalidateSize(), 50);
         gmapsBtn?.classList.remove("hidden");
@@ -410,7 +511,10 @@ const mapAddress = "76 bis faubourg de Besançon, 25200 Montbéliard";
 
       // Charge au survol (desktop) ou au toucher (mobile)
       root.addEventListener("mouseenter", loadMap, { once: true });
-      root.addEventListener("touchstart", loadMap, { once: true, passive: true });
+      root.addEventListener("touchstart", loadMap, {
+        once: true,
+        passive: true,
+      });
       // Charge avant que la carte soit réellement visible.
       const observer = new IntersectionObserver(
         (entries) => {
@@ -418,7 +522,7 @@ const mapAddress = "76 bis faubourg de Besançon, 25200 Montbéliard";
             void loadMap();
           }
         },
-        { threshold: 0, rootMargin: "800px 0px 800px 0px" }
+        { threshold: 0, rootMargin: "800px 0px 800px 0px" },
       );
       observer.observe(root);
     }

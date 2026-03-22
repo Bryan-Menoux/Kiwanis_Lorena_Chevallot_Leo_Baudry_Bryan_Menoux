@@ -101,7 +101,7 @@ const initialRecadrageValue = (() => {
   data-initial-step={String(initialStep)}
   data-wizard-storage-key={recordKey}
 >
-  <h1 class="text-4xl! font-bold mb-6 mt-6 lg:mb-8 lg:mt-24 text-white">
+  <h1 class="text-4xl! font-bold mb-6 mt-20 lg:mb-8 lg:mt-24 text-white">
     {formTitle}
   </h1>
 
@@ -280,7 +280,7 @@ const initialRecadrageValue = (() => {
             type="submit"
             name="publish_action"
             value="true"
-            class="btn text-accent px-4 py-2 rounded-md! flex-1"
+            class="btn btn-outline btn-accent px-4 py-2 rounded-md! flex-1"
           >
             Publier l'action
           </button>
@@ -292,7 +292,7 @@ const initialRecadrageValue = (() => {
           "px-4 py-2 rounded-md! flex-1",
           mode === "create"
             ? "btn text-accent"
-            : "btn btn-outline text-base-100 hover:text-accent!",
+            : "btn btn-outline btn-accent",
         ]}
         >
           {mode === "create" ? "Créer l'action" : "Enregistrer les modifications"}
@@ -303,7 +303,7 @@ const initialRecadrageValue = (() => {
             type="submit"
             name="save_as"
             value="brouillon"
-            class="btn btn-outline text-base-100 hover:text-accent! px-4 py-2 rounded-md! w-full"
+            class="btn btn-outline btn-accent px-4 py-2 rounded-md! w-full"
           >
             Enregistrer en brouillon
           </button>
@@ -323,7 +323,7 @@ const initialRecadrageValue = (() => {
           <button
             type="button"
             data-mobile-prev
-            class="btn btn-outline rounded-full flex-1"
+            class="btn btn-outline btn-accent rounded-full flex-1"
           >
             Précédent
           </button>
@@ -341,7 +341,7 @@ const initialRecadrageValue = (() => {
               "rounded-full flex-1 hidden",
               mode === "create"
                 ? "btn text-accent"
-                : "btn btn-outline text-base-100 hover:text-accent!",
+                : "btn btn-outline btn-accent",
             ]}
           >
             {mode === "create" ? "Créer l'action" : "Enregistrer"}
@@ -354,7 +354,7 @@ const initialRecadrageValue = (() => {
                 type="submit"
                 name="publish_action"
                 value="true"
-                class="btn btn-ghost rounded-full flex-1 text-base-100 hover:text-accent"
+                class="btn btn-outline btn-accent rounded-full flex-1"
               >
                 Publier l'action
               </button>
@@ -364,7 +364,7 @@ const initialRecadrageValue = (() => {
             mode === "edit" && isDraft && (
               <button
                 type="submit"
-                class="btn btn-outline rounded-full flex-1 text-base-100"
+                class="btn btn-outline btn-accent rounded-full flex-1"
               >
                 Enregistrer les modifications
               </button>
@@ -376,7 +376,7 @@ const initialRecadrageValue = (() => {
                 type="submit"
                 name="save_as"
                 value="brouillon"
-                class="btn btn-outline rounded-full flex-1 text-base-100"
+                class="btn btn-outline btn-accent rounded-full flex-1"
               >
                 Enregistrer en brouillon
               </button>

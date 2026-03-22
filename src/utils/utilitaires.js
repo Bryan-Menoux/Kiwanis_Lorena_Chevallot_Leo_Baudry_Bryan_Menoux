@@ -200,12 +200,28 @@ export function buildResponsiveImageSrcSet(value, record, pocketbaseClient, widt
   if (!value) return null;
   if (!Array.isArray(widths) || widths.length === 0) return null;
 
-  const entries = widths
-    .map((width) => {
-      const numericWidth = Number(width);
-      if (!Number.isFinite(numericWidth) || numericWidth <= 0) return null;
+  const sanitizeSrcsetUrl = (url) => {
+    if (typeof url !== "string") return null;
+    const normalized = url.trim();
+    if (!normalized || isDataUrl(normalized)) return null;
+    return normalized
+      .replace(/\s/g, "%20")
+      .replace(/,/g, "%2C");
+  };
+
+  const validWidths = Array.from(
+    new Set(
+      widths
+        .map((width) => Number(width))
+        .filter((width) => Number.isFinite(width) && width > 0),
+    ),
+  ).sort((a, b) => a - b);
+
+  const entries = validWidths
+    .map((numericWidth) => {
       const url = normalizeImageUrl(value, record, pocketbaseClient, { thumb: `${numericWidth}x0` });
-      return url ? `${url} ${numericWidth}w` : null;
+      const safeUrl = sanitizeSrcsetUrl(url);
+      return safeUrl ? `${safeUrl} ${numericWidth}w` : null;
     })
     .filter(Boolean);
 
