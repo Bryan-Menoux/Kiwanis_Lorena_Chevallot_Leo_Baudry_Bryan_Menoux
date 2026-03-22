@@ -14,7 +14,8 @@ function formatPhone(phone: any) {
 export const POST: APIRoute = async ({ request }) => {
   try {
     const data = await request.json();
-    const { prenom, nom, email, telephone, message, photos, id, collectionId } = data;
+    const { prenom, nom, email, telephone, message, photos, id, collectionId } =
+      data;
 
     const formattedPhone = formatPhone(telephone);
 
@@ -23,7 +24,8 @@ export const POST: APIRoute = async ({ request }) => {
         const url = `${process.env.POCKETBASE_URL}/api/files/${collectionId}/${id}/${file}`;
 
         const res = await fetch(url);
-        if (!res.ok) throw new Error(`Impossible de récupérer ${file}: ${res.status}`);
+        if (!res.ok)
+          throw new Error(`Impossible de récupérer ${file}: ${res.status}`);
 
         const buffer = await res.arrayBuffer();
 
@@ -32,16 +34,23 @@ export const POST: APIRoute = async ({ request }) => {
         if (ext === "png") contentType = "image/png";
         if (ext === "webp") contentType = "image/webp";
 
-        return { file, index, contentType, base64: Buffer.from(buffer).toString("base64") };
-      })
+        return {
+          file,
+          index,
+          contentType,
+          base64: Buffer.from(buffer).toString("base64"),
+        };
+      }),
     );
 
-    const inlineAttachments = files.map(({ file, index, contentType, base64 }) => ({
-      filename: file,
-      content: base64,
-      contentType,
-      contentId: `image_${index}`,
-    }));
+    const inlineAttachments = files.map(
+      ({ file, index, contentType, base64 }) => ({
+        filename: file,
+        content: base64,
+        contentType,
+        contentId: `image_${index}`,
+      }),
+    );
 
     const regularAttachments = files.map(({ file, contentType, base64 }) => ({
       filename: file,
@@ -74,7 +83,9 @@ export const POST: APIRoute = async ({ request }) => {
 
     const baseStyle = `font-family:Arial,sans-serif;background:#f4f6f8;padding:20px;`;
     const cardStyle = `max-width:600px;margin:auto;background:white;border-radius:12px;padding:20px;box-shadow:0 5px 20px rgba(0,0,0,0.08);`;
-    const photosBlock = photos?.length ? `<h3 style="margin-top:20px;">Images</h3>${imagesHtml}` : "";
+    const photosBlock = photos?.length
+      ? `<h3 style="margin-top:20px;">Images</h3>${imagesHtml}`
+      : "";
 
     const adminHtml = `
       <div style="${baseStyle}"><div style="${cardStyle}">
