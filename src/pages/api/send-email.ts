@@ -1,7 +1,7 @@
 import type { APIRoute } from "astro";
 import { Resend } from "resend";
 
-const resend = new Resend(import.meta.env.RESEND_API_KEY);
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 function formatPhone(phone: any) {
   if (!phone) return "";
@@ -20,7 +20,7 @@ export const POST: APIRoute = async ({ request }) => {
 
     const files = await Promise.all(
       (photos || []).map(async (file: string, index: number) => {
-        const url = `${import.meta.env.POCKETBASE_URL}/api/files/${collectionId}/${id}/${file}`;
+        const url = `${process.env.POCKETBASE_URL}/api/files/${collectionId}/${id}/${file}`;
 
         const res = await fetch(url);
         if (!res.ok) throw new Error(`Impossible de récupérer ${file}: ${res.status}`);
