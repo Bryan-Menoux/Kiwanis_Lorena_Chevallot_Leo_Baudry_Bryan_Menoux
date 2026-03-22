@@ -108,7 +108,7 @@ export const POST: APIRoute = async ({ request }) => {
 
     await resend.emails.send({
       from: "onboarding@resend.dev",
-      to: ["support.kiwanis.pays.montbeliard@gmail.com"],
+      to: [email],
       subject: "Nous avons bien reçu votre message",
       html: userHtml,
       attachments: allAttachments,
