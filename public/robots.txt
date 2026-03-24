@@ -9,3 +9,5 @@ Allow: /site.webmanifest
 
 Disallow: /admin
 Disallow: /private
+
+Sitemap: https://kiwanis-pays-de-montbeliard.fr/sitemap.xml
