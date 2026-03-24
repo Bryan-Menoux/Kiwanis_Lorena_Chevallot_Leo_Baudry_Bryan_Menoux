@@ -324,16 +324,33 @@ if (Astro.request.method === "POST") {
     return safeCurrent;
   }
 
+  function getCreationScrollOffset() {
+    const header =
+      document.getElementById("creation-header") ||
+      document.getElementById("main-header") ||
+      document.querySelector("header.fixed.top-0") ||
+      document.querySelector("header");
+
+    const headerOffset =
+      header instanceof HTMLElement ? header.offsetHeight + 16 : 16;
+    const minimumViewportOffset = Math.round(window.innerHeight * 0.15);
+    return Math.max(headerOffset, minimumViewportOffset);
+  }
+
   // Au changement de page, on remonte en douceur vers le haut de la liste (et non en haut du document).
   const scrollTopOnPageChange = () => {
     const globalScrollUtils = window.scrollUtils;
     if (globalScrollUtils && typeof globalScrollUtils.scrollToTarget === "function") {
-      globalScrollUtils.scrollToTarget("#pages-container");
+      globalScrollUtils.scrollToTarget("#pages-container", {
+        offset: -getCreationScrollOffset(),
+      });
       return;
     }
     const listRoot = document.getElementById("pages-container");
     if (listRoot instanceof HTMLElement) {
-      listRoot.scrollIntoView({ behavior: "smooth", block: "start" });
+      const targetTop =
+        window.scrollY + listRoot.getBoundingClientRect().top - getCreationScrollOffset();
+      window.scrollTo({ top: Math.max(0, targetTop), behavior: "smooth" });
       return;
     }
     window.scrollTo({ top: 0, behavior: "smooth" });

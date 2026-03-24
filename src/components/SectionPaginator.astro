@@ -49,6 +49,20 @@ const {
     renderPagination,
     resolveNextPage,
   } from "../utils/renderPagination";
+  import { scrollToTarget } from "../utils/scroll.js";
+
+  function getPaginatorScrollOffset() {
+    const header =
+      document.getElementById("main-header") ||
+      document.getElementById("creation-header") ||
+      document.querySelector("header.fixed.top-0") ||
+      document.querySelector("header");
+
+    const headerOffset =
+      header instanceof HTMLElement ? header.offsetHeight + 16 : 16;
+    const minimumViewportOffset = Math.round(window.innerHeight * 0.15);
+    return Math.max(headerOffset, minimumViewportOffset);
+  }
 
   function initPaginator(root: HTMLElement) {
     if (root.dataset.paginatorBound === "true") return;
@@ -147,7 +161,7 @@ const {
         root.innerHTML = emptyMessage
           ? `<div class="rounded-xl border border-base-300 bg-base-100 p-6 text-center text-base-content/60">${emptyMessage}</div>`
           : "";
-        return;
+        return [];
       }
 
       const totalPages = getTotalPages(filteredItems.length, pageSize);
@@ -172,17 +186,19 @@ const {
         root.innerHTML = emptyMessage
           ? `<div class="rounded-xl border border-base-300 bg-base-100 p-6 text-center text-base-content/60">${emptyMessage}</div>`
           : "";
-        return;
+        return [];
       }
 
       if (filteredItems.length <= pageSize) {
         root.innerHTML = "";
-        return;
+        return pageItems;
       }
 
       root.innerHTML = renderPagination(totalPages, page, {
         wrapperClass: "flex flex-wrap items-center justify-center gap-2",
       });
+
+      return pageItems;
     };
 
     root.addEventListener("click", (event) => {
@@ -199,7 +215,11 @@ const {
       page = resolveNextPage(page, totalPages, action, button.dataset.page);
 
       if (page !== previousPage) {
-        render();
+        const pageItems = render();
+        const scrollTarget = pageItems[0] || root;
+        scrollToTarget(scrollTarget, {
+          offset: -getPaginatorScrollOffset(),
+        });
       }
     });
 
