@@ -41,7 +41,7 @@ import crossIcon from "../assets/cross-circle.svg";
           <div class="bg-blue-50 border-l-4 border-blue-400 p-4 rounded">
             <p class="text-blue-800">
               <strong>Conseil :</strong> Prenez le temps de lire ce guide tranquillement.
-              Cliquez sur les sections qui vous intéressent pour en savoir arrow .
+              Cliquez sur les sections qui vous intéressent pour en savoir plus.
             </p>
           </div>
         </div>
@@ -129,7 +129,8 @@ import crossIcon from "../assets/cross-circle.svg";
               <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded mt-6">
                 <h5 class="font-semibold text-yellow-800 mb-2">Comment changer de section :</h5>
                 <ol class="list-decimal list-inside text-yellow-800 space-y-1">
-                  <li>Cliquez sur le bouton dans la barre de navigation à gauche</li>
+                  <li class="hidden lg:block">Cliquez sur le bouton dans la barre de navigation à gauche</li>
+                  <li class="lg:hidden">Cliquez sur les boutonss dans la barre de navigation en bas de votre écran</li>
                   <li>La page va doucement glisser vers la nouvelle section</li>
                   <li>L'indicateur bleu montre où vous êtes</li>
                 </ol>
@@ -152,10 +153,10 @@ import crossIcon from "../assets/cross-circle.svg";
                     Sur votre page personnelle, vous verrez toutes vos informations :
                   </p>
                   <ul class="list-disc list-inside text-base-content/70 space-y-1">
+                    <li>Votre photo de profil</li>
                     <li>Votre nom complet</li>
+                    <li>Votre genre</li>
                     <li>Votre adresse email</li>
-                    <li>Votre date d'inscription</li>
-                    <li>Votre statut (membre ou administrateur)</li>
                   </ul>
                 </div>
 
@@ -165,7 +166,6 @@ import crossIcon from "../assets/cross-circle.svg";
                     Pour changer votre mot de passe :
                   </p>
                   <ol class="list-decimal list-inside text-base-content/70 space-y-1">
-                    <li>Cliquez sur le bouton "Modifier le mot de passe"</li>
                     <li>Remplissez l'ancien mot de passe</li>
                     <li>Choisissez un nouveau mot de passe fort</li>
                     <li>Confirmez le nouveau mot de passe</li>
@@ -184,9 +184,7 @@ import crossIcon from "../assets/cross-circle.svg";
                     Pour mettre à jour vos informations :
                   </p>
                   <ol class="list-decimal list-inside text-base-content/70 space-y-1">
-                    <li>Cliquez sur "Modifier le profil"</li>
-                    <li>Changez votre nom ou prénom si nécessaire</li>
-                    <li>Vérifiez votre adresse email</li>
+                    <li>Remplissez les champs avec les nouvelles informations</li>
                     <li>Cliquez sur "Enregistrer les modifications"</li>
                   </ol>
                 </div>
@@ -226,7 +224,7 @@ import crossIcon from "../assets/cross-circle.svg";
                     </div>
                     <div class="bg-red-50 p-3 rounded">
                       <p class="text-red-800 text-sm font-semibold">Refuser un membre :</p>
-                      <p class="text-red-700 text-sm">Cliquez sur "Rejeter" - le compte sera supprimé</p>
+                      <p class="text-red-700 text-sm">Cliquez sur "Rejeter" - le compte sera placé dans une liste des utilisateurs rejetés. Vous pourrez le supprimer ultérieurement</p>
                     </div>
                   </div>
                 </div>
@@ -268,7 +266,7 @@ import crossIcon from "../assets/cross-circle.svg";
                   </p>
                   <ol class="list-decimal list-inside text-base-content/70 space-y-1">
                     <li>Utilisez le champ "Rechercher un utilisateur"</li>
-                    <li>Tapez le nom, prénom ou email</li>
+                    <li>Tapez le nom, prénom, ou email</li>
                     <li>La liste se met à jour automatiquement</li>
                     <li>Cliquez sur "Modifier" à côté du nom</li>
                   </ol>
@@ -282,7 +280,7 @@ import crossIcon from "../assets/cross-circle.svg";
                   <ol class="list-decimal list-inside text-base-content/70 space-y-1">
                     <li>Trouvez le membre (avec la recherche)</li>
                     <li>Cliquez sur "Modifier"</li>
-                    <li>Changez le prénom, nom ou email</li>
+                    <li>Changez le prénom, nom, email, etc...</li>
                     <li>Cochez/décochez "Administrateur" si besoin</li>
                     <li>Cliquez sur "Enregistrer"</li>
                   </ol>
@@ -331,7 +329,7 @@ import crossIcon from "../assets/cross-circle.svg";
                 <div class="bg-base-100 p-6 rounded-lg border border-base-300">
                   <h4 class="text-lg font-semibold text-base-content mb-3">Je ne peux pas me connecter</h4>
                   <p class="text-base-content/70 mb-2"><strong>Cause :</strong> Mot de passe incorrect ou compte non vérifié</p>
-                  <p class="text-base-content/70"><strong>Solution :</strong> Utilisez "Mot de passe oublié" ou contactez un administrateur</p>
+                  <p class="text-base-content/70"><strong>Solution :</strong> Utilisez "Mot de passe oublié"</p>
                 </div>
 
                 <div class="bg-base-100 p-6 rounded-lg border border-base-300">

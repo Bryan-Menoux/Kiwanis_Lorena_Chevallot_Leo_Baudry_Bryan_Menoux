@@ -1,13 +1,33 @@
 ---
-
 import edit from "../assets/edit.svg";
 const user = Astro.props.user;
 const isAdmin = Astro.props.isAdmin;
-
+const avatarValue = user?.avatar;
+const avatarFile = typeof avatarValue === "string"
+  ? avatarValue
+  : Array.isArray(avatarValue)
+    ? String(avatarValue[0] || "")
+    : "";
+const avatarUrl = avatarFile ? Astro.locals.pb.files.getURL(user, avatarFile) : "";
 ---
 
-<div class="user-card flex flex-col md:flex-row md:items-center justify-between p-4 bg-base-200 rounded-lg shadow-md transition-all duration-300" data-user-id={user?.id} data-admin={user?.administrateur ? 'true' : 'false'}>
+<div class="user-card flex flex-col md:flex-row md:items-center justify-between p-4 bg-base-200 rounded-lg shadow-md transition-all duration-300" data-user-id={user?.id} data-admin={user?.administrateur ? 'true' : 'false'} data-avatar-url={avatarUrl}>
   <div class="flex items-center gap-4">
+    <div class="avatar">
+      <div class="h-12 w-12 rounded-full bg-base-100">
+        {avatarUrl ? (
+          <img
+            src={avatarUrl}
+            alt={`Photo de ${user?.name || "l'utilisateur"}`}
+            class="h-full w-full object-cover"
+          />
+        ) : (
+          <div class="flex h-full w-full items-center justify-center text-[10px] font-semibold text-base-content/60">
+            Profil
+          </div>
+        )}
+      </div>
+    </div>
     <div>
       <h3 class="text-lg font-bold">{user?.name || 'N/A'}</h3>
       <p class="text-sm text-gray-500">{user?.email || 'N/A'}</p>

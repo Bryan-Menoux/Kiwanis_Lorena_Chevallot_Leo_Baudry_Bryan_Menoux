@@ -13,6 +13,15 @@ const isAdmin = user?.administrateur === true;
 const userGenre = user?.genre === UsersGenreOptions.femme
   ? UsersGenreOptions.femme
   : UsersGenreOptions.homme;
+const avatarValue = user?.avatar;
+const avatarFile = typeof avatarValue === "string"
+  ? avatarValue
+  : Array.isArray(avatarValue)
+    ? String(avatarValue[0] || "")
+    : "";
+const avatarUrl = avatarFile
+  ? Astro.locals.pb.files.getURL(user!, avatarFile)
+  : "";
 
 const { firstName, lastName } = splitUserName(user!.name);
 ---
@@ -50,6 +59,44 @@ const { firstName, lastName } = splitUserName(user!.name);
           <h3 class="text-lg font-bold text-base-content mb-6">
             Informations personnelles
           </h3>
+          <div class="form-control w-full mb-6">
+            <label class="label pb-2">
+              <span class="label-text font-semibold text-base-content">
+                Photo de profil
+              </span>
+            </label>
+            <div class="mb-4 flex items-center gap-4">
+              <div class="avatar">
+                <div class="h-16 w-16 rounded-full border border-base-300 bg-base-200">
+                  {avatarUrl ? (
+                    <img
+                      id="profile-avatar-preview"
+                      src={avatarUrl}
+                      alt="Photo de profil actuelle"
+                      class="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <div
+                      id="profile-avatar-placeholder"
+                      class="flex h-full w-full items-center justify-center text-xs font-semibold text-base-content/60"
+                    >
+                      Profil
+                    </div>
+                  )}
+                </div>
+              </div>
+              <p class="max-w-xs text-xs! leading-5 text-base-content/60 md:max-w-none md:text-sm md:leading-6">
+                Votre photo actuelle sera remplacée uniquement si vous choisissez un nouveau fichier.
+              </p>
+            </div>
+            <input
+              type="file"
+              id="avatar"
+              name="avatar"
+              class="file-input file-input-bordered w-full"
+              accept="image/*"
+            />
+          </div>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <!-- Champ prénom -->
             <div class="form-control w-full">
@@ -225,6 +272,41 @@ const { firstName, lastName } = splitUserName(user!.name);
   ) as HTMLButtonElement;
   const submitText = document.getElementById("submitText");
   const loadingSpinner = document.getElementById("loadingSpinner");
+  const avatarInput = document.getElementById("avatar") as HTMLInputElement | null;
+  const avatarPreview = document.getElementById("profile-avatar-preview") as HTMLImageElement | null;
+  const avatarPlaceholder = document.getElementById("profile-avatar-placeholder");
+
+  function updateImagePreview(
+    input: HTMLInputElement | null,
+    preview: HTMLImageElement | null,
+    placeholder: HTMLElement | null,
+    fallbackAlt: string,
+  ) {
+    if (!(input instanceof HTMLInputElement)) return;
+
+    input.addEventListener("change", () => {
+      const file = input.files?.[0];
+      if (!(file instanceof File)) return;
+
+      const nextUrl = URL.createObjectURL(file);
+
+      if (preview instanceof HTMLImageElement) {
+        preview.src = nextUrl;
+        preview.alt = fallbackAlt;
+        return;
+      }
+
+      if (placeholder instanceof HTMLElement) {
+        placeholder.innerHTML = "";
+        const image = document.createElement("img");
+        image.id = "profile-avatar-preview";
+        image.src = nextUrl;
+        image.alt = fallbackAlt;
+        image.className = "h-full w-full object-cover";
+        placeholder.replaceWith(image);
+      }
+    });
+  }
 
   function showSuccess(
     message = "Vos informations de compte ont bien été enregistrées.",
@@ -250,6 +332,13 @@ const { firstName, lastName } = splitUserName(user!.name);
     }
   }
 
+  updateImagePreview(
+    avatarInput,
+    avatarPreview,
+    avatarPlaceholder,
+    "Nouvelle photo de profil",
+  );
+
   // Intercepter la soumission du formulaire
   if (profileForm) {
     (profileForm as HTMLFormElement).addEventListener(
@@ -269,6 +358,7 @@ const { firstName, lastName } = splitUserName(user!.name);
         const newPassword = (formData.get("newPassword") as string) || "";
         const newPasswordConfirm =
           (formData.get("newPasswordConfirm") as string) || "";
+        const avatar = formData.get("avatar");
 
         // Validation simple
         if (!firstName.trim()) {
@@ -302,22 +392,26 @@ const { firstName, lastName } = splitUserName(user!.name);
         loadingSpinner.classList.remove("hidden");
 
         try {
+          const payload = new FormData();
+          payload.set("formType", "profile");
+          payload.set("firstName", firstName);
+          payload.set("lastName", lastName);
+          payload.set("email", email);
+          payload.set("genre", genre);
+          payload.set("oldPassword", oldPassword);
+          payload.set("newPassword", newPassword);
+          payload.set("newPasswordConfirm", newPasswordConfirm);
+
+          if (avatar instanceof File && avatar.size > 0) {
+            payload.set("avatar", avatar);
+          }
+
           const response = await fetch("/api/form-submit", {
             method: "POST",
             headers: {
-              "Content-Type": "application/json",
               "X-Requested-With": "XMLHttpRequest",
             },
-            body: JSON.stringify({
-              formType: "profile",
-              firstName,
-              lastName,
-              email,
-              genre,
-              oldPassword,
-              newPassword,
-              newPasswordConfirm,
-            }),
+            body: payload,
           });
 
           const result = await response.json();

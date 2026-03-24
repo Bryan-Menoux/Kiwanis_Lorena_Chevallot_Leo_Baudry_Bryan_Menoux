@@ -156,19 +156,22 @@ const totalPages = pages.length || 1;
           <div class="flex items-start justify-between gap-4 border-b border-base-300/70 bg-linear-to-b from-base-100 via-base-100 to-base-200/40 px-6 py-5 md:px-8 md:py-6">
             <div class="flex min-w-0 items-start gap-4">
               <div class="flex h-12 w-12 flex-none items-center justify-center rounded-full bg-accent text-accent-content shadow-sm shadow-accent/20" aria-hidden="true">
-                <svg
-                  class="h-6 w-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                  ></path>
-                </svg>
+                <div class="avatar">
+                  <div class="h-12 w-12 rounded-full border border-base-300 bg-base-200">
+                    <img
+                      id="modal-avatar-preview"
+                      src=""
+                      alt="Photo de profil de l'utilisateur"
+                      class="hidden h-full w-full object-cover"
+                    />
+                    <div
+                      id="modal-avatar-placeholder"
+                      class="flex h-full w-full items-center justify-center text-[10px] font-semibold text-base-content/60"
+                    >
+                      Profil
+                    </div>
+                  </div>
+                </div>
               </div>
               <div class="min-w-0">
                 <p class="text-sm! text-base-content/80 font-semibold!">Compte utilisateur</p>
@@ -187,6 +190,21 @@ const totalPages = pages.length || 1;
 
           <form id="modify-form" class="grid gap-4 px-6 pt-6 md:grid-cols-2 md:px-8">
             <input type="hidden" name="userId" id="modal-user-id" />
+            <div class="form-control md:col-span-2">
+              <label class="label pb-2">
+                <span class="label-text text-sm font-semibold tracking-wide text-base-content/80">Photo de profil</span>
+              </label>
+              <input
+                type="file"
+                name="avatar"
+                id="modal-avatar"
+                accept="image/*"
+                class="file-input file-input-bordered w-full rounded-xl bg-base-100"
+              />
+              <p class="mt-2 text-xs text-base-content/60">
+                Laissez vide pour conserver la photo actuelle.
+              </p>
+            </div>
             <div class="form-control md:col-span-1">
               <label class="label pb-2">
                 <span class="label-text text-sm font-semibold tracking-wide text-base-content/80">Nom complet</span>

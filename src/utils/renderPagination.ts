@@ -32,11 +32,45 @@ export function renderPagination(
     noWrapper = false,
   } = options;
 
-  const pageButtons = Array.from({ length: totalPages }, (_, i) => {
-    const n = i + 1;
-    const cls = n === currentPage ? activeButtonClass : buttonClass;
-    return `<button type="button" class="${cls}" data-page-action="go" data-page="${n}">${n}</button>`;
-  }).join("");
+  const renderPageButton = (pageNumber: number, extraClass = "") => {
+    const cls = pageNumber === currentPage ? activeButtonClass : buttonClass;
+    return `<button type="button" class="${cls}${extraClass ? ` ${extraClass}` : ""}" data-page-action="go" data-page="${pageNumber}">${pageNumber}</button>`;
+  };
+
+  const mobileVisibleCount = 3;
+  const desktopVisibleCount = 4;
+  const leadingCount = Math.min(totalPages, desktopVisibleCount);
+  const items: string[] = [];
+
+  for (let pageNumber = 1; pageNumber <= leadingCount; pageNumber += 1) {
+    const extraClass =
+      pageNumber === 4 ? "hidden md:inline-flex" : "";
+    items.push(renderPageButton(pageNumber, extraClass));
+  }
+
+  const hasHiddenMiddlePages = totalPages > desktopVisibleCount + 1;
+  const hasLastPageOutsideLeading = totalPages > desktopVisibleCount;
+
+  if (hasLastPageOutsideLeading) {
+    const mobileNeedsEllipsis = totalPages > mobileVisibleCount + 1;
+    const desktopNeedsEllipsis = hasHiddenMiddlePages;
+
+    if (mobileNeedsEllipsis) {
+      items.push(
+        `<span class="btn btn-sm btn-ghost pointer-events-none md:hidden" aria-hidden="true">...</span>`,
+      );
+    }
+
+    if (desktopNeedsEllipsis) {
+      items.push(
+        `<span class="btn btn-sm btn-ghost pointer-events-none hidden md:inline-flex" aria-hidden="true">...</span>`,
+      );
+    }
+
+    items.push(renderPageButton(totalPages));
+  }
+
+  const pageButtons = items.join("");
 
   if (noWrapper) return pageButtons;
 

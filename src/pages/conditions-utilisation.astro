@@ -1,0 +1,124 @@
+---
+import Layout from "../layouts/Layout.astro";
+
+const siteName = "Kiwanis Pays de Montbéliard";
+const contactEmail = "kiwanisfeminin.montbeliard@gmail.com";
+const legalUpdateDate = "24 mars 2026";
+---
+
+<Layout>
+  <Fragment slot="head">
+    <title>Conditions d'utilisation | Kiwanis Pays de Montbéliard</title>
+    <meta
+      name="description"
+      content="Conditions d'utilisation du site Kiwanis Pays de Montbéliard : accès au service, règles d'usage, comptes membres, contenus et responsabilités."
+    />
+  </Fragment>
+
+  <main class="mx-auto my-24 max-w-[85dvw]! md:my-32 md:max-w-[80dvw]! lg:my-40">
+    <section class="flex flex-col gap-5 rounded-box border border-base-300/60 bg-base-100 p-6 shadow-md md:p-8 lg:p-10">
+      <h1>Conditions d'utilisation</h1>
+      <p>
+        Les présentes conditions définissent les règles d'utilisation du site
+        {siteName}. En naviguant sur le site ou en utilisant ses fonctionnalités,
+        vous acceptez ces conditions.
+      </p>
+      <p class="text-base-content/70">
+        Dernière mise à jour : {legalUpdateDate}
+      </p>
+    </section>
+
+    <div class="mt-8 grid grid-cols-1 gap-6 md:mt-10 md:gap-8 lg:mt-12">
+      <section class="rounded-box border border-base-300/60 bg-base-100 p-6 shadow-md md:p-8">
+        <h2>1. Accès au site</h2>
+        <div class="mt-4 flex flex-col gap-3">
+          <p>
+            Le site est accessible gratuitement à tout utilisateur disposant d'un
+            accès à Internet. Certains services peuvent être réservés aux membres
+            autorisés ou aux administrateurs.
+          </p>
+          <p>
+            L'association se réserve le droit de suspendre, limiter ou interrompre
+            l'accès à tout ou partie du site pour maintenance, mise à jour ou
+            raison de sécurité.
+          </p>
+        </div>
+      </section>
+
+      <section class="rounded-box border border-base-300/60 bg-base-100 p-6 shadow-md md:p-8">
+        <h2>2. Usage autorisé</h2>
+        <div class="mt-4 flex flex-col gap-3">
+          <p>
+            L'utilisateur s'engage à utiliser le site de manière loyale, conforme
+            à sa finalité et dans le respect des lois et règlements en vigueur.
+          </p>
+          <p>
+            Sont notamment interdits : toute tentative d'intrusion, la perturbation
+            du fonctionnement du service, l'extraction non autorisée de données,
+            l'usurpation d'identité et la diffusion de contenus illicites.
+          </p>
+        </div>
+      </section>
+
+      <section class="rounded-box border border-base-300/60 bg-base-100 p-6 shadow-md md:p-8">
+        <h2>3. Comptes membres</h2>
+        <div class="mt-4 flex flex-col gap-3">
+          <p>
+            Certaines fonctionnalités nécessitent la création d'un compte. Chaque
+            utilisateur est responsable de la confidentialité de ses identifiants
+            et des actions réalisées depuis son compte.
+          </p>
+          <p>
+            En cas d'usage abusif, de tentative de fraude ou de non-respect des
+            présentes conditions, l'association peut suspendre ou supprimer l'accès
+            au compte concerné.
+          </p>
+        </div>
+      </section>
+
+      <section class="rounded-box border border-base-300/60 bg-base-100 p-6 shadow-md md:p-8">
+        <h2>4. Contenus du site</h2>
+        <div class="mt-4 flex flex-col gap-3">
+          <p>
+            Les contenus publiés sur le site sont fournis à titre informatif. Malgré
+            le soin apporté à leur mise à jour, des erreurs ou omissions peuvent
+            subsister.
+          </p>
+          <p>
+            Sauf mention contraire, les textes, visuels, éléments graphiques et
+            composants spécifiques du site ne peuvent pas être reproduits ou réutilisés
+            sans autorisation préalable.
+          </p>
+        </div>
+      </section>
+
+      <section class="rounded-box border border-base-300/60 bg-base-100 p-6 shadow-md md:p-8">
+        <h2>5. Responsabilité</h2>
+        <div class="mt-4 flex flex-col gap-3">
+          <p>
+            L'association ne saurait être tenue responsable d'un dommage résultant
+            d'une indisponibilité temporaire du site, d'un incident technique, d'un
+            usage inadapté du service ou d'un contenu provenant d'un site tiers.
+          </p>
+          <p>
+            L'utilisateur reste seul responsable de son équipement, de sa connexion
+            Internet et de la sécurisation de ses accès.
+          </p>
+        </div>
+      </section>
+
+      <section class="rounded-box border border-base-300/60 bg-base-100 p-6 shadow-md md:p-8">
+        <h2>6. Contact</h2>
+        <div class="mt-4 flex flex-col gap-3">
+          <p>
+            Pour toute question relative aux présentes conditions d'utilisation,
+            vous pouvez écrire à
+            <a class="link link-hover" href={`mailto:${contactEmail}`}>
+              {" "}{contactEmail}
+            </a>.
+          </p>
+        </div>
+      </section>
+    </div>
+  </main>
+</Layout>

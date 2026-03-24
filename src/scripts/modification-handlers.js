@@ -89,16 +89,28 @@ export function initModifications() {
         const userName = card.querySelector("h3")?.textContent?.trim() || "";
         const userEmail = card.querySelector("p")?.textContent?.trim() || "";
         const userAdmin = card.dataset.admin === "true";
+        const userAvatarUrl = card.dataset.avatarUrl || "";
 
         const modalUserId = document.getElementById("modal-user-id");
         const modalName = document.getElementById("modal-name");
         const modalEmail = document.getElementById("modal-email");
         const modalAdmin = document.getElementById("modal-admin");
+        const modalAvatar = document.getElementById("modal-avatar");
+        const modalAvatarPreview = document.getElementById("modal-avatar-preview");
+        const modalAvatarPlaceholder = document.getElementById("modal-avatar-placeholder");
 
         if (modalUserId instanceof HTMLInputElement) modalUserId.value = userId;
         if (modalName instanceof HTMLInputElement) modalName.value = userName;
         if (modalEmail instanceof HTMLInputElement) modalEmail.value = userEmail;
         if (modalAdmin instanceof HTMLInputElement) modalAdmin.checked = userAdmin;
+        if (modalAvatar instanceof HTMLInputElement) modalAvatar.value = "";
+        if (modalAvatarPreview instanceof HTMLImageElement) {
+          modalAvatarPreview.src = userAvatarUrl;
+          modalAvatarPreview.classList.toggle("hidden", !userAvatarUrl);
+        }
+        if (modalAvatarPlaceholder instanceof HTMLElement) {
+          modalAvatarPlaceholder.classList.toggle("hidden", Boolean(userAvatarUrl));
+        }
 
         const deleteBtn = document.getElementById("delete-btn");
         const currentUserId = modal?.dataset.currentUserId;
@@ -136,10 +148,13 @@ export function initModifications() {
       const nameField = document.getElementById("modal-name");
       const emailField = document.getElementById("modal-email");
       const adminField = document.getElementById("modal-admin");
+      const avatarField = document.getElementById("modal-avatar");
       const userId = userIdField instanceof HTMLInputElement ? userIdField.value : "";
       const name = nameField instanceof HTMLInputElement ? nameField.value : "";
       const email = emailField instanceof HTMLInputElement ? emailField.value : "";
       const admin = adminField instanceof HTMLInputElement ? adminField.checked : false;
+      const avatar =
+        avatarField instanceof HTMLInputElement ? avatarField.files?.[0] || null : null;
 
       const submitBtn = modalForm.querySelector('button[type="submit"]');
       const originalHTML = submitBtn?.innerHTML;
@@ -151,19 +166,22 @@ export function initModifications() {
       }
 
       try {
+        const payload = new FormData();
+        payload.set("formType", "modification");
+        payload.set("userId", userId);
+        payload.set("name", name);
+        payload.set("email", email);
+        payload.set("admin", admin ? "true" : "false");
+        if (avatar instanceof File && avatar.size > 0) {
+          payload.set("avatar", avatar);
+        }
+
         const response = await fetch("/api/form-submit", {
           method: "POST",
           headers: {
-            "Content-Type": "application/json",
             "X-Requested-With": "XMLHttpRequest",
           },
-          body: JSON.stringify({
-            formType: "modification",
-            userId,
-            name,
-            email,
-            admin,
-          }),
+          body: payload,
         });
 
         const data = await response.json();
@@ -171,6 +189,8 @@ export function initModifications() {
         if (data.success && editingCard) {
           const h3 = editingCard.querySelector("h3");
           const p = editingCard.querySelector("p");
+          const avatarWrapper = editingCard.querySelector(".avatar .rounded-full");
+          const currentAvatarImage = avatarWrapper?.querySelector("img");
 
           if (h3) h3.textContent = data.name;
           if (p) p.textContent = data.email;
@@ -179,6 +199,26 @@ export function initModifications() {
           editingCard.dataset.userName = data.name;
           editingCard.dataset.userEmail = data.email;
           editingCard.dataset.admin = data.administrateur ? "true" : "false";
+          editingCard.dataset.avatarUrl = data.avatarUrl || "";
+
+          if (avatarWrapper instanceof HTMLElement) {
+            if (data.avatarUrl) {
+              if (currentAvatarImage instanceof HTMLImageElement) {
+                currentAvatarImage.src = data.avatarUrl;
+                currentAvatarImage.alt = `Photo de ${data.name || "l'utilisateur"}`;
+              } else {
+                avatarWrapper.innerHTML = "";
+                const image = document.createElement("img");
+                image.src = data.avatarUrl;
+                image.alt = `Photo de ${data.name || "l'utilisateur"}`;
+                image.className = "h-full w-full object-cover";
+                avatarWrapper.appendChild(image);
+              }
+            } else {
+              avatarWrapper.innerHTML =
+                '<div class="flex h-full w-full items-center justify-center text-[10px] font-semibold text-base-content/60">Profil</div>';
+            }
+          }
 
           document.getElementById("modify-modal")?.classList.remove("modal-open");
           editingCard = null;
@@ -218,6 +258,32 @@ export function initModifications() {
 
     window._modificationSubmitHandler = submitHandler;
     modalForm.addEventListener("submit", submitHandler);
+  }
+
+  const modalAvatarInput = document.getElementById("modal-avatar");
+  const modalAvatarPreview = document.getElementById("modal-avatar-preview");
+  const modalAvatarPlaceholder = document.getElementById("modal-avatar-placeholder");
+  if (modalAvatarInput instanceof HTMLInputElement) {
+    if (window._modificationAvatarHandler) {
+      modalAvatarInput.removeEventListener("change", window._modificationAvatarHandler);
+    }
+
+    const avatarHandler = () => {
+      const file = modalAvatarInput.files?.[0];
+      if (!(file instanceof File)) return;
+      const previewUrl = URL.createObjectURL(file);
+
+      if (modalAvatarPreview instanceof HTMLImageElement) {
+        modalAvatarPreview.src = previewUrl;
+        modalAvatarPreview.classList.remove("hidden");
+      }
+      if (modalAvatarPlaceholder instanceof HTMLElement) {
+        modalAvatarPlaceholder.classList.add("hidden");
+      }
+    };
+
+    window._modificationAvatarHandler = avatarHandler;
+    modalAvatarInput.addEventListener("change", avatarHandler);
   }
 
   const userSearchInput = document.getElementById("user-search");

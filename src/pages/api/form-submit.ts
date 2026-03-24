@@ -10,10 +10,6 @@ import {
 } from '../../pocketbase-types';
 
 export const POST: APIRoute = async ({ locals, request }) => {
-  if (request.headers.get("content-type") !== "application/json") {
-    return new Response(JSON.stringify({ error: 'Invalid content type' }), { status: 400 });
-  }
-
   if (!locals.pb.authStore.isValid) {
     return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
   }
@@ -160,7 +156,18 @@ export const POST: APIRoute = async ({ locals, request }) => {
   };
 
   try {
-    const data = await request.json();
+    const contentType = request.headers.get("content-type") || "";
+    let data: Record<string, any> = {};
+
+    if (contentType.includes("application/json")) {
+      data = await request.json();
+    } else if (contentType.includes("multipart/form-data")) {
+      const submittedFormData = await request.formData();
+      data = Object.fromEntries(submittedFormData.entries());
+    } else {
+      return new Response(JSON.stringify({ error: 'Invalid content type' }), { status: 400 });
+    }
+
     const { formType, ...formData } = data;
 
     switch (formType) {
@@ -174,6 +181,7 @@ export const POST: APIRoute = async ({ locals, request }) => {
           newPassword,
           newPasswordConfirm,
           genre,
+          avatar,
         } = formData;
         
         const name = `${firstName} ${lastName}`.trim();
@@ -207,6 +215,9 @@ export const POST: APIRoute = async ({ locals, request }) => {
         }
         if (genre === UsersGenreOptions.homme || genre === UsersGenreOptions.femme) {
           updateData.genre = genre;
+        }
+        if (avatar instanceof File && avatar.size > 0) {
+          updateData.avatar = avatar;
         }
 
         if (Object.keys(updateData).length === 0) {
@@ -339,7 +350,13 @@ export const POST: APIRoute = async ({ locals, request }) => {
 
       case 'modification':
         // Modification des infos d'un autre utilisateur
-        const { userId: modUserId, name: modName, email: modEmail, admin: modAdmin } = formData;
+        const {
+          userId: modUserId,
+          name: modName,
+          email: modEmail,
+          admin: modAdmin,
+          avatar: modAvatar,
+        } = formData;
         
         if (!currentUser.administrateur) {
           return new Response(
@@ -356,10 +373,13 @@ export const POST: APIRoute = async ({ locals, request }) => {
         
         // Ajouter le champ administrateur s'il est fourni
         if (modAdmin !== undefined) {
-          updateDataMod.administrateur = modAdmin;
+          updateDataMod.administrateur = modAdmin === true || modAdmin === "true";
+        }
+        if (modAvatar instanceof File && modAvatar.size > 0) {
+          updateDataMod.avatar = modAvatar;
         }
         
-        await locals.pb.collection("users").update(modUserId, updateDataMod);
+        const updatedUser = await locals.pb.collection("users").update<UsersResponse>(modUserId, updateDataMod);
 
         try {
           const existingMember = await findExistingMemberRecord(modUserId);
@@ -379,6 +399,9 @@ export const POST: APIRoute = async ({ locals, request }) => {
             name: capitalizedModName,
             email: modEmail,
             administrateur: modAdmin,
+            avatarUrl: getAvatarFileName(updatedUser.avatar)
+              ? locals.pb.files.getURL(updatedUser, getAvatarFileName(updatedUser.avatar))
+              : "",
             message: 'Utilisateur modifié avec succès'
           }),
           { status: 200, headers: { 'Content-Type': 'application/json' } }
