@@ -13,7 +13,6 @@ if (Astro.locals.pb.authStore.isValid) {
   Astro.response.headers.set("Location", "/");
 }
 
-
 let resetRequested = false;
 let serverMessage = "";
 
@@ -21,14 +20,12 @@ const isPostForm =
   Astro.request.method === "POST" &&
   Astro.request.headers.get("content-type")?.includes("form");
 
-
 if (isPostForm) {
   try {
     const data = await Astro.request.formData();
     const email = data.get("email")?.toString() ?? "";
 
-    // Demande d'envoi du mail de réinitialisation via PocketBase
-    await Astro.locals.pb.collection('users').requestPasswordReset(email);
+    await Astro.locals.pb.collection("users").requestPasswordReset(email);
 
     resetRequested = true;
     serverMessage =
@@ -46,7 +43,13 @@ if (isPostForm) {
   <div
     class="absolute top-8 left-8 flex items-center text-white hover:underline z-10"
   >
-    <img src={backArrow.src} alt="" loading="lazy" aria-hidden="true"  decoding="async" />
+    <img
+      src={backArrow.src}
+      alt=""
+      loading="lazy"
+      aria-hidden="true"
+      decoding="async"
+    />
     <a href="/" class="text-white ml-2">Retour à l'accueil</a>
   </div>
   <img
@@ -56,7 +59,8 @@ if (isPostForm) {
     aria-hidden="true"
     class="absolute left-0 bottom-0 w-[50dvw] lg:w-[25dvw] select-none"
     draggable="false"
-   decoding="async" />
+    decoding="async"
+  />
   <img
     src={shapesRight.src}
     alt=""
@@ -64,7 +68,8 @@ if (isPostForm) {
     aria-hidden="true"
     class="absolute right-0 top-0 w-[70dvw] md:w-[50dvw] lg:w-[40dvw] select-none"
     draggable="false"
-   decoding="async" />
+    decoding="async"
+  />
 
   <div
     class="absolute -translate-x-1/2 -translate-y-1/2 left-1/2 top-1/2 flex flex-col lg:flex-row gap-4 md:gap-16 justify-center items-center z-10"
@@ -74,7 +79,9 @@ if (isPostForm) {
       alt="Logo Kiwanis Pays de Montbéliard"
       class="block md:w-[30dvw] lg:w-[15dvw] aspect-square object-contain"
     />
-    <div class="w-fit min-w-[70dvw] md:min-w-[60dvw] lg:min-w-[20dvw] lg:max-w-[60dvw]">
+    <div
+      class="w-fit min-w-[70dvw] md:min-w-[60dvw] lg:min-w-[20dvw] lg:max-w-[60dvw]"
+    >
       <div
         id="auth-flags"
         data-reset-requested={String(resetRequested)}
@@ -90,7 +97,8 @@ if (isPostForm) {
             alt=""
             loading="lazy"
             class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 opacity-70"
-           decoding="async" />
+            decoding="async"
+          />
           <input
             type="email"
             name="email"
@@ -134,9 +142,14 @@ if (isPostForm) {
 
     if (resetRequested) {
       showError(
-        message || "Si ce compte existe, un e-mail de réinitialisation a été envoyé.",
+        message ||
+          "Si ce compte existe, un e-mail de réinitialisation a été envoyé.",
         "success",
       );
+      // Rediriger vers la page de connexion après 3 secondes
+      setTimeout(() => {
+        window.location.href = "/connexion";
+      }, 3000);
     } else if (message) {
       showError(message, "error");
     }
@@ -145,12 +158,11 @@ if (isPostForm) {
   }
 
   // Bonus : journalise les événements du formulaire
-  const form = document.querySelector('form');
+  const form = document.querySelector("form");
   if (form) {
-    form.addEventListener('submit', (e) => {
+    form.addEventListener("submit", (e) => {
       const formData = new FormData(form);
-      const email = formData.get('email');
+      const email = formData.get("email");
     });
   }
 </script>
-
