@@ -131,16 +131,9 @@ function truncateWords(text: string, limit = 70): string {
           </div>
         ) : (
           <>
-            {/*
-            CORRECTIONS :
-            1. scroll-px-4 / md:scroll-px-8 : correspond exactement au px-4/px-8 existant
-               → le navigateur aligne les snap points en tenant compte du padding visible
-            2. snap-start conservé (cohérent avec px aligné à gauche)
-            3. Suppression du gap entre cartes non nul qui suffisait, gap-4/md:gap-6 conservés
-          */}
             <div
               id="projects-carousel-track"
-              class="no-scrollbar flex gap-4 overflow-x-auto px-4 py-8 snap-x snap-mandatory scroll-smooth scroll-px-4 md:gap-6 md:px-8 md:scroll-px-8 lg:flex-col lg:gap-16 lg:overflow-visible lg:px-16 lg:py-32 lg:snap-none lg:scroll-px-0"
+              class="flex gap-4 overflow-x-auto px-4 py-8 snap-x snap-mandatory scroll-smooth scroll-px-4 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden md:gap-6 md:px-8 md:scroll-px-8 lg:flex-col lg:gap-16 lg:overflow-visible lg:px-16 lg:py-32 lg:snap-none lg:scroll-px-0"
             >
               {projets.map((projet) => (
                 <article
@@ -156,14 +149,11 @@ function truncateWords(text: string, limit = 70): string {
                       ))}
                     </ul>
 
-                    <h2
-                      class="font-medium! mt-4"
-                      style="overflow-wrap:anywhere; word-break:break-word;"
-                    >
+                    <h2 class="mt-4 wrap-anywhere font-medium!">
                       {projet.titre}
                     </h2>
 
-                    <p style="overflow-wrap:anywhere; word-break:break-word;">
+                    <p class="wrap-anywhere line-clamp-8 lg:line-clamp-6">
                       {projet.description
                         ? truncateWords(projet.description, 70)
                         : ""}
@@ -258,9 +248,11 @@ function truncateWords(text: string, limit = 70): string {
 <script>
   (() => {
     const DESKTOP_QUERY = "(min-width: 1024px)";
+    const desktopMedia = window.matchMedia(DESKTOP_QUERY);
+    let cleanupCarousel = () => {};
 
-    function initProjectCarousel() {
-      if (window.matchMedia(DESKTOP_QUERY).matches) return;
+    function setupProjectCarousel() {
+      cleanupCarousel();
 
       const track = document.getElementById("projects-carousel-track");
       const prevBtn = document.getElementById("projects-carousel-prev");
@@ -277,7 +269,15 @@ function truncateWords(text: string, limit = 70): string {
       ).filter((card): card is HTMLElement => card instanceof HTMLElement);
       if (cards.length <= 1) return;
 
+      if (desktopMedia.matches) {
+        dots.innerHTML = "";
+        prevBtn.disabled = false;
+        nextBtn.disabled = false;
+        return;
+      }
+
       let currentIndex = 0;
+      let scrollTimer = 0;
 
       dots.innerHTML = cards
         .map(
@@ -290,6 +290,9 @@ function truncateWords(text: string, limit = 70): string {
         dots.querySelectorAll<HTMLButtonElement>("[data-project-dot]"),
       );
 
+      const getScrollPaddingLeft = () =>
+        parseFloat(getComputedStyle(track).scrollPaddingLeft) || 0;
+
       const clampIndex = (index: number) =>
         Math.max(0, Math.min(index, cards.length - 1));
 
@@ -301,26 +304,27 @@ function truncateWords(text: string, limit = 70): string {
           const isActive = index === currentIndex;
           button.classList.toggle("bg-accent", isActive);
           button.classList.toggle("bg-base-300", !isActive);
+          button.setAttribute("aria-current", isActive ? "true" : "false");
         });
       };
 
       const scrollToIndex = (index: number) => {
         currentIndex = clampIndex(index);
-        // scrollIntoView respecte automatiquement le scroll-padding du container,
-        // contrairement à scrollTo({ left: card.offsetLeft }) qui l'ignorait.
-        cards[currentIndex].scrollIntoView({
+        const left = Math.max(
+          0,
+          cards[currentIndex].offsetLeft - getScrollPaddingLeft(),
+        );
+
+        track.scrollTo({
+          left,
           behavior: "smooth",
-          block: "nearest",
-          inline: "start",
         });
+
         renderState();
       };
 
       const getClosestIndex = () => {
-        const scrollLeft = track.scrollLeft;
-        const scrollPadding =
-          parseInt(getComputedStyle(track).scrollPaddingLeft, 10) || 0;
-        const target = scrollLeft + scrollPadding;
+        const target = track.scrollLeft + getScrollPaddingLeft();
 
         let closestIndex = 0;
         let closestDistance = Number.POSITIVE_INFINITY;
@@ -336,15 +340,15 @@ function truncateWords(text: string, limit = 70): string {
         return closestIndex;
       };
 
-      prevBtn.addEventListener("click", () => {
+      const handlePrevClick = () => {
         scrollToIndex(currentIndex - 1);
-      });
+      };
 
-      nextBtn.addEventListener("click", () => {
+      const handleNextClick = () => {
         scrollToIndex(currentIndex + 1);
-      });
+      };
 
-      dots.addEventListener("click", (event) => {
+      const handleDotsClick = (event: Event) => {
         const button =
           event.target instanceof HTMLElement
             ? event.target.closest("[data-project-dot]")
@@ -355,37 +359,49 @@ function truncateWords(text: string, limit = 70): string {
         if (!Number.isFinite(dotValue)) return;
 
         scrollToIndex(dotValue);
-      });
+      };
 
-      let scrollTimer = 0;
-      track.addEventListener("scroll", () => {
+      const handleScroll = () => {
         window.clearTimeout(scrollTimer);
         scrollTimer = window.setTimeout(() => {
           currentIndex = getClosestIndex();
           renderState();
         }, 80);
-      });
+      };
 
+      const handleResize = () => {
+        currentIndex = getClosestIndex();
+        renderState();
+      };
+
+      prevBtn.addEventListener("click", handlePrevClick);
+      nextBtn.addEventListener("click", handleNextClick);
+      dots.addEventListener("click", handleDotsClick);
+      track.addEventListener("scroll", handleScroll, { passive: true });
+      window.addEventListener("resize", handleResize);
+
+      currentIndex = getClosestIndex();
       renderState();
+
+      cleanupCarousel = () => {
+        window.clearTimeout(scrollTimer);
+        prevBtn.removeEventListener("click", handlePrevClick);
+        nextBtn.removeEventListener("click", handleNextClick);
+        dots.removeEventListener("click", handleDotsClick);
+        track.removeEventListener("scroll", handleScroll);
+        window.removeEventListener("resize", handleResize);
+      };
     }
 
+    const init = () => {
+      setupProjectCarousel();
+      desktopMedia.addEventListener("change", setupProjectCarousel);
+    };
+
     if (document.readyState === "loading") {
-      document.addEventListener("DOMContentLoaded", initProjectCarousel, {
-        once: true,
-      });
+      document.addEventListener("DOMContentLoaded", init, { once: true });
     } else {
-      initProjectCarousel();
+      init();
     }
   })();
 </script>
-
-<style>
-  .no-scrollbar {
-    scrollbar-width: none;
-    -ms-overflow-style: none;
-  }
-
-  .no-scrollbar::-webkit-scrollbar {
-    display: none;
-  }
-</style>
