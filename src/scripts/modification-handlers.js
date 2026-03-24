@@ -6,6 +6,31 @@ import { scrollToTarget } from "../utils/scroll.js";
 
 let currentPage = 0;
 
+function getHeaderOffset() {
+  const header =
+    document.getElementById("main-header") ||
+    document.getElementById("creation-header") ||
+    document.querySelector("header.fixed.top-0") ||
+    document.querySelector("header");
+
+  const headerOffset = header instanceof HTMLElement ? header.offsetHeight + 16 : 16;
+  const minimumViewportOffset = Math.round(window.innerHeight * 0.15);
+  return Math.max(headerOffset, minimumViewportOffset);
+}
+
+function getModificationScrollTarget() {
+  const searchInput = document.getElementById("user-search");
+  if (searchInput instanceof HTMLElement) {
+    return (
+      searchInput.closest(".px-8.py-8") ||
+      searchInput.closest(".bg-white") ||
+      searchInput
+    );
+  }
+
+  return document.querySelector(".carousel-container");
+}
+
 function updateButtons() {
   const prevBtn = document.getElementById("prev-btn");
   const nextBtn = document.getElementById("next-btn");
@@ -38,8 +63,9 @@ function goToPage(page) {
   updateButtons();
 
   if (currentPage !== previousPage && container instanceof HTMLElement) {
-    // En pagination carousel, remonte vers le haut de la liste des cartes.
-    scrollToTarget(container);
+    scrollToTarget(getModificationScrollTarget() || container, {
+      offset: -getHeaderOffset(),
+    });
   }
 }
 

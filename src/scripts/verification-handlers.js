@@ -11,6 +11,41 @@ const searchState = {
   'verified-list': { query: '', filteredCards: null }
 };
 
+function getHeaderOffset() {
+  const header =
+    document.getElementById("main-header") ||
+    document.getElementById("creation-header") ||
+    document.querySelector("header.fixed.top-0") ||
+    document.querySelector("header");
+
+  const headerOffset = header instanceof HTMLElement ? header.offsetHeight + 16 : 16;
+  const minimumViewportOffset = Math.round(window.innerHeight * 0.20);
+  return Math.max(headerOffset, minimumViewportOffset);
+}
+
+function getVerificationScrollTarget(listId) {
+  const searchInputMap = {
+    "pending-list": "pending-search",
+    "rejected-list": "rejected-search",
+    "verified-list": "verified-search",
+  };
+
+  const searchInputId = searchInputMap[listId];
+  const searchInput = searchInputId
+    ? document.getElementById(searchInputId)
+    : null;
+
+  if (searchInput instanceof HTMLElement) {
+    return (
+      searchInput.closest(".px-8.py-8") ||
+      searchInput.closest(".collapse-content") ||
+      searchInput
+    );
+  }
+
+  return document.getElementById(listId);
+}
+
 // Fonctions utilitaires
 function getTargetList(action, fromList = null) {
   switch (action) {
@@ -448,7 +483,9 @@ function setupPagination(listId) {
         nextBtn.disabled = currentPage === totalPages;
         pageIndicator.innerHTML = `<span class="hidden md:inline">Page </span>${currentPage}/${totalPages}`;
         // Après changement de page, replace le haut de la liste active dans le viewport.
-        scrollToTarget(`#${listId}`);
+        scrollToTarget(getVerificationScrollTarget(listId) || `#${listId}`, {
+          offset: -getHeaderOffset(),
+        });
       }
     });
 
@@ -469,7 +506,9 @@ function setupPagination(listId) {
         nextBtn.disabled = currentPage === totalPages;
         pageIndicator.innerHTML = `<span class="hidden md:inline">Page </span>${currentPage}/${totalPages}`;
         // Même comportement pour la pagination suivante.
-        scrollToTarget(`#${listId}`);
+        scrollToTarget(getVerificationScrollTarget(listId) || `#${listId}`, {
+          offset: -getHeaderOffset(),
+        });
       }
     });
 
