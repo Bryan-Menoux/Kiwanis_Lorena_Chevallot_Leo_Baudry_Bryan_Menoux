@@ -167,8 +167,7 @@ const actionButtons = [{ href: "/contact", label: "Contact" }];
 
       {
         Astro.locals.pb.authStore.isValid &&
-          currentUser?.verified &&
-          currentUser?.administrateur === true && (
+          currentUser?.verified && (
             <>
               <div class="h-4 xl:h-6 w-px bg-base-content/20" />
 

@@ -6,6 +6,9 @@ import backArrow from "../../../assets/back-arrow.svg";
 import type { ActionsResponse } from "../../../pocketbase-types";
 import { getDraftEditUrl } from "../../../utils/creationRoutes";
 
+const currentUser = Astro.locals.pb.authStore.model;
+const isAdmin = currentUser?.administrateur === true;
+const currentUserId = typeof currentUser?.id === "string" ? currentUser.id : "";
 const id = Astro.params.id;
 const slug = Astro.params.slug;
 const normalizedId =
@@ -27,6 +30,10 @@ try {
     );
   }
   throw err;
+}
+
+if (draft && !isAdmin && String((draft as any)?.cree_par || "") !== currentUserId) {
+  return Astro.redirect("/creation?error=" + encodeURIComponent("Accès non autorisé."));
 }
 
 const draftEditUrl = getDraftEditUrl(id || "", slug || "");

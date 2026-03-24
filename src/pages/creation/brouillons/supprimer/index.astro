@@ -8,15 +8,26 @@ import { getDraftEditUrl, getDraftViewUrl } from "../../../../utils/creationRout
 
 let error = "";
 let success = "";
+const currentUser = Astro.locals.pb.authStore.model;
+const isAdmin = currentUser?.administrateur === true;
+const currentUserId = typeof currentUser?.id === "string" ? currentUser.id : "";
 
 let brouillonsRaw: any[] = [];
 try {
   brouillonsRaw = await (Astro.locals as any).pb
     .collection("brouillons")
-    .getFullList(500, { sort: "-updated" });
+    .getFullList(500, {
+      sort: "-updated",
+    });
 } catch (e) {
   console.error("Impossible de récupérer les brouillons:", e);
   error = "Impossible de charger la liste des brouillons.";
+}
+
+if (!isAdmin) {
+  brouillonsRaw = brouillonsRaw.filter(
+    (draft) => String(draft?.cree_par || "") === currentUserId,
+  );
 }
 
 const brouillons = brouillonsRaw.map((brouillon) => {
@@ -78,6 +89,12 @@ if (Astro.request.method === "POST") {
 
       for (const id of ids) {
         try {
+          if (!isAdmin) {
+            const draft = await (Astro.locals as any).pb.collection("brouillons").getOne(id);
+            if (String(draft?.cree_par || "") !== currentUserId) {
+              throw new Error("Vous ne pouvez supprimer que vos propres brouillons.");
+            }
+          }
           await (Astro.locals as any).pb.collection("brouillons").delete(id);
         } catch (e) {
           console.error("Erreur lors de la suppression du brouillon :", id, e);

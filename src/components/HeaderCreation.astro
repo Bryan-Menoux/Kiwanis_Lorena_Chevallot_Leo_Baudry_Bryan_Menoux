@@ -8,37 +8,49 @@ import CreationAccountLink from "./CreationAccountLink.astro";
 import CreationMobileMenu from "./CreationMobileMenu.astro";
 
 const currentUser = Astro.locals.pb.authStore.record;
+const isAdmin = currentUser?.administrateur === true;
 
-const creationMenuSections = [
-  {
-    title: "Ajouter du contenu",
-    items: [
-      { href: "/creation/actions/nouveau", label: "Actions" },
-      { href: "/creation/projets/nouveau", label: "Projets" },
-      { href: "/creation/produits/nouveau", label: "Produits" },
-      { href: "/creation/remerciements/nouveau", label: "Remerciements" },
-    ],
-  },
-  {
-    title: "Supprimer du contenu",
-    items: [
-      { href: "/creation/actions/supprimer", label: "Actions" },
-      { href: "/creation/projets/supprimer", label: "Projets" },
-      { href: "/creation/produits/supprimer", label: "Produits" },
-      { href: "/creation/remerciements/supprimer", label: "Remerciements" },
-      { href: "/creation/brouillons/supprimer", label: "Brouillons" },
-    ],
-  },
-  {
-    title: "Modifier du contenu",
-    items: [
-      { href: "/creation/actions", label: "Actions" },
-      { href: "/creation/projets", label: "Projets" },
-      { href: "/creation/produits", label: "Produits" },
-      { href: "/creation/remerciements", label: "Remerciements" },
-    ],
-  },
-];
+const creationMenuSections = isAdmin
+  ? [
+      {
+        title: "Ajouter du contenu",
+        items: [
+          { href: "/creation/actions/nouveau", label: "Actions" },
+          { href: "/creation/projets/nouveau", label: "Projets" },
+          { href: "/creation/produits/nouveau", label: "Produits" },
+          { href: "/creation/remerciements/nouveau", label: "Remerciements" },
+        ],
+      },
+      {
+        title: "Supprimer du contenu",
+        items: [
+          { href: "/creation/actions/supprimer", label: "Actions" },
+          { href: "/creation/projets/supprimer", label: "Projets" },
+          { href: "/creation/produits/supprimer", label: "Produits" },
+          { href: "/creation/remerciements/supprimer", label: "Remerciements" },
+          { href: "/creation/brouillons/supprimer", label: "Brouillons" },
+        ],
+      },
+      {
+        title: "Modifier du contenu",
+        items: [
+          { href: "/creation/actions", label: "Actions" },
+          { href: "/creation/projets", label: "Projets" },
+          { href: "/creation/produits", label: "Produits" },
+          { href: "/creation/remerciements", label: "Remerciements" },
+        ],
+      },
+    ]
+  : [
+      {
+        title: "Mes brouillons",
+        items: [
+          { href: "/creation/actions/nouveau", label: "Créer une action" },
+          { href: "/creation/actions", label: "Voir mes brouillons" },
+          { href: "/creation/brouillons/supprimer", label: "Supprimer mes brouillons" },
+        ],
+      },
+    ];
 ---
 
 <header id="creation-header" class="fixed top-0 left-0 right-0 z-50 font-sans">
@@ -54,21 +66,12 @@ const creationMenuSections = [
       class="w-full h-14 max-w-[80dvw] flex items-center justify-between gap-4 bg-accent rounded-xl px-4"
     >
       <div class="flex items-center gap-4 text-white">
-        <CreationDropdown
-          title="Ajouter du contenu"
-          items={creationMenuSections[0].items}
-        />
-        <span>|</span>
-        <CreationDropdown
-          title="Supprimer du contenu"
-          items={creationMenuSections[1].items}
-        />
-        <span>|</span>
-        <CreationDropdown
-          title="Modifier du contenu"
-          items={creationMenuSections[2].items}
-        />
-
+        {creationMenuSections.map((section, index) => (
+          <>
+            <CreationDropdown title={section.title} items={section.items} />
+            {index < creationMenuSections.length - 1 && <span>|</span>}
+          </>
+        ))}
         <span>|</span>
         <a href="/creation">Espace création</a>
       </div>

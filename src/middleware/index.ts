@@ -143,6 +143,15 @@ export const onRequest = defineMiddleware(
 
       const url = new URL(request.url);
       const protectedPrefixes = ["/creation"];
+      const nonAdminAllowedCreationRoutes = [
+        "/creation",
+        "/creation/actions",
+        "/creation/actions/nouveau",
+      ];
+      const nonAdminAllowedCreationPrefixes = [
+        "/creation/actions/modifier/",
+        "/creation/brouillons/",
+      ];
 
       if (protectedPrefixes.some((p) => url.pathname.startsWith(p))) {
         const userRecord = locals.pb.authStore.record;
@@ -150,11 +159,23 @@ export const onRequest = defineMiddleware(
         const isAdmin = userRecord?.administrateur === true;
         const isVerified = userRecord?.verified === true;
 
-        if (!isAuthenticated || !(isAdmin && isVerified)) {
+        if (!isAuthenticated || !isVerified) {
           // conserver la destination d'origine pour la renvoyer après login
           const redirectUrl = new URL("/connexion", request.url);
           redirectUrl.searchParams.set("redirect", url.pathname + url.search);
           return Response.redirect(redirectUrl.toString(), 302);
+        }
+
+        if (!isAdmin) {
+          const isAllowedRoute =
+            nonAdminAllowedCreationRoutes.includes(url.pathname) ||
+            nonAdminAllowedCreationPrefixes.some((prefix) =>
+              url.pathname.startsWith(prefix),
+            );
+
+          if (!isAllowedRoute) {
+            return Response.redirect(new URL("/creation", request.url).toString(), 302);
+          }
         }
       }
     }

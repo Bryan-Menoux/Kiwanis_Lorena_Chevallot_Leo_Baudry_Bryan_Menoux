@@ -1,6 +1,5 @@
 import { showAlert } from "../../utils/alerts";
 import { scrollToTarget } from "../../utils/scroll.js";
-import { renderPagination } from "../../utils/renderPagination";
 import {
   buildStepOneRequiredMessage,
   getMissingHeaderFields,
@@ -66,11 +65,14 @@ function setNavState(form, step) {
   // Génère les pastilles de navigation via renderPagination.
   const stepNav = form.querySelector("[data-mobile-step-nav]");
   if (stepNav instanceof HTMLElement) {
-    stepNav.innerHTML = renderPagination(TOTAL_STEPS, step, {
-      noWrapper: true,
-      buttonClass: "btn btn-xs rounded-full border border-base-100/30 bg-transparent text-base-100/60",
-      activeButtonClass: "btn btn-xs rounded-full bg-base-100 text-accent",
-    });
+    const buttonClass =
+      "btn btn-xs rounded-full border border-base-100/30 bg-transparent text-base-100/60";
+    const activeButtonClass = "btn btn-xs rounded-full bg-base-100 text-accent";
+    stepNav.innerHTML = Array.from({ length: TOTAL_STEPS }, (_, index) => {
+      const pageNumber = index + 1;
+      const cls = pageNumber === step ? activeButtonClass : buttonClass;
+      return `<button type="button" class="${cls}" data-page-action="go" data-page="${pageNumber}">${pageNumber}</button>`;
+    }).join("");
   }
 }
 

@@ -12,10 +12,26 @@ import {
   type CreationDashboardPage,
 } from "../../services/creationDashboard";
 
-const actions = await Astro.locals.pb.collection('actions').getFullList(200, { sort: '-updated', expand: 'cree_par' });
-const projets = await Astro.locals.pb.collection('projets').getFullList(200, { sort: '-updated', expand: 'cree_par' });
-const produits = await Astro.locals.pb.collection('produits').getFullList(200, { sort: '-updated', expand: 'cree_par' });
-const brouillons = await Astro.locals.pb.collection('brouillons').getFullList(200, { sort: '-updated', expand: 'cree_par' });
+const currentUser = Astro.locals.pb.authStore.model;
+const isAdmin = currentUser?.administrateur === true;
+const currentUserId = typeof currentUser?.id === "string" ? currentUser.id : "";
+
+const actions = isAdmin
+  ? await Astro.locals.pb.collection('actions').getFullList(200, { sort: '-updated', expand: 'cree_par' })
+  : [];
+const projets = isAdmin
+  ? await Astro.locals.pb.collection('projets').getFullList(200, { sort: '-updated', expand: 'cree_par' })
+  : [];
+const produits = isAdmin
+  ? await Astro.locals.pb.collection('produits').getFullList(200, { sort: '-updated', expand: 'cree_par' })
+  : [];
+const brouillonsRaw = await Astro.locals.pb.collection('brouillons').getFullList(200, {
+  sort: '-updated',
+  expand: 'cree_par',
+});
+const brouillons = isAdmin
+  ? brouillonsRaw
+  : brouillonsRaw.filter((draft: any) => String(draft?.cree_par || "") === currentUserId);
 
 const pages: CreationDashboardPage[] = mapCreationDashboardPages({
   actions,
@@ -109,6 +125,17 @@ if (Astro.request.method === "POST") {
 
     if (!collection) {
       throw new Error("Type d'element invalide.");
+    }
+
+    if (!isAdmin) {
+      if (collection !== "brouillons") {
+        throw new Error("Seul un administrateur peut supprimer ce contenu.");
+      }
+
+      const draft = await Astro.locals.pb.collection("brouillons").getOne(id);
+      if (String(draft?.cree_par || "") !== currentUserId) {
+        throw new Error("Vous ne pouvez supprimer que vos propres brouillons.");
+      }
     }
 
     await Astro.locals.pb.collection(collection).delete(id);

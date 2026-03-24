@@ -33,6 +33,10 @@ import {
 import { normalizeActionImagesForSave } from "../../../../utils/actionImageWebp";
 
 const currentUser = Astro.locals.pb.authStore.model;
+const isAdmin = currentUser?.administrateur === true;
+const currentUserId = typeof currentUser?.id === "string" ? currentUser.id : "";
+const isOwnedByCurrentUser = (record: any) =>
+  currentUserId !== "" && String(record?.cree_par || "") === currentUserId;
 // Message d'erreur affiché dans le formulaire en cas d'échec serveur
 let error: string = "";
 // Construit une URL de redirection avec un message de succès uniforme.
@@ -295,6 +299,12 @@ if (idParam) {
   }
 }
 
+if (actionRecord && !isAdmin) {
+  if (!actionRecordFromBrouillon || !isOwnedByCurrentUser(actionRecord)) {
+    return Astro.redirect("/creation?error=" + encodeURIComponent("Accès non autorisé."));
+  }
+}
+
 // Ce bloc normalise les valeurs base de données pour la prévisualisation en direct et les champs du formulaire.
 const previewData: any = {
   titre: actionRecord?.titre ?? "Titre de l'action",
@@ -398,6 +408,9 @@ if (Astro.request.method === "POST") {
     }
 
     const publishRequested = formData.get("publish_action")?.toString() === "true";
+    if (publishRequested && !isAdmin) {
+      throw new Error("Seul un administrateur peut publier une action.");
+    }
     if (!actionRecordFromBrouillon || publishRequested) {
       const overLimitPartTexts = getOverLimitPartTextFieldsAfterSubmit(
         formData,
@@ -839,6 +852,7 @@ if (Astro.request.method === "POST") {
         uiMode="mobile-wizard"
         initialStep={1}
         recordKey={idParam ? String(idParam) : "new"}
+        canPublish={isAdmin}
       />
     </Fragment>
     <Fragment slot="preview">

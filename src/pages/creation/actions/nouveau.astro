@@ -121,6 +121,7 @@ const previewPlaceholder: any = {
   ...previewDefaults,
 };
 const currentUser = Astro.locals.pb.authStore.model;
+const isAdmin = currentUser?.administrateur === true;
 // Gestion de la soumission du formulaire côté serveur (création)
 if (Astro.request.method === "POST") {
   try {
@@ -131,7 +132,7 @@ if (Astro.request.method === "POST") {
     const discardDraft = formData.get("discard_draft")?.toString() === "true";
     const isAutosave = formData.get("autosave")?.toString() === "true";
     const draftId = formData.get("draft_id")?.toString()?.trim() || "";
-    const isBrouillon = saveAs === "brouillon" || isAutosave;
+    const isBrouillon = !isAdmin || saveAs === "brouillon" || isAutosave;
 
     if (discardDraft) {
       if (draftId) {
@@ -354,6 +355,7 @@ if (Astro.request.method === "POST") {
         uiMode="mobile-wizard"
         initialStep={1}
         recordKey="new"
+        canPublish={isAdmin}
       />
     </Fragment>
     <Fragment slot="preview">
