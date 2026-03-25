@@ -67,14 +67,6 @@ const hasBeneficiaire = mode === "edit" && hasValue(previewData?.beneficiaire);
     />
 
     <div class="w-fit flex items-stretch shrink-0">
-      <a
-        id="btn_voir_maps"
-        class="btn btn-accent rounded-md! flex items-center justify-center whitespace-nowrap h-full"
-        target="_blank"
-        rel="noopener noreferrer"
-        href={hasLienLieu ? previewData.lien_lieu : "#"}
-        style={hasLienLieu ? "" : "display:none;"}>Voir sur Maps</a
-      >
     </div>
   </div>
 

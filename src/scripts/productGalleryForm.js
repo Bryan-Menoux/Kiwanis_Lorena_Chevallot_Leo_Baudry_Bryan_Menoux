@@ -32,7 +32,7 @@ function createSelectedThumbnail(previewUrl, index) {
   removeButton.setAttribute("data-gallery-selected-index", String(index));
   removeButton.setAttribute("aria-label", "Supprimer la photo");
   removeButton.title = "Supprimer la photo";
-  removeButton.textContent = "\u2716";
+  removeButton.textContent = "✖";
   wrapper.appendChild(removeButton);
 
   return wrapper;
@@ -58,7 +58,7 @@ function createExistingThumbnail(photoUrl) {
   removeButton.setAttribute("data-gallery-remove-url", photoUrl);
   removeButton.setAttribute("aria-label", "Supprimer la photo");
   removeButton.title = "Supprimer la photo";
-  removeButton.textContent = "\u2716";
+  removeButton.textContent = "✖";
   wrapper.appendChild(removeButton);
 
   return wrapper;

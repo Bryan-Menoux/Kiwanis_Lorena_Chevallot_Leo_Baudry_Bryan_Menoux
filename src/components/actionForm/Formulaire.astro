@@ -59,7 +59,7 @@ const placeholders = {
 
 const resolvedImageIcon = imageIconProp || imageIcon;
 const isMobileWizard = uiMode === "mobile-wizard";
-const createActionLabel = canPublish ? "CrÃ©er l'action" : "Enregistrer le brouillon";
+const createActionLabel = canPublish ? "Créer l'action" : "Enregistrer le brouillon";
 const formTitle =
   mode === "create" ? "Créer une nouvelle action" : "Modifier l'action";
 const showUnsavedModal = mode === "create" || mode === "edit";
@@ -283,7 +283,7 @@ const initialRecadrageValue = (() => {
             type="submit"
             name="publish_action"
             value="true"
-            class="btn btn-outline btn-accent px-4 py-2 rounded-md! flex-1"
+            class="btn btn-block text-accent px-4 py-2 rounded-md! flex-1"
           >
             Publier l'action
           </button>
@@ -297,7 +297,7 @@ const initialRecadrageValue = (() => {
           "px-4 py-2 rounded-md! flex-1",
           mode === "create"
             ? "btn text-accent"
-            : "btn btn-outline btn-accent",
+            : "btn btn-outline border-base-100 text-base-100 hover:text-accent",
         ]}
         >
           {mode === "create" ? createActionLabel : "Enregistrer les modifications"}
@@ -308,7 +308,7 @@ const initialRecadrageValue = (() => {
             type="submit"
             name="save_as"
             value="brouillon"
-            class="btn btn-outline btn-accent px-4 py-2 rounded-md! w-full"
+            class="btn btn-outline border-base-100 text-base-100 hover:text-accent px-4 py-2 rounded-md! w-full"
           >
             Enregistrer en brouillon
           </button>
@@ -336,60 +336,26 @@ const initialRecadrageValue = (() => {
             type="button"
             data-mobile-next
             class="btn btn-accent rounded-full flex-1"
+            data-next-text="Suivant"
+            data-last-text={mode === "edit" && isDraft && canPublish ? "Publier l'action" : undefined}
+            name={mode === "edit" && isDraft && canPublish ? "publish_action" : undefined}
+            value={mode === "edit" && isDraft && canPublish ? "true" : undefined}
           >
             Suivant
           </button>
-          <button
-            type="submit"
-            name={mode === "create" && !canPublish ? "save_as" : undefined}
-            value={mode === "create" && !canPublish ? "brouillon" : undefined}
-            data-mobile-submit
-            class:list={[
-              "rounded-full flex-1 hidden",
-              mode === "create"
-                ? "btn text-accent"
-                : "btn btn-outline btn-accent",
-            ]}
-          >
-            {mode === "create" ? createActionLabel : "Enregistrer"}
-          </button>
         </div>
-        <div class="flex gap-2">
-          {
-            mode === "edit" && isDraft && canPublish && (
-              <button
-                type="submit"
-                name="publish_action"
-                value="true"
-                class="btn btn-outline btn-accent rounded-full flex-1"
-              >
-                Publier l'action
-              </button>
-            )
-          }
-          {
-            mode === "edit" && isDraft && (
-              <button
-                type="submit"
-                class="btn btn-outline btn-accent rounded-full flex-1"
-              >
-                Enregistrer les modifications
-              </button>
-            )
-          }
-          {
-            mode === "create" && canPublish && (
-              <button
-                type="submit"
-                name="save_as"
-                value="brouillon"
-                class="btn btn-outline btn-accent rounded-full flex-1"
-              >
-                Enregistrer en brouillon
-              </button>
-            )
-          }
-        </div>
+        {
+          mode === "edit" && isDraft && (
+            <button
+              type="submit"
+              name="edit_save"
+              value="true"
+              class="btn btn-outline btn-accent hover:text-accent rounded-full w-full"
+            >
+              Enregistrer les modifications
+            </button>
+          )
+        }
       </div>
     )
   }

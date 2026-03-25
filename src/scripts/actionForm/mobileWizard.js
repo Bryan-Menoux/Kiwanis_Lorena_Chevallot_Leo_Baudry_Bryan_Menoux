@@ -54,7 +54,19 @@ function setNavState(form, step) {
 
   const nextButton = form.querySelector("[data-mobile-next]");
   if (nextButton instanceof HTMLButtonElement) {
-    nextButton.classList.toggle("hidden", step === TOTAL_STEPS);
+    if (step === TOTAL_STEPS) {
+      const lastText = nextButton.getAttribute("data-last-text");
+      if (lastText) {
+        nextButton.textContent = lastText;
+        nextButton.type = "submit";
+      }
+    } else {
+      const nextText = nextButton.getAttribute("data-next-text");
+      if (nextText) {
+        nextButton.textContent = nextText;
+      }
+      nextButton.type = "button";
+    }
   }
 
   const submitButton = form.querySelector("[data-mobile-submit]");
@@ -286,7 +298,11 @@ function initMobileWizard() {
   const nextButton = form.querySelector("[data-mobile-next]");
   const prevHandler = () => goToStep(currentStep - 1);
   const nextHandler = () => {
-    goToStep(currentStep + 1, true);
+    if (currentStep === TOTAL_STEPS) {
+      form.submit();
+    } else {
+      goToStep(currentStep + 1, true);
+    }
   };
   if (prevButton instanceof HTMLButtonElement) {
     prevButton.addEventListener("click", prevHandler);

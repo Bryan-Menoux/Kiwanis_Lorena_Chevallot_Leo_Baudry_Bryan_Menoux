@@ -83,13 +83,10 @@ function initActionFormRequiredValidation() {
         ? submitter.name
         : "";
     const isDraftSave = submitterName === "save_as";
+    const isEditSave = submitterName === "edit_save";
     const isPublishSubmit = submitterName === "publish_action";
-    const isEditDraftSubmit =
-      form.getAttribute("data-form-mode") === "edit" &&
-      form.getAttribute("data-is-draft") === "true" &&
-      !isPublishSubmit;
 
-    if (isDraftSave || isEditDraftSubmit) {
+    if (isDraftSave || isEditSave) {
       markSubmitInProgress();
       setClientValidationError("");
       return;

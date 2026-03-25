@@ -553,12 +553,13 @@ if (Astro.request.method === "POST") {
 
     // Vérifier que le titre est fourni
     const titre = formData.get("titre")?.toString();
-    if (!titre || titre.trim() === "") {
+    const editSaveRequested = formData.get("edit_save")?.toString() === "true";
+    if (!editSaveRequested && (!titre || titre.trim() === "")) {
       throw new Error("Le titre est obligatoire");
     }
 
     // Générer le slug
-    slug = slugify(titre, { lower: true, strict: true });
+    slug = slugify(titre || actionRecord?.slug || "brouillon", { lower: true, strict: true });
 
     // Préparer les données pour PocketBase
     const data: any = { slug };
@@ -584,6 +585,7 @@ if (Astro.request.method === "POST") {
         key === "remove_galerie_photos" ||
         key.startsWith("remove_") ||
         key === "save_as" ||
+        key === "edit_save" ||
         key === "publish_action" ||
         key === "draft_id" ||
         key === "autosave" ||

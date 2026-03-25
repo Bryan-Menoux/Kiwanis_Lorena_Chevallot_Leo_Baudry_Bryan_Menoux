@@ -9,137 +9,121 @@ import {
 } from "../utils/consent";
 ---
 
-<div
-  id="kiwanis-consent-root"
-  class="pointer-events-none fixed inset-0 z-10020 hidden items-end justify-center p-4 sm:items-center"
-  aria-live="polite"
->
-  <div
-    data-consent-backdrop
-    class="absolute inset-0 bg-black/45 opacity-0 transition-opacity duration-200"
-  ></div>
-
-  <section
-    data-consent-panel
-    class="pointer-events-auto relative z-10 w-full max-w-2xl rounded-[1.75rem] border border-base-300 bg-base-100 p-6 shadow-2xl opacity-0 translate-y-4 transition-all duration-200 sm:p-8"
-    role="dialog"
-    aria-modal="true"
-    aria-labelledby="kiwanis-consent-title"
-    aria-describedby="kiwanis-consent-description"
-  >
-    <div class="flex flex-col gap-3">
-      <p
-        id="kiwanis-consent-eyebrow"
-        class="text-xs font-semibold uppercase tracking-[0.18em] text-accent/70"
-      >
-        Cookies et services externes
-      </p>
-      <h2
-        id="kiwanis-consent-title"
-        class="text-2xl font-bold text-accent sm:text-3xl"
-      >
-        Gérer les services externes
-      </h2>
-      <p
-        id="kiwanis-consent-description"
-        class="text-sm leading-relaxed text-base-content/80 sm:text-base"
-      >
-        Le site utilise des cookies et stockages strictement nécessaires pour
-        l’espace membre et certaines fonctions d’interface. Les services
-        externes, comme OpenStreetMap ou Nominatim, restent désactivés tant que
-        vous ne les autorisez pas.
-      </p>
-    </div>
-
-    <div class="mt-6 flex flex-col gap-4" data-consent-customize hidden>
-      <div class="rounded-2xl border border-base-300 bg-base-200/45 p-4 sm:p-5">
-        <div class="flex items-start justify-between gap-4">
-          <div class="space-y-2">
-            <h3 class="text-base font-semibold text-base-content sm:text-lg">
-              Cookies techniques essentiels
-            </h3>
-            <p class="text-sm leading-relaxed text-base-content/75">
-              Toujours actifs. Ils servent à l’authentification PocketBase, au
-              maintien de session et à des stockages locaux techniques de
-              l’interface.
-            </p>
+<div id="kiwanis-consent-root" class="fixed inset-0 z-10020 hidden items-end justify-center p-4 sm:items-center sm:p-6 pointer-events-none" aria-live="polite">
+  <div data-consent-backdrop class="absolute inset-0 bg-black/45 opacity-0 transition-opacity duration-220 pointer-events-none" style="backdrop-filter: blur(2px)"></div>
+  <section data-consent-panel class="relative z-10 w-full max-w-xl bg-base-100 rounded-xl shadow-lg overflow-hidden opacity-0 scale-95 transition-all duration-220" role="dialog" aria-modal="true" aria-labelledby="kiwanis-consent-title" aria-describedby="kiwanis-consent-description">
+    <header class="flex gap-3 p-6 border-b border-base-300">
+      <div class="shrink-0 w-9 h-9 bg-primary/10 text-primary rounded-lg flex items-center justify-center" aria-hidden="true">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      </div>
+      <div class="flex-1 min-w-0">
+        <span class="text-xs font-semibold uppercase tracking-widest text-primary mb-1 block">Confidentialité</span>
+        <h2 id="kiwanis-consent-title" class="text-lg font-bold text-base-content mb-2">Vos préférences de confidentialité</h2>
+        <p id="kiwanis-consent-description" class="text-sm text-base-content/70">Ce site utilise des cookies essentiels pour fonctionner. Les services tiers (OpenStreetMap, Nominatim…) ne se chargent qu'avec votre accord explicite.</p>
+      </div>
+    </header>
+    <div class="p-4 space-y-3">
+      <div class="bg-primary/5 border border-primary/20 rounded-lg p-3">
+        <div class="flex items-center justify-between gap-4">
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-2 text-sm font-semibold text-base-content mb-1">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="text-primary"><polyline points="20 6 9 17 4 12"/></svg>
+              Cookies essentiels
+            </div>
+            <p class="text-xs text-base-content/60">Authentification, sécurité de session, stockages techniques — indispensables au bon fonctionnement du site.</p>
           </div>
-          <span
-            class="badge badge-accent badge-outline shrink-0 whitespace-nowrap"
-          >
-            Toujours actif
-          </span>
+          <span class="shrink-0 badge badge-primary">Actif</span>
         </div>
       </div>
-
-      <div class="rounded-2xl border border-base-300 bg-base-200/45 p-4 sm:p-5">
-        <div class="flex items-start justify-between gap-4">
-          <div class="space-y-2">
-            <h3 class="text-base font-semibold text-base-content sm:text-lg">
-              Contenus et services externes
-            </h3>
-            <p class="text-sm leading-relaxed text-base-content/75">
-              Autorise le chargement de la carte OpenStreetMap, des suggestions
-              d’adresse Nominatim et, le cas échéant, des médias chargés depuis
-              un domaine externe.
-            </p>
+      <div class="bg-base-200 border border-base-300 rounded-lg p-3 hidden" data-consent-customize>
+        <div class="flex items-center justify-between gap-4">
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-2 text-sm font-semibold text-base-content mb-1">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+              Services &amp; contenus externes
+            </div>
+            <p class="text-xs text-base-content/60">Cartes OpenStreetMap, suggestions Nominatim et médias hébergés sur des domaines tiers.</p>
           </div>
-
-          <label class="swap shrink-0">
-            <input
-              id="kiwanis-consent-external-services"
-              type="checkbox"
-              class="toggle toggle-accent"
-            />
+          <label class="shrink-0 cursor-pointer">
+            <span class="sr-only">Autoriser les services et contenus externes</span>
+            <input id="kiwanis-consent-external-services" type="checkbox" class="toggle toggle-primary" role="switch" aria-checked="false" />
           </label>
         </div>
       </div>
+      <p class="text-xs text-base-content/50 flex items-start gap-2 px-1">
+        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="shrink-0 mt-0.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <span>Votre choix est mémorisé {CONSENT_RETENTION_DAYS} jours dans votre navigateur.</span>
+      </p>
     </div>
-
-    <div class="mt-6 flex flex-wrap items-center gap-3">
-      <button
-        type="button"
-        class="btn btn-accent min-w-40"
-        data-consent-accept
-      >
-        Tout accepter
-      </button>
-      <button
-        type="button"
-        class="btn btn-outline min-w-40"
-        data-consent-reject
-      >
-        Tout refuser
-      </button>
-      <button
-        type="button"
-        class="btn btn-ghost min-w-40"
-        data-consent-customize-toggle
-      >
-        Personnaliser
-      </button>
-      <button
-        type="button"
-        class="btn btn-accent min-w-40 hidden"
-        data-consent-save
-      >
-        Enregistrer mes choix
-      </button>
-      <a
-        href="/cookies"
-        class="text-sm font-medium text-accent underline underline-offset-4"
-      >
-        Voir la page d’information
+    <footer class="flex flex-col gap-3 p-4 border-t border-base-300">
+      <a href="/cookies" class="text-xs font-medium text-primary hover:underline flex items-center justify-center gap-1 whitespace-nowrap">
+        Politique de cookies
+        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
       </a>
-    </div>
-
-    <p class="mt-4 text-xs leading-relaxed text-base-content/65">
-      Votre choix est conservé pendant {CONSENT_RETENTION_DAYS} jours dans le
-      stockage local du navigateur pour éviter de vous le redemander à chaque
-      visite.
-    </p>
+      <div class="flex gap-2 flex-wrap justify-end max-sm:grid max-sm:grid-cols-2">
+        <button type="button" class="btn btn-ghost btn-sm" data-consent-reject>Tout refuser</button>
+        <button type="button" class="btn btn-outline btn-sm" data-consent-customize-toggle>Personnaliser</button>
+        <button type="button" class="btn btn-accent btn-sm" data-consent-accept>Tout accepter</button>
+        <button type="button" class="btn btn-accent btn-sm hidden" data-consent-save>Enregistrer</button>
+      </div>
+    </footer>
   </section>
 </div>
+
+<style>
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+  }
+
+  #kiwanis-consent-root {
+    display: none;
+  }
+
+  #kiwanis-consent-root.is-open {
+    display: flex;
+    pointer-events: auto;
+  }
+
+  [data-consent-backdrop] {
+    opacity: 0;
+    transition: opacity 220ms ease;
+  }
+
+  #kiwanis-consent-root.is-visible [data-consent-backdrop] {
+    opacity: 1;
+  }
+
+  [data-consent-panel] {
+    opacity: 0;
+    transform: translateY(12px) scale(0.99);
+    transition: opacity 220ms ease, transform 220ms ease;
+  }
+
+  #kiwanis-consent-root.is-visible [data-consent-panel] {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+
+  html.consent-scroll-locked {
+    overflow: hidden;
+  }
+
+  @media (max-width: 480px) {
+    [class*="consent-actions"] {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.5rem;
+    }
+  }
+</style>
 
 <script
   define:vars={{
@@ -148,16 +132,10 @@ import {
     consentChangedEvent: CONSENT_EVENT_CHANGED,
     consentOpenEvent: CONSENT_OPEN_EVENT,
     externalServicesCategory: EXTERNAL_SERVICES_CATEGORY,
+    consentVersion: 1,
+    consentRetentionDays: CONSENT_RETENTION_DAYS,
   }}
 >
-  import {
-    createConsentPreferences,
-    hasExternalServicesConsent,
-    isConsentPreferencesExpired,
-    parseConsentPreferences,
-    serializeConsentPreferences,
-  } from "../utils/consent";
-
   const root = document.getElementById("kiwanis-consent-root");
   const panel = root?.querySelector("[data-consent-panel]");
   const backdrop = root?.querySelector("[data-consent-backdrop]");
@@ -166,99 +144,116 @@ import {
   const acceptButton = root?.querySelector("[data-consent-accept]");
   const rejectButton = root?.querySelector("[data-consent-reject]");
   const saveButton = root?.querySelector("[data-consent-save]");
-  const externalServicesToggle = document.getElementById(
-    "kiwanis-consent-external-services",
-  );
+  const externalServicesToggle = document.getElementById("kiwanis-consent-external-services");
 
   let preferences = null;
   let isCustomizeMode = false;
+  let previouslyFocusedElement = null;
+  const consentRetentionMs = Number(consentRetentionDays) * 24 * 60 * 60 * 1000;
 
-  const dispatchConsentEvent = (eventName, detail) => {
-    window.dispatchEvent(new CustomEvent(eventName, { detail }));
-  };
+  // ── Focus trap ──────────────────────────────────────────────────────────
+  const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
-  const readStoredPreferences = () => {
-    try {
-      const parsed = parseConsentPreferences(
-        window.localStorage.getItem(consentStorageKey),
-      );
-
-      if (!parsed || isConsentPreferencesExpired(parsed)) {
-        window.localStorage.removeItem(consentStorageKey);
-        return null;
-      }
-
-      return parsed;
-    } catch {
-      return null;
+  const trapFocus = (e) => {
+    if (!(panel instanceof HTMLElement)) return;
+    const els = [...panel.querySelectorAll(FOCUSABLE)].filter(el => !el.closest("[hidden]") && !el.classList.contains("hidden"));
+    if (!els.length) return;
+    const first = els[0], last = els[els.length - 1];
+    if (e.key === "Tab") {
+      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
     }
   };
 
+  // ── Consent helpers ─────────────────────────────────────────────────────
+  const createConsentPreferences = (externalServices) => {
+    const updatedAt = new Date();
+    return {
+      version: Number(consentVersion) || 1,
+      updatedAt: updatedAt.toISOString(),
+      expiresAt: new Date(updatedAt.getTime() + consentRetentionMs).toISOString(),
+      categories: { externalServices: Boolean(externalServices) },
+    };
+  };
+
+  const parseConsentPreferences = (value) => {
+    if (!value) return null;
+    try {
+      const parsed = JSON.parse(value);
+      if (!parsed || typeof parsed !== "object") return null;
+      return {
+        version: Number(parsed.version) || 1,
+        updatedAt: String(parsed.updatedAt || ""),
+        expiresAt: String(parsed.expiresAt || ""),
+        categories: { externalServices: Boolean(parsed.categories?.externalServices) },
+      };
+    } catch { return null; }
+  };
+
+  const isExpired = (c) => {
+    if (!c) return true;
+    if (c.version !== (Number(consentVersion) || 1)) return true;
+    const exp = Date.parse(c.expiresAt || "");
+    return !Number.isFinite(exp) || exp <= Date.now();
+  };
+
+  const hasExternalServicesConsent = (c) => Boolean(c?.categories?.externalServices);
+  const dispatch = (name, detail) => window.dispatchEvent(new CustomEvent(name, { detail }));
+
+  const readStoredPreferences = () => {
+    try {
+      const parsed = parseConsentPreferences(window.localStorage.getItem(consentStorageKey));
+      if (!parsed || isExpired(parsed)) { window.localStorage.removeItem(consentStorageKey); return null; }
+      return parsed;
+    } catch { return null; }
+  };
+
   const applyExternalServicesState = () => {
-    const enabled = hasExternalServicesConsent(preferences);
-    document.documentElement.dataset.kiwanisExternalServices = enabled
-      ? "granted"
-      : "denied";
+    document.documentElement.dataset.kiwanisExternalServices =
+      hasExternalServicesConsent(preferences) ? "granted" : "denied";
   };
 
   const syncUiWithPreferences = () => {
     if (externalServicesToggle instanceof HTMLInputElement) {
-      externalServicesToggle.checked = hasExternalServicesConsent(preferences);
+      const checked = hasExternalServicesConsent(preferences);
+      externalServicesToggle.checked = checked;
+      externalServicesToggle.setAttribute("aria-checked", String(checked));
     }
   };
 
-  const persistPreferences = (nextPreferences) => {
-    preferences = nextPreferences;
-
-    try {
-      window.localStorage.setItem(
-        consentStorageKey,
-        serializeConsentPreferences(nextPreferences),
-      );
-    } catch {
-      // Ignorer les navigateurs qui bloquent le stockage.
-    }
-
-    applyExternalServicesState();
-    syncUiWithPreferences();
-    closePanel();
-    dispatchConsentEvent(consentChangedEvent, nextPreferences);
-  };
-
+  // ── Panel open / close ──────────────────────────────────────────────────
   const showRoot = () => {
     if (!(root instanceof HTMLElement) || !(panel instanceof HTMLElement)) return;
-    root.classList.remove("hidden", "pointer-events-none");
-    root.classList.add("flex");
-
-    window.requestAnimationFrame(() => {
-      backdrop?.classList.remove("opacity-0");
-      panel.classList.remove("opacity-0", "translate-y-4");
+    previouslyFocusedElement = document.activeElement;
+    root.classList.add("is-open");
+    document.documentElement.classList.add("consent-scroll-locked");
+    requestAnimationFrame(() => {
+      root.classList.add("is-visible");
+      const first = panel.querySelector(FOCUSABLE);
+      if (first instanceof HTMLElement) first.focus();
     });
+    panel.addEventListener("keydown", trapFocus);
   };
 
   const hideRoot = () => {
     if (!(root instanceof HTMLElement) || !(panel instanceof HTMLElement)) return;
-
-    backdrop?.classList.add("opacity-0");
-    panel.classList.add("opacity-0", "translate-y-4");
-
-    window.setTimeout(() => {
-      root.classList.add("hidden", "pointer-events-none");
-      root.classList.remove("flex");
-    }, 180);
+    root.classList.remove("is-visible");
+    panel.removeEventListener("keydown", trapFocus);
+    document.documentElement.classList.remove("consent-scroll-locked");
+    setTimeout(() => {
+      root.classList.remove("is-open");
+      if (previouslyFocusedElement instanceof HTMLElement) previouslyFocusedElement.focus();
+    }, 220);
   };
 
   const syncMode = () => {
     if (!(customizeSection instanceof HTMLElement)) return;
-
-    customizeSection.hidden = !isCustomizeMode;
+    customizeSection.classList.toggle("hidden", !isCustomizeMode);
     saveButton?.classList.toggle("hidden", !isCustomizeMode);
     acceptButton?.classList.toggle("hidden", isCustomizeMode);
     rejectButton?.classList.toggle("hidden", isCustomizeMode);
     if (customizeToggle instanceof HTMLButtonElement) {
-      customizeToggle.textContent = isCustomizeMode
-        ? "Retour"
-        : "Personnaliser";
+      customizeToggle.textContent = isCustomizeMode ? "Retour" : "Personnaliser";
     }
   };
 
@@ -269,62 +264,49 @@ import {
     showRoot();
   };
 
-  const closePanel = () => {
-    hideRoot();
+  const closePanel = () => hideRoot();
+
+  // ── Persist ─────────────────────────────────────────────────────────────
+  const persistPreferences = (next) => {
+    preferences = next;
+    try { window.localStorage.setItem(consentStorageKey, JSON.stringify(next)); } catch {}
+    applyExternalServicesState();
+    syncUiWithPreferences();
+    closePanel();
+    dispatch(consentChangedEvent, next);
   };
 
+  const acceptAll = () => persistPreferences(createConsentPreferences(true));
+  const rejectAll = () => persistPreferences(createConsentPreferences(false));
   const saveCurrentSelection = () => {
-    const externalServices =
-      externalServicesToggle instanceof HTMLInputElement
-        ? externalServicesToggle.checked
-        : false;
-    persistPreferences(createConsentPreferences(externalServices));
+    persistPreferences(createConsentPreferences(
+      externalServicesToggle instanceof HTMLInputElement ? externalServicesToggle.checked : false
+    ));
   };
 
-  const acceptAll = () => {
-    persistPreferences(createConsentPreferences(true));
-  };
-
-  const rejectAll = () => {
-    persistPreferences(createConsentPreferences(false));
-  };
-
-  customizeToggle?.addEventListener("click", () => {
-    isCustomizeMode = !isCustomizeMode;
-    syncMode();
-  });
-
+  // ── Events ──────────────────────────────────────────────────────────────
+  customizeToggle?.addEventListener("click", () => { isCustomizeMode = !isCustomizeMode; syncMode(); });
   acceptButton?.addEventListener("click", acceptAll);
   rejectButton?.addEventListener("click", rejectAll);
   saveButton?.addEventListener("click", saveCurrentSelection);
+
   backdrop?.addEventListener("click", closePanel);
+  backdrop?.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); closePanel(); } });
 
-  window.addEventListener("keydown", (event) => {
-    if (event.key === "Escape") {
-      closePanel();
-    }
-  });
+  window.addEventListener("keydown", (e) => { if (e.key === "Escape") closePanel(); });
 
-  document.addEventListener("click", (event) => {
-    const target = event.target;
-    if (!(target instanceof HTMLElement)) return;
-
-    const trigger = target.closest("[data-open-cookie-settings]");
+  document.addEventListener("click", (e) => {
+    const trigger = e.target instanceof HTMLElement && e.target.closest("[data-open-cookie-settings]");
     if (!(trigger instanceof HTMLElement)) return;
-
-    event.preventDefault();
-    const mode = trigger.dataset.openCookieSettings || "customize";
-    openPanel(mode);
+    e.preventDefault();
+    openPanel(trigger.dataset.openCookieSettings || "customize");
   });
 
-  window.addEventListener(consentOpenEvent, (event) => {
-    const mode =
-      event instanceof CustomEvent && typeof event.detail?.mode === "string"
-        ? event.detail.mode
-        : "customize";
-    openPanel(mode);
+  window.addEventListener(consentOpenEvent, (e) => {
+    openPanel(e instanceof CustomEvent && typeof e.detail?.mode === "string" ? e.detail.mode : "customize");
   });
 
+  // ── Init ─────────────────────────────────────────────────────────────────
   preferences = readStoredPreferences();
   applyExternalServicesState();
   syncUiWithPreferences();
@@ -339,9 +321,22 @@ import {
     category: externalServicesCategory,
   };
 
-  dispatchConsentEvent(consentReadyEvent, preferences);
-
+  dispatch(consentReadyEvent, preferences);
+  
+  // ── Auto-show on scroll only if no preferences saved ──────────────────────
   if (!preferences) {
-    openPanel("banner");
+    let hasScrolled = false;
+    const showOnScroll = () => {
+      if (hasScrolled) return;
+      // Affiche quand le centre du viewport est à 150dvh du haut
+      const viewportCenter = window.scrollY + window.innerHeight / 2;
+      const threshold = 1.5 * window.innerHeight;
+      if (viewportCenter > threshold) {
+        hasScrolled = true;
+        window.removeEventListener("scroll", showOnScroll);
+        openPanel("banner");
+      }
+    };
+    window.addEventListener("scroll", showOnScroll, { passive: true });
   }
 </script>

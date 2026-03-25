@@ -1,4 +1,6 @@
 ---
+import DiagArrow from './DiagArrow.astro';
+
 export interface Props {
   inputId?: string;
   suggestionsId?: string;
@@ -32,29 +34,41 @@ const hasInitialValue =
   data-location-search
   data-map-link-input-id={mapLinkInputId}
 >
-  <input
-    id={inputId}
-    type="text"
-    placeholder={placeholder}
-    autocomplete="off"
-    class={inputClass}
-    {...hasInitialValue ? { value } : {}}
-    data-prop={dataProp}
-    name={name}
-    maxlength={maxLength}
-  />
+  <div class="flex gap-2">
+    <input
+      id={inputId}
+      type="text"
+      placeholder={placeholder}
+      autocomplete="off"
+      class={inputClass}
+      {...hasInitialValue ? { value } : {}}
+      data-prop={dataProp}
+      name={name}
+      maxlength={maxLength}
+    />
+    <a
+      id={`${inputId}-maps-link`}
+      href=""
+      target="_blank"
+      rel="noopener noreferrer"
+      class="btn btn-accent btn-sm px-4 py-2 whitespace-nowrap flex gap-2"
+      style="display: none;"
+    >
+      Voir sur Maps <DiagArrow class="w-3 h-3" />
+    </a>
+  </div>
 
   <div
     class="mt-2 rounded-xl border border-base-300 bg-base-200/60 p-3 text-sm text-base-content/75"
     data-location-search-notice
   >
-    <p>
+    <p class="text-sm!">
       La recherche assistée d’adresse utilise le service externe
       OpenStreetMap Nominatim.
     </p>
     <button
       type="button"
-      class="btn btn-accent btn-xs mt-3"
+      class="btn btn-accent btn-sm! px-4 py-2 mt-3 w-full rounded-md!"
       data-open-cookie-settings="customize"
     >
       Autoriser les services externes
@@ -106,7 +120,11 @@ const hasInitialValue =
     let timer: ReturnType<typeof setTimeout> | undefined;
     let isProgrammaticUpdate = false;
     const hasExternalServicesConsent = () =>
-      Boolean(window.KiwanisConsent?.hasExternalServicesConsent?.());
+      Boolean(
+        (window as Window & {
+          KiwanisConsent?: { hasExternalServicesConsent?: () => boolean };
+        }).KiwanisConsent?.hasExternalServicesConsent?.(),
+      );
     const syncNotice = () => {
       if (!(notice instanceof HTMLElement)) return;
       notice.classList.toggle("hidden", hasExternalServicesConsent());
@@ -152,6 +170,13 @@ const hasInitialValue =
       mapLinkField.value = buildMapsLink(input.value.trim());
       mapLinkField.dispatchEvent(new Event("input", { bubbles: true }));
       mapLinkField.dispatchEvent(new Event("change", { bubbles: true }));
+      
+      const mapsLink = root.querySelector<HTMLAnchorElement>("a[id*='-maps-link']");
+      if (mapsLink) {
+        const url = buildMapsLink(input.value.trim());
+        mapsLink.href = url;
+        mapsLink.style.display = url ? "inline-flex" : "none";
+      }
     };
     syncMapLinkFromInput();
     syncNotice();
