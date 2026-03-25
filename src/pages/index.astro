@@ -282,6 +282,18 @@ const mapAddress = "76 bis faubourg de Besançon, 25200 Montbéliard";
             clip-rule="evenodd"></path>
         </svg>
         <p class="font-semibold text-sm">{mapAddress}</p>
+        <p class="max-w-md text-sm leading-relaxed text-base-content/75">
+          La carte interactive charge des contenus OpenStreetMap uniquement si
+          vous autorisez les services externes.
+        </p>
+        <button
+          type="button"
+          class="btn btn-outline btn-sm px-5"
+          data-open-cookie-settings="customize"
+          data-map-consent-btn
+        >
+          Autoriser et afficher la carte
+        </button>
         <a
           href={mapGoogleUrl}
           target="_blank"
@@ -466,12 +478,14 @@ const mapAddress = "76 bis faubourg de Besançon, 25200 Montbéliard";
         "[data-map-placeholder]",
       );
       const gmapsBtn = root.querySelector<HTMLElement>("[data-map-gmaps-btn]");
+      const consentBtn = root.querySelector<HTMLElement>("[data-map-consent-btn]");
       let loaded = false;
+      const hasExternalServicesConsent = () =>
+        Boolean(window.KiwanisConsent?.hasExternalServicesConsent?.());
 
       const loadMap = async () => {
-        if (loaded || !target) return;
+        if (loaded || !target || !hasExternalServicesConsent()) return;
         loaded = true;
-        observer?.disconnect();
 
         // Injecter le CSS depuis le bundle (pas de requête CDN)
         if (!document.getElementById("leaflet-css")) {
@@ -534,6 +548,18 @@ const mapAddress = "76 bis faubourg de Besançon, 25200 Montbéliard";
         { threshold: 0, rootMargin: "800px 0px 800px 0px" },
       );
       observer.observe(root);
+
+      const syncMapState = () => {
+        const granted = hasExternalServicesConsent();
+        consentBtn?.classList.toggle("hidden", granted);
+        if (granted) {
+          void loadMap();
+        }
+      };
+
+      window.addEventListener("kiwanis:consent-ready", syncMapState);
+      window.addEventListener("kiwanis:consent-changed", syncMapState);
+      syncMapState();
     }
   </script>
   <style>

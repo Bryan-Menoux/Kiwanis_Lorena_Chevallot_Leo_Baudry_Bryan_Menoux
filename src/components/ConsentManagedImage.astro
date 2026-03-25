@@ -1,0 +1,170 @@
+---
+import { isExternalHttpUrl } from "../utils/consent";
+
+interface Props {
+  src: string | null | undefined;
+  alt: string;
+  class?: string;
+  srcset?: string;
+  sizes?: string;
+  width?: string | number;
+  height?: string | number;
+  loading?: "eager" | "lazy";
+  fetchpriority?: "high" | "low" | "auto";
+  decoding?: "async" | "sync" | "auto";
+  style?: string;
+  title?: string;
+  containerClass?: string;
+  placeholderClass?: string;
+  placeholderLabel?: string;
+}
+
+const {
+  src,
+  alt,
+  class: imageClass = "",
+  srcset,
+  sizes,
+  width,
+  height,
+  loading = "lazy",
+  fetchpriority = "low",
+  decoding = "async",
+  style,
+  title,
+  containerClass = "",
+  placeholderClass = "",
+  placeholderLabel = "Ce média est chargé depuis un service externe.",
+} = Astro.props as Props;
+
+const isExternal = isExternalHttpUrl(src);
+---
+
+{
+  !isExternal ? (
+    <img
+      src={src || ""}
+      alt={alt}
+      class={imageClass}
+      srcset={srcset || undefined}
+      sizes={sizes || undefined}
+      width={width}
+      height={height}
+      loading={loading}
+      fetchpriority={fetchpriority}
+      decoding={decoding}
+      style={style}
+      title={title}
+    />
+  ) : (
+    <div
+      class:list={[
+        "relative",
+        containerClass,
+      ]}
+      data-consent-managed-image
+      data-src={src || ""}
+      data-srcset={srcset || ""}
+      data-sizes={sizes || ""}
+      data-alt={alt}
+      data-width={String(width || "")}
+      data-height={String(height || "")}
+      data-loading={loading}
+      data-fetchpriority={fetchpriority}
+      data-decoding={decoding}
+      data-style={style || ""}
+      data-title={title || ""}
+    >
+      <div
+        data-consent-managed-placeholder
+        class:list={[
+          "flex min-h-48 w-full flex-col items-center justify-center gap-4 rounded-2xl border border-base-300 bg-base-200/70 p-6 text-center",
+          placeholderClass || imageClass,
+        ]}
+      >
+        <p class="max-w-xl text-sm leading-relaxed text-base-content/75">
+          {placeholderLabel}
+        </p>
+        <button
+          type="button"
+          class="btn btn-sm btn-accent"
+          data-open-cookie-settings="customize"
+        >
+          Autoriser les services externes
+        </button>
+      </div>
+
+      <img
+        data-consent-managed-target
+        alt={alt}
+        class:list={[imageClass, "hidden"]}
+        width={width}
+        height={height}
+        loading={loading}
+        fetchpriority={fetchpriority}
+        decoding={decoding}
+        style={style}
+        title={title}
+      />
+    </div>
+  )
+}
+
+<script>
+  const bindManagedImages = () => {
+    document
+      .querySelectorAll("[data-consent-managed-image]")
+      .forEach((root) => {
+        if (!(root instanceof HTMLElement) || root.dataset.bound === "true") {
+          return;
+        }
+
+        root.dataset.bound = "true";
+
+        const placeholder = root.querySelector(
+          "[data-consent-managed-placeholder]",
+        );
+        const target = root.querySelector("[data-consent-managed-target]");
+
+        if (!(placeholder instanceof HTMLElement) || !(target instanceof HTMLImageElement)) {
+          return;
+        }
+
+        const loadImage = () => {
+          if (target.dataset.loaded === "true") return;
+          target.dataset.loaded = "true";
+          target.src = root.dataset.src || "";
+          if (root.dataset.srcset) target.srcset = root.dataset.srcset;
+          if (root.dataset.sizes) target.sizes = root.dataset.sizes;
+          target.classList.remove("hidden");
+          placeholder.classList.add("hidden");
+        };
+
+        const syncState = () => {
+          const hasConsent = Boolean(
+            window.KiwanisConsent?.hasExternalServicesConsent?.(),
+          );
+
+          if (hasConsent) {
+            loadImage();
+            return;
+          }
+
+          target.classList.add("hidden");
+          placeholder.classList.remove("hidden");
+        };
+
+        window.addEventListener("kiwanis:consent-ready", syncState);
+        window.addEventListener("kiwanis:consent-changed", syncState);
+        syncState();
+      });
+  };
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", bindManagedImages, {
+      once: true,
+    });
+  } else {
+    bindManagedImages();
+  }
+</script>

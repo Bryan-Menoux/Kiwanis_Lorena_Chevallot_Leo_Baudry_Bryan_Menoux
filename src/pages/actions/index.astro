@@ -2,6 +2,7 @@
 import Layout from "../../layouts/Layout.astro";
 import Hero from "../../components/Hero.astro";
 import SearchActions from "../../components/SearchActions.astro";
+import ConsentManagedImage from "../../components/ConsentManagedImage.astro";
 import slugify from "slugify";
 import {
   buildResponsiveImageSrcSet,
@@ -212,7 +213,7 @@ const lcpDesktop = await getImage({ src: HeroActions, format: "webp", width: 184
                 >
                   <div class="flex h-full flex-col lg:flex-row lg:items-stretch">
                     {action.heroUrl ? (
-                      <img
+                      <ConsentManagedImage
                         src={action.heroUrl}
                         alt={
                           action.description_hero ||
@@ -226,6 +227,8 @@ const lcpDesktop = await getImage({ src: HeroActions, format: "webp", width: 184
                         width="960"
                         height="540"
                         class={`h-56 w-full object-cover md:h-[36dvh] lg:h-full lg:w-1/2 ${imageOrderClass}`}
+                        placeholderClass={`h-56 w-full object-cover md:h-[36dvh] lg:h-full lg:w-1/2 ${imageOrderClass}`}
+                        placeholderLabel="Cette image est chargée depuis un service externe. Autorisez les services externes pour l’afficher."
                       />
                     ) : (
                       <div

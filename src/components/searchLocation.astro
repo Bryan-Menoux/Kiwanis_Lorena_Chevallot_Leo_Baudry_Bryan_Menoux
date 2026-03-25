@@ -45,6 +45,23 @@ const hasInitialValue =
   />
 
   <div
+    class="mt-2 rounded-xl border border-base-300 bg-base-200/60 p-3 text-sm text-base-content/75"
+    data-location-search-notice
+  >
+    <p>
+      La recherche assistée d’adresse utilise le service externe
+      OpenStreetMap Nominatim.
+    </p>
+    <button
+      type="button"
+      class="btn btn-accent btn-xs mt-3"
+      data-open-cookie-settings="customize"
+    >
+      Autoriser les services externes
+    </button>
+  </div>
+
+  <div
     id={suggestionsId}
     class="absolute left-0 right-0 bg-white border border-zinc-200 rounded-xl mt-1 hidden z-50"
   ></div>
@@ -78,6 +95,7 @@ const hasInitialValue =
 
     const input = root.querySelector<HTMLInputElement>("input");
     const box = root.querySelector<HTMLDivElement>("div[id]");
+    const notice = root.querySelector<HTMLElement>("[data-location-search-notice]");
     if (!input || !box) return;
     const mapLinkInputId = root.dataset.mapLinkInputId;
     const mapLinkInput =
@@ -87,6 +105,12 @@ const hasInitialValue =
 
     let timer: ReturnType<typeof setTimeout> | undefined;
     let isProgrammaticUpdate = false;
+    const hasExternalServicesConsent = () =>
+      Boolean(window.KiwanisConsent?.hasExternalServicesConsent?.());
+    const syncNotice = () => {
+      if (!(notice instanceof HTMLElement)) return;
+      notice.classList.toggle("hidden", hasExternalServicesConsent());
+    };
     const joinParts = (parts: Array<string | undefined>) =>
       parts
         .map((part) => String(part || "").trim())
@@ -130,11 +154,21 @@ const hasInitialValue =
       mapLinkField.dispatchEvent(new Event("change", { bubbles: true }));
     };
     syncMapLinkFromInput();
+    syncNotice();
+
+    window.addEventListener("kiwanis:consent-ready", syncNotice);
+    window.addEventListener("kiwanis:consent-changed", syncNotice);
 
     input.addEventListener("input", () => {
       syncMapLinkFromInput();
       if (isProgrammaticUpdate) return;
       clearTimeout(timer);
+
+      if (!hasExternalServicesConsent()) {
+        box.classList.add("hidden");
+        box.innerHTML = "";
+        return;
+      }
 
       const value = input.value.trim();
       if (value.length < 3) {

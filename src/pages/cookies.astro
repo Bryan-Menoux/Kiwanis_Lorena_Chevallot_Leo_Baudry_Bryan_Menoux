@@ -1,0 +1,171 @@
+---
+import Layout from "../layouts/Layout.astro";
+import {
+  CONSENT_RETENTION_DAYS,
+  CONSENT_STORAGE_KEY,
+} from "../utils/consent";
+
+const updateDate = "25 mars 2026";
+---
+
+<Layout
+  title="Cookies et services externes | Kiwanis Pays de Montbéliard"
+  description="Informations sur les cookies techniques, stockages locaux et services externes utilisés par le site Kiwanis Pays de Montbéliard."
+  canonical="/cookies"
+  robots="noindex,follow"
+>
+  <main class="max-w-[85dvw]! md:max-w-[80dvw]! mx-auto my-24 md:my-32 lg:my-40">
+    <section class="rounded-box bg-base-100 p-6 md:p-8 lg:p-10 shadow-md border border-base-300/60 flex flex-col gap-5">
+      <h1>Cookies et services externes</h1>
+      <p>
+        Cette page décrit uniquement les cookies, stockages locaux et services
+        externes réellement utilisés dans le code du site.
+      </p>
+      <p class="text-base-content/70">
+        Dernière mise à jour : {updateDate}
+      </p>
+      <div class="flex flex-wrap gap-3">
+        <button
+          type="button"
+          class="btn btn-accent"
+          data-open-cookie-settings="customize"
+        >
+          Gérer mes préférences
+        </button>
+        <a href="/mentions-legales" class="btn btn-outline">
+          Voir les mentions légales
+        </a>
+      </div>
+    </section>
+
+    <div class="mt-8 md:mt-10 lg:mt-12 grid grid-cols-1 gap-6 md:gap-8">
+      <section class="rounded-box bg-base-100 p-6 md:p-8 shadow-md border border-base-300/60">
+        <h2>1. Catégories utilisées</h2>
+        <div class="mt-4 space-y-4">
+          <div class="rounded-2xl border border-base-300 bg-base-200/45 p-4">
+            <h3 class="font-semibold">Cookies techniques essentiels</h3>
+            <p class="mt-2">
+              Toujours actifs. Ils ne servent qu’au fonctionnement du site, à
+              l’authentification et à des fonctions d’interface.
+            </p>
+          </div>
+          <div class="rounded-2xl border border-base-300 bg-base-200/45 p-4">
+            <h3 class="font-semibold">Contenus et services externes</h3>
+            <p class="mt-2">
+              Désactivés par défaut tant que vous n’avez pas donné votre accord.
+              Cette catégorie couvre les ressources chargées depuis des services
+              externes comme OpenStreetMap et Nominatim.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section class="rounded-box bg-base-100 p-6 md:p-8 shadow-md border border-base-300/60">
+        <h2>2. Éléments toujours actifs car nécessaires</h2>
+        <div class="mt-4 overflow-x-auto">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Élément</th>
+                <th>Usage</th>
+                <th>Qualification</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>pb_auth</code></td>
+                <td>Authentification PocketBase et maintien de session membre/admin.</td>
+                <td>Cookie strictement nécessaire.</td>
+              </tr>
+              <tr>
+                <td><code>sessionStorage</code></td>
+                <td>Cache technique de sections dans <code>/mon-compte</code>.</td>
+                <td>Stockage local technique, non soumis au consentement.</td>
+              </tr>
+              <tr>
+                <td><code>localStorage</code></td>
+                <td>Mémorisation d’étape du wizard mobile de création.</td>
+                <td>Stockage local technique, non soumis au consentement.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="rounded-box bg-base-100 p-6 md:p-8 shadow-md border border-base-300/60">
+        <h2>3. Services externes soumis à votre choix</h2>
+        <div class="mt-4 overflow-x-auto">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Service</th>
+                <th>Quand il est chargé</th>
+                <th>Traitement appliqué</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>OpenStreetMap</td>
+                <td>Carte d’accueil chargée uniquement après accord.</td>
+                <td>Blocage préalable avec alternative par lien sortant.</td>
+              </tr>
+              <tr>
+                <td>Nominatim</td>
+                <td>Suggestions d’adresse dans l’espace de création après saisie et accord.</td>
+                <td>Bloqué par défaut, l’utilisateur peut toujours saisir une adresse manuellement.</td>
+              </tr>
+              <tr>
+                <td>Images externes éventuelles</td>
+                <td>Le code peut accepter des URLs <code>http(s)</code> dans certains contenus.</td>
+                <td>Point à vérifier manuellement en production, car la présence de telles URLs dépend des données enregistrées.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="rounded-box bg-base-100 p-6 md:p-8 shadow-md border border-base-300/60">
+        <h2>4. Ce qui n’est pas utilisé dans le code audité</h2>
+        <p class="mt-4">
+          Aucun outil de mesure d’audience, pixel publicitaire, widget social
+          embarqué, iframe vidéo, reCAPTCHA, service worker ou cache
+          applicatif explicite n’a été identifié dans le dépôt audité.
+        </p>
+      </section>
+
+      <section class="rounded-box bg-base-100 p-6 md:p-8 shadow-md border border-base-300/60">
+        <h2>5. Mémorisation de votre choix</h2>
+        <div class="mt-4 flex flex-col gap-3">
+          <p>
+            Votre préférence est conservée pendant {CONSENT_RETENTION_DAYS} jours
+            dans le stockage local du navigateur sous la clé
+            <code>{CONSENT_STORAGE_KEY}</code>.
+          </p>
+          <p>
+            Cette mémorisation sert uniquement à ne pas réafficher le panneau à
+            chaque visite. Vous pouvez retirer ou modifier votre choix à tout
+            moment via le footer ou le bouton ci-dessous.
+          </p>
+          <div>
+            <button
+              type="button"
+              class="btn btn-accent"
+              data-open-cookie-settings="customize"
+            >
+              Modifier mes préférences
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <section class="rounded-box bg-base-100 p-6 md:p-8 shadow-md border border-base-300/60">
+        <h2>6. Liens sortants et services non bloqués</h2>
+        <p class="mt-4">
+          Les liens vers Google Maps, Google Calendar ou Facebook ne sont pas
+          chargés automatiquement par le site. Ils ne s’ouvrent qu’après un clic
+          volontaire de votre part.
+        </p>
+      </section>
+    </div>
+  </main>
+</Layout>

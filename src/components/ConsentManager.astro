@@ -1,0 +1,347 @@
+---
+import {
+  CONSENT_EVENT_CHANGED,
+  CONSENT_EVENT_READY,
+  CONSENT_OPEN_EVENT,
+  CONSENT_RETENTION_DAYS,
+  CONSENT_STORAGE_KEY,
+  EXTERNAL_SERVICES_CATEGORY,
+} from "../utils/consent";
+---
+
+<div
+  id="kiwanis-consent-root"
+  class="pointer-events-none fixed inset-0 z-10020 hidden items-end justify-center p-4 sm:items-center"
+  aria-live="polite"
+>
+  <div
+    data-consent-backdrop
+    class="absolute inset-0 bg-black/45 opacity-0 transition-opacity duration-200"
+  ></div>
+
+  <section
+    data-consent-panel
+    class="pointer-events-auto relative z-10 w-full max-w-2xl rounded-[1.75rem] border border-base-300 bg-base-100 p-6 shadow-2xl opacity-0 translate-y-4 transition-all duration-200 sm:p-8"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="kiwanis-consent-title"
+    aria-describedby="kiwanis-consent-description"
+  >
+    <div class="flex flex-col gap-3">
+      <p
+        id="kiwanis-consent-eyebrow"
+        class="text-xs font-semibold uppercase tracking-[0.18em] text-accent/70"
+      >
+        Cookies et services externes
+      </p>
+      <h2
+        id="kiwanis-consent-title"
+        class="text-2xl font-bold text-accent sm:text-3xl"
+      >
+        Gérer les services externes
+      </h2>
+      <p
+        id="kiwanis-consent-description"
+        class="text-sm leading-relaxed text-base-content/80 sm:text-base"
+      >
+        Le site utilise des cookies et stockages strictement nécessaires pour
+        l’espace membre et certaines fonctions d’interface. Les services
+        externes, comme OpenStreetMap ou Nominatim, restent désactivés tant que
+        vous ne les autorisez pas.
+      </p>
+    </div>
+
+    <div class="mt-6 flex flex-col gap-4" data-consent-customize hidden>
+      <div class="rounded-2xl border border-base-300 bg-base-200/45 p-4 sm:p-5">
+        <div class="flex items-start justify-between gap-4">
+          <div class="space-y-2">
+            <h3 class="text-base font-semibold text-base-content sm:text-lg">
+              Cookies techniques essentiels
+            </h3>
+            <p class="text-sm leading-relaxed text-base-content/75">
+              Toujours actifs. Ils servent à l’authentification PocketBase, au
+              maintien de session et à des stockages locaux techniques de
+              l’interface.
+            </p>
+          </div>
+          <span
+            class="badge badge-accent badge-outline shrink-0 whitespace-nowrap"
+          >
+            Toujours actif
+          </span>
+        </div>
+      </div>
+
+      <div class="rounded-2xl border border-base-300 bg-base-200/45 p-4 sm:p-5">
+        <div class="flex items-start justify-between gap-4">
+          <div class="space-y-2">
+            <h3 class="text-base font-semibold text-base-content sm:text-lg">
+              Contenus et services externes
+            </h3>
+            <p class="text-sm leading-relaxed text-base-content/75">
+              Autorise le chargement de la carte OpenStreetMap, des suggestions
+              d’adresse Nominatim et, le cas échéant, des médias chargés depuis
+              un domaine externe.
+            </p>
+          </div>
+
+          <label class="swap shrink-0">
+            <input
+              id="kiwanis-consent-external-services"
+              type="checkbox"
+              class="toggle toggle-accent"
+            />
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <div class="mt-6 flex flex-wrap items-center gap-3">
+      <button
+        type="button"
+        class="btn btn-accent min-w-40"
+        data-consent-accept
+      >
+        Tout accepter
+      </button>
+      <button
+        type="button"
+        class="btn btn-outline min-w-40"
+        data-consent-reject
+      >
+        Tout refuser
+      </button>
+      <button
+        type="button"
+        class="btn btn-ghost min-w-40"
+        data-consent-customize-toggle
+      >
+        Personnaliser
+      </button>
+      <button
+        type="button"
+        class="btn btn-accent min-w-40 hidden"
+        data-consent-save
+      >
+        Enregistrer mes choix
+      </button>
+      <a
+        href="/cookies"
+        class="text-sm font-medium text-accent underline underline-offset-4"
+      >
+        Voir la page d’information
+      </a>
+    </div>
+
+    <p class="mt-4 text-xs leading-relaxed text-base-content/65">
+      Votre choix est conservé pendant {CONSENT_RETENTION_DAYS} jours dans le
+      stockage local du navigateur pour éviter de vous le redemander à chaque
+      visite.
+    </p>
+  </section>
+</div>
+
+<script
+  define:vars={{
+    consentStorageKey: CONSENT_STORAGE_KEY,
+    consentReadyEvent: CONSENT_EVENT_READY,
+    consentChangedEvent: CONSENT_EVENT_CHANGED,
+    consentOpenEvent: CONSENT_OPEN_EVENT,
+    externalServicesCategory: EXTERNAL_SERVICES_CATEGORY,
+  }}
+>
+  import {
+    createConsentPreferences,
+    hasExternalServicesConsent,
+    isConsentPreferencesExpired,
+    parseConsentPreferences,
+    serializeConsentPreferences,
+  } from "../utils/consent";
+
+  const root = document.getElementById("kiwanis-consent-root");
+  const panel = root?.querySelector("[data-consent-panel]");
+  const backdrop = root?.querySelector("[data-consent-backdrop]");
+  const customizeSection = root?.querySelector("[data-consent-customize]");
+  const customizeToggle = root?.querySelector("[data-consent-customize-toggle]");
+  const acceptButton = root?.querySelector("[data-consent-accept]");
+  const rejectButton = root?.querySelector("[data-consent-reject]");
+  const saveButton = root?.querySelector("[data-consent-save]");
+  const externalServicesToggle = document.getElementById(
+    "kiwanis-consent-external-services",
+  );
+
+  let preferences = null;
+  let isCustomizeMode = false;
+
+  const dispatchConsentEvent = (eventName, detail) => {
+    window.dispatchEvent(new CustomEvent(eventName, { detail }));
+  };
+
+  const readStoredPreferences = () => {
+    try {
+      const parsed = parseConsentPreferences(
+        window.localStorage.getItem(consentStorageKey),
+      );
+
+      if (!parsed || isConsentPreferencesExpired(parsed)) {
+        window.localStorage.removeItem(consentStorageKey);
+        return null;
+      }
+
+      return parsed;
+    } catch {
+      return null;
+    }
+  };
+
+  const applyExternalServicesState = () => {
+    const enabled = hasExternalServicesConsent(preferences);
+    document.documentElement.dataset.kiwanisExternalServices = enabled
+      ? "granted"
+      : "denied";
+  };
+
+  const syncUiWithPreferences = () => {
+    if (externalServicesToggle instanceof HTMLInputElement) {
+      externalServicesToggle.checked = hasExternalServicesConsent(preferences);
+    }
+  };
+
+  const persistPreferences = (nextPreferences) => {
+    preferences = nextPreferences;
+
+    try {
+      window.localStorage.setItem(
+        consentStorageKey,
+        serializeConsentPreferences(nextPreferences),
+      );
+    } catch {
+      // Ignorer les navigateurs qui bloquent le stockage.
+    }
+
+    applyExternalServicesState();
+    syncUiWithPreferences();
+    closePanel();
+    dispatchConsentEvent(consentChangedEvent, nextPreferences);
+  };
+
+  const showRoot = () => {
+    if (!(root instanceof HTMLElement) || !(panel instanceof HTMLElement)) return;
+    root.classList.remove("hidden", "pointer-events-none");
+    root.classList.add("flex");
+
+    window.requestAnimationFrame(() => {
+      backdrop?.classList.remove("opacity-0");
+      panel.classList.remove("opacity-0", "translate-y-4");
+    });
+  };
+
+  const hideRoot = () => {
+    if (!(root instanceof HTMLElement) || !(panel instanceof HTMLElement)) return;
+
+    backdrop?.classList.add("opacity-0");
+    panel.classList.add("opacity-0", "translate-y-4");
+
+    window.setTimeout(() => {
+      root.classList.add("hidden", "pointer-events-none");
+      root.classList.remove("flex");
+    }, 180);
+  };
+
+  const syncMode = () => {
+    if (!(customizeSection instanceof HTMLElement)) return;
+
+    customizeSection.hidden = !isCustomizeMode;
+    saveButton?.classList.toggle("hidden", !isCustomizeMode);
+    acceptButton?.classList.toggle("hidden", isCustomizeMode);
+    rejectButton?.classList.toggle("hidden", isCustomizeMode);
+    if (customizeToggle instanceof HTMLButtonElement) {
+      customizeToggle.textContent = isCustomizeMode
+        ? "Retour"
+        : "Personnaliser";
+    }
+  };
+
+  const openPanel = (mode = "banner") => {
+    isCustomizeMode = mode === "customize";
+    syncMode();
+    syncUiWithPreferences();
+    showRoot();
+  };
+
+  const closePanel = () => {
+    hideRoot();
+  };
+
+  const saveCurrentSelection = () => {
+    const externalServices =
+      externalServicesToggle instanceof HTMLInputElement
+        ? externalServicesToggle.checked
+        : false;
+    persistPreferences(createConsentPreferences(externalServices));
+  };
+
+  const acceptAll = () => {
+    persistPreferences(createConsentPreferences(true));
+  };
+
+  const rejectAll = () => {
+    persistPreferences(createConsentPreferences(false));
+  };
+
+  customizeToggle?.addEventListener("click", () => {
+    isCustomizeMode = !isCustomizeMode;
+    syncMode();
+  });
+
+  acceptButton?.addEventListener("click", acceptAll);
+  rejectButton?.addEventListener("click", rejectAll);
+  saveButton?.addEventListener("click", saveCurrentSelection);
+  backdrop?.addEventListener("click", closePanel);
+
+  window.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") {
+      closePanel();
+    }
+  });
+
+  document.addEventListener("click", (event) => {
+    const target = event.target;
+    if (!(target instanceof HTMLElement)) return;
+
+    const trigger = target.closest("[data-open-cookie-settings]");
+    if (!(trigger instanceof HTMLElement)) return;
+
+    event.preventDefault();
+    const mode = trigger.dataset.openCookieSettings || "customize";
+    openPanel(mode);
+  });
+
+  window.addEventListener(consentOpenEvent, (event) => {
+    const mode =
+      event instanceof CustomEvent && typeof event.detail?.mode === "string"
+        ? event.detail.mode
+        : "customize";
+    openPanel(mode);
+  });
+
+  preferences = readStoredPreferences();
+  applyExternalServicesState();
+  syncUiWithPreferences();
+
+  window.KiwanisConsent = {
+    get: () => preferences,
+    open: openPanel,
+    acceptAll,
+    rejectAll,
+    save: saveCurrentSelection,
+    hasExternalServicesConsent: () => hasExternalServicesConsent(preferences),
+    category: externalServicesCategory,
+  };
+
+  dispatchConsentEvent(consentReadyEvent, preferences);
+
+  if (!preferences) {
+    openPanel("banner");
+  }
+</script>

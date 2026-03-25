@@ -3,6 +3,7 @@ import "../styles/global.css";
 import Footer from "../components/Footer.astro";
 import Header from "../components/Header.astro";
 import AlertProvider from "../components/AlertProvider.astro";
+import ConsentManager from "../components/ConsentManager.astro";
 
 interface Props {
   title?: string;
@@ -87,6 +88,7 @@ const pathname = new URL(Astro.request.url).pathname;
   </head>
   <body>
     {includeAlertProvider && <AlertProvider />}
+    <ConsentManager />
     <Header />
     <slot />
     <Footer />
