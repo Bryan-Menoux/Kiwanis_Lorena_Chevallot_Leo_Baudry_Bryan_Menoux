@@ -20,7 +20,14 @@ const lcpDesktop = await getImage({ src: heroRecrutement, format: "webp", width:
 
 ---
 
-<Layout>
+<Layout
+  title="Rejoindre le Kiwanis à Montbéliard | Club féminin"
+  description="Vous souhaitez rejoindre le Kiwanis à Montbéliard ou devenir bénévole ? Découvrez le club, ses valeurs et comment vous engager."
+  canonical="/recrutement"
+  robots="index,follow"
+  ogTitle="Rejoindre le Kiwanis à Montbéliard | Club féminin"
+  ogDescription="Vous souhaitez rejoindre le Kiwanis à Montbéliard ou devenir bénévole ? Découvrez le club, ses valeurs et comment vous engager."
+>
   <Fragment slot="head">
     <link rel="preload" as="image" href={lcpMobile.src} type="image/webp" media="(max-width: 767px)" fetchpriority="high" />
     <link rel="preload" as="image" href={lcpTablet.src} type="image/webp" media="(min-width: 768px) and (max-width: 1023px)" fetchpriority="high" />

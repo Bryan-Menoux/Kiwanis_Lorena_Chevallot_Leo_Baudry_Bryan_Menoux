@@ -1,6 +1,5 @@
 ---
 import Layout from "../layouts/Layout.astro";
-
 import arrow from "../assets/arrow-previous-small.svg";
 import circleCheck from "../assets/circle-check.svg";
 import edit from "../assets/edit.svg";
@@ -50,7 +49,10 @@ const navItems = [
 ];
 ---
 
-<Layout includeAlertProvider>
+<Layout
+  robots="noindex,nofollow"
+  includeAlertProvider
+>
   <!-- Navigation desktop (visible sur grands écrans) -->
   <nav
     id="desktop-nav"

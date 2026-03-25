@@ -2,6 +2,7 @@
 import Layout from "../layouts/Layout.astro";
 import Hero from "../components/Hero.astro";
 import DiagArrow from "../components/DiagArrow.astro";
+
 import SectionPaginator from "../components/SectionPaginator.astro";
 import imageIcon from "../assets/image-icon.svg";
 import HeroProducts from "../assets/products-page/hero-products-page.png";
@@ -55,15 +56,14 @@ const produits: ProductCard[] = produitsRaw.map((produit) => {
 });
 ---
 
-<Layout>
-  <Fragment slot="head">
-    <title>Produits | Kiwanis Pays de Montbéliard</title>
-    <meta
-      name="description"
-      content="Découvrez les produits du Kiwanis Pays de Montbéliard, disponibles uniquement en consultation lors de nos actions."
-    />
-  </Fragment>
-
+<Layout
+  title="Produits solidaires | Kiwanis Montbéliard"
+  description="Consultez les produits solidaires du Kiwanis à Montbéliard. Un catalogue local qui aide à financer des actions pour les enfants."
+  canonical="/produits"
+  robots="index,follow"
+  ogTitle="Produits solidaires"
+  ogDescription="Consultez les produits solidaires du Kiwanis à Montbéliard. Un catalogue local qui aide à financer des actions pour les enfants."
+>
   <Hero
     image={HeroProducts}
     title="NOS PRODUITS"

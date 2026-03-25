@@ -98,7 +98,14 @@ const lcpDesktopMd = await getImage({ src: HeroActions, format: "webp", width: 1
 const lcpDesktop = await getImage({ src: HeroActions, format: "webp", width: 1840, quality: 80 });
 ---
 
-<Layout>
+<Layout
+  title="Actions du Kiwanis Montbéliard | Solidarité locale"
+  description="Retrouvez les actions solidaires du Kiwanis à Montbéliard, menées pour les enfants, les jeunes et les partenaires du territoire."
+  canonical="/actions"
+  robots="index,follow"
+  ogTitle="Actions du Kiwanis Montbéliard | Solidarité locale"
+  ogDescription="Retrouvez les actions solidaires du Kiwanis à Montbéliard, menées pour les enfants, les jeunes et les partenaires du territoire."
+>
   <Fragment slot="head">
     <link rel="preload" as="image" href={lcpMobile.src} type="image/webp" media="(max-width: 767px)" fetchpriority="high" />
     <link rel="preload" as="image" href={lcpTablet.src} type="image/webp" media="(min-width: 768px) and (max-width: 1023px)" fetchpriority="high" />

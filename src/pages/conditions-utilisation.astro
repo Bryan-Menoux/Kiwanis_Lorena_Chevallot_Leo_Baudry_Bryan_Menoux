@@ -1,20 +1,13 @@
 ---
 import Layout from "../layouts/Layout.astro";
-
 const siteName = "Kiwanis Pays de Montbéliard";
 const contactEmail = "kiwanisfeminin.montbeliard@gmail.com";
 const legalUpdateDate = "24 mars 2026";
 ---
 
-<Layout>
-  <Fragment slot="head">
-    <title>Conditions d'utilisation | Kiwanis Pays de Montbéliard</title>
-    <meta
-      name="description"
-      content="Conditions d'utilisation du site Kiwanis Pays de Montbéliard. Accès au site, espace membre, règles d'usage, contenus et responsabilités."
-    />
-  </Fragment>
-
+<Layout
+  robots="noindex,follow"
+>
   <main class="mx-auto my-24 max-w-[85dvw]! md:my-32 md:max-w-[80dvw]! lg:my-40">
     <section class="flex flex-col gap-5 rounded-box border border-base-300/60 bg-base-100 p-6 shadow-md md:p-8 lg:p-10">
       <h1>Conditions d'utilisation</h1>

@@ -5,16 +5,37 @@ import Header from "../components/Header.astro";
 import AlertProvider from "../components/AlertProvider.astro";
 
 interface Props {
+  title?: string;
+  description?: string;
+  canonical?: string;
+  robots?: string;
+  ogTitle?: string;
+  ogDescription?: string;
+  ogImage?: string;
+  ogType?: string;
+  structuredData?: Record<string, unknown>[];
+  
   includeAlertProvider?: boolean;
   includeManifest?: boolean;
   loadPoppinsFont?: boolean;
 }
 
 const {
+  title = "Kiwanis Pays de Montbéliard",
+  description = "Découvrez le Kiwanis Pays de Montbéliard",
+  canonical = "/",
+  robots = "index,follow",
+  ogTitle = "Kiwanis Pays de Montbéliard",
+  ogDescription = "Découvrez le Kiwanis Pays de Montbéliard",
+  ogImage,
+  ogType = "website",
+  structuredData = [],
   includeAlertProvider = false,
   includeManifest = true,
   loadPoppinsFont = true,
 } = Astro.props as Props;
+
+const pathname = new URL(Astro.request.url).pathname;
 ---
 
 <!doctype html>
@@ -22,6 +43,30 @@ const {
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <!-- SEO Basics -->
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <meta name="robots" content={robots} />
+    <link rel="canonical" href={canonical ? `https://kiwanis-montbeliard.fr${canonical}` : "https://kiwanis-montbeliard.fr"} />
+
+    <!-- Open Graph / Social Media -->
+    <meta property="og:type" content={ogType} />
+    <meta property="og:title" content={ogTitle} />
+    <meta property="og:description" content={ogDescription} />
+    {ogImage && <meta property="og:image" content={ogImage} />}
+    <meta property="og:url" content={`https://kiwanis-montbeliard.fr${pathname}`} />
+    <meta property="og:locale" content="fr_FR" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={ogTitle} />
+    <meta name="twitter:description" content={ogDescription} />
+
+    <!-- Structured Data -->
+    {structuredData && structuredData.map((schema) => (
+      <script type="application/ld+json" set:html={JSON.stringify(schema)} />
+    ))}
 
     <slot name="head" />
 
@@ -56,13 +101,7 @@ const {
     {includeManifest && <link rel="manifest" href="/site.webmanifest" />}
 
     <meta name="theme-color" content="#000000" />
-    <meta
-      name="description"
-      content="Site officiel du Kiwanis Pays de Montbéliard"
-    />
     <meta name="generator" content={Astro.generator} />
-
-    <title>Kiwanis Pays de Montbéliard</title>
   </head>
   <body>
     {includeAlertProvider && <AlertProvider />}

@@ -1,6 +1,5 @@
 ﻿---
 import Layout from "../layouts/Layout.astro";
-
 const siteName = "Kiwanis Pays de Montbéliard";
 const contactEmail = "kiwanisfeminin.montbeliard@gmail.com";
 const contactAddress = "76 bis faubourg de Besançon, 25200 Montbéliard";
@@ -8,15 +7,9 @@ const publicDomain = "https://www.kiwanis-pays-de-montbeliard.fr";
 const legalUpdateDate = "22 mars 2026";
 ---
 
-<Layout>
-  <Fragment slot="head">
-    <title>Mentions légales | Kiwanis Pays de Montbéliard</title>
-    <meta
-      name="description"
-      content="Mentions légales du site Kiwanis Pays de Montbéliard : éditeur, hébergement, propriété intellectuelle, données personnelles, cookies et contact."
-    />
-  </Fragment>
-
+<Layout
+  robots="noindex,follow"
+>
   <main class="max-w-[85dvw]! md:max-w-[80dvw]! mx-auto my-24 md:my-32 lg:my-40">
     <section class="rounded-box bg-base-100 p-6 md:p-8 lg:p-10 shadow-md border border-base-300/60 flex flex-col gap-5">
       <h1>Mentions légales</h1>

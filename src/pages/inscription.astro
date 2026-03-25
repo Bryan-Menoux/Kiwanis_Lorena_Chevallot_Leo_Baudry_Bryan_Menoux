@@ -1,6 +1,5 @@
 ---
 import Layout from "../layouts/Layout-login.astro";
-
 import backArrow from "../assets/back-arrow.svg";
 import lockIcon from "../assets/login-page/lock.svg";
 import shapesLeft from "../assets/login-page/shapes-left.svg";
@@ -56,7 +55,7 @@ if (isPostForm) {
 }
 ---
 
-<Layout>
+<Layout robots="noindex,nofollow">
   <div class="absolute top-8 left-8 flex items-center text-white hover:underline z-10">
     <img src={backArrow.src} alt="" loading="lazy" aria-hidden="true"  decoding="async" />
     <a href="/" class="text-white ml-2">Retour à l'accueil</a>
