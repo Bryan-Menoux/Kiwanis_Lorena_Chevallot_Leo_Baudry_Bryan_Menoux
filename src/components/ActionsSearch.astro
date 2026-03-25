@@ -110,13 +110,28 @@ const secondaryGridClass =
     )}
   </div>
 
-  <div class="mt-3 flex justify-end">
+  <!-- Bandeau des filtres actifs -->
+  <div id="active-filters-banner" class="mt-6 p-4 rounded-xl bg-warning/5 border border-warning/30 shadow-sm hidden">
+    <div class="flex flex-col gap-3">
+      <p class="text-xs font-bold text-warning/70 uppercase tracking-widest">Filtres actifs</p>
+      <div id="active-filters-list" class="flex flex-wrap gap-2"></div>
+    </div>
+  </div>
+
+  <div class="mt-4 flex justify-between items-center">
     <button
       type="button"
       class="link link-primary text-sm font-medium"
       data-reset-filters
     >
       Réinitialiser les filtres
+    </button>
+    <button
+      type="button"
+      class="btn btn-accent rounded-md! px-8 py-2"
+      data-apply-filters
+    >
+      Filtrer
     </button>
   </div>
 </div>
@@ -133,6 +148,9 @@ const secondaryGridClass =
       const statusSelect = root.querySelector('#status-select');
       const sortSelect = root.querySelector('#sort-select');
       const resetButton = root.querySelector('[data-reset-filters]');
+      const applyButton = root.querySelector('[data-apply-filters]');
+      const activeFiltersBanner = root.querySelector('#active-filters-banner');
+      const activeFiltersList = root.querySelector('#active-filters-list');
       const initialSearch = root.dataset.initialSearch || "";
 
       if (searchInput instanceof HTMLInputElement) searchInput.value = initialSearch;
@@ -150,7 +168,68 @@ const secondaryGridClass =
         if (typeSelect instanceof HTMLSelectElement) detail.type = typeSelect.value;
         if (statusSelect instanceof HTMLSelectElement) detail.status = statusSelect.value;
 
+        updateActiveFiltersBanner(detail);
         document.dispatchEvent(new CustomEvent("actions-filter-change", { detail, bubbles: true }));
+      }
+
+      function updateActiveFiltersBanner(detail: any) {
+        const filterItems: Array<{label: string, key: string}> = [];
+        
+        if (detail.search) filterItems.push({label: `Titre: "${detail.search}"`, key: 'search'});
+        if (detail.beneficiary) filterItems.push({label: `Bénéficiaire: "${detail.beneficiary}"`, key: 'beneficiary'});
+        if (detail.year) filterItems.push({label: `Année: ${detail.year}`, key: 'year'});
+        if (detail.type) filterItems.push({label: `Type: ${detail.type}`, key: 'type'});
+        if (detail.status && detail.status !== 'all') filterItems.push({label: `Statut: ${detail.status}`, key: 'status'});
+        
+        if (activeFiltersList instanceof HTMLElement) {
+          if (filterItems.length > 0) {
+            activeFiltersList.innerHTML = filterItems
+              .map(item => `<span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-warning/70 bg-warning/40 text-warning text-sm! font-medium! cursor-pointer hover:bg-warning/80 text-accent! hover:border-warning/60 transition-all duration-200" data-filter-key="${item.key}" onclick="event.stopPropagation()">${item.label}<svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/></svg></span>`)
+              .join('');
+            if (activeFiltersBanner instanceof HTMLElement) {
+              activeFiltersBanner.classList.remove('hidden');
+            }
+            // Ajouter les event listeners pour les spans et les boutons de suppression
+            activeFiltersList.querySelectorAll('[data-filter-key]').forEach((span: Element) => {
+              if (span instanceof HTMLElement) {
+                span.addEventListener('click', (e: Event) => {
+                  if (e.target instanceof HTMLElement && e.target.classList.contains('btn')) return;
+                  const filterKey = span.dataset.filterKey;
+                  removeFilter(filterKey);
+                });
+              }
+            });
+            activeFiltersList.querySelectorAll('[data-remove-filter]').forEach((btn: Element) => {
+              if (btn instanceof HTMLElement) {
+                btn.addEventListener('click', (e: Event) => {
+                  e.stopPropagation();
+                  const filterKey = btn.dataset.removeFilter;
+                  removeFilter(filterKey);
+                });
+              }
+            });
+          } else {
+            activeFiltersList.innerHTML = '';
+            if (activeFiltersBanner instanceof HTMLElement) {
+              activeFiltersBanner.classList.add('hidden');
+            }
+          }
+        }
+      }
+
+      function removeFilter(filterKey: string | undefined) {
+        if (filterKey === 'search' && searchInput instanceof HTMLInputElement) {
+          searchInput.value = '';
+        } else if (filterKey === 'beneficiary' && beneficiaryInput instanceof HTMLInputElement) {
+          beneficiaryInput.value = '';
+        } else if (filterKey === 'year' && yearSelect instanceof HTMLSelectElement) {
+          yearSelect.value = '';
+        } else if (filterKey === 'type' && typeSelect instanceof HTMLSelectElement) {
+          typeSelect.value = '';
+        } else if (filterKey === 'status' && statusSelect instanceof HTMLSelectElement) {
+          statusSelect.value = 'all';
+        }
+        emit();
       }
 
       function resetFilters() {
@@ -166,28 +245,32 @@ const secondaryGridClass =
         emit();
       }
 
+      // Remove input event listeners - only emit on filter button click
       if (searchInput instanceof Element) {
-        searchInput.addEventListener('input', emit);
-        searchInput.addEventListener('change', emit);
+        searchInput.addEventListener('change', () => {});
       }
       if (beneficiaryInput instanceof Element) {
-        beneficiaryInput.addEventListener('input', emit);
-        beneficiaryInput.addEventListener('change', emit);
+        beneficiaryInput.addEventListener('change', () => {});
       }
       if (yearSelect instanceof Element) {
-        yearSelect.addEventListener('change', emit);
+        yearSelect.addEventListener('change', () => {});
       }
       if (typeSelect instanceof Element) {
-        typeSelect.addEventListener('change', emit);
+        typeSelect.addEventListener('change', () => {});
       }
       if (statusSelect instanceof Element) {
-        statusSelect.addEventListener('change', emit);
+        statusSelect.addEventListener('change', () => {});
+      }
+
+      if (applyButton instanceof HTMLButtonElement) {
+        applyButton.addEventListener("click", emit);
       }
 
       if (resetButton instanceof HTMLButtonElement) {
         resetButton.addEventListener("click", resetFilters);
       }
 
+      // Emit initial state
       emit();
     }
 
