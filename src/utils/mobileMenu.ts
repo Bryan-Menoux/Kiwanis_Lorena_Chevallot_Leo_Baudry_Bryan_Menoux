@@ -6,36 +6,39 @@ type MobileMenuOptions = {
   onClose?: () => void;
 };
 
-type GsapInstance = NonNullable<Window["gsap"]>;
-
-let gsapLoader: Promise<GsapInstance | null> | null = null;
-
-function requestGsap(): Promise<GsapInstance | null> {
-  if (typeof window === "undefined") return Promise.resolve(null);
-
-  if (window.gsap) {
-    return Promise.resolve(window.gsap);
-  }
-
-  if (!gsapLoader) {
-    gsapLoader = import("./loadGsap")
-      .then(({ loadGsap }) => loadGsap())
-      .catch(() => null);
-  }
-
-  return gsapLoader;
+function setHidden(dropdown: HTMLElement) {
+  dropdown.classList.add("hidden", "pointer-events-none", "opacity-0", "-translate-y-[10px]");
 }
 
-function setHidden(dropdown: HTMLElement) {
-  dropdown.style.display = "none";
-  dropdown.style.opacity = "0";
-  dropdown.style.transform = "translateY(-10px)";
+function revealDropdown(dropdown: HTMLElement) {
+  dropdown.classList.remove("hidden");
+  window.requestAnimationFrame(() => {
+    dropdown.classList.remove("pointer-events-none", "opacity-0", "-translate-y-[10px]");
+  });
+}
+
+function setItemsHidden(items: HTMLElement[]) {
+  items.forEach((item, index) => {
+    item.style.transitionDelay = "0ms";
+    item.style.transitionDuration = "150ms";
+    item.classList.add("opacity-0", "translate-y-[5px]");
+    item.dataset.menuIndex = String(index);
+  });
+}
+
+function animateItemsIn(items: HTMLElement[]) {
+  items.forEach((item, index) => {
+    item.style.transitionDelay = `${100 + index * 20}ms`;
+    item.style.transitionDuration = "150ms";
+    item.classList.remove("opacity-0", "translate-y-[5px]");
+  });
 }
 
 function prepareHamburger(...lines: (HTMLElement | null)[]) {
   lines.forEach((line) => {
     if (!line) return;
     line.style.transformOrigin = "center";
+    line.style.transition = "transform 200ms ease";
   });
 }
 
@@ -70,81 +73,55 @@ export function initMobileMenu({
   const headerContainer = toggle.closest("header");
   const hamTop = document.getElementById("ham-top");
   const hamBottom = document.getElementById("ham-bottom");
-  let gsap: GsapInstance | null = null;
-  let gsapReady = requestGsap().then((instance) => {
-    gsap = instance;
-    return instance;
-  });
 
   let isOpen = false;
   let hideTimer = 0;
+  let itemResetTimer = 0;
 
   prepareHamburger(hamTop, hamBottom);
-
   setHidden(dropdown);
+  setItemsHidden(items);
 
   const closeMenu = (immediate = false) => {
     window.clearTimeout(hideTimer);
+    window.clearTimeout(itemResetTimer);
     isOpen = false;
     toggle.setAttribute("aria-expanded", "false");
     dropdown.setAttribute("aria-hidden", "true");
     onClose?.();
 
     if (immediate) {
-      gsap?.killTweensOf([dropdown, ...items]);
-      if (gsap) {
-        gsap.set(dropdown, { display: "none", opacity: 0, y: -10 });
-      } else {
-        setHidden(dropdown);
-      }
+      setHidden(dropdown);
+      setItemsHidden(items);
       setHamburgerState(hamTop, hamBottom, false);
       return;
     }
 
-    if (gsap) {
-      gsap.killTweensOf([dropdown, ...items]);
-      gsap
-        .timeline()
-        .to(dropdown, { opacity: 0, y: -10, duration: 0.15, ease: "power2.in" })
-        .set(dropdown, { display: "none" });
-    } else {
-      dropdown.style.opacity = "0";
-      dropdown.style.transform = "translateY(-10px)";
-      hideTimer = window.setTimeout(() => {
-        dropdown.style.display = "none";
-      }, 150);
-    }
+    dropdown.style.transitionDuration = "150ms";
+    dropdown.classList.add("pointer-events-none", "opacity-0", "-translate-y-[10px]");
+    hideTimer = window.setTimeout(() => {
+      dropdown.classList.add("hidden");
+    }, 150);
+    itemResetTimer = window.setTimeout(() => {
+      setItemsHidden(items);
+    }, 150);
 
     setHamburgerState(hamTop, hamBottom, false);
   };
 
-  const openMenu = async () => {
+  const openMenu = () => {
     window.clearTimeout(hideTimer);
+    window.clearTimeout(itemResetTimer);
     isOpen = true;
     toggle.setAttribute("aria-expanded", "true");
     dropdown.setAttribute("aria-hidden", "false");
 
-    // Attendre que GSAP soit chargé avant de continuer
-    await gsapReady;
-
-    if (gsap) {
-      gsap.killTweensOf([dropdown, ...items]);
-      dropdown.style.display = "block";
-      gsap
-        .timeline()
-        .to(dropdown, { opacity: 1, y: 0, duration: 0.2, ease: "power2.out" })
-        .fromTo(
-          items,
-          { opacity: 0, y: 5 },
-          { opacity: 1, y: 0, stagger: 0.02, duration: 0.15, overwrite: "auto" },
-          "-=0.1",
-        );
-    } else {
-      dropdown.style.display = "block";
-      dropdown.style.opacity = "1";
-      dropdown.style.transform = "translateY(0)";
-    }
-
+    dropdown.style.transitionDuration = "200ms";
+    setItemsHidden(items);
+    revealDropdown(dropdown);
+    window.requestAnimationFrame(() => {
+      animateItemsIn(items);
+    });
     setHamburgerState(hamTop, hamBottom, true);
   };
 
@@ -154,7 +131,7 @@ export function initMobileMenu({
       closeMenu();
       return;
     }
-    void openMenu();
+    openMenu();
   });
 
   toggle.addEventListener("keydown", (event) => {
@@ -164,7 +141,7 @@ export function initMobileMenu({
       closeMenu();
       return;
     }
-    void openMenu();
+    openMenu();
   });
 
   document.addEventListener("click", (event) => {

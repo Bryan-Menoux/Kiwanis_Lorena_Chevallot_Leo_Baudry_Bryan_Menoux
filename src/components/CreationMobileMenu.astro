@@ -18,8 +18,7 @@ const { sections, currentUser, UserWhiteSvg } = Astro.props;
 
 <div
   id="mobile-dropdown"
-  class="w-full max-w-[90dvw] rounded-2xl [@media(max-height:700px)]:p-4 p-7 text-white shadow-2xl bg-accent"
-  style="display: none;"
+  class="hidden pointer-events-none w-full max-w-[90dvw] rounded-2xl [@media(max-height:700px)]:p-4 p-7 text-white shadow-2xl bg-accent opacity-0 -translate-y-2.5 transition-[opacity,transform] duration-200 ease-[cubic-bezier(0.215,0.61,0.355,1)]"
   role="menu"
   aria-hidden="true"
 >
@@ -33,49 +32,56 @@ const { sections, currentUser, UserWhiteSvg } = Astro.props;
     class="flex flex-col select-none [@media(max-height:700px)]:gap-1.5 gap-3"
     role="navigation"
   >
-    {sections.map((section) => (
-      <details class="mob-link rounded-xl border border-white/20 bg-white/5">
-        <summary
-          class="flex items-center justify-between px-4 [@media(max-height:700px)]:py-2 py-3 cursor-pointer list-none"
-        >
-          <span class="uppercase text-sm! tracking-wide">{section.title}</span>
-          <span
-            class="submenu-arrow inline-flex w-4 h-4 opacity-70 transition-transform duration-200 -rotate-90"
-            aria-hidden="true"
-          >
-            <svg
-              class="w-full h-full text-white"
-              viewBox="0 0 20 20"
-              fill="none"
-              stroke="currentColor"
+    {
+      sections.map((section) => (
+        <details class="mob-link rounded-xl border border-white/20 bg-white/5 opacity-0 translate-y-1.25 transition-[opacity,transform] duration-150 ease-[cubic-bezier(0.215,0.61,0.355,1)]">
+          <summary class="flex items-center justify-between px-4 [@media(max-height:700px)]:py-2 py-3 cursor-pointer list-none">
+            <span class="uppercase text-sm! tracking-wide">
+              {section.title}
+            </span>
+            <span
+              class="submenu-arrow inline-flex w-4 h-4 opacity-70 transition-transform duration-200 -rotate-90"
+              aria-hidden="true"
             >
-              <path
-                d="M6 8l4 4 4-4"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"></path>
-            </svg>
-          </span>
-        </summary>
-        <div class="flex flex-col px-4 pb-3 pl-8">
-          {section.items.map((item) => (
-            <a
-              href={item.href}
-              class="[@media(max-height:700px)]:py-1 py-2 flex justify-between items-center text-base"
-              role="menuitem"
-            >
-              {item.label} <span class="opacity-40" aria-hidden="true"><DiagArrow class="h-3 w-auto" /></span>
-            </a>
-          ))}
-        </div>
-      </details>
-    ))}
+              <svg
+                class="w-full h-full text-white"
+                viewBox="0 0 20 20"
+                fill="none"
+                stroke="currentColor"
+              >
+                <path
+                  d="M6 8l4 4 4-4"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+            </span>
+          </summary>
+          <div class="flex flex-col px-4 pb-3 pl-8">
+            {section.items.map((item) => (
+              <a
+                href={item.href}
+                class="[@media(max-height:700px)]:py-1 py-2 flex justify-between items-center text-base"
+                role="menuitem"
+              >
+                {item.label}{" "}
+                <span class="opacity-40" aria-hidden="true">
+                  <DiagArrow class="h-3 w-auto" />
+                </span>
+              </a>
+            ))}
+          </div>
+        </details>
+      ))
+    }
 
     <div
-      class="mob-link h-px w-full bg-white/20 [@media(max-height:700px)]:my-1 my-2"
+      class="mob-link h-px w-full bg-white/20 [@media(max-height:700px)]:my-1 my-2 opacity-0 translate-y-1.25 transition-[opacity,transform] duration-150 ease-[cubic-bezier(0.215,0.61,0.355,1)]"
       role="separator"
       aria-hidden="true"
-    />
+    >
+    </div>
 
     <div class="flex flex-col [@media(max-height:700px)]:gap-2 gap-4">
       {
@@ -89,7 +95,7 @@ const { sections, currentUser, UserWhiteSvg } = Astro.props;
           </a>
         )
       }
-      <div class="flex items-center gap-3 w-full md:col-span-2">
+      <div class="flex items-center gap-3 w-full md:col-span-2 mt-4">
         <a
           id="mobile-account-link"
           href="/mon-compte"
@@ -97,19 +103,21 @@ const { sections, currentUser, UserWhiteSvg } = Astro.props;
           class="flex items-center gap-3 flex-1"
         >
           <div class="avatar">
-            <div class="w-10 rounded-full ring ring-offset-base-100 ring-white/30 overflow-hidden">
+            <div
+              class="w-8 md:w-10 rounded-full ring ring-offset-base-100 ring-white/30 overflow-hidden"
+            >
               <UserWhiteSvg
                 class="inline-block w-full h-full"
                 aria-hidden="true"
               />
             </div>
           </div>
-          <span class="text-sm font-semibold">Mon compte</span>
+          <span class="text-sm! md:text-md! font-semibold">Mon compte</span>
         </a>
         <button
           id="mobile-logout-btn"
           type="button"
-          class="btn btn-block w-fit px-4 py-2 md:px-8 md:py-4 btn-sm"
+          class="btn btn-block rounded-md! w-fit px-4 py-2 md:px-8 md:py-4 btn-sm!"
           role="menuitem"
         >
           Déconnexion

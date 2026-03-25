@@ -138,8 +138,6 @@ import Alert from "./Alert.astro";
     const ALERT_MARGIN_MOBILE = 12;
     const ALERT_MARGIN_DESKTOP = 16;
     const timers = new WeakMap<HTMLElement, number>();
-    let gsapInstance: NonNullable<Window["gsap"]> | null = null;
-    let gsapPromise: Promise<NonNullable<Window["gsap"]> | null> | null = null;
 
     let activeConfirm: ConfirmQueueItem | null = null;
     const confirmQueue: ConfirmQueueItem[] = [];
@@ -152,58 +150,24 @@ import Alert from "./Alert.astro";
     const editorTabStickyTop = 84;
     const mobileOffsetQuery = window.matchMedia("(max-width: 1023px)");
 
-    function ensureGsap() {
-      if (gsapInstance) return Promise.resolve(gsapInstance);
-      if (!gsapPromise) {
-        gsapPromise = import("../utils/loadGsap")
-          .then(({ loadGsap }) => loadGsap())
-          .then((instance) => {
-            gsapInstance = instance;
-            return instance;
-          })
-          .catch(() => null);
-      }
-      return gsapPromise;
+    function animateIn(element: HTMLElement): void {
+      window.requestAnimationFrame(() => {
+        element.classList.remove("opacity-0", "translate-y-3", "-translate-y-3", "scale-[0.98]", "scale-95");
+      });
     }
 
     function animateToastIn(toast: HTMLElement): void {
-      void ensureGsap();
-
-      if (!gsapInstance) {
-        toast.style.opacity = "1";
-        toast.style.transform = "translateY(0) scale(1)";
-        return;
-      }
-
-      gsapInstance.fromTo(
-        toast,
-        { opacity: 0, y: -16, scale: 0.98 },
-        {
-          opacity: 1,
-          y: 0,
-          scale: 1,
-          duration: 0.28,
-          ease: "power2.out",
-        },
-      );
+      animateIn(toast);
     }
 
     function animateToastOut(toast: HTMLElement, onComplete: () => void): void {
-      void ensureGsap();
-
-      if (!gsapInstance) {
+      if (!toast.isConnected) {
         onComplete();
         return;
       }
 
-      gsapInstance.to(toast, {
-        opacity: 0,
-        y: -12,
-        scale: 0.98,
-        duration: 0.2,
-        ease: "power2.in",
-        onComplete,
-      });
+      toast.classList.add("opacity-0", "-translate-y-3", "scale-[0.98]");
+      window.setTimeout(onComplete, 200);
     }
 
     function showConfirmUi(): void {
@@ -211,21 +175,8 @@ import Alert from "./Alert.astro";
         return;
       }
 
-      void ensureGsap();
-
-      if (!gsapInstance) {
-        confirmBackdrop.style.opacity = "1";
-        confirmPanel.style.opacity = "1";
-        confirmPanel.style.transform = "translateY(0) scale(1)";
-        return;
-      }
-
-      gsapInstance.fromTo(confirmBackdrop, { opacity: 0 }, { opacity: 1, duration: 0.18 });
-      gsapInstance.fromTo(
-        confirmPanel,
-        { opacity: 0, scale: 0.96, y: 10 },
-        { opacity: 1, scale: 1, y: 0, duration: 0.24, ease: "power2.out" },
-      );
+      animateIn(confirmBackdrop);
+      animateIn(confirmPanel);
     }
 
     function hideConfirmUi(onComplete: () => void): void {
@@ -234,25 +185,9 @@ import Alert from "./Alert.astro";
         return;
       }
 
-      void ensureGsap();
-
-      if (!gsapInstance) {
-        onComplete();
-        return;
-      }
-
-      gsapInstance.to([confirmBackdrop, confirmPanel], {
-        opacity: 0,
-        duration: 0.18,
-        ease: "power2.in",
-      });
-
-      gsapInstance.to(confirmPanel, {
-        scale: 0.96,
-        duration: 0.18,
-        ease: "power2.in",
-        onComplete,
-      });
+      confirmBackdrop.classList.add("opacity-0");
+      confirmPanel.classList.add("opacity-0", "translate-y-3", "scale-95");
+      window.setTimeout(onComplete, 180);
     }
 
     function getMainHeader(): HTMLElement | null {
@@ -423,6 +358,14 @@ import Alert from "./Alert.astro";
       toast.className = `${BASE_TOAST_CLASS} ${variant.toast}`;
       toast.dataset.alertType = payload.type;
       toast.dataset.removing = "false";
+      toast.classList.add(
+        "opacity-0",
+        "-translate-y-3",
+        "scale-[0.98]",
+        "transition-[opacity,transform]",
+        "duration-200",
+        "ease-out",
+      );
 
       if (messageEl instanceof HTMLElement) {
         messageEl.textContent = payload.message;
@@ -479,8 +422,10 @@ import Alert from "./Alert.astro";
       }
 
       hideConfirmUi(() => {
-        confirmBackdrop.removeAttribute("style");
-        confirmPanel.removeAttribute("style");
+        confirmBackdrop.className =
+          "absolute inset-0 bg-black/45 opacity-0 backdrop-blur-[1px]";
+        confirmPanel.className =
+          "relative pointer-events-auto my-auto w-full max-w-lg rounded-2xl border border-base-300 bg-base-100 p-5 shadow-2xl opacity-0 scale-95 sm:p-6 max-h-[calc(100dvh-3rem)] overflow-y-auto min-w-0";
         if (confirmRoot instanceof HTMLElement) {
           confirmRoot.classList.add("hidden", "pointer-events-none");
           confirmRoot.classList.remove("flex");
@@ -522,6 +467,13 @@ import Alert from "./Alert.astro";
 
       confirmRoot.classList.remove("hidden", "pointer-events-none");
       confirmRoot.classList.add("flex");
+      confirmBackdrop.classList.add("transition-opacity", "duration-200", "ease-out");
+      confirmPanel.classList.add(
+        "translate-y-3",
+        "transition-[opacity,transform]",
+        "duration-200",
+        "ease-out",
+      );
       showConfirmUi();
     }
 

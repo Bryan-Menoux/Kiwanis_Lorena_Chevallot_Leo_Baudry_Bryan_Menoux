@@ -1,11 +1,3 @@
-import { loadGsap } from "./loadGsap";
-
-let gsapInstance = typeof window !== "undefined" ? window.gsap || null : null;
-let gsapLoader = null;
-
-// Clé globale utilisée pour éviter plusieurs animations concurrentes sur le défilement de fenêtre.
-const WINDOW_SCROLL_TWEEN_KEY = "__kcWindowScrollTween";
-
 // Accepte un nombre (ou une chaîne numérique) et renvoie une position exploitable.
 function parseNumericTarget(target) {
   if (typeof target === "number" && Number.isFinite(target)) return target;
@@ -46,7 +38,7 @@ function clampScrollTarget(container, axis, value) {
   return value;
 }
 
-// Positionne immédiatement le défilement (sans animation).
+// Positionne immédiatement le défilement.
 function setScrollPosition(container, axis, value, behavior = "auto") {
   if (container === window) {
     if (axis === "x") {
@@ -87,63 +79,6 @@ function getElementPositionInContainer(element, container, axis) {
   return null;
 }
 
-// Anime le défilement avec GSAP pour un déplacement fluide.
-function tweenScroll(container, axis, targetValue, duration, ease) {
-  if (!gsapInstance) {
-    if (!gsapLoader) {
-      gsapLoader = loadGsap().then((instance) => {
-        gsapInstance = instance;
-        return instance;
-      });
-    }
-    return setScrollPosition(container, axis, targetValue, "smooth");
-  }
-
-  if (container === window) {
-    const startValue = axis === "x" ? window.scrollX : window.scrollY;
-    const state = { value: startValue };
-
-    const previousTween = globalThis[WINDOW_SCROLL_TWEEN_KEY];
-    if (previousTween && typeof previousTween.kill === "function") {
-      previousTween.kill();
-    }
-
-    const tween = gsapInstance.to(state, {
-      value: targetValue,
-      duration,
-      ease,
-      overwrite: "auto",
-      onUpdate: () => {
-        setScrollPosition(window, axis, state.value, "auto");
-      },
-    });
-
-    globalThis[WINDOW_SCROLL_TWEEN_KEY] = tween;
-    return true;
-  }
-
-  if (container instanceof HTMLElement) {
-    if (axis === "x") {
-      gsapInstance.to(container, {
-        scrollLeft: targetValue,
-        duration,
-        ease,
-        overwrite: "auto",
-      });
-    } else {
-      gsapInstance.to(container, {
-        scrollTop: targetValue,
-        duration,
-        ease,
-        overwrite: "auto",
-      });
-    }
-    return true;
-  }
-
-  return false;
-}
-
 export function scrollToTarget(target, options = {}) {
   if (typeof window === "undefined") return false;
 
@@ -153,7 +88,6 @@ export function scrollToTarget(target, options = {}) {
     axis = "y",
     offset = 0,
     duration = 0.45,
-    ease = "power2.out",
   } = options;
 
   const targetElement = resolveTargetElement(target);
@@ -173,8 +107,8 @@ export function scrollToTarget(target, options = {}) {
     return setScrollPosition(container, axis, finalTarget, "auto");
   }
 
-  // Mode animé par défaut.
-  return tweenScroll(container, axis, finalTarget, duration, ease);
+  // Le navigateur gère ici le défilement fluide nativement.
+  return setScrollPosition(container, axis, finalTarget, "smooth");
 }
 
 // Expose l'utilitaire sur globalThis pour les scripts en ligne (ex : Astro define:vars).

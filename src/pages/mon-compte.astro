@@ -56,7 +56,7 @@ const navItems = [
   <!-- Navigation desktop (visible sur grands écrans) -->
   <nav
     id="desktop-nav"
-    class="hidden lg:flex flex-col bg-white rounded-box fixed top-1/2 left-4 -translate-y-1/2 z-50 shadow-lg p-4"
+    class="hidden lg:flex flex-col overflow-hidden bg-white rounded-box fixed top-1/2 left-4 -translate-y-1/2 z-50 shadow-lg p-4 transition-[width] duration-300 ease-in-out"
   >
     <button
       id="nav-toggle"
@@ -64,10 +64,10 @@ const navItems = [
       aria-label="Réduire la navigation"
       type="button"
     >
-      <span id="nav-toggle-icon-wrapper" class="flex items-center justify-center w-6 h-6 flex-none transition duration-200 min-w-6 min-h-6 max-w-6 max-h-6">
+      <span id="nav-toggle-icon-wrapper" class="flex items-center justify-center w-6 h-6 flex-none transition-transform duration-300 ease-in-out min-w-6 min-h-6 max-w-6 max-h-6">
         <img src={arrow.src} alt="Ouvrir/fermer le menu" loading="lazy" id="nav-toggle-icon" class="w-6 h-6 flex-none object-contain min-w-6 min-h-6 max-w-6 max-h-6"  decoding="async" />
       </span>
-      <span id="nav-toggle-label" class="nav-label whitespace-nowrap flex-1 text-left self-center pl-1">Fermer le menu</span>
+      <span id="nav-toggle-label" class="nav-label whitespace-nowrap flex-1 text-left self-center pl-1 transition-[opacity,transform] duration-200 ease-in-out">Fermer le menu</span>
     </button>
 
     <ul class="space-y-2 flex-1">
@@ -86,7 +86,7 @@ const navItems = [
               loading="lazy"
               class={`nav-icon w-6 h-6 transition duration-260 ease-[cubic-bezier(0.2,0.8,0.2,1)] ${i === 0 ? "filter brightness-0 invert" : ""}`}
              decoding="async" />
-            <span class="nav-label whitespace-nowrap flex-1 text-left self-center pl-1">{item.label}</span>
+            <span class="nav-label whitespace-nowrap flex-1 text-left self-center pl-1 transition-[opacity,transform] duration-200 ease-in-out">{item.label}</span>
           </a>
         </li>
       ))}
@@ -98,7 +98,7 @@ const navItems = [
           class="nav-item-desktop w-full flex items-center justify-start gap-4 px-4 h-12 rounded-lg bg-accent text-white hover:bg-accent-focus transition duration-200 ease-[cubic-bezier(0.2,0.8,0.2,1)] text-sm"
         >
           <img src={logout.src} alt="" loading="lazy" class="nav-icon w-6 h-6 transition duration-260 ease-[cubic-bezier(0.2,0.8,0.2,1)] filter brightness-0 invert"  decoding="async" />
-          <span class="nav-label whitespace-nowrap flex-1 text-left self-center pl-1">Déconnexion</span>
+          <span class="nav-label whitespace-nowrap flex-1 text-left self-center pl-1 transition-[opacity,transform] duration-200 ease-in-out">Déconnexion</span>
         </button>
       </li>
     </ul>
@@ -159,14 +159,8 @@ const navItems = [
   import { initVerifications } from "../scripts/verification-handlers.js";
   import { initModifications } from "../scripts/modification-handlers.js";
   import { scrollToTarget } from "../utils/scroll.js";
-  import { loadGsap } from "../utils/loadGsap";
 
   async function initAccountPage() {
-    const gsap = await loadGsap();
-    if (gsap) {
-      gsap.defaults({ duration: 0.35, ease: "power2.inOut" });
-    }
-
     const container = document.getElementById("content-container");
     const navLinks = Array.from(document.querySelectorAll<HTMLElement>(".nav-link"));
     const navLinksMobile = Array.from(
@@ -316,11 +310,8 @@ const navItems = [
 
     let navCollapsed = false;
     let navAnimating = false;
-
-    const getNavDuration = () => {
-      const defaults = gsap?.defaults();
-      return typeof defaults?.duration === "number" ? defaults.duration : 0.35;
-    };
+    const NAV_WIDTH_DURATION = 300;
+    const LABEL_FADE_DURATION = 200;
 
     function clearLabelStyles(labels: HTMLElement[]) {
       labels.forEach((label) => {
@@ -343,16 +334,6 @@ const navItems = [
     function setToggleRotation(collapsed: boolean, animated: boolean) {
       if (!(navToggleIconWrapper instanceof HTMLElement)) return;
       const rotation = collapsed ? 180 : 0;
-
-      if (animated && gsap) {
-        gsap.to(navToggleIconWrapper, {
-          rotation,
-          duration: getNavDuration(),
-          overwrite: "auto",
-        });
-        return;
-      }
-
       navToggleIconWrapper.style.transform = `rotate(${rotation}deg)`;
     }
 
@@ -361,15 +342,6 @@ const navItems = [
 
       navIcons.forEach((icon, index) => {
         const nextX = offsets[index] ?? 0;
-        if (animated && gsap) {
-          gsap.to(icon, {
-            x: nextX,
-            duration: getNavDuration(),
-            overwrite: "auto",
-          });
-          return;
-        }
-
         icon.style.transform = nextX ? `translateX(${nextX}px)` : "";
       });
 
@@ -380,15 +352,6 @@ const navItems = [
 
     function resetIcons(animated: boolean) {
       navIcons.forEach((icon) => {
-        if (animated && gsap) {
-          gsap.to(icon, {
-            x: 0,
-            duration: getNavDuration(),
-            overwrite: "auto",
-          });
-          return;
-        }
-
         icon.style.transform = "";
       });
 
@@ -438,66 +401,55 @@ const navItems = [
         navCollapsed = nextCollapsed;
         navAnimating = true;
 
-        if (!gsap) {
-          applyNavState(nextCollapsed);
-          navAnimating = false;
-          return;
-        }
-
         const labels = navToggleLabel instanceof HTMLElement
           ? [...navLabels, navToggleLabel]
           : [...navLabels];
 
         if (nextCollapsed) {
-          gsap.to(labels, {
-            opacity: 0,
-            x: -8,
-            duration: 0.18,
-            overwrite: "auto",
+          labels.forEach((label) => {
+            label.style.opacity = "0";
+            label.style.transform = "translateX(-8px)";
           });
           setToggleRotation(true, true);
-          gsap.to(desktopNav, {
-            width: COLLAPSED_WIDTH,
-            duration: getNavDuration(),
-            overwrite: "auto",
-            onComplete: () => {
-              setCollapsedLayout(true);
-              setLabelsVisible(false);
-              clearLabelStyles(labels);
-              centerIcons(true);
-              navToggle.setAttribute("aria-expanded", "false");
-              navAnimating = false;
-            },
-          });
+
+          window.setTimeout(() => {
+            setCollapsedLayout(true);
+            setLabelsVisible(false);
+            clearLabelStyles(labels);
+            centerIcons(true);
+            navToggle.setAttribute("aria-expanded", "false");
+          }, LABEL_FADE_DURATION);
+
+          window.setTimeout(() => {
+            navAnimating = false;
+          }, NAV_WIDTH_DURATION);
           return;
         }
 
         setCollapsedLayout(false);
         resetIcons(true);
         setToggleRotation(false, true);
-        gsap.to(desktopNav, {
-          width: EXPANDED_WIDTH,
-          duration: getNavDuration(),
-          overwrite: "auto",
-          onComplete: () => {
-            setLabelsVisible(true);
-            gsap.fromTo(
-              labels,
-              { opacity: 0, x: -8 },
-              {
-                opacity: 1,
-                x: 0,
-                duration: 0.22,
-                overwrite: "auto",
-                onComplete: () => {
-                  clearLabelStyles(labels);
-                  navToggle.setAttribute("aria-expanded", "true");
-                  navAnimating = false;
-                },
-              },
-            );
-          },
-        });
+
+        window.setTimeout(() => {
+          setLabelsVisible(true);
+          labels.forEach((label) => {
+            label.style.opacity = "0";
+            label.style.transform = "translateX(-8px)";
+          });
+
+          window.requestAnimationFrame(() => {
+            labels.forEach((label) => {
+              label.style.opacity = "1";
+              label.style.transform = "translateX(0)";
+            });
+          });
+        }, NAV_WIDTH_DURATION);
+
+        window.setTimeout(() => {
+          clearLabelStyles(labels);
+          navToggle.setAttribute("aria-expanded", "true");
+          navAnimating = false;
+        }, NAV_WIDTH_DURATION + LABEL_FADE_DURATION + 20);
       });
     }
   }
