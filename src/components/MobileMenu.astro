@@ -29,7 +29,9 @@ const {
   role="menu"
   aria-hidden="true"
 >
-  <h2 class="text-xs font-bold tracking-widest [@media(max-height:700px)]:mb-3 mb-6 opacity-90 uppercase">
+  <h2
+    class="text-xs font-bold tracking-widest [@media(max-height:700px)]:mb-3 mb-6 opacity-90 uppercase"
+  >
     {menuTitle}
   </h2>
 
@@ -42,7 +44,10 @@ const {
             class="mob-link flex justify-between items-center [@media(max-height:700px)]:py-1 py-2 text-base"
             role="menuitem"
           >
-            {item.label} <span class="opacity-40" aria-hidden="true"><DiagArrow class="h-3 w-auto" /></span>
+            {item.label}{" "}
+            <span class="opacity-40" aria-hidden="true">
+              <DiagArrow class="h-3 w-auto" />
+            </span>
           </a>
           {idx === 2 && (
             <div
@@ -78,7 +83,7 @@ const {
             {actionButtons.map((btn) => (
               <a
                 href={btn.href}
-                class={`btn ${btn.variant || 'btn-ghost'} border-base-100 rounded-lg! w-full`}
+                class={`btn ${btn.variant || "btn-ghost"} border-base-100 rounded-lg! w-full`}
                 role="menuitem"
               >
                 {btn.label}
@@ -95,13 +100,17 @@ const {
                 >
                   <div class="avatar">
                     <div class="w-10 rounded-full ring ring-offset-base-100 ring-white/30 overflow-hidden">
-                      {
-                        UserSvg ? (
-                            <UserSvg class="inline-block w-full h-full" aria-hidden="true" />
-                        ) : (
-                            <UserWhiteSvg class="inline-block w-full h-full" aria-hidden="true" />
-                        )
-                      }
+                      {UserSvg ? (
+                        <UserSvg
+                          class="inline-block w-full h-full"
+                          aria-hidden="true"
+                        />
+                      ) : (
+                        <UserWhiteSvg
+                          class="inline-block w-full h-full"
+                          aria-hidden="true"
+                        />
+                      )}
                     </div>
                   </div>
                   <span class="text-sm font-semibold">Mon compte</span>
@@ -140,3 +149,24 @@ const {
     display: none;
   }
 </style>
+<script>
+  const logoutBtn = document.getElementById("mobile-logout-btn");
+  if (logoutBtn instanceof HTMLButtonElement) {
+    logoutBtn.addEventListener("click", async () => {
+      try {
+        const response = await fetch("/api/logout", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+
+        if (response.ok) {
+          window.location.href = "/connexion";
+        }
+      } catch (error) {
+        console.error("Erreur lors de la déconnexion:", error);
+      }
+    });
+  }
+</script>
