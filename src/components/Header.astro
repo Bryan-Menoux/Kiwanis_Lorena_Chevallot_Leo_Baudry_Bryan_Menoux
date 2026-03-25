@@ -307,12 +307,34 @@ const actionButtons = [{ href: "/contact", label: "Contact" }];
     if (!toggle || !dropdown || toggle.dataset.bound === "true") return;
     toggle.dataset.bound = "true";
 
-    toggle.addEventListener("click", (e) => {
+    let closeTimeoutId: NodeJS.Timeout | null = null;
+
+    const onToggle = (e: Event) => {
       e.stopPropagation();
       const other = DROPDOWN_IDS.find((d) => d !== id)!;
       if (openState[other]) setState(other, false);
       setState(id, !openState[id]);
-    });
+    };
+
+    const onMouseEnter = () => {
+      if (closeTimeoutId) clearTimeout(closeTimeoutId);
+      const other = DROPDOWN_IDS.find((d) => d !== id)!;
+      if (openState[other]) setState(other, false);
+      setState(id, true);
+    };
+
+    const onMouseLeave = () => {
+      closeTimeoutId = setTimeout(() => {
+        setState(id, false);
+      }, 150);
+    };
+
+    toggle.addEventListener("click", onToggle);
+    toggle.addEventListener("mouseenter", onMouseEnter);
+    toggle.addEventListener("mouseleave", onMouseLeave);
+    
+    dropdown.addEventListener("mouseenter", onMouseEnter);
+    dropdown.addEventListener("mouseleave", onMouseLeave);
 
     toggle.addEventListener("keydown", (e: KeyboardEvent) => {
       if (e.key === "Enter" || e.key === " ") {
