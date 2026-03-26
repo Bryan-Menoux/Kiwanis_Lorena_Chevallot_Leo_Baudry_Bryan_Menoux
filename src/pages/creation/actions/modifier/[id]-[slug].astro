@@ -538,6 +538,7 @@ if (Astro.request.method === "POST") {
         publishPayload,
         actionRecord,
         Astro.locals.pb,
+        { forceDownloadExistingFile: true },
       );
 
       const publishedAction = await Astro.locals.pb
@@ -753,6 +754,7 @@ if (Astro.request.method === "POST") {
             publishPayload,
             actionRecord,
             Astro.locals.pb,
+            { forceDownloadExistingFile: true },
           );
           const publishedAction = await Astro.locals.pb
             .collection("actions")

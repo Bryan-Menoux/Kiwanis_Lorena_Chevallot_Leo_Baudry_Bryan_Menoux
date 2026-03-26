@@ -32,9 +32,8 @@ async function convertFileToWebp(file: File, outputName?: string) {
   const webpBuffer = await sharp(inputBuffer)
     .webp({ quality: WEBP_QUALITY })
     .toBuffer();
-  const webpArrayBuffer = Uint8Array.from(webpBuffer).buffer;
 
-  return new File([webpArrayBuffer], outputName || toWebpFileName(file.name), {
+  return new File([webpBuffer], outputName || toWebpFileName(file.name), {
     type: "image/webp",
   });
 }
@@ -149,6 +148,7 @@ async function normalizeImageValue(
   value: unknown,
   record: any,
   pocketbaseClient: any,
+  options?: { forceDownloadExistingFile?: boolean },
 ): Promise<unknown> {
   if (value instanceof File) {
     return isWebpFileLike(value)
@@ -163,6 +163,7 @@ async function normalizeImageValue(
         entry,
         record,
         pocketbaseClient,
+        options,
       );
       if (normalizedEntry === undefined || normalizedEntry === null || normalizedEntry === "") {
         continue;
@@ -177,14 +178,24 @@ async function normalizeImageValue(
   const fileName = value.trim();
   const fileReference = getFileReference(fileName);
   if (!fileReference) return value;
-  if (isWebpFileName(fileReference)) return value;
-  if (isWebpFileName(fileName)) return value;
   if (!record || !pocketbaseClient) return value;
 
   const file = await downloadRecordFile(record, fileName, fileReference, pocketbaseClient);
   if (!file) {
     throw new Error(`Impossible de récupérer le fichier "${fileReference}" pour le convertir en WebP.`);
   }
+
+  if (
+    options?.forceDownloadExistingFile &&
+    (isWebpFileName(fileReference) || isWebpFileName(fileName) || isWebpFileLike(file))
+  ) {
+    return new File([file], fileReference || toWebpFileName(file.name), {
+      type: file.type || "image/webp",
+    });
+  }
+
+  if (isWebpFileName(fileReference)) return value;
+  if (isWebpFileName(fileName)) return value;
 
   return convertFileToWebp(file, toWebpFileName(file.name || fileReference));
 }
@@ -193,12 +204,18 @@ export async function normalizeActionImagesForSave(
   payload: Record<string, any>,
   record: any,
   pocketbaseClient: any,
+  options?: { forceDownloadExistingFile?: boolean },
 ) {
   for (const fieldName of ACTION_SINGLE_IMAGE_FIELDS) {
     if (!Object.prototype.hasOwnProperty.call(payload, fieldName)) continue;
     const currentValue = payload[fieldName];
     if (currentValue === undefined || currentValue === null || currentValue === "") continue;
-    payload[fieldName] = await normalizeImageValue(currentValue, record, pocketbaseClient);
+    payload[fieldName] = await normalizeImageValue(
+      currentValue,
+      record,
+      pocketbaseClient,
+      options,
+    );
   }
 
   if (Object.prototype.hasOwnProperty.call(payload, ACTION_GALLERY_FIELD)) {
@@ -206,7 +223,12 @@ export async function normalizeActionImagesForSave(
     if (Array.isArray(galleryValue)) {
       const normalizedGallery = [];
       for (const entry of galleryValue) {
-        const normalizedEntry = await normalizeImageValue(entry, record, pocketbaseClient);
+        const normalizedEntry = await normalizeImageValue(
+          entry,
+          record,
+          pocketbaseClient,
+          options,
+        );
         if (normalizedEntry === undefined || normalizedEntry === null || normalizedEntry === "") {
           continue;
         }
@@ -218,6 +240,7 @@ export async function normalizeActionImagesForSave(
         galleryValue,
         record,
         pocketbaseClient,
+        options,
       );
     }
   }
