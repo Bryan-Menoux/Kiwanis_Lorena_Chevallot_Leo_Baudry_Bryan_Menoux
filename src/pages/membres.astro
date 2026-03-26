@@ -1,6 +1,5 @@
 ---
 import { getImage } from "astro:assets";
-import PocketBase from "pocketbase";
 import HeroMembresMobile from "../assets/members-page/hero-member-mobile.png";
 import HeroMembresTablet from "../assets/members-page/hero-member-tablette.png";
 import HeroMembres from "../assets/members-page/hero-member.png";
@@ -13,6 +12,7 @@ import MembersGrid from "../components/Members-grid.astro";
 import Layout from "../layouts/Layout.astro";
 import {
   Collections,
+  type HerosResponse,
   MembresRoleOptions,
   type MembresResponse,
 } from "../pocketbase-types";
@@ -113,6 +113,18 @@ try {
 }
 
 members = sortMembers(members);
+
+const heroRecords = await Astro.locals.pb
+  .collection(Collections.Heros)
+  .getFullList<HerosResponse>();
+const pageHeroRecord = heroRecords.find(
+  (hero) => (hero.nom_page || "").trim().toLowerCase() === "membres",
+);
+const pageHeroImageUrl =
+  pageHeroRecord?.image
+    ? Astro.locals.pb.files.getURL(pageHeroRecord, pageHeroRecord.image)
+    : null;
+const heroImage = pageHeroImageUrl || HeroMembres;
 ---
 
 <Layout
@@ -124,34 +136,40 @@ members = sortMembers(members);
   ogDescription="Rencontrez les membres du Kiwanis à Montbéliard, un club féminin engagé pour les enfants, les projets solidaires et la vie locale."
 >
   <Fragment slot="head">
-    <link
-      rel="preload"
-      as="image"
-      href={lcpMobile.src}
-      type="image/webp"
-      media="(max-width: 767px)"
-      fetchpriority="high"
-    />
-    <link
-      rel="preload"
-      as="image"
-      href={lcpTablet.src}
-      type="image/webp"
-      media="(min-width: 768px) and (max-width: 1023px)"
-      fetchpriority="high"
-    />
-    <link
-      rel="preload"
-      as="image"
-      href={lcpDesktop.src}
-      imagesrcset={`${lcpDesktopMd.src} 1440w, ${lcpDesktop.src} 1840w`}
-      imagesizes="95vw"
-      type="image/webp"
-      media="(min-width: 1024px)"
-      fetchpriority="high"
-    />
+    {pageHeroImageUrl ? (
+      <link rel="preload" as="image" href={pageHeroImageUrl} fetchpriority="high" />
+    ) : (
+      <>
+        <link
+          rel="preload"
+          as="image"
+          href={lcpMobile.src}
+          type="image/webp"
+          media="(max-width: 767px)"
+          fetchpriority="high"
+        />
+        <link
+          rel="preload"
+          as="image"
+          href={lcpTablet.src}
+          type="image/webp"
+          media="(min-width: 768px) and (max-width: 1023px)"
+          fetchpriority="high"
+        />
+        <link
+          rel="preload"
+          as="image"
+          href={lcpDesktop.src}
+          imagesrcset={`${lcpDesktopMd.src} 1440w, ${lcpDesktop.src} 1840w`}
+          imagesizes="95vw"
+          type="image/webp"
+          media="(min-width: 1024px)"
+          fetchpriority="high"
+        />
+      </>
+    )}
   </Fragment>
-  <Hero image={HeroMembres} title="Nos membres" subtitle="" />
+  <Hero image={heroImage} title="Nos membres" subtitle="" />
   <div class="flex flex-col max-w-7xl mx-auto my-32 gap-4 px-8">
     <p>
       Sur cette page, vous retrouverez les membres qui font vivre le Kiwanis

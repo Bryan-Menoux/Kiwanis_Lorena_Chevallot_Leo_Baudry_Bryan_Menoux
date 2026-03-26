@@ -15,6 +15,7 @@ import HeroActionsTablet from "../../assets/action-page/hero-action-page-tablett
 import { getImage } from "astro:assets";
 import AdminEditBanner from "../../components/AdminEditBanner.astro";
 import DiagArrow from "../../components/DiagArrow.astro";
+import { Collections, type HerosResponse } from "../../pocketbase-types";
 
 const currentUser = Astro.locals.pb.authStore.record;
 const canEditActions =
@@ -97,6 +98,18 @@ const lcpMobile = await getImage({ src: HeroActionsMobile, format: "webp", width
 const lcpTablet = await getImage({ src: HeroActionsTablet, format: "webp", width: 1280, quality: 72 });
 const lcpDesktopMd = await getImage({ src: HeroActions, format: "webp", width: 1440, quality: 80 });
 const lcpDesktop = await getImage({ src: HeroActions, format: "webp", width: 1840, quality: 80 });
+
+const heroRecords = await Astro.locals.pb
+  .collection(Collections.Heros)
+  .getFullList<HerosResponse>();
+const pageHeroRecord = heroRecords.find(
+  (hero) => (hero.nom_page || "").trim().toLowerCase() === "actions",
+);
+const pageHeroImageUrl =
+  pageHeroRecord?.image
+    ? Astro.locals.pb.files.getURL(pageHeroRecord, pageHeroRecord.image)
+    : null;
+const heroImage = pageHeroImageUrl || HeroActions;
 ---
 
 <Layout
@@ -108,14 +121,19 @@ const lcpDesktop = await getImage({ src: HeroActions, format: "webp", width: 184
   ogDescription="Retrouvez les actions solidaires du Kiwanis à Montbéliard, menées pour les enfants, les jeunes et les partenaires du territoire."
 >
   <Fragment slot="head">
-    <link rel="preload" as="image" href={lcpMobile.src} type="image/webp" media="(max-width: 767px)" fetchpriority="high" />
-    <link rel="preload" as="image" href={lcpTablet.src} type="image/webp" media="(min-width: 768px) and (max-width: 1023px)" fetchpriority="high" />
-    <link rel="preload" as="image" href={lcpDesktop.src} imagesrcset={`${lcpDesktopMd.src} 1440w, ${lcpDesktop.src} 1840w`} imagesizes="95vw" type="image/webp" media="(min-width: 1024px)" fetchpriority="high" />
+    {pageHeroImageUrl ? (
+      <link rel="preload" as="image" href={pageHeroImageUrl} fetchpriority="high" />
+    ) : (
+      <>
+        <link rel="preload" as="image" href={lcpMobile.src} type="image/webp" media="(max-width: 767px)" fetchpriority="high" />
+        <link rel="preload" as="image" href={lcpTablet.src} type="image/webp" media="(min-width: 768px) and (max-width: 1023px)" fetchpriority="high" />
+        <link rel="preload" as="image" href={lcpDesktop.src} imagesrcset={`${lcpDesktopMd.src} 1440w, ${lcpDesktop.src} 1840w`} imagesizes="95vw" type="image/webp" media="(min-width: 1024px)" fetchpriority="high" />
+      </>
+    )}
   </Fragment>
   <Hero
-    image={HeroActions}
-    title="Kiwanis Pays de Montbéliard"
-    subtitle="Servir les enfants du monde, au cœur de notre territoire"
+    image={heroImage}
+    title="Nos actions"
   />
 
   <AdminEditBanner

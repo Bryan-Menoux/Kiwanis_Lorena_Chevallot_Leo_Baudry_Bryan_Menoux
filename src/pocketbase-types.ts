@@ -13,7 +13,9 @@ export enum Collections {
 	Superusers = "_superusers",
 	Actions = "actions",
 	Brouillons = "brouillons",
+	Contact = "contact",
 	Contributeurs = "contributeurs",
+	Heros = "heros",
 	Membres = "membres",
 	Partenaires = "partenaires",
 	Produits = "produits",
@@ -200,13 +202,33 @@ export type BrouillonsRecord = {
 	updated: IsoAutoDateString
 }
 
+export type ContactRecord = {
+	created: IsoAutoDateString
+	email?: string
+	id: string
+	message?: HTMLString
+	nom?: string
+	numero_de_telephone?: number
+	photos?: FileNameString[]
+	prenom?: string
+	updated: IsoAutoDateString
+}
+
 export type ContributeursRecord = {
 	created: IsoAutoDateString
+	cree_par?: RecordIdString
 	description?: string
 	id: string
 	metier?: string
 	nom?: string
-	cree_par?: RecordIdString
+	updated: IsoAutoDateString
+}
+
+export type HerosRecord = {
+	created: IsoAutoDateString
+	id: string
+	image?: FileNameString
+	nom_page?: string
 	updated: IsoAutoDateString
 }
 
@@ -227,21 +249,21 @@ export type MembresRecord = {
 
 export type PartenairesRecord = {
 	created: IsoAutoDateString
+	cree_par?: RecordIdString
 	id: string
 	logo?: FileNameString
 	nom?: string
-	cree_par?: RecordIdString
 	updated: IsoAutoDateString
 }
 
 export type ProduitsRecord = {
 	created: IsoAutoDateString
+	cree_par?: RecordIdString
 	description?: string
 	id: string
 	photo?: FileNameString[]
 	prix?: number
 	titre?: string
-	cree_par?: RecordIdString
 	updated: IsoAutoDateString
 }
 
@@ -256,13 +278,13 @@ export enum ProjetsTypeActionOptions {
 }
 export type ProjetsRecord = {
 	created: IsoAutoDateString
+	cree_par?: RecordIdString
 	date?: IsoDateString
 	description?: string
 	id: string
 	nom_adresse?: string
 	titre?: string
 	type_action?: ProjetsTypeActionOptions[]
-	cree_par?: RecordIdString
 	updated: IsoAutoDateString
 	url_adresse?: string
 }
@@ -298,7 +320,9 @@ export type OtpsResponse<Texpand = unknown> = Required<OtpsRecord> & BaseSystemF
 export type SuperusersResponse<Texpand = unknown> = Required<SuperusersRecord> & AuthSystemFields<Texpand>
 export type ActionsResponse<Trecadrage = unknown, Texpand = unknown> = Required<ActionsRecord<Trecadrage>> & BaseSystemFields<Texpand>
 export type BrouillonsResponse<Texpand = unknown> = Required<BrouillonsRecord> & BaseSystemFields<Texpand>
+export type ContactResponse<Texpand = unknown> = Required<ContactRecord> & BaseSystemFields<Texpand>
 export type ContributeursResponse<Texpand = unknown> = Required<ContributeursRecord> & BaseSystemFields<Texpand>
+export type HerosResponse<Texpand = unknown> = Required<HerosRecord> & BaseSystemFields<Texpand>
 export type MembresResponse<Texpand = unknown> = Required<MembresRecord> & BaseSystemFields<Texpand>
 export type PartenairesResponse<Texpand = unknown> = Required<PartenairesRecord> & BaseSystemFields<Texpand>
 export type ProduitsResponse<Texpand = unknown> = Required<ProduitsRecord> & BaseSystemFields<Texpand>
@@ -315,7 +339,9 @@ export type CollectionRecords = {
 	_superusers: SuperusersRecord
 	actions: ActionsRecord
 	brouillons: BrouillonsRecord
+	contact: ContactRecord
 	contributeurs: ContributeursRecord
+	heros: HerosRecord
 	membres: MembresRecord
 	partenaires: PartenairesRecord
 	produits: ProduitsRecord
@@ -331,7 +357,9 @@ export type CollectionResponses = {
 	_superusers: SuperusersResponse
 	actions: ActionsResponse
 	brouillons: BrouillonsResponse
+	contact: ContactResponse
 	contributeurs: ContributeursResponse
+	heros: HerosResponse
 	membres: MembresResponse
 	partenaires: PartenairesResponse
 	produits: ProduitsResponse

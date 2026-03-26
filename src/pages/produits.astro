@@ -9,6 +9,7 @@ import HeroProducts from "../assets/products-page/hero-products-page.png";
 import KiwanisPoupee1 from "../assets/products-page/poupee_kiwanis_1.webp";
 import KiwanisPoupee2 from "../assets/products-page/poupee_kiwanis_2.webp";
 import AdminEditBanner from "../components/AdminEditBanner.astro";
+import { Collections, type HerosResponse } from "../pocketbase-types";
 
 const currentUser = Astro.locals.pb.authStore.record;
 const canEditProduits =
@@ -54,6 +55,18 @@ const produits: ProductCard[] = produitsRaw.map((produit) => {
     priceLabel: formatPrice(produit.prix),
   };
 });
+
+const heroRecords = await Astro.locals.pb
+  .collection(Collections.Heros)
+  .getFullList<HerosResponse>();
+const pageHeroRecord = heroRecords.find(
+  (hero) => (hero.nom_page || "").trim().toLowerCase() === "produits",
+);
+const pageHeroImageUrl =
+  pageHeroRecord?.image
+    ? Astro.locals.pb.files.getURL(pageHeroRecord, pageHeroRecord.image)
+    : null;
+const heroImage = pageHeroImageUrl || HeroProducts;
 ---
 
 <Layout
@@ -64,8 +77,13 @@ const produits: ProductCard[] = produitsRaw.map((produit) => {
   ogTitle="Produits solidaires"
   ogDescription="Consultez les produits solidaires du Kiwanis à Montbéliard. Un catalogue local qui aide à financer des actions pour les enfants."
 >
+  <Fragment slot="head">
+    {pageHeroImageUrl && (
+      <link rel="preload" as="image" href={pageHeroImageUrl} fetchpriority="high" />
+    )}
+  </Fragment>
   <Hero
-    image={HeroProducts}
+    image={heroImage}
     title="NOS PRODUITS"
   />
 

@@ -288,14 +288,19 @@ const actionButtons = [{ href: "/contact", label: "Contact" }];
     leclub: false,
     discover: false,
   };
+  const pinnedState: Record<DropdownId, boolean> = {
+    leclub: false,
+    discover: false,
+  };
   let mobileMenuInitialized = false;
 
-  function setState(id: DropdownId, isOpen: boolean) {
+  function setState(id: DropdownId, isOpen: boolean, pinned = pinnedState[id]) {
     const toggle = document.getElementById(`${id}-toggle`);
     const dropdown = document.getElementById(`${id}-dropdown`);
     const arrow = document.getElementById(`${id}-arrow`);
     if (!toggle || !dropdown || !arrow) return;
     openState[id] = isOpen;
+    pinnedState[id] = isOpen ? pinned : false;
     toggle.setAttribute("aria-expanded", String(isOpen));
     dropdown.setAttribute("aria-hidden", String(!isOpen));
     dropdown.classList.toggle("is-open", isOpen);
@@ -313,20 +318,22 @@ const actionButtons = [{ href: "/contact", label: "Contact" }];
     const onToggle = (e: Event) => {
       e.stopPropagation();
       const other = DROPDOWN_IDS.find((d) => d !== id)!;
-      if (openState[other]) setState(other, false);
-      setState(id, !openState[id]);
+      if (openState[other]) setState(other, false, false);
+      setState(id, true, true);
     };
 
     const onMouseEnter = () => {
       if (closeTimeoutId) clearTimeout(closeTimeoutId);
+      if (pinnedState[id]) return;
       const other = DROPDOWN_IDS.find((d) => d !== id)!;
-      if (openState[other]) setState(other, false);
-      setState(id, true);
+      if (openState[other] && !pinnedState[other]) setState(other, false, false);
+      setState(id, true, false);
     };
 
     const onMouseLeave = () => {
+      if (pinnedState[id]) return;
       closeTimeoutId = setTimeout(() => {
-        setState(id, false);
+        setState(id, false, false);
       }, 150);
     };
 
@@ -342,7 +349,7 @@ const actionButtons = [{ href: "/contact", label: "Contact" }];
         e.preventDefault();
         toggle.click();
       } else if (e.key === "Escape" && openState[id]) {
-        setState(id, false);
+        setState(id, false, false);
       }
     });
   }
@@ -356,7 +363,7 @@ const actionButtons = [{ href: "/contact", label: "Contact" }];
         !toggle?.contains(e.target as Node) &&
         !dropdown?.contains(e.target as Node)
       ) {
-        setState(id, false);
+        setState(id, false, false);
       }
     }
   });

@@ -8,6 +8,7 @@ import Hero from "../components/Hero.astro";
 import Layout from "../layouts/Layout.astro";
 import { formatDateShort } from "../utils/utilitaires.js";
 import DiagArrow from "../components/DiagArrow.astro";
+import { Collections, type HerosResponse } from "../pocketbase-types";
 
 const currentUser = Astro.locals.pb.authStore.record;
 const canEditProjets =
@@ -49,6 +50,18 @@ const projets = (projetsRaw || []).map((projet) => ({
   typeActionSafe: Array.isArray(projet.type_action) ? projet.type_action : [],
 }));
 
+const heroRecords = await Astro.locals.pb
+  .collection(Collections.Heros)
+  .getFullList<HerosResponse>();
+const pageHeroRecord = heroRecords.find(
+  (hero) => (hero.nom_page || "").trim().toLowerCase() === "projets",
+);
+const pageHeroImageUrl =
+  pageHeroRecord?.image
+    ? Astro.locals.pb.files.getURL(pageHeroRecord, pageHeroRecord.image)
+    : null;
+const heroImage = pageHeroImageUrl || HeroActions;
+
 function truncateWords(text: string, limit = 70): string {
   const normalized = text.trim();
   if (!normalized) return "";
@@ -69,35 +82,41 @@ function truncateWords(text: string, limit = 70): string {
   ogDescription="Découvrez les projets futurs du Kiwanis à Montbéliard et les prochaines actions prévues pour les enfants et le territoire."
 >
   <Fragment slot="head">
-    <link
-      rel="preload"
-      as="image"
-      href={lcpMobile.src}
-      type="image/webp"
-      media="(max-width: 767px)"
-      fetchpriority="high"
-    />
-    <link
-      rel="preload"
-      as="image"
-      href={lcpTablet.src}
-      type="image/webp"
-      media="(min-width: 768px) and (max-width: 1023px)"
-      fetchpriority="high"
-    />
-    <link
-      rel="preload"
-      as="image"
-      href={lcpDesktop.src}
-      imagesrcset={`${lcpDesktopMd.src} 1440w, ${lcpDesktop.src} 1840w`}
-      imagesizes="95vw"
-      type="image/webp"
-      media="(min-width: 1024px)"
-      fetchpriority="high"
-    />
+    {pageHeroImageUrl ? (
+      <link rel="preload" as="image" href={pageHeroImageUrl} fetchpriority="high" />
+    ) : (
+      <>
+        <link
+          rel="preload"
+          as="image"
+          href={lcpMobile.src}
+          type="image/webp"
+          media="(max-width: 767px)"
+          fetchpriority="high"
+        />
+        <link
+          rel="preload"
+          as="image"
+          href={lcpTablet.src}
+          type="image/webp"
+          media="(min-width: 768px) and (max-width: 1023px)"
+          fetchpriority="high"
+        />
+        <link
+          rel="preload"
+          as="image"
+          href={lcpDesktop.src}
+          imagesrcset={`${lcpDesktopMd.src} 1440w, ${lcpDesktop.src} 1840w`}
+          imagesizes="95vw"
+          type="image/webp"
+          media="(min-width: 1024px)"
+          fetchpriority="high"
+        />
+      </>
+    )}
   </Fragment>
 
-  <Hero image={HeroActions} title="Nos projets" />
+  <Hero image={heroImage} title="Nos projets" />
 
   <AdminEditBanner
     canEdit={canEditProjets}

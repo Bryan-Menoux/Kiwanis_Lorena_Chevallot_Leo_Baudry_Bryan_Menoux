@@ -15,6 +15,7 @@ import why1 from "../assets/landing-page/why-1.webp";
 import why2 from "../assets/landing-page/why-2.webp";
 import why3 from "../assets/landing-page/why-3.webp";
 import HomePartner from "../components/Home-partner.astro";
+import { Collections, type HerosResponse } from "../pocketbase-types";
 
 const lcpMobile = await getImage({
   src: heroLandingfinalMobile,
@@ -83,6 +84,17 @@ const why3Lg = await getImage({ src: why3, width: 640, format: "webp" });
 const mapGoogleUrl =
   "https://maps.google.com/?q=76+bis+faubourg+de+Besan%C3%A7on%2C+25200+Montb%C3%A9liard";
 const mapAddress = "76 bis faubourg de Besançon, 25200 Montbéliard";
+const heroRecords = await Astro.locals.pb
+  .collection(Collections.Heros)
+  .getFullList<HerosResponse>();
+const pageHeroRecord = heroRecords.find(
+  (hero) => (hero.nom_page || "").trim().toLowerCase() === "index",
+);
+const pageHeroImageUrl =
+  pageHeroRecord?.image
+    ? Astro.locals.pb.files.getURL(pageHeroRecord, pageHeroRecord.image)
+    : null;
+const heroImage = pageHeroImageUrl || heroLandingfinal;
 ---
 
 <Layout
@@ -96,35 +108,41 @@ const mapAddress = "76 bis faubourg de Besançon, 25200 Montbéliard";
   includeManifest={false}
 >
   <Fragment slot="head">
-    <link
-      rel="preload"
-      as="image"
-      href={lcpMobile.src}
-      type="image/webp"
-      media="(max-width: 767px)"
-      fetchpriority="high"
-    />
-    <link
-      rel="preload"
-      as="image"
-      href={lcpTablet.src}
-      type="image/webp"
-      media="(min-width: 768px) and (max-width: 1023px)"
-      fetchpriority="high"
-    />
-    <link
-      rel="preload"
-      as="image"
-      href={lcpDesktop.src}
-      imagesrcset={`${lcpDesktopMd.src} 1440w, ${lcpDesktop.src} 1840w`}
-      imagesizes="95vw"
-      type="image/webp"
-      media="(min-width: 1024px)"
-      fetchpriority="high"
-    />
+    {pageHeroImageUrl ? (
+      <link rel="preload" as="image" href={pageHeroImageUrl} fetchpriority="high" />
+    ) : (
+      <>
+        <link
+          rel="preload"
+          as="image"
+          href={lcpMobile.src}
+          type="image/webp"
+          media="(max-width: 767px)"
+          fetchpriority="high"
+        />
+        <link
+          rel="preload"
+          as="image"
+          href={lcpTablet.src}
+          type="image/webp"
+          media="(min-width: 768px) and (max-width: 1023px)"
+          fetchpriority="high"
+        />
+        <link
+          rel="preload"
+          as="image"
+          href={lcpDesktop.src}
+          imagesrcset={`${lcpDesktopMd.src} 1440w, ${lcpDesktop.src} 1840w`}
+          imagesizes="95vw"
+          type="image/webp"
+          media="(min-width: 1024px)"
+          fetchpriority="high"
+        />
+      </>
+    )}
   </Fragment>
   <Hero
-    image={heroLandingfinal}
+    image={heroImage}
     title="Kiwanis Pays de Montbéliard"
     subtitle="Servir les enfants du monde, au cœur de notre territoire"
   />
@@ -188,7 +206,7 @@ const mapAddress = "76 bis faubourg de Besançon, 25200 Montbéliard";
         <h2>Nos membres</h2>
       </div>
       <p>
-        Créé par Marie France ZUSATZ et charté le 22 septembre 2019, notre club
+        Créé par Marie France ZUSATZ en 2019 et charté le 22 septembre 2022, notre club
         réunit 14 femmes aux parcours variés, unies par l’envie d’agir pour les
         autres, et notamment pour les enfants.
       </p>
@@ -470,6 +488,14 @@ const mapAddress = "76 bis faubourg de Besançon, 25200 Montbéliard";
   <script>
     // CSS Leaflet inliné dans le bundle → 0 requête réseau supplémentaire
     import leafletCss from "leaflet/dist/leaflet.css?inline";
+
+    declare global {
+      interface Window {
+        KiwanisConsent?: {
+          hasExternalServicesConsent?: () => boolean;
+        };
+      }
+    }
 
     const root = document.querySelector<HTMLElement>("[data-map-loader]");
     if (root) {

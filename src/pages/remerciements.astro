@@ -6,6 +6,7 @@ import heroRemerciments from "../assets/remerciements-page/hero-remerciements.pn
 import AdminEditBanner from "../components/AdminEditBanner.astro";
 import Hero from "../components/Hero.astro";
 import Layout from "../layouts/Layout.astro";
+import { Collections, type HerosResponse } from "../pocketbase-types";
 
 const currentUser = Astro.locals.pb.authStore.record;
 const canEditRemerciments =
@@ -56,6 +57,18 @@ const lcpDesktop = await getImage({
   width: 1840,
   quality: 80,
 });
+
+const heroRecords = await Astro.locals.pb
+  .collection(Collections.Heros)
+  .getFullList<HerosResponse>();
+const pageHeroRecord = heroRecords.find(
+  (hero) => (hero.nom_page || "").trim().toLowerCase() === "remerciements",
+);
+const pageHeroImageUrl =
+  pageHeroRecord?.image
+    ? Astro.locals.pb.files.getURL(pageHeroRecord, pageHeroRecord.image)
+    : null;
+const heroImage = pageHeroImageUrl || heroRemerciments;
 ---
 
 <Layout
@@ -67,35 +80,41 @@ const lcpDesktop = await getImage({
   ogDescription="Découvrez les partenaires et contributeurs qui soutiennent le Kiwanis à Montbéliard et rendent possibles les actions pour les enfants."
 >
   <Fragment slot="head">
-    <link
-      rel="preload"
-      as="image"
-      href={lcpMobile.src}
-      type="image/webp"
-      media="(max-width: 767px)"
-      fetchpriority="high"
-    />
-    <link
-      rel="preload"
-      as="image"
-      href={lcpTablet.src}
-      type="image/webp"
-      media="(min-width: 768px) and (max-width: 1023px)"
-      fetchpriority="high"
-    />
-    <link
-      rel="preload"
-      as="image"
-      href={lcpDesktop.src}
-      imagesrcset={`${lcpDesktopMd.src} 1440w, ${lcpDesktop.src} 1840w`}
-      imagesizes="95vw"
-      type="image/webp"
-      media="(min-width: 1024px)"
-      fetchpriority="high"
-    />
+    {pageHeroImageUrl ? (
+      <link rel="preload" as="image" href={pageHeroImageUrl} fetchpriority="high" />
+    ) : (
+      <>
+        <link
+          rel="preload"
+          as="image"
+          href={lcpMobile.src}
+          type="image/webp"
+          media="(max-width: 767px)"
+          fetchpriority="high"
+        />
+        <link
+          rel="preload"
+          as="image"
+          href={lcpTablet.src}
+          type="image/webp"
+          media="(min-width: 768px) and (max-width: 1023px)"
+          fetchpriority="high"
+        />
+        <link
+          rel="preload"
+          as="image"
+          href={lcpDesktop.src}
+          imagesrcset={`${lcpDesktopMd.src} 1440w, ${lcpDesktop.src} 1840w`}
+          imagesizes="95vw"
+          type="image/webp"
+          media="(min-width: 1024px)"
+          fetchpriority="high"
+        />
+      </>
+    )}
   </Fragment>
   <Hero
-    image={heroRemerciments}
+    image={heroImage}
     title="Remerciements"
     subtitle="Nous tenons à exprimer notre profonde gratitude envers tous ceux qui ont contribué à la réussite de nos projets."
   />
