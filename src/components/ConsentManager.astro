@@ -258,7 +258,7 @@ import {
   };
 
   const openPanel = (mode = "banner") => {
-    isCustomizeMode = mode === "customize";
+    isCustomizeMode = false;
     syncMode();
     syncUiWithPreferences();
     showRoot();
