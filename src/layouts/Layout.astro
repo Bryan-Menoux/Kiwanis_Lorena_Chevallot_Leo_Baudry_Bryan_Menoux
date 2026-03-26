@@ -37,6 +37,7 @@ const {
 } = Astro.props as Props;
 
 const pathname = new URL(Astro.request.url).pathname;
+const siteOrigin = "https://www.kiwanis-pays-de-montbeliard.fr";
 ---
 
 <!doctype html>
@@ -49,14 +50,14 @@ const pathname = new URL(Astro.request.url).pathname;
     <title>{title}</title>
     <meta name="description" content={description} />
     <meta name="robots" content={robots} />
-    <link rel="canonical" href={canonical ? `https://kiwanis-montbeliard.fr${canonical}` : "https://kiwanis-montbeliard.fr"} />
+    <link rel="canonical" href={canonical ? `${siteOrigin}${canonical}` : siteOrigin} />
 
     <!-- Open Graph / Social Media -->
     <meta property="og:type" content={ogType} />
     <meta property="og:title" content={ogTitle} />
     <meta property="og:description" content={ogDescription} />
     {ogImage && <meta property="og:image" content={ogImage} />}
-    <meta property="og:url" content={`https://kiwanis-montbeliard.fr${pathname}`} />
+    <meta property="og:url" content={`${siteOrigin}${pathname}`} />
     <meta property="og:locale" content="fr_FR" />
 
     <!-- Twitter Card -->

@@ -9,7 +9,6 @@ interface Props {
 const { success = false } = Astro.props;
 
 let user = Astro.locals.pb.authStore.record;
-const isAdmin = user?.administrateur === true;
 const userGenre = user?.genre === UsersGenreOptions.femme
   ? UsersGenreOptions.femme
   : UsersGenreOptions.homme;
@@ -185,19 +184,10 @@ const { firstName, lastName } = splitUserName(user!.name);
               type="email"
               id="email"
               name="email"
-              class={`input input-bordered w-full ${!isAdmin ? "bg-base-200" : ""}`}
+              class="input input-bordered w-full"
               placeholder="votre.email@exemple.com"
               value={user?.email || ""}
-              disabled={!isAdmin}
             />
-            {
-              !isAdmin && (
-                <p class="text-sm text-base-content/60 mt-2">
-                  Seul un administrateur peut modifier votre adresse e-mail.
-                  Veuillez contacter un administrateur.
-                </p>
-              )
-            }
           </div>
         </div>
 

@@ -65,28 +65,29 @@ function sortMembers(list: PublicMember[]) {
     const roleIndexB = roleOrder.indexOf(b.status);
 
     if (roleIndexA !== roleIndexB) {
-      return (roleIndexA === -1 ? Number.MAX_SAFE_INTEGER : roleIndexA) -
-        (roleIndexB === -1 ? Number.MAX_SAFE_INTEGER : roleIndexB);
+      return (
+        (roleIndexA === -1 ? Number.MAX_SAFE_INTEGER : roleIndexA) -
+        (roleIndexB === -1 ? Number.MAX_SAFE_INTEGER : roleIndexB)
+      );
     }
 
     return a.name.localeCompare(b.name, "fr", { sensitivity: "base" });
   });
 }
 
-async function loadMembersFromCollection(pbClient: PocketBase): Promise<PublicMember[]> {
-  const membreRecords = await pbClient
+async function loadMembersFromCollection(): Promise<PublicMember[]> {
+  const membreRecords = await Astro.locals.pb
     .collection(Collections.Membres)
-    .getFullList<MembresResponse>({
-      sort: "-created",
-    });
+    .getFullList<MembresResponse>();
 
   const members = membreRecords.map((membreRecord) => {
     const avatarValue = membreRecord.avatar;
-    const avatarFile = typeof avatarValue === "string"
-      ? avatarValue
-      : Array.isArray(avatarValue)
-        ? String(avatarValue[0] || "")
-        : "";
+    const avatarFile =
+      typeof avatarValue === "string"
+        ? avatarValue
+        : Array.isArray(avatarValue)
+          ? String(avatarValue[0] || "")
+          : "";
     const role = membreRecord.role as MembresRoleOptions;
 
     return {
@@ -94,7 +95,7 @@ async function loadMembersFromCollection(pbClient: PocketBase): Promise<PublicMe
       name: String(membreRecord.nom || "").trim() || defaultMemberName,
       status: roleLabels[role] || "Membre",
       avatarUrl: avatarFile
-        ? pbClient.files.getURL(membreRecord, avatarFile)
+        ? Astro.locals.pb.files.getURL(membreRecord, avatarFile)
         : null,
     };
   });
@@ -103,7 +104,7 @@ async function loadMembersFromCollection(pbClient: PocketBase): Promise<PublicMe
 }
 
 try {
-  const membersFromCurrentSession = await loadMembersFromCollection(Astro.locals.pb);
+  const membersFromCurrentSession = await loadMembersFromCollection();
   if (membersFromCurrentSession.length > 0) {
     members = membersFromCurrentSession;
   }
@@ -150,16 +151,13 @@ members = sortMembers(members);
       fetchpriority="high"
     />
   </Fragment>
-  <Hero
-    image={HeroMembres}
-    title="Nos membres"
-    subtitle=""
-  />
+  <Hero image={HeroMembres} title="Nos membres" subtitle="" />
   <div class="flex flex-col max-w-7xl mx-auto my-32 gap-4 px-8">
     <p>
-      Sur cette page, vous retrouverez les membres qui font vivre le Kiwanis féminin
-      Pays de Montbéliard au quotidien. Ce sont elles que vous croisez lors des événements,
-      derrière les stands, à l’organisation des actions et des projets pour les enfants.
+      Sur cette page, vous retrouverez les membres qui font vivre le Kiwanis
+      féminin Pays de Montbéliard au quotidien. Ce sont elles que vous croisez
+      lors des événements, derrière les stands, à l’organisation des actions et
+      des projets pour les enfants.
     </p>
   </div>
   <MembersGrid members={members} />
@@ -179,18 +177,20 @@ members = sortMembers(members);
   </div>
 
   <div class="flex flex-col max-w-7xl mx-auto my-32 gap-8 px-8">
-    <div class="grid grid-cols-1 md:grid-cols-[1fr_1fr] gap-8 lg:gap-16 min-h-[40dvh]">
+    <div
+      class="grid grid-cols-1 md:grid-cols-[1fr_1fr] gap-8 lg:gap-16 min-h-[40dvh]"
+    >
       <div class="flex flex-col gap-4 mt-6">
         <h4>Une histoire qui continue</h4>
         <p>
-          Le club évolue au fil des années : de nouvelles bénévoles nous rejoignent,
-          de nouveaux projets naissent et notre façon d’agir s’enrichit des rencontres
-          faites sur le territoire.
+          Le club évolue au fil des années : de nouvelles bénévoles nous
+          rejoignent, de nouveaux projets naissent et notre façon d’agir
+          s’enrichit des rencontres faites sur le territoire.
         </p>
         <p>
-          Bien que le club soit féminin, nos actions s’adressent à tous. Toute personne
-          souhaitant participer, soutenir un projet ou nous rencontrer est la bienvenue
-          lors de nos événements.
+          Bien que le club soit féminin, nos actions s’adressent à tous. Toute
+          personne souhaitant participer, soutenir un projet ou nous rencontrer
+          est la bienvenue lors de nos événements.
         </p>
       </div>
       <div class="flex flex-col w-full mx-auto md:max-w-full">
@@ -205,7 +205,9 @@ members = sortMembers(members);
         />
       </div>
     </div>
-    <div class="grid grid-cols-1 md:grid-cols-[1fr_1fr] gap-8 lg:gap-16 min-h-[40dvh]">
+    <div
+      class="grid grid-cols-1 md:grid-cols-[1fr_1fr] gap-8 lg:gap-16 min-h-[40dvh]"
+    >
       <div class="flex-col w-full mx-auto md:max-w-full hidden md:flex">
         <img
           src={members2.src}
@@ -220,14 +222,14 @@ members = sortMembers(members);
       <div class="flex flex-col gap-4 mt-6">
         <h4>Nous rejoindre</h4>
         <p>
-          Si vous partagez notre envie d’agir pour les enfants du Pays de Montbéliard
-          et que vous avez un peu de temps à consacrer au bénévolat, vous pouvez nous
-          rejoindre.
+          Si vous partagez notre envie d’agir pour les enfants du Pays de
+          Montbéliard et que vous avez un peu de temps à consacrer au bénévolat,
+          vous pouvez nous rejoindre.
         </p>
         <p>
-          La première étape est simple : assister à une réunion ou échanger avec nous
-          sur votre envie de vous engager. Il suffit de nous contacter via la page
-          Contact du site, et nous reviendrons vers vous pour la suite.
+          La première étape est simple : assister à une réunion ou échanger avec
+          nous sur votre envie de vous engager. Il suffit de nous contacter via
+          la page Contact du site, et nous reviendrons vers vous pour la suite.
         </p>
       </div>
       <div class="flex flex-col w-full mx-auto md:max-w-full md:hidden">

@@ -17,6 +17,7 @@ if (Astro.locals.pb.authStore.isValid) {
 
 let userVerificated = true;
 let serverMessage = "";
+const emailChanged = Astro.url.searchParams.get("emailChanged") === "true";
 
 const isPostForm =
   Astro.request.method === "POST" &&
@@ -110,6 +111,7 @@ if (isPostForm) {
         id="auth-flags"
         data-user-verificated={String(userVerificated)}
         data-message={serverMessage}
+        data-email-changed={String(emailChanged)}
         class="hidden"
       >
       </div>
@@ -179,6 +181,14 @@ if (isPostForm) {
   if (flags) {
     const userVerificated = flags.dataset.userVerificated === "true";
     const message = flags.dataset.message || "";
+    const emailChanged = flags.dataset.emailChanged === "true";
+
+    if (emailChanged) {
+      showAlert({
+        message: "Votre nouvelle adresse e-mail a bien été confirmée.",
+        type: "success",
+      });
+    }
 
     if (!userVerificated) {
       showError(

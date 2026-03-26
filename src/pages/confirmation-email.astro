@@ -1,0 +1,150 @@
+---
+import Layout from "../layouts/Layout-login.astro";
+
+import shapesLeft from "../assets/login-page/shapes-left.svg";
+import shapesRight from "../assets/login-page/shapes-right.svg";
+import logo from "../assets/logo-kiwanis-full.svg";
+import backArrow from "../assets/back-arrow.svg";
+import lockIcon from "../assets/login-page/lock.svg";
+
+const token = Astro.url.searchParams.get("token") ?? "";
+let serverMessage = "";
+let success = false;
+
+const isPostForm =
+  Astro.request.method === "POST" &&
+  Astro.request.headers.get("content-type")?.includes("form");
+
+if (isPostForm) {
+  try {
+    const data = await Astro.request.formData();
+    const postedToken = data.get("token")?.toString() ?? "";
+    const password = data.get("password")?.toString() ?? "";
+
+    if (!postedToken || !password) {
+      throw new Error("missing_data");
+    }
+
+    await Astro.locals.pb.collection("users").confirmEmailChange(postedToken, password);
+    success = true;
+    serverMessage = "Votre changement d'adresse e-mail a bien été confirmé. Vous pouvez maintenant vous connecter avec votre nouvelle adresse.";
+  } catch (error) {
+    serverMessage =
+      "La confirmation du changement d'adresse e-mail a échoué. Vérifiez le lien reçu et votre mot de passe.";
+  }
+}
+---
+
+<Layout robots="noindex,nofollow">
+  <div
+    class="absolute top-8 left-8 flex items-center text-white hover:underline z-10"
+  >
+    <img src={backArrow.src} alt="" loading="eager" aria-hidden="true" decoding="async" />
+    <a href="/connexion" class="text-white ml-2">Retour à la connexion</a>
+  </div>
+
+  <img
+    src={shapesLeft.src}
+    alt=""
+    loading="eager"
+    aria-hidden="true"
+    class="absolute left-0 bottom-0 w-[50dvw] lg:w-[25dvw] select-none"
+    draggable="false"
+    decoding="async"
+  />
+  <img
+    src={shapesRight.src}
+    alt=""
+    loading="eager"
+    aria-hidden="true"
+    class="absolute right-0 top-0 w-[70dvw] md:w-[50dvw] lg:w-[40dvw] select-none"
+    draggable="false"
+    decoding="async"
+  />
+
+  <div
+    class="absolute -translate-x-1/2 -translate-y-1/2 left-1/2 top-1/2 flex flex-col lg:flex-row gap-4 md:gap-16 justify-center items-center z-10"
+  >
+    <img
+      src={logo.src}
+      alt="Logo Kiwanis Pays de Montbéliard"
+      class="block md:w-[30dvw] lg:w-[15dvw] aspect-square object-contain"
+    />
+
+    <div class="w-fit min-w-[70dvw] md:min-w-[60dvw] lg:min-w-[24dvw] lg:max-w-[60dvw]">
+      <div
+        id="email-change-flags"
+        data-success={String(success)}
+        data-message={serverMessage}
+        class="hidden"
+      ></div>
+
+      <div class="mb-6 text-white">
+        <h1 class="text-3xl font-bold">Confirmer le changement d'e-mail</h1>
+        <p class="mt-3 text-sm text-white/80">
+          Saisissez votre mot de passe pour valider la nouvelle adresse.
+        </p>
+      </div>
+
+      {
+        token ? (
+          <form method="POST" class="flex flex-col w-full relative">
+            <input type="hidden" name="token" value={token} />
+            <div class="relative my-2">
+              <img
+                src={lockIcon.src}
+                alt=""
+                loading="eager"
+                class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 opacity-70"
+                decoding="async"
+              />
+              <input
+                type="password"
+                name="password"
+                placeholder="Mot de passe actuel"
+                class="input input-bordered w-full pl-10 bg-transparent border-gray-200 text-gray-200"
+                required
+              />
+            </div>
+
+            <button
+              class="btn btn-primary rounded-lg! bg-white text-primary w-full mt-4 lg:mt-8"
+            >
+              Confirmer l'e-mail
+            </button>
+          </form>
+        ) : (
+          <p class="text-white/90">
+            Le lien est incomplet : le token de confirmation est manquant.
+          </p>
+        )
+      }
+
+      {
+        success && (
+          <a href="/connexion?emailChanged=true" class="btn btn-outline mt-6 border-white text-white hover:bg-white hover:text-primary">
+            Aller à la connexion
+          </a>
+        )
+      }
+    </div>
+  </div>
+</Layout>
+
+<script>
+  import { showAlert } from "../utils/alerts";
+
+  const flags = document.getElementById("email-change-flags");
+
+  if (flags instanceof HTMLElement) {
+    const success = flags.dataset.success === "true";
+    const message = flags.dataset.message || "";
+
+    if (message) {
+      showAlert({
+        message,
+        type: success ? "success" : "error",
+      });
+    }
+  }
+</script>

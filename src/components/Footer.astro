@@ -1,44 +1,11 @@
 ---
 import logo from "../assets/logo.svg";
 import DiagArrow from "./DiagArrow.astro";
-import { Collections, MembresRoleOptions, type MembresResponse, type UsersResponse } from "../pocketbase-types";
+import { getPresidentPhoneNumber } from "../utils/presidentPhone";
 
 const facebookUrl = "https://www.facebook.com/Kiwaniennes25/";
 const contactEmail = "kiwanisfeminin.montbeliard@gmail.com";
-let presidentPhoneNumber: string | null = null;
-
-// Récupérer le président/présidente et son numéro de téléphone
-try {
-  const president = await Astro.locals.pb
-    .collection(Collections.Membres)
-    .getFirstListItem<MembresResponse>(
-      `role = "${MembresRoleOptions.président}" || role = "${MembresRoleOptions.présidente}"`,
-      { expand: "utilisateur" }
-    );
-  
-  if (president && president.utilisateur) {
-    // Récupérer l'utilisateur associé
-    let user: UsersResponse | null = null;
-    
-    // Si l'expansion a fonctionné
-    const expandedUser = (president as any)?.expand?.utilisateur;
-    if (expandedUser) {
-      user = expandedUser;
-    } else {
-      // Sinon, récupérer l'utilisateur directement
-      user = await Astro.locals.pb
-        .collection(Collections.Users)
-        .getOne<UsersResponse>(president.utilisateur);
-    }
-    
-    if (user && user.numero_telephone) {
-      presidentPhoneNumber = user.numero_telephone;
-    }
-  }
-} catch (error) {
-  // Si pas de président trouvé ou erreur, on continue sans le numéro
-  console.error("Erreur lors de la récupération du numéro du président:", error);
-}
+const presidentPhoneNumber = await getPresidentPhoneNumber(Astro.locals.pb);
 ---
 
 <footer
@@ -188,13 +155,6 @@ try {
 
         <div class="flex flex-col gap-3 items-end">
           <div class="flex gap-3 md:gap-2 lg:gap-2 items-center shrink-0 flex-wrap justify-end md:justify-end lg:justify-end">
-            <button
-              type="button"
-              class="px-3 py-1.5 border border-white/30 rounded-full text-white font-sans text-xs font-normal leading-[1.3] md:leading-[1.3] lg:leading-tight tracking-wide whitespace-nowrap hover:bg-white/10 transition-colors duration-300"
-              data-open-cookie-settings="customize"
-            >
-              Gérer mes cookies
-            </button>
             <a
               href={facebookUrl}
               target="_blank"

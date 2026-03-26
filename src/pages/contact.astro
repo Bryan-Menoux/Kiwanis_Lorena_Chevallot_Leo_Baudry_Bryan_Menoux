@@ -2,45 +2,13 @@
 import Layout from "../layouts/Layout.astro";
 import DiagArrow from "../components/DiagArrow.astro";
 import shapes from "../assets/contact/shapes.svg";
-import { Collections, MembresRoleOptions, type MembresResponse, type UsersResponse } from "../pocketbase-types";
+import { getPresidentPhoneNumber } from "../utils/presidentPhone";
+import { sendContactEmails } from "../utils/contactMail";
 
 const contactEmail = "kiwanisfeminin.montbeliard@gmail.com";
 let contactTelephone = "06 49 72 92 58";
 let contactTelHref = "tel:+33649729258";
-let presidentPhoneNumber: string | null = null;
-
-// Récupérer le président/présidente et son numéro de téléphone
-try {
-  const president = await Astro.locals.pb
-    .collection(Collections.Membres)
-    .getFirstListItem<MembresResponse>(
-      `role = "${MembresRoleOptions.président}" || role = "${MembresRoleOptions.présidente}"`,
-      { expand: "utilisateur" }
-    );
-  
-  if (president && president.utilisateur) {
-    // Récupérer l'utilisateur associé
-    let user: UsersResponse | null = null;
-    
-    // Si l'expansion a fonctionné
-    const expandedUser = (president as any)?.expand?.utilisateur;
-    if (expandedUser) {
-      user = expandedUser;
-    } else {
-      // Sinon, récupérer l'utilisateur directement
-      user = await Astro.locals.pb
-        .collection(Collections.Users)
-        .getOne<UsersResponse>(president.utilisateur);
-    }
-    
-    if (user && user.numero_telephone) {
-      presidentPhoneNumber = user.numero_telephone;
-    }
-  }
-} catch (error) {
-  // Si pas de président trouvé ou erreur, on continue sans le numéro
-  console.error("Erreur lors de la récupération du numéro du président:", error);
-}
+const presidentPhoneNumber = await getPresidentPhoneNumber(Astro.locals.pb);
 
 const contactAddress = "76 bis faubourg de Besançon, 25200 Montbéliard";
 const facebookUrl = "https://www.facebook.com/Kiwaniennes25/";
@@ -132,6 +100,8 @@ if (Astro.request.method === "POST") {
     const email = formData.get("email")?.toString().trim() ?? "";
     const telephone = formData.get("telephone")?.toString().trim() ?? "";
     const message = formData.get("message")?.toString().trim() ?? "";
+    const resendConsentAccepted =
+      formData.get("resend_consent")?.toString().trim() === "accepted";
     const photos = formData
       .getAll("photos")
       .filter(
@@ -141,7 +111,10 @@ if (Astro.request.method === "POST") {
           entry.type.startsWith("image/"),
       );
 
-    if (!email && !telephone) {
+    if (!resendConsentAccepted) {
+      errorMessage =
+        "Veuillez accepter le traitement de vos données par notre prestataire d'envoi d'e-mails avant l'envoi.";
+    } else if (!email && !telephone) {
       errorMessage = "Veuillez renseigner un email ou un numéro de téléphone.";
     } else {
       if (photos.length > MAX_CONTACT_PHOTOS) {
@@ -174,7 +147,17 @@ if (Astro.request.method === "POST") {
         }
       }
 
-      await createContactRecord(payload, Astro.locals.pb);
+      const createdRecord = await createContactRecord(payload, Astro.locals.pb);
+      await sendContactEmails({
+        prenom,
+        nom,
+        email,
+        telephone: normalizedTelephone,
+        message,
+        photos: Array.isArray(createdRecord?.photos) ? createdRecord.photos : [],
+        id: createdRecord?.id,
+        collectionId: createdRecord?.collectionId,
+      });
       successMessage = "Votre message a bien été envoyé. Nous vous répondrons rapidement !";
     }
   } catch (err: unknown) {
@@ -339,6 +322,27 @@ if (Astro.request.method === "POST") {
             <p data-photo-error class="hidden text-xs text-error"></p>
             <ul data-photo-list class="grid grid-cols-1 gap-2 lg:grid-cols-2"></ul>
           </label>
+
+          <div class="rounded-box border border-base-300/70 bg-base-200/50 p-4">
+            <label class="flex items-start gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                name="resend_consent"
+                value="accepted"
+                class="checkbox checkbox-accent mt-0.5"
+                required
+              />
+              <span class="text-sm text-base-content/75 leading-6">
+                J'accepte que les données de ce formulaire soient traitées pour l'envoi de mon message, y compris via notre prestataire tiers d'acheminement d'e-mails.
+                <a
+                  href="/mentions-legales#traitement-contact-resend"
+                  class="link link-hover text-accent font-medium"
+                >
+                  En savoir plus
+                </a>.
+              </span>
+            </label>
+          </div>
 
           <div class="flex justify-end">
             <button type="submit" class="btn btn-accent w-full md:w-fit px-8">

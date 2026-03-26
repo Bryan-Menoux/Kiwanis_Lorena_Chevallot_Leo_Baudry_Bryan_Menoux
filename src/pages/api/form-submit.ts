@@ -72,6 +72,14 @@ export const POST: APIRoute = async ({ locals, request }) => {
     }
   };
 
+  const cloneFile = async (file: File) => {
+    const fileBuffer = await file.arrayBuffer();
+    return new File([fileBuffer], file.name, {
+      type: file.type || "application/octet-stream",
+      lastModified: file.lastModified,
+    });
+  };
+
   const downloadAvatarFileForMember = async (memberUser: UsersResponse) => {
     const sourceAvatarFileName = getAvatarFileName(memberUser.avatar);
     if (!sourceAvatarFileName) {
@@ -117,10 +125,23 @@ export const POST: APIRoute = async ({ locals, request }) => {
   const upsertMemberRecord = async (
     memberUserId: string,
     role: MembresRoleOptions,
+    options?: {
+      avatarFile?: File;
+    },
   ) => {
     const memberUser = await getMemberUser(memberUserId);
     const existingRecord = await findExistingMemberRecord(memberUserId);
-    const { sourceAvatarFileName, avatarFile } = await downloadAvatarFileForMember(memberUser);
+    let sourceAvatarFileName = "";
+    let avatarFile: File | null = null;
+
+    if (options?.avatarFile instanceof File && options.avatarFile.size > 0) {
+      sourceAvatarFileName = options.avatarFile.name;
+      avatarFile = await cloneFile(options.avatarFile);
+    } else {
+      const downloadedAvatar = await downloadAvatarFileForMember(memberUser);
+      sourceAvatarFileName = downloadedAvatar.sourceAvatarFileName;
+      avatarFile = downloadedAvatar.avatarFile;
+    }
 
     const memberPayload: Record<string, unknown> = {
       utilisateur: memberUser.id,
@@ -187,6 +208,7 @@ export const POST: APIRoute = async ({ locals, request }) => {
         
         const name = `${firstName} ${lastName}`.trim();
         const capitalizedName = capitalizeName(name);
+        const requestedEmail = typeof email === 'string' ? email.trim() : '';
 
         if (oldPassword || newPassword || newPasswordConfirm) {
           if (newPassword !== newPasswordConfirm) {
@@ -199,16 +221,6 @@ export const POST: APIRoute = async ({ locals, request }) => {
 
         const updateData: any = {};
         if (capitalizedName) updateData.name = capitalizedName;
-        if (email && email.trim()) {
-          // Seul un admin peut modifier l'email
-          if (!currentUser.administrateur) {
-            return new Response(
-              JSON.stringify({ success: false, error: 'Seul un administrateur peut modifier l\'adresse e-mail' }),
-              { status: 403, headers: { 'Content-Type': 'application/json' } }
-            );
-          }
-          updateData.email = email.trim();
-        }
         if (oldPassword && newPassword) {
           updateData.oldPassword = oldPassword;
           updateData.password = newPassword;
@@ -232,10 +244,16 @@ export const POST: APIRoute = async ({ locals, request }) => {
         }
 
         // Vérifier si l'email ou le mot de passe a changé
-        const emailChanged = email && email.trim() !== currentUser.email;
+        const emailChanged = requestedEmail.length > 0 && requestedEmail !== currentUser.email;
         const passwordChanged = oldPassword && newPassword;
 
-        await locals.pb.collection("users").update(currentUser.id, updateData);
+        if (Object.keys(updateData).length > 0) {
+          await locals.pb.collection("users").update(currentUser.id, updateData);
+        }
+
+        if (emailChanged) {
+          await locals.pb.collection("users").requestEmailChange(requestedEmail);
+        }
 
         try {
           const existingMember = await findExistingMemberRecord(currentUser.id);
@@ -243,14 +261,18 @@ export const POST: APIRoute = async ({ locals, request }) => {
             await upsertMemberRecord(
               currentUser.id,
               existingMember.role || MembresRoleOptions.membre,
+              avatar instanceof File && avatar.size > 0
+                ? { avatarFile: avatar }
+                : undefined,
             );
           }
         } catch (memberSyncError) {
           console.error("Impossible de synchroniser le membre après mise à jour du profil:", memberSyncError);
         }
 
-        // Si l'email ou le mot de passe a changé, déconnecter l'utilisateur
-        const shouldLogout = emailChanged || passwordChanged;
+        // Le changement d'e-mail passe par une confirmation dédiée PocketBase.
+        // Seul un changement de mot de passe force une reconnexion.
+        const shouldLogout = Boolean(passwordChanged);
         if (shouldLogout) {
           locals.pb.authStore.clear();
         }
@@ -259,8 +281,10 @@ export const POST: APIRoute = async ({ locals, request }) => {
           JSON.stringify({ 
             success: true, 
             name: capitalizedName, 
-            email: updateData.email || currentUser.email,
-            message: 'Profil mis à jour avec succès',
+            email: currentUser.email,
+            message: emailChanged
+              ? 'Profil mis à jour. Un e-mail de confirmation a été envoyé à votre nouvelle adresse.'
+              : 'Profil mis à jour avec succès',
             logout: shouldLogout
           }),
           { status: 200, headers: { 'Content-Type': 'application/json' } }
@@ -391,6 +415,9 @@ export const POST: APIRoute = async ({ locals, request }) => {
             await upsertMemberRecord(
               modUserId,
               existingMember.role || MembresRoleOptions.membre,
+              modAvatar instanceof File && modAvatar.size > 0
+                ? { avatarFile: modAvatar }
+                : undefined,
             );
           }
         } catch (memberSyncError) {
