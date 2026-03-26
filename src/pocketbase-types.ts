@@ -280,6 +280,7 @@ export type UsersRecord = {
 	genre?: UsersGenreOptions
 	id: string
 	name?: string
+	numero_telephone?: string
 	password: string
 	rejected?: boolean
 	rejectedBy?: RecordIdString

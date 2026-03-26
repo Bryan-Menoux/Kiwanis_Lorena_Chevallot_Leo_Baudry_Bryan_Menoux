@@ -181,6 +181,7 @@ export const POST: APIRoute = async ({ locals, request }) => {
           newPassword,
           newPasswordConfirm,
           genre,
+          numero_telephone,
           avatar,
         } = formData;
         
@@ -215,6 +216,9 @@ export const POST: APIRoute = async ({ locals, request }) => {
         }
         if (genre === UsersGenreOptions.homme || genre === UsersGenreOptions.femme) {
           updateData.genre = genre;
+        }
+        if (numero_telephone && typeof numero_telephone === 'string') {
+          updateData.numero_telephone = numero_telephone.trim();
         }
         if (avatar instanceof File && avatar.size > 0) {
           updateData.avatar = avatar;

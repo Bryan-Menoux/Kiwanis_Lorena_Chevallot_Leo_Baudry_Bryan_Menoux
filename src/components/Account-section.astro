@@ -159,6 +159,21 @@ const { firstName, lastName } = splitUserName(user!.name);
             </select>
           </div>
 
+          <!-- Champ numéro de téléphone -->
+          <div class="form-control w-full mt-6">
+            <label class="label pb-2">
+              <span class="label-text font-semibold text-base-content">Numéro de téléphone</span>
+            </label>
+            <input
+              type="tel"
+              id="numero_telephone"
+              name="numero_telephone"
+              class="input input-bordered w-full"
+              placeholder="Votre numéro de téléphone"
+              value={user?.numero_telephone || ""}
+            />
+          </div>
+
           <!-- Champ email -->
           <div class="form-control w-full mt-6">
             <label class="label pb-2">
@@ -354,6 +369,7 @@ const { firstName, lastName } = splitUserName(user!.name);
         const lastName = (formData.get("lastName") as string) || "";
         const genre = (formData.get("genre") as string) || "";
         const email = (formData.get("email") as string) || "";
+        const numeroTelephone = (formData.get("numero_telephone") as string) || "";
         const oldPassword = (formData.get("oldPassword") as string) || "";
         const newPassword = (formData.get("newPassword") as string) || "";
         const newPasswordConfirm =
@@ -398,6 +414,7 @@ const { firstName, lastName } = splitUserName(user!.name);
           payload.set("lastName", lastName);
           payload.set("email", email);
           payload.set("genre", genre);
+          payload.set("numero_telephone", numeroTelephone);
           payload.set("oldPassword", oldPassword);
           payload.set("newPassword", newPassword);
           payload.set("newPasswordConfirm", newPasswordConfirm);

@@ -1,9 +1,44 @@
 ---
 import logo from "../assets/logo.svg";
 import DiagArrow from "./DiagArrow.astro";
+import { Collections, MembresRoleOptions, type MembresResponse, type UsersResponse } from "../pocketbase-types";
 
 const facebookUrl = "https://www.facebook.com/Kiwaniennes25/";
 const contactEmail = "kiwanisfeminin.montbeliard@gmail.com";
+let presidentPhoneNumber: string | null = null;
+
+// Récupérer le président/présidente et son numéro de téléphone
+try {
+  const president = await Astro.locals.pb
+    .collection(Collections.Membres)
+    .getFirstListItem<MembresResponse>(
+      `role = "${MembresRoleOptions.président}" || role = "${MembresRoleOptions.présidente}"`,
+      { expand: "utilisateur" }
+    );
+  
+  if (president && president.utilisateur) {
+    // Récupérer l'utilisateur associé
+    let user: UsersResponse | null = null;
+    
+    // Si l'expansion a fonctionné
+    const expandedUser = (president as any)?.expand?.utilisateur;
+    if (expandedUser) {
+      user = expandedUser;
+    } else {
+      // Sinon, récupérer l'utilisateur directement
+      user = await Astro.locals.pb
+        .collection(Collections.Users)
+        .getOne<UsersResponse>(president.utilisateur);
+    }
+    
+    if (user && user.numero_telephone) {
+      presidentPhoneNumber = user.numero_telephone;
+    }
+  }
+} catch (error) {
+  // Si pas de président trouvé ou erreur, on continue sans le numéro
+  console.error("Erreur lors de la récupération du numéro du président:", error);
+}
 ---
 
 <footer
@@ -134,12 +169,14 @@ const contactEmail = "kiwanisfeminin.montbeliard@gmail.com";
             Contactez-nous
           </p>
           <div class="flex flex-col gap-3 md:gap-1 lg:gap-0.5">
-            <a
-              href="tel:+33684523650"
-              class="text-white font-sans text-sm font-normal leading-[1.4] lg:leading-tight tracking-wide hover:opacity-70 transition-opacity"
-            >
-              06 84 52 36 50
-            </a>
+            {presidentPhoneNumber && (
+              <a
+                href={`tel:+33${presidentPhoneNumber.replace(/\s/g, '').replace(/^0/, '')}`}
+                class="text-white font-sans text-sm font-normal leading-[1.4] lg:leading-tight tracking-wide hover:opacity-70 transition-opacity"
+              >
+                {presidentPhoneNumber}
+              </a>
+            )}
             <a
               href={`mailto:${contactEmail}`}
               class="text-white font-sans text-xs font-normal leading-[1.4] lg:leading-tight tracking-wide hover:opacity-70 transition-opacity break-all md:break-normal"
