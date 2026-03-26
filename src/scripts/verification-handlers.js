@@ -200,6 +200,37 @@ async function reloadUserLists() {
       
       // Mise à jour des badges
       updateBadges();
+      
+      // Recharger aussi la section des modifications si elle existe
+      const carouselContainer = document.querySelector(".carousel-container");
+      if (carouselContainer) {
+        try {
+          const modResponse = await fetch(window.location.pathname);
+          if (modResponse.ok) {
+            const modHtml = await modResponse.text();
+            const modParser = new DOMParser();
+            const modDoc = modParser.parseFromString(modHtml, "text/html");
+            
+            const newCarouselContainer = modDoc.querySelector(".carousel-container");
+            if (newCarouselContainer) {
+              const oldCarouselContainer = document.querySelector(".carousel-container");
+              if (oldCarouselContainer) {
+                oldCarouselContainer.replaceWith(newCarouselContainer);
+                
+                // Réinitialiser le gestionnaire de modifications
+                try {
+                  const { initModifications } = await import("./modification-handlers.js");
+                  initModifications();
+                } catch (modError) {
+                  console.error("Erreur lors de la réinitialisation du module modifications:", modError);
+                }
+              }
+            }
+          }
+        } catch (modError) {
+          console.error("Erreur lors du rechargement de la section modifications:", modError);
+        }
+      }
     }
   } catch (error) {
     console.error("Erreur lors du rechargement:", error);

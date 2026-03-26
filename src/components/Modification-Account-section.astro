@@ -38,10 +38,8 @@ const isPresidentOrPresidente = [
 
 let users: any[] = [];
 if (isAdmin) {
-  // Récupérer tous les utilisateurs vérifiés
-  users = await Astro.locals.pb.collection("users").getFullList({
-    filter: "verified = true && rejected = false",
-  });
+  // Récupérer tous les utilisateurs
+  users = await Astro.locals.pb.collection("users").getFullList();
 }
 
 const perPage = 6;

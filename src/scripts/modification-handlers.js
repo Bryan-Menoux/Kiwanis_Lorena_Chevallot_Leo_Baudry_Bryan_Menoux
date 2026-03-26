@@ -321,11 +321,51 @@ export function initModifications() {
     const searchHandler = () => {
       const query = userSearchInput.value.toLowerCase();
       const cards = document.querySelectorAll(".user-card");
-      cards.forEach((card) => {
+      let visibleCount = 0;
+      let firstVisibleSlideIndex = -1;
+      
+      cards.forEach((card, index) => {
         const name = (card.querySelector("h3")?.textContent || "").toLowerCase();
         const email = (card.querySelector("p")?.textContent || "").toLowerCase();
-        card.style.display = name.includes(query) || email.includes(query) ? "" : "none";
+        const isVisible = name.includes(query) || email.includes(query);
+        card.style.display = isVisible ? "" : "none";
+        if (isVisible) {
+          visibleCount++;
+          // Trouver la première slide qui contient une carte visible
+          if (firstVisibleSlideIndex === -1) {
+            const slide = card.closest(".carousel-slide");
+            if (slide) {
+              const parent = slide.parentElement;
+              const slides = Array.from(parent?.children || []);
+              firstVisibleSlideIndex = slides.indexOf(slide);
+            }
+          }
+        }
       });
+      
+      // Si on a des résultats de recherche, aller à la première page avec un résultat
+      if (query !== "" && firstVisibleSlideIndex >= 0) {
+        goToPage(firstVisibleSlideIndex);
+      } else if (query === "") {
+        // Si la recherche est vidée, revenir à la première page
+        goToPage(0);
+      }
+      
+      // Gérer la pagination en fonction des résultats de recherche
+      const paginationControls = document.querySelector(".flex.justify-center.items-center.gap-4.mt-8");
+      if (paginationControls) {
+        // Si la recherche est vide (pas de filtre), montrer la pagination normalement
+        if (query === "") {
+          paginationControls.style.display = "";
+        } else {
+          // Si la recherche a 6 résultats ou moins, masquer la pagination
+          if (visibleCount <= 6) {
+            paginationControls.style.display = "none";
+          } else {
+            paginationControls.style.display = "";
+          }
+        }
+      }
     };
 
     window._modificationSearchHandler = searchHandler;
