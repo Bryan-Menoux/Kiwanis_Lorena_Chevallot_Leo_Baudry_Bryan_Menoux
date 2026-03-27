@@ -1,5 +1,6 @@
 import { showAlert } from "../utils/alerts";
 import { scrollToTarget } from "../utils/scroll.js";
+import { normalizeSearchTerm } from "../utils/searchNormalization";
 
 // Initialisation des compteurs de vérification
 // Les compteurs sont maintenant calculés à la volée depuis le DOM
@@ -99,7 +100,7 @@ function normalizeVerificationError(errorMessage) {
   if (detail.startsWith("HTTP ")) {
     return `le serveur a répondu ${detail}`;
   }
-  if (detail.toLowerCase().includes("réseau")) {
+  if (normalizeSearchTerm(detail).includes("reseau")) {
     return "problème de connexion réseau";
   }
   return detail;
@@ -621,8 +622,8 @@ function applySearchFilter(listId) {
   
   // Filtrer selon la requête stockée
   const filteredCards = allCards.filter(card => {
-    const text = card.textContent?.toLowerCase() || "";
-    return text.includes(state.query.toLowerCase());
+    const text = normalizeSearchTerm(card.textContent || "");
+    return text.includes(normalizeSearchTerm(state.query));
   });
   
   // Mettre à jour l'état
@@ -630,8 +631,8 @@ function applySearchFilter(listId) {
   
   // Appliquer la visibilité
   allCards.forEach(card => {
-    const text = card.textContent?.toLowerCase() || "";
-    if (text.includes(state.query.toLowerCase())) {
+    const text = normalizeSearchTerm(card.textContent || "");
+    if (text.includes(normalizeSearchTerm(state.query))) {
       card.style.display = "";
     } else {
       card.style.display = "none";
@@ -643,7 +644,8 @@ function applySearchFilter(listId) {
 // Met en place la fonctionnalité de recherche pour filtrer les cartes utilisateur
 function setupSearch(searchInputId, listId) {
   const searchInput = document.getElementById(searchInputId);
-  if (!searchInput) return;
+  const applyButton = document.getElementById(`${searchInputId}-apply`);
+  if (!searchInput || !(applyButton instanceof HTMLButtonElement)) return;
 
   // Évite l'attachement multiple
   if (searchInput.hasAttribute('data-search-attached')) return;
@@ -656,8 +658,8 @@ function setupSearch(searchInputId, listId) {
   }
 
   // Gestionnaire d'événements pour la saisie dans le champ de recherche
-  searchInput.addEventListener("input", () => {
-    const query = searchInput.value.toLowerCase();
+  applyButton.addEventListener("click", () => {
+    const query = normalizeSearchTerm(searchInput.value);
     const list = document.getElementById(listId);
     if (!list) return;
 
@@ -685,7 +687,7 @@ function setupSearch(searchInputId, listId) {
     } else {
       // Filtrer les cartes selon la requête
       const filteredCards = allCards.filter(card => {
-        const text = card.textContent?.toLowerCase() || "";
+        const text = normalizeSearchTerm(card.textContent || "");
         return text.includes(query);
       });
 
@@ -694,7 +696,7 @@ function setupSearch(searchInputId, listId) {
 
       // Appliquer la visibilité sur les cartes originales
       allCards.forEach(card => {
-        const text = card.textContent?.toLowerCase() || "";
+        const text = normalizeSearchTerm(card.textContent || "");
         card.style.display = text.includes(query) ? "" : "none";
       });
 

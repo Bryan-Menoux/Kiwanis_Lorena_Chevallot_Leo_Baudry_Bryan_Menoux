@@ -4,6 +4,7 @@ interface Props {
   pageSize?: number;
   class?: string;
   searchInputId?: string;
+  applyButtonId?: string;
   searchAttr?: string;
   beneficiaryAttr?: string;
   yearAttr?: string;
@@ -18,6 +19,7 @@ const {
   pageSize = 6,
   class: className = "mt-6",
   searchInputId = "",
+  applyButtonId = "",
   searchAttr = "data-search",
   beneficiaryAttr = "",
   yearAttr = "",
@@ -34,6 +36,7 @@ const {
   data-item-attr={itemAttr}
   data-page-size={pageSize}
   data-search-input-id={searchInputId}
+  data-apply-button-id={applyButtonId}
   data-search-attr={searchAttr}
   data-beneficiary-attr={beneficiaryAttr}
   data-year-attr={yearAttr}
@@ -49,6 +52,7 @@ const {
     renderPagination,
     resolveNextPage,
   } from "../utils/renderPagination";
+  import { normalizeSearchTerm } from "../utils/searchNormalization";
   import { scrollToTarget } from "../utils/scroll.js";
 
   function getPaginatorScrollOffset() {
@@ -74,6 +78,7 @@ const {
         ? Math.floor(parsedPageSize)
         : 6;
     const searchInputId = root.dataset.searchInputId || "";
+    const applyButtonId = root.dataset.applyButtonId || "";
     const searchAttr = root.dataset.searchAttr || "data-search";
     const beneficiaryAttr = root.dataset.beneficiaryAttr || "";
     const yearAttr = root.dataset.yearAttr || "";
@@ -90,6 +95,9 @@ const {
       );
     const searchInput = searchInputId
       ? document.getElementById(searchInputId)
+      : null;
+    const applyButton = applyButtonId
+      ? document.getElementById(applyButtonId)
       : null;
     const sortSelect = sortSelectId
       ? document.getElementById(sortSelectId)
@@ -116,25 +124,22 @@ const {
 
     const getFilteredItems = () => {
       const items = getItems();
-      const query =
-        searchInput instanceof HTMLInputElement
-          ? searchInput.value.trim().toLowerCase()
-          : currentSearch;
+      const query = currentSearch;
       const beneficiaryQuery = currentBeneficiary;
       const yearQuery = currentYear;
       const typeQuery = currentType;
 
       const filtered = items.filter((item) => {
-        const searchValue = (item.getAttribute(searchAttr) || "").toLowerCase();
+        const searchValue = normalizeSearchTerm(item.getAttribute(searchAttr) || "");
         const beneficiaryValue = beneficiaryAttr
-          ? (item.getAttribute(beneficiaryAttr) || "").toLowerCase()
+          ? normalizeSearchTerm(item.getAttribute(beneficiaryAttr) || "")
           : "";
         const yearValue = yearAttr ? (item.getAttribute(yearAttr) || "") : "";
         const typeValue = typeAttr
           ? String(item.getAttribute(typeAttr) || "")
               .toLowerCase()
               .split("||")
-              .map((value) => value.trim())
+              .map((value) => normalizeSearchTerm(value))
               .filter(Boolean)
           : [];
 
@@ -223,9 +228,12 @@ const {
       }
     });
 
-    if (searchInput instanceof HTMLInputElement) {
-      searchInput.addEventListener("input", () => {
-        currentSearch = searchInput.value.trim().toLowerCase();
+    if (
+      searchInput instanceof HTMLInputElement &&
+      applyButton instanceof HTMLButtonElement
+    ) {
+      applyButton.addEventListener("click", () => {
+        currentSearch = normalizeSearchTerm(searchInput.value);
         page = 1;
         render();
       });
@@ -247,10 +255,10 @@ const {
           type?: string;
         }>).detail || {};
 
-        currentSearch = (detail.search || "").toLowerCase().trim();
-        currentBeneficiary = (detail.beneficiary || "").toLowerCase().trim();
+        currentSearch = normalizeSearchTerm(detail.search || "");
+        currentBeneficiary = normalizeSearchTerm(detail.beneficiary || "");
         currentYear = (detail.year || "").trim();
-        currentType = (detail.type || "").toLowerCase().trim();
+        currentType = normalizeSearchTerm(detail.type || "");
         page = 1;
         render();
       });

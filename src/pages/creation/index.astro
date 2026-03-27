@@ -11,6 +11,7 @@ import {
   mapCreationDashboardPages,
   type CreationDashboardPage,
 } from "../../services/creationDashboard";
+import { normalizeSearchTerm } from "../../utils/searchNormalization";
 
 const currentUser = Astro.locals.pb.authStore.model;
 const isAdmin = currentUser?.administrateur === true;
@@ -67,10 +68,10 @@ const status = params.get('status') || 'all';
 let list = pages.slice();
 if (status && status !== 'all') list = list.filter(p => p.status === status);
 if (q) {
-  const token = q.toLowerCase();
+  const token = normalizeSearchTerm(q);
   list = list.filter((p) =>
-    String(p.title || "").toLowerCase().includes(token) ||
-    String(p.slug || "").toLowerCase().includes(token),
+    normalizeSearchTerm(p.title || "").includes(token) ||
+    normalizeSearchTerm(p.slug || "").includes(token),
   );
 }
 // tri par updatedAt desc
@@ -313,6 +314,8 @@ if (Astro.request.method === "POST") {
   };
 </script>
 <script define:vars={{ allPages, q, status }}>
+  import { normalizeSearchTerm } from "../../utils/searchNormalization";
+
   // Données et fonctions utilitaires
   const pages = allPages;
   let currentSearch = q;
@@ -423,18 +426,20 @@ if (Astro.request.method === "POST") {
 
     // Filtre par recherche
     if (search) {
-      const token = search.toLowerCase();
-      filtered = filtered.filter(p =>
-        p.title.toLowerCase().includes(token) ||
-        p.slug.toLowerCase().includes(token)
+      const token = normalizeSearchTerm(search);
+      filtered = filtered.filter((p) =>
+        normalizeSearchTerm(p.title).includes(token) ||
+        normalizeSearchTerm(p.slug).includes(token),
       );
     }
 
     // Filtre par bénéficiaire (seulement pour les actions)
     if (benef) {
-      const benefToken = benef.toLowerCase();
-      filtered = filtered.filter(p =>
-        p.status === 'actions' && (p.beneficiary || '').toLowerCase().includes(benefToken)
+      const benefToken = normalizeSearchTerm(benef);
+      filtered = filtered.filter(
+        (p) =>
+          p.status === 'actions' &&
+          normalizeSearchTerm(p.beneficiary || '').includes(benefToken),
       );
     }
 

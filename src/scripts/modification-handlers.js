@@ -1,5 +1,6 @@
 import { showAlert, showConfirm } from "../utils/alerts";
 import { scrollToTarget } from "../utils/scroll.js";
+import { normalizeSearchTerm } from "../utils/searchNormalization";
 
 // Gestionnaires pour la section Modifications
 // Ce fichier permet de réinitialiser les écouteurs d'événements après un rechargement dynamique.
@@ -313,20 +314,24 @@ export function initModifications() {
   }
 
   const userSearchInput = document.getElementById("user-search");
+  const userSearchApplyButton = document.getElementById("user-search-apply");
   if (userSearchInput instanceof HTMLInputElement) {
-    if (window._modificationSearchHandler) {
-      userSearchInput.removeEventListener("input", window._modificationSearchHandler);
+    if (
+      userSearchApplyButton instanceof HTMLButtonElement &&
+      window._modificationSearchHandler
+    ) {
+      userSearchApplyButton.removeEventListener("click", window._modificationSearchHandler);
     }
 
     const searchHandler = () => {
-      const query = userSearchInput.value.toLowerCase();
+      const query = normalizeSearchTerm(userSearchInput.value);
       const cards = document.querySelectorAll(".user-card");
       let visibleCount = 0;
       let firstVisibleSlideIndex = -1;
       
       cards.forEach((card, index) => {
-        const name = (card.querySelector("h3")?.textContent || "").toLowerCase();
-        const email = (card.querySelector("p")?.textContent || "").toLowerCase();
+        const name = normalizeSearchTerm(card.querySelector("h3")?.textContent || "");
+        const email = normalizeSearchTerm(card.querySelector("p")?.textContent || "");
         const isVisible = name.includes(query) || email.includes(query);
         card.style.display = isVisible ? "" : "none";
         if (isVisible) {
@@ -369,7 +374,9 @@ export function initModifications() {
     };
 
     window._modificationSearchHandler = searchHandler;
-    userSearchInput.addEventListener("input", searchHandler);
+    if (userSearchApplyButton instanceof HTMLButtonElement) {
+      userSearchApplyButton.addEventListener("click", searchHandler);
+    }
   }
 
   const deleteBtn = document.getElementById("delete-btn");
@@ -442,4 +449,3 @@ export function initModifications() {
     updateButtons();
   }
 }
-

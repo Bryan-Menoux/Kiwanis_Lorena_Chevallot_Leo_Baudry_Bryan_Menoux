@@ -57,12 +57,17 @@ const verifiedUsers = users.filter((u: User) => u.verified === true);
         </h2>
 
         <search>
-          <input
-            type="text"
-            id="pending-search"
-            placeholder="Rechercher par nom ou email..."
-            class="input input-bordered input-primary w-full mb-4 focus:input-primary-focus"
-          />
+          <div class="flex flex-col gap-2 mb-4">
+            <input
+              type="text"
+              id="pending-search"
+              placeholder="Rechercher par nom ou email..."
+              class="input input-bordered input-primary w-full focus:input-primary-focus"
+            />
+            <button type="button" id="pending-search-apply" class="btn btn-accent w-fit">
+              Filtrer
+            </button>
+          </div>
         </search>
 
         <div class="space-y-4" id="pending-list">
@@ -92,12 +97,17 @@ const verifiedUsers = users.filter((u: User) => u.verified === true);
 
           <div class="collapse-content space-y-2" id="rejected-list">
             <search>
-              <input
-                type="text"
-                id="rejected-search"
-                placeholder="Rechercher par nom ou email..."
-                class="input input-bordered input-primary w-full my-4 focus:input-primary-focus"
-              />
+              <div class="flex flex-col gap-2 my-4">
+                <input
+                  type="text"
+                  id="rejected-search"
+                  placeholder="Rechercher par nom ou email..."
+                  class="input input-bordered input-primary w-full focus:input-primary-focus"
+                />
+                <button type="button" id="rejected-search-apply" class="btn btn-accent w-fit">
+                  Filtrer
+                </button>
+              </div>
             </search>
             {
               rejectedUsers.length > 0 ? (
@@ -160,12 +170,17 @@ const verifiedUsers = users.filter((u: User) => u.verified === true);
           </summary>
           <div class="collapse-content space-y-2" id="verified-list">
             <search>
-              <input
-                type="text"
-                id="verified-search"
-                placeholder="Rechercher par nom ou email..."
-                class="input input-bordered input-primary w-full my-4 ml-auto focus:input-primary-focus"
-              />
+              <div class="flex flex-col gap-2 my-4">
+                <input
+                  type="text"
+                  id="verified-search"
+                  placeholder="Rechercher par nom ou email..."
+                  class="input input-bordered input-primary w-full ml-auto focus:input-primary-focus"
+                />
+                <button type="button" id="verified-search-apply" class="btn btn-accent w-fit">
+                  Filtrer
+                </button>
+              </div>
             </search>
             {
               verifiedUsers.length > 0 ? (

@@ -1,5 +1,6 @@
 import { showAlert, showConfirm } from "./alerts";
 import { getTotalPages, renderPagination, resolveNextPage } from "./renderPagination";
+import { normalizeSearchTerm } from "./searchNormalization";
 
 export interface DeletePageConfig {
   flashFlagsSelector: string;
@@ -104,29 +105,25 @@ export function initDeletePageHandler(config: Partial<DeletePageConfig> = {}) {
   }
 
   function getFilteredCards(): HTMLElement[] {
-    const query = currentSearch ||
-      (searchInput instanceof HTMLInputElement ? searchInput.value : "")
-      .toLowerCase()
-      .trim();
+    const query = currentSearch;
 
     return allCards.filter((card) => {
-      const title = (card.getAttribute(cfg.dataTitleAttribute) || "").toLowerCase();
-      const beneficiary =
+      const title = normalizeSearchTerm(card.getAttribute(cfg.dataTitleAttribute) || "");
+      const beneficiary = normalizeSearchTerm(
         (card.getAttribute("data-beneficiary") ||
           card.querySelector<HTMLInputElement>('input[type="checkbox"][name="ids"]')?.dataset.beneficiary ||
-          "")
-          .toLowerCase();
+          ""),
+      );
       const types = String(
         card.getAttribute("data-types") ||
           card.querySelector<HTMLInputElement>('input[type="checkbox"][name="ids"]')?.dataset.types ||
           "",
       )
-        .toLowerCase()
         .split("||")
-        .map((value) => value.trim())
+        .map((value) => normalizeSearchTerm(value))
         .filter(Boolean);
-      const typeFilter = currentType.toLowerCase().trim();
-      const beneficiaryFilter = currentBeneficiary.toLowerCase().trim();
+      const typeFilter = normalizeSearchTerm(currentType);
+      const beneficiaryFilter = normalizeSearchTerm(currentBeneficiary);
 
       if (query && !title.includes(query)) return false;
       if (beneficiaryFilter && !beneficiary.includes(beneficiaryFilter)) return false;
@@ -331,23 +328,15 @@ export function initDeletePageHandler(config: Partial<DeletePageConfig> = {}) {
     }
   });
 
-  if (searchInput instanceof HTMLInputElement) {
-    searchInput.addEventListener("input", () => {
-      currentSearch = searchInput.value.trim().toLowerCase();
-      currentPage = 1;
-      updateView();
-    });
-  }
-
   document.addEventListener("actions-filter-change", (event) => {
     const custom = event as CustomEvent<{
       search?: string;
       beneficiary?: string;
       type?: string;
     }>;
-    currentSearch = (custom.detail?.search || "").toLowerCase().trim();
-    currentBeneficiary = (custom.detail?.beneficiary || "").toLowerCase().trim();
-    currentType = (custom.detail?.type || "").toLowerCase().trim();
+    currentSearch = normalizeSearchTerm(custom.detail?.search || "");
+    currentBeneficiary = normalizeSearchTerm(custom.detail?.beneficiary || "");
+    currentType = normalizeSearchTerm(custom.detail?.type || "");
     currentPage = 1;
     updateView();
   });

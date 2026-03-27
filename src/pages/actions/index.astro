@@ -16,6 +16,7 @@ import { getImage } from "astro:assets";
 import AdminEditBanner from "../../components/AdminEditBanner.astro";
 import DiagArrow from "../../components/DiagArrow.astro";
 import { Collections, type HerosResponse } from "../../pocketbase-types";
+import { normalizeSearchTerm } from "../../utils/searchNormalization";
 
 const currentUser = Astro.locals.pb.authStore.record;
 const canEditActions =
@@ -67,7 +68,7 @@ const actionsWithUrls = actions.map((action) => {
     ),
     year: selectedDate ? new Date(selectedDate).getFullYear().toString() : "",
     typeActionSafe: safeTypes,
-    typeActionNormalized: safeTypes.map((type: unknown) => String(type).toLowerCase()),
+    typeActionNormalized: safeTypes.map((type: unknown) => normalizeSearchTerm(type)),
   };
 });
 
@@ -323,15 +324,13 @@ const heroImage = pageHeroImageUrl || HeroActions;
     renderPagination,
     resolveNextPage,
   } from "../../utils/renderPagination";
+  import { normalizeSearchTerm } from "../../utils/searchNormalization";
 
   (() => {
     const PAGE_SIZE = 9;
 
     const byId = (id: string): HTMLElement | null => document.getElementById(id);
-    const normalize = (value: unknown): string =>
-      String(value || "")
-        .toLowerCase()
-        .trim();
+    const normalize = (value: unknown): string => normalizeSearchTerm(value);
 
     function init() {
       const grid = byId("actions-grid");

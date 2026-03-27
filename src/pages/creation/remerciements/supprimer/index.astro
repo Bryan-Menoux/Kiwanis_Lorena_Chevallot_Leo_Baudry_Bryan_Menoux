@@ -187,12 +187,21 @@ try {
                   <span class="label-text font-medium">
                     Rechercher un partenaire
                   </span>
-                  <input
-                    id="partenaires-search-input"
-                    type="text"
-                    class="input input-bordered w-full"
-                    placeholder="Filtrer par nom du partenaire"
-                  />
+                  <div class="flex gap-2">
+                    <input
+                      id="partenaires-search-input"
+                      type="text"
+                      class="input input-bordered w-full"
+                      placeholder="Filtrer par nom du partenaire"
+                    />
+                    <button
+                      id="partenaires-search-apply"
+                      type="button"
+                      class="btn btn-accent shrink-0"
+                    >
+                      Filtrer
+                    </button>
+                  </div>
                 </label>
               </div>
 
@@ -228,6 +237,7 @@ try {
                 itemAttr="data-partenaire-item"
                 pageSize={6}
                 searchInputId="partenaires-search-input"
+                applyButtonId="partenaires-search-apply"
                 emptyMessage="Aucun partenaire ne correspond à la recherche."
               />
             </>
@@ -252,12 +262,21 @@ try {
                   <span class="label-text font-medium">
                     Rechercher un contributeur
                   </span>
-                  <input
-                    id="contributeurs-search-input"
-                    type="text"
-                    class="input input-bordered w-full"
-                    placeholder="Filtrer par nom, métier ou description"
-                  />
+                  <div class="flex gap-2">
+                    <input
+                      id="contributeurs-search-input"
+                      type="text"
+                      class="input input-bordered w-full"
+                      placeholder="Filtrer par nom, métier ou description"
+                    />
+                    <button
+                      id="contributeurs-search-apply"
+                      type="button"
+                      class="btn btn-accent shrink-0"
+                    >
+                      Filtrer
+                    </button>
+                  </div>
                 </label>
               </div>
 
@@ -292,6 +311,7 @@ try {
                 itemAttr="data-contributeur-item"
                 pageSize={6}
                 searchInputId="contributeurs-search-input"
+                applyButtonId="contributeurs-search-apply"
                 emptyMessage="Aucun contributeur ne correspond à la recherche."
               />
             </>

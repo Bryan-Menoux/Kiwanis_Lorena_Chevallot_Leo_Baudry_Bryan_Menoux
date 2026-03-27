@@ -177,6 +177,13 @@ try {
                     placeholder="Nom ou e-mail..."
                     aria-label="Rechercher un membre pour la succession"
                   />
+                  <button
+                    type="button"
+                    id="handover-search-apply"
+                    class="btn btn-accent w-fit mb-4"
+                  >
+                    Filtrer
+                  </button>
 
                   <label class="label pb-2">
                     <span class="label-text font-semibold text-base-content">
@@ -271,9 +278,11 @@ try {
     renderPagination,
     resolveNextPage,
   } from "../utils/renderPagination";
+  import { normalizeSearchTerm } from "../utils/searchNormalization";
 
   const handoverButton = document.getElementById("handover-btn") as HTMLButtonElement | null;
   const handoverSearch = document.getElementById("handover-search") as HTMLInputElement | null;
+  const handoverSearchApply = document.getElementById("handover-search-apply") as HTMLButtonElement | null;
   const handoverSearchEmpty = document.getElementById("handover-search-empty") as HTMLElement | null;
   const handoverPagination = document.getElementById("handover-pagination") as HTMLElement | null;
   const candidateCards = Array.from(
@@ -281,7 +290,7 @@ try {
   );
 
   function toSearchTerm(value: string) {
-    return value.toLowerCase().trim();
+    return normalizeSearchTerm(value);
   }
 
   const PAGE_SIZE = 6;
@@ -337,8 +346,8 @@ try {
     applyFilter();
   }
 
-  if (handoverSearch) {
-    handoverSearch.addEventListener("input", applyFilter);
+  if (handoverSearchApply) {
+    handoverSearchApply.addEventListener("click", applyFilter);
   }
 
   if (handoverPagination) {
