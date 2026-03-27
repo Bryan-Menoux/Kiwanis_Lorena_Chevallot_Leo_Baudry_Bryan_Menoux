@@ -17,31 +17,46 @@ const {
   data-initial-year={initialYear}
   data-initial-type={initialType}
 >
-  <div class="flex w-full flex-col gap-3 md:flex-row md:flex-wrap md:items-center lg:flex-nowrap">
+  <div
+    class="flex w-full flex-col gap-3 md:flex-row md:flex-wrap md:items-center lg:flex-nowrap"
+  >
     <input
       id="search-input"
       class="input input-bordered flex-1 w-full min-h-10"
       type="text"
       placeholder="Rechercher le titre d'une action..."
     />
-    {yearOptions.length > 0 && (
-      <select id="year-select" class="select select-bordered w-full md:w-40">
-        <option value="">Toutes les années</option>
-        {yearOptions.map((y: string) => <option value={y}>{y}</option>)}
-      </select>
-    )}
-    {typeOptions.length > 0 && (
-      <select id="type-select" class="select select-bordered w-full md:w-56">
-        <option value="">Tous les types</option>
-        {typeOptions.map((t: string) => <option value={t}>{t}</option>)}
-      </select>
-    )}
+    {
+      yearOptions.length > 0 && (
+        <select id="year-select" class="select select-bordered w-full md:w-40">
+          <option value="">Toutes les années</option>
+          {yearOptions.map((y: string) => (
+            <option value={y}>{y}</option>
+          ))}
+        </select>
+      )
+    }
+    {
+      typeOptions.length > 0 && (
+        <select id="type-select" class="select select-bordered w-full md:w-56">
+          <option value="">Tous les types</option>
+          {typeOptions.map((t: string) => (
+            <option value={t}>{t}</option>
+          ))}
+        </select>
+      )
+    }
   </div>
 
   <!-- Bandeau des filtres actifs -->
-  <div id="active-filters-banner" class="mt-6 p-4 rounded-xl bg-warning/5 border border-warning/30 shadow-sm hidden">
+  <div
+    id="active-filters-banner"
+    class="mt-6 p-4 rounded-xl bg-warning/5 border border-warning/30 shadow-sm hidden"
+  >
     <div class="flex flex-col gap-3">
-      <p class="text-xs font-bold text-warning/70 uppercase tracking-widest">Filtres actifs</p>
+      <p class="text-xs font-bold text-warning/70 uppercase tracking-widest">
+        Filtres actifs
+      </p>
       <div id="active-filters-list" class="flex flex-wrap gap-2"></div>
     </div>
   </div>
@@ -65,77 +80,112 @@ const {
 </div>
 
 <script>
-  (function() {
+  (function () {
     function initOne(root: HTMLElement) {
       if (root.dataset.searchActionsBound === "true") return;
       root.dataset.searchActionsBound = "true";
       const searchInput = root.querySelector("#search-input");
-      const yearSelect = root.querySelector('#year-select');
-      const typeSelect = root.querySelector('#type-select');
-      const resetButton = root.querySelector('[data-reset-filters]');
-      const applyButton = root.querySelector('[data-apply-filters]');
-      const activeFiltersBanner = root.querySelector('#active-filters-banner');
-      const activeFiltersList = root.querySelector('#active-filters-list');
+      const yearSelect = root.querySelector("#year-select");
+      const typeSelect = root.querySelector("#type-select");
+      const resetButton = root.querySelector("[data-reset-filters]");
+      const applyButton = root.querySelector("[data-apply-filters]");
+      const activeFiltersBanner = root.querySelector("#active-filters-banner");
+      const activeFiltersList = root.querySelector("#active-filters-list");
       const initialSearch = root.dataset.initialSearch || "";
       const initialYear = root.dataset.initialYear || "";
       const initialType = root.dataset.initialType || "";
 
-      if (searchInput instanceof HTMLInputElement) searchInput.value = initialSearch;
-      if (yearSelect instanceof HTMLSelectElement && initialYear) yearSelect.value = initialYear;
-      if (typeSelect instanceof HTMLSelectElement && initialType) typeSelect.value = initialType;
+      if (searchInput instanceof HTMLInputElement)
+        searchInput.value = initialSearch;
+      if (yearSelect instanceof HTMLSelectElement && initialYear)
+        yearSelect.value = initialYear;
+      if (typeSelect instanceof HTMLSelectElement && initialType)
+        typeSelect.value = initialType;
 
       function emit() {
         const detail: any = {
-          search: (searchInput instanceof HTMLInputElement) ? searchInput.value.trim() : "",
+          search:
+            searchInput instanceof HTMLInputElement
+              ? searchInput.value.trim()
+              : "",
         };
-        if (yearSelect instanceof HTMLSelectElement) detail.year = yearSelect.value;
-        if (typeSelect instanceof HTMLSelectElement) detail.type = typeSelect.value;
+        if (yearSelect instanceof HTMLSelectElement)
+          detail.year = yearSelect.value;
+        if (typeSelect instanceof HTMLSelectElement)
+          detail.type = typeSelect.value;
 
         updateActiveFiltersBanner(detail);
-        document.dispatchEvent(new CustomEvent("search-actions-change", { detail, bubbles: true }));
+        document.dispatchEvent(
+          new CustomEvent("search-actions-change", { detail, bubbles: true }),
+        );
       }
 
       function updateActiveFiltersBanner(detail: any) {
-        const filterItems: Array<{label: string, key: string}> = [];
-        
-        if (detail.search) filterItems.push({label: `Titre: "${detail.search}"`, key: 'search'});
-        if (detail.year) filterItems.push({label: `Année: ${detail.year}`, key: 'year'});
-        if (detail.type) filterItems.push({label: `Type: ${detail.type}`, key: 'type'});
-        
+        const filterItems: Array<{ label: string; key: string }> = [];
+
+        if (detail.search)
+          filterItems.push({
+            label: `Titre: "${detail.search}"`,
+            key: "search",
+          });
+        if (detail.year)
+          filterItems.push({ label: `Année: ${detail.year}`, key: "year" });
+        if (detail.type)
+          filterItems.push({ label: `Type: ${detail.type}`, key: "type" });
+
         if (activeFiltersList instanceof HTMLElement) {
           if (filterItems.length > 0) {
             activeFiltersList.innerHTML = filterItems
-              .map(item => `<span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-warning/70 bg-warning/40 text-warning text-sm! font-medium! cursor-pointer hover:bg-warning/80 text-accent! hover:border-warning/60 transition-all duration-200" data-filter-key="${item.key}" onclick="event.stopPropagation()">${item.label}<svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/></svg></span>`)
-              .join('');
+              .map((item) => {
+                const maxLen = window.innerWidth >= 768 ? 70 : 30;
+                const label =
+                  item.label.length > maxLen
+                    ? item.label.slice(0, maxLen) + "…"
+                    : item.label;
+                return `<span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-warning/70 bg-warning/40 text-warning text-sm! font-medium! cursor-pointer hover:bg-warning/80 text-accent! hover:border-warning/60 transition-all duration-200" data-filter-key="${item.key}" onclick="event.stopPropagation()">${label}<svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/></svg></span>`;
+              })
+              .join("");
             if (activeFiltersBanner instanceof HTMLElement) {
-              activeFiltersBanner.classList.remove('hidden');
+              activeFiltersBanner.classList.remove("hidden");
             }
             // Ajouter les event listeners pour les spans
-            activeFiltersList.querySelectorAll('[data-filter-key]').forEach((span: Element) => {
-              if (span instanceof HTMLElement) {
-                span.addEventListener('click', (e: Event) => {
-                  if (e.target instanceof HTMLElement && e.target.classList.contains('btn')) return;
-                  const filterKey = span.dataset.filterKey;
-                  removeFilter(filterKey);
-                });
-              }
-            });
+            activeFiltersList
+              .querySelectorAll("[data-filter-key]")
+              .forEach((span: Element) => {
+                if (span instanceof HTMLElement) {
+                  span.addEventListener("click", (e: Event) => {
+                    if (
+                      e.target instanceof HTMLElement &&
+                      e.target.classList.contains("btn")
+                    )
+                      return;
+                    const filterKey = span.dataset.filterKey;
+                    removeFilter(filterKey);
+                  });
+                }
+              });
           } else {
-            activeFiltersList.innerHTML = '';
+            activeFiltersList.innerHTML = "";
             if (activeFiltersBanner instanceof HTMLElement) {
-              activeFiltersBanner.classList.add('hidden');
+              activeFiltersBanner.classList.add("hidden");
             }
           }
         }
       }
 
       function removeFilter(filterKey: string | undefined) {
-        if (filterKey === 'search' && searchInput instanceof HTMLInputElement) {
-          searchInput.value = '';
-        } else if (filterKey === 'year' && yearSelect instanceof HTMLSelectElement) {
-          yearSelect.value = '';
-        } else if (filterKey === 'type' && typeSelect instanceof HTMLSelectElement) {
-          typeSelect.value = '';
+        if (filterKey === "search" && searchInput instanceof HTMLInputElement) {
+          searchInput.value = "";
+        } else if (
+          filterKey === "year" &&
+          yearSelect instanceof HTMLSelectElement
+        ) {
+          yearSelect.value = "";
+        } else if (
+          filterKey === "type" &&
+          typeSelect instanceof HTMLSelectElement
+        ) {
+          typeSelect.value = "";
         }
         emit();
       }
@@ -149,13 +199,13 @@ const {
 
       // No automatic emit on input - only on filter button click
       if (searchInput instanceof Element) {
-        searchInput.addEventListener('change', () => {});
+        searchInput.addEventListener("change", () => {});
       }
       if (yearSelect instanceof Element) {
-        yearSelect.addEventListener('change', () => {});
+        yearSelect.addEventListener("change", () => {});
       }
       if (typeSelect instanceof Element) {
-        typeSelect.addEventListener('change', () => {});
+        typeSelect.addEventListener("change", () => {});
       }
 
       if (applyButton instanceof HTMLButtonElement) {
@@ -178,8 +228,8 @@ const {
       });
     }
 
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', initAll, { once: true });
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", initAll, { once: true });
     } else {
       initAll();
     }

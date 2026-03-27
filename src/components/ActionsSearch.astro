@@ -184,8 +184,15 @@ const secondaryGridClass =
         if (activeFiltersList instanceof HTMLElement) {
           if (filterItems.length > 0) {
             activeFiltersList.innerHTML = filterItems
-              .map(item => `<span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-warning/70 bg-warning/40 text-warning text-sm! font-medium! cursor-pointer hover:bg-warning/80 text-accent! hover:border-warning/60 transition-all duration-200" data-filter-key="${item.key}" onclick="event.stopPropagation()">${item.label}<svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/></svg></span>`)
-              .join('');
+              .map((item) => {
+                const maxLen = window.innerWidth >= 768 ? 70 : 30;
+                const label =
+                  item.label.length > maxLen
+                    ? item.label.slice(0, maxLen) + "…"
+                    : item.label;
+                return `<span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-warning/70 bg-warning/40 text-warning text-sm! font-medium! cursor-pointer hover:bg-warning/80 text-accent! hover:border-warning/60 transition-all duration-200" data-filter-key="${item.key}" onclick="event.stopPropagation()">${label}<svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/></svg></span>`;
+              })
+              .join("");
             if (activeFiltersBanner instanceof HTMLElement) {
               activeFiltersBanner.classList.remove('hidden');
             }
