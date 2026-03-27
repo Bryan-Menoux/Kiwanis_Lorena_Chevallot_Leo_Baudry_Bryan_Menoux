@@ -224,7 +224,8 @@ export type ContributeursRecord = {
 	updated: IsoAutoDateString
 }
 
-export type HerosRecord = {
+export type HerosRecord<Tcentrage = unknown> = {
+	centrage?: null | Tcentrage
 	created: IsoAutoDateString
 	id: string
 	image?: FileNameString
@@ -322,7 +323,7 @@ export type ActionsResponse<Trecadrage = unknown, Texpand = unknown> = Required<
 export type BrouillonsResponse<Texpand = unknown> = Required<BrouillonsRecord> & BaseSystemFields<Texpand>
 export type ContactResponse<Texpand = unknown> = Required<ContactRecord> & BaseSystemFields<Texpand>
 export type ContributeursResponse<Texpand = unknown> = Required<ContributeursRecord> & BaseSystemFields<Texpand>
-export type HerosResponse<Texpand = unknown> = Required<HerosRecord> & BaseSystemFields<Texpand>
+export type HerosResponse<Tcentrage = unknown, Texpand = unknown> = Required<HerosRecord<Tcentrage>> & BaseSystemFields<Texpand>
 export type MembresResponse<Texpand = unknown> = Required<MembresRecord> & BaseSystemFields<Texpand>
 export type PartenairesResponse<Texpand = unknown> = Required<PartenairesRecord> & BaseSystemFields<Texpand>
 export type ProduitsResponse<Texpand = unknown> = Required<ProduitsRecord> & BaseSystemFields<Texpand>

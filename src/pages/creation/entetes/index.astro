@@ -1,0 +1,692 @@
+---
+import Layout from "../../../layouts/Layout-back-office.astro";
+import { Collections, type HerosResponse } from "../../../pocketbase-types";
+import {
+  serializeHeroCentrage,
+  type HeroCentrageMap,
+} from "../../../utils/heroCentrage";
+
+const pageOptions = [
+  { value: "index", label: "Page d'accueil" },
+  { value: "actions", label: "Actions" },
+  { value: "membres", label: "Membres" },
+  { value: "projets", label: "Projets" },
+  { value: "produits", label: "Produits" },
+  { value: "recrutement", label: "Recrutement" },
+  { value: "remerciements", label: "Remerciements" },
+] as const;
+
+const asText = (value: FormDataEntryValue | null): string =>
+  typeof value === "string" ? value.trim() : "";
+
+const getPageLabel = (value: string): string =>
+  pageOptions.find((page) => page.value === value)?.label || value;
+
+const redirectWith = (type: "success" | "error", message: string) =>
+  Astro.redirect(
+    `${Astro.url.pathname}?${type}=${encodeURIComponent(message)}`,
+  );
+
+if (Astro.request.method === "POST") {
+  try {
+    const formData = await Astro.request.formData();
+    const intent = asText(formData.get("intent"));
+    const id = asText(formData.get("id"));
+    const nomPage = asText(formData.get("nom_page")).toLowerCase();
+    const image = formData.get("image");
+    const centrage = serializeHeroCentrage(asText(formData.get("centrage")));
+
+    if (intent !== "update") {
+      throw new Error("Action inconnue.");
+    }
+    if (!id) {
+      throw new Error("Hero introuvable.");
+    }
+    if (!nomPage) {
+      throw new Error("Le nom de page est obligatoire.");
+    }
+
+    const updateData: {
+      nom_page: string;
+      centrage: HeroCentrageMap;
+      image?: File;
+    } = {
+      nom_page: nomPage,
+      centrage,
+    };
+
+    if (image instanceof File && image.size > 0) {
+      updateData.image = image;
+    }
+
+    await Astro.locals.pb.collection(Collections.Heros).update(id, updateData);
+
+    return redirectWith("success", "Entete modifiee avec succes.");
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "Une erreur est survenue.";
+    return redirectWith("error", message);
+  }
+}
+
+const heroRecords = await Astro.locals.pb
+  .collection(Collections.Heros)
+  .getFullList<HerosResponse<HeroCentrageMap>>(200, { sort: "nom_page" });
+
+const heros = heroRecords.map((hero) => ({
+  id: hero.id,
+  nomPage: hero.nom_page || "",
+  pageLabel: getPageLabel(hero.nom_page || ""),
+  imageUrl: hero.image ? Astro.locals.pb.files.getURL(hero, hero.image) : "",
+  centrage: serializeHeroCentrage(hero.centrage),
+}));
+
+const success = (Astro.url.searchParams.get("success") || "").trim();
+const error = (Astro.url.searchParams.get("error") || "").trim();
+---
+
+<Layout>
+  <div class="container mx-auto my-16 px-4 py-8 md:my-32">
+    <h1>Images des entetes</h1>
+
+    {
+      success && (
+        <div id="hero-success-flag" data-message={success} class="hidden" />
+      )
+    }
+    {error && <div id="hero-error-flag" data-message={error} class="hidden" />}
+
+    {
+      heros.length === 0 ? (
+        <div class="rounded-2xl border border-base-300 bg-base-100 p-8 text-base-content/60">
+          Aucun hero enregistre pour le moment.
+        </div>
+      ) : (
+        <div class="grid grid-cols-1 gap-8 lg:grid-cols-2">
+          {heros.map((hero) => (
+            <article class="space-y-4">
+              <h2 class="text-2xl font-bold text-base-content">
+                {hero.pageLabel}
+              </h2>
+
+              <div class="relative overflow-hidden rounded-2xl border border-base-300 bg-base-100 shadow-sm">
+                {hero.imageUrl ? (
+                  <img
+                    src={hero.imageUrl}
+                    alt={`Hero ${hero.pageLabel}`}
+                    class="h-72 w-full object-cover"
+                    loading="lazy"
+                    decoding="async"
+                  />
+                ) : (
+                  <div class="flex h-72 items-center justify-center text-sm text-base-content/50">
+                    Aucune image
+                  </div>
+                )}
+
+                <div
+                  class="pointer-events-none absolute bottom-0 right-0 h-[22rem] w-[22rem] translate-x-1/4 translate-y-1/3 rounded-full bg-[radial-gradient(circle,rgba(0,0,0,0.72)_0%,rgba(0,0,0,0.5)_24%,rgba(0,0,0,0.2)_48%,rgba(0,0,0,0.03)_64%,transparent_100%)]"
+                  aria-hidden="true"
+                ></div>
+
+                <button
+                  type="button"
+                  class="btn btn-accent btn-sm md:btn-md absolute bottom-4 right-4 rounded-full px-5 shadow-xl"
+                  data-open-hero-modal={hero.id}
+                >
+                  Modifier
+                </button>
+              </div>
+
+              <dialog id={`hero-modal-${hero.id}`} class="modal">
+                <div class="modal-box max-w-7xl">
+                  <form method="dialog">
+                    <button
+                      type="submit"
+                      class="btn btn-sm btn-circle btn-ghost absolute right-3 top-3"
+                      aria-label={`Fermer la modification de ${hero.pageLabel}`}
+                    >
+                      x
+                    </button>
+                  </form>
+
+                  <div class="pr-10">
+                    <p class="text-sm font-medium uppercase tracking-[0.2em] text-base-content/50">
+                      Page
+                    </p>
+                    <h2 class="mt-1 text-2xl font-bold">{hero.pageLabel}</h2>
+                    <p class="mt-2 text-sm text-base-content/70">
+                      Ajustez separatement le cadrage desktop, tablette et
+                      mobile avec des curseurs.
+                    </p>
+                  </div>
+
+                  <form
+                    method="POST"
+                    enctype="multipart/form-data"
+                    class="mt-6 space-y-6"
+                    data-hero-edit-form
+                  >
+                    <input type="hidden" name="intent" value="update" />
+                    <input type="hidden" name="id" value={hero.id} />
+                    <input type="hidden" name="nom_page" value={hero.nomPage} />
+                    <input
+                      type="hidden"
+                      name="centrage"
+                      value={JSON.stringify(hero.centrage)}
+                      data-centrage-input
+                    />
+
+                    <label class="form-control gap-2">
+                      <span class="label-text font-medium">Nouvelle image</span>
+                      <input
+                        type="file"
+                        name="image"
+                        accept="image/*"
+                        class="file-input file-input-bordered w-full"
+                        data-hero-image-input
+                      />
+                      <span class="label-text-alt text-base-content/60">
+                        Laissez vide si vous voulez seulement modifier les
+                        cadrages.
+                      </span>
+                    </label>
+
+                    <div class="grid gap-6 xl:grid-cols-3">
+                      <section class="rounded-3xl border border-base-300 bg-base-100 p-4 md:p-5">
+                        <div class="flex items-center justify-between gap-3">
+                          <div>
+                            <h3 class="text-lg font-semibold">Desktop</h3>
+                            <p class="text-sm text-base-content/60">16:9</p>
+                          </div>
+                          <button
+                            type="button"
+                            class="btn btn-outline btn-sm rounded-full"
+                            data-reset-support="desktop"
+                          >
+                            Reinitialiser
+                          </button>
+                        </div>
+
+                        <div class="mt-4 overflow-hidden rounded-2xl border border-base-300 bg-base-200">
+                          <div class="relative aspect-[16/9]">
+                            <img
+                              src={hero.imageUrl || ""}
+                              alt={`Apercu desktop ${hero.pageLabel}`}
+                              class="h-full w-full object-cover"
+                              style="object-position: 50% 50%;"
+                              data-preview-image="desktop"
+                            />
+                            <span
+                              class="pointer-events-none absolute h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white bg-accent shadow-md"
+                              style="left: 50%; top: 50%;"
+                              data-preview-marker="desktop"
+                            ></span>
+                          </div>
+                        </div>
+
+                        <div class="mt-4 space-y-4">
+                          <label class="form-control gap-2">
+                            <span class="label-text text-sm font-medium">
+                              Horizontal
+                            </span>
+                            <input
+                              type="range"
+                              min="0"
+                              max="100"
+                              value="50"
+                              class="range range-accent"
+                              data-range-x="desktop"
+                            />
+                          </label>
+                          <label class="form-control gap-2">
+                            <span class="label-text text-sm font-medium">
+                              Vertical
+                            </span>
+                            <input
+                              type="range"
+                              min="0"
+                              max="100"
+                              value="50"
+                              class="range range-accent"
+                              data-range-y="desktop"
+                            />
+                          </label>
+                          <p
+                            class="text-sm text-base-content/70"
+                            data-support-position="desktop"
+                          >
+                            Centrage: 50% / 50%
+                          </p>
+                        </div>
+                      </section>
+
+                      <section class="rounded-3xl border border-base-300 bg-base-100 p-4 md:p-5">
+                        <div class="flex items-center justify-between gap-3">
+                          <div>
+                            <h3 class="text-lg font-semibold">Tablette</h3>
+                            <p class="text-sm text-base-content/60">4:3</p>
+                          </div>
+                          <button
+                            type="button"
+                            class="btn btn-outline btn-sm rounded-full"
+                            data-reset-support="tablet"
+                          >
+                            Reinitialiser
+                          </button>
+                        </div>
+
+                        <div class="mt-4 overflow-hidden rounded-2xl border border-base-300 bg-base-200">
+                          <div class="relative aspect-[4/3]">
+                            <img
+                              src={hero.imageUrl || ""}
+                              alt={`Apercu tablette ${hero.pageLabel}`}
+                              class="h-full w-full object-cover"
+                              style="object-position: 50% 50%;"
+                              data-preview-image="tablet"
+                            />
+                            <span
+                              class="pointer-events-none absolute h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white bg-accent shadow-md"
+                              style="left: 50%; top: 50%;"
+                              data-preview-marker="tablet"
+                            ></span>
+                          </div>
+                        </div>
+
+                        <div class="mt-4 space-y-4">
+                          <label class="form-control gap-2">
+                            <span class="label-text text-sm font-medium">
+                              Horizontal
+                            </span>
+                            <input
+                              type="range"
+                              min="0"
+                              max="100"
+                              value="50"
+                              class="range range-accent"
+                              data-range-x="tablet"
+                            />
+                          </label>
+                          <label class="form-control gap-2">
+                            <span class="label-text text-sm font-medium">
+                              Vertical
+                            </span>
+                            <input
+                              type="range"
+                              min="0"
+                              max="100"
+                              value="50"
+                              class="range range-accent"
+                              data-range-y="tablet"
+                            />
+                          </label>
+                          <p
+                            class="text-sm text-base-content/70"
+                            data-support-position="tablet"
+                          >
+                            Centrage: 50% / 50%
+                          </p>
+                        </div>
+                      </section>
+
+                      <section class="rounded-3xl border border-base-300 bg-base-100 p-4 md:p-5">
+                        <div class="flex items-center justify-between gap-3">
+                          <div>
+                            <h3 class="text-lg font-semibold">Mobile</h3>
+                            <p class="text-sm text-base-content/60">9:16</p>
+                          </div>
+                          <button
+                            type="button"
+                            class="btn btn-outline btn-sm rounded-full"
+                            data-reset-support="mobile"
+                          >
+                            Reinitialiser
+                          </button>
+                        </div>
+
+                        <div class="mt-4 overflow-hidden rounded-2xl border border-base-300 bg-base-200 p-4">
+                          <div class="relative mx-auto aspect-[9/16] max-w-[18rem]">
+                            <img
+                              src={hero.imageUrl || ""}
+                              alt={`Apercu mobile ${hero.pageLabel}`}
+                              class="h-full w-full object-cover rounded-[1.5rem]"
+                              style="object-position: 50% 50%;"
+                              data-preview-image="mobile"
+                            />
+                            <span
+                              class="pointer-events-none absolute h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white bg-accent shadow-md"
+                              style="left: 50%; top: 50%;"
+                              data-preview-marker="mobile"
+                            ></span>
+                          </div>
+                        </div>
+
+                        <div class="mt-4 space-y-4">
+                          <label class="form-control gap-2">
+                            <span class="label-text text-sm font-medium">
+                              Horizontal
+                            </span>
+                            <input
+                              type="range"
+                              min="0"
+                              max="100"
+                              value="50"
+                              class="range range-accent"
+                              data-range-x="mobile"
+                            />
+                          </label>
+                          <label class="form-control gap-2">
+                            <span class="label-text text-sm font-medium">
+                              Vertical
+                            </span>
+                            <input
+                              type="range"
+                              min="0"
+                              max="100"
+                              value="50"
+                              class="range range-accent"
+                              data-range-y="mobile"
+                            />
+                          </label>
+                          <p
+                            class="text-sm text-base-content/70"
+                            data-support-position="mobile"
+                          >
+                            Centrage: 50% / 50%
+                          </p>
+                        </div>
+                      </section>
+                    </div>
+
+                    <div class="flex justify-end gap-3 pt-2">
+                      <button
+                        type="button"
+                        class="btn btn-ghost rounded-full"
+                        data-close-hero-modal={hero.id}
+                      >
+                        Annuler
+                      </button>
+                      <button type="submit" class="btn btn-accent rounded-full">
+                        Enregistrer
+                      </button>
+                    </div>
+                  </form>
+                </div>
+                <form method="dialog" class="modal-backdrop">
+                  <button type="submit">close</button>
+                </form>
+              </dialog>
+            </article>
+          ))}
+        </div>
+      )
+    }
+  </div>
+</Layout>
+
+<script>
+  import { showAlert } from "../../../utils/alerts";
+
+  const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
+
+  function normalizePoint(value) {
+    return {
+      x: clamp(Number(value?.x) || 50, 0, 100),
+      y: clamp(Number(value?.y) || 50, 0, 100),
+    };
+  }
+
+  function parseCentrage(value) {
+    if (!value) return {};
+
+    const rawValue =
+      typeof value === "string"
+        ? (() => {
+            try {
+              return JSON.parse(value);
+            } catch {
+              return {};
+            }
+          })()
+        : value;
+
+    if (!rawValue || typeof rawValue !== "object") return {};
+
+    const nextValue = {};
+    ["desktop", "tablet", "mobile"].forEach((support) => {
+      const point = normalizePoint(rawValue[support]);
+      if (point) {
+        nextValue[support] = point;
+      }
+    });
+
+    return nextValue;
+  }
+
+  function serializeCentrage(centrage) {
+    return JSON.stringify(centrage);
+  }
+
+  function initializeHeroForm(form) {
+    const input = form.querySelector("[data-hero-image-input]");
+    const centrageInput = form.querySelector("[data-centrage-input]");
+
+    if (
+      !(input instanceof HTMLInputElement) ||
+      !(centrageInput instanceof HTMLInputElement)
+    ) {
+      return;
+    }
+
+    const previewImages = {
+      desktop: form.querySelector('[data-preview-image="desktop"]'),
+      tablet: form.querySelector('[data-preview-image="tablet"]'),
+      mobile: form.querySelector('[data-preview-image="mobile"]'),
+    };
+
+    const previewMarkers = {
+      desktop: form.querySelector('[data-preview-marker="desktop"]'),
+      tablet: form.querySelector('[data-preview-marker="tablet"]'),
+      mobile: form.querySelector('[data-preview-marker="mobile"]'),
+    };
+
+    const rangeXInputs = {
+      desktop: form.querySelector('[data-range-x="desktop"]'),
+      tablet: form.querySelector('[data-range-x="tablet"]'),
+      mobile: form.querySelector('[data-range-x="mobile"]'),
+    };
+
+    const rangeYInputs = {
+      desktop: form.querySelector('[data-range-y="desktop"]'),
+      tablet: form.querySelector('[data-range-y="tablet"]'),
+      mobile: form.querySelector('[data-range-y="mobile"]'),
+    };
+
+    const positionLabels = {
+      desktop: form.querySelector('[data-support-position="desktop"]'),
+      tablet: form.querySelector('[data-support-position="tablet"]'),
+      mobile: form.querySelector('[data-support-position="mobile"]'),
+    };
+
+    const resetButtons = Array.from(
+      form.querySelectorAll("[data-reset-support]"),
+    );
+
+    const state = {
+      input,
+      centrageInput,
+      previewImages,
+      previewMarkers,
+      rangeXInputs,
+      rangeYInputs,
+      positionLabels,
+      resetButtons,
+      currentObjectUrl: "",
+      initialSrc:
+        previewImages.desktop instanceof HTMLImageElement
+          ? previewImages.desktop.src
+          : "",
+      centrage: {
+        desktop: { x: 50, y: 50 },
+        tablet: { x: 50, y: 50 },
+        mobile: { x: 50, y: 50 },
+        ...parseCentrage(centrageInput.value),
+      },
+    };
+
+    function syncHiddenInput() {
+      state.centrageInput.value = serializeCentrage(state.centrage);
+    }
+
+    function syncSupport(support) {
+      const point = state.centrage[support];
+      const objectPosition = `${point.x}% ${point.y}%`;
+      const image = state.previewImages[support];
+      const marker = state.previewMarkers[support];
+      const rangeX = state.rangeXInputs[support];
+      const rangeY = state.rangeYInputs[support];
+      const label = state.positionLabels[support];
+
+      if (image instanceof HTMLImageElement) {
+        image.style.objectPosition = objectPosition;
+      }
+      if (marker instanceof HTMLElement) {
+        marker.style.left = `${point.x}%`;
+        marker.style.top = `${point.y}%`;
+      }
+      if (rangeX instanceof HTMLInputElement) {
+        rangeX.value = `${point.x}`;
+      }
+      if (rangeY instanceof HTMLInputElement) {
+        rangeY.value = `${point.y}`;
+      }
+      if (label instanceof HTMLElement) {
+        label.textContent = `Centrage: ${Math.round(point.x)}% / ${Math.round(point.y)}%`;
+      }
+    }
+
+    function syncAllSupports() {
+      ["desktop", "tablet", "mobile"].forEach((support) => {
+        syncSupport(support);
+      });
+      syncHiddenInput();
+    }
+
+    function updateSupportPoint(support, axis, value) {
+      const nextPoint = {
+        ...state.centrage[support],
+        [axis]: clamp(Number(value) || 50, 0, 100),
+      };
+      state.centrage[support] = nextPoint;
+      syncSupport(support);
+      syncHiddenInput();
+    }
+
+    function syncImageSource(source) {
+      const nextSource = source || state.initialSrc || "";
+      ["desktop", "tablet", "mobile"].forEach((support) => {
+        const image = state.previewImages[support];
+        if (image instanceof HTMLImageElement) {
+          image.src = nextSource;
+        }
+      });
+    }
+
+    input.addEventListener("change", () => {
+      const [file] = input.files || [];
+
+      if (state.currentObjectUrl) {
+        URL.revokeObjectURL(state.currentObjectUrl);
+        state.currentObjectUrl = "";
+      }
+
+      if (!file) {
+        syncImageSource(state.initialSrc);
+        return;
+      }
+
+      state.currentObjectUrl = URL.createObjectURL(file);
+      syncImageSource(state.currentObjectUrl);
+    });
+
+    ["desktop", "tablet", "mobile"].forEach((support) => {
+      const rangeX = state.rangeXInputs[support];
+      const rangeY = state.rangeYInputs[support];
+
+      rangeX?.addEventListener("input", () => {
+        updateSupportPoint(support, "x", rangeX.value);
+      });
+
+      rangeY?.addEventListener("input", () => {
+        updateSupportPoint(support, "y", rangeY.value);
+      });
+    });
+
+    state.resetButtons.forEach((button) => {
+      if (!(button instanceof HTMLButtonElement)) return;
+      button.addEventListener("click", () => {
+        const support = button.dataset.resetSupport || "";
+        if (!["desktop", "tablet", "mobile"].includes(support)) return;
+        state.centrage[support] = { x: 50, y: 50 };
+        syncSupport(support);
+        syncHiddenInput();
+      });
+    });
+
+    syncAllSupports();
+  }
+
+  document.addEventListener("click", (event) => {
+    const openButton =
+      event.target instanceof HTMLElement
+        ? event.target.closest("[data-open-hero-modal]")
+        : null;
+    if (openButton instanceof HTMLButtonElement) {
+      const heroId = openButton.dataset.openHeroModal || "";
+      const dialog = document.getElementById(`hero-modal-${heroId}`);
+      if (dialog instanceof HTMLDialogElement) {
+        dialog.showModal();
+      }
+      return;
+    }
+
+    const closeButton =
+      event.target instanceof HTMLElement
+        ? event.target.closest("[data-close-hero-modal]")
+        : null;
+    if (closeButton instanceof HTMLButtonElement) {
+      const heroId = closeButton.dataset.closeHeroModal || "";
+      const dialog = document.getElementById(`hero-modal-${heroId}`);
+      if (dialog instanceof HTMLDialogElement) {
+        dialog.close();
+      }
+    }
+  });
+
+  document
+    .querySelectorAll("[data-hero-edit-form]")
+    .forEach((form) => initializeHeroForm(form));
+
+  const successFlag = document.getElementById("hero-success-flag");
+  const errorFlag = document.getElementById("hero-error-flag");
+
+  if (successFlag instanceof HTMLElement) {
+    const message = (successFlag.dataset.message || "").trim();
+    if (message) {
+      showAlert({ type: "success", message });
+      const url = new URL(window.location.href);
+      url.searchParams.delete("success");
+      window.history.replaceState({}, "", url.toString());
+    }
+  }
+
+  if (errorFlag instanceof HTMLElement) {
+    const message = (errorFlag.dataset.message || "").trim();
+    if (message) {
+      showAlert({ type: "error", message });
+      const url = new URL(window.location.href);
+      url.searchParams.delete("error");
+      window.history.replaceState({}, "", url.toString());
+    }
+  }
+</script>

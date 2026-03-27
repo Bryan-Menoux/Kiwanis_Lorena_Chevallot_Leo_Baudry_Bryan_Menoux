@@ -116,7 +116,11 @@ function truncateWords(text: string, limit = 70): string {
     )}
   </Fragment>
 
-  <Hero image={heroImage} title="Nos projets" />
+  <Hero
+    image={heroImage}
+    centrage={pageHeroRecord?.centrage}
+    title="Nos projets"
+  />
 
   <AdminEditBanner
     canEdit={canEditProjets}

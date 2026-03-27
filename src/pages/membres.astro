@@ -169,7 +169,12 @@ const heroImage = pageHeroImageUrl || HeroMembres;
       </>
     )}
   </Fragment>
-  <Hero image={heroImage} title="Nos membres" subtitle="" />
+  <Hero
+    image={heroImage}
+    centrage={pageHeroRecord?.centrage}
+    title="Nos membres"
+    subtitle=""
+  />
   <div class="flex flex-col max-w-7xl mx-auto my-32 gap-4 px-8">
     <p>
       Sur cette page, vous retrouverez les membres qui font vivre le Kiwanis
