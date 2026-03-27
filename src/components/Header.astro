@@ -11,12 +11,12 @@ import MobileMenu from "./MobileMenu.astro";
 const currentUser = Astro.locals.pb.authStore.record;
 
 const menuItems = [
-  { href: "/membres", label: "Nos membres" },
-  { href: "/remerciements", label: "Remerciements" },
-  { href: "/recrutement", label: "Recrutement" },
   { href: "/actions", label: "Nos actions" },
   { href: "/projets", label: "Nos projets" },
   { href: "/produits", label: "Nos produits" },
+  { href: "/membres", label: "Nos membres" },
+  { href: "/remerciements", label: "Remerciements" },
+  { href: "/recrutement", label: "Recrutement" },
 ];
 
 const actionButtons = [{ href: "/contact", label: "Contact" }];
