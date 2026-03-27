@@ -125,13 +125,13 @@ const error = (Astro.url.searchParams.get("error") || "").trim();
                 )}
 
                 <div
-                  class="pointer-events-none absolute bottom-0 right-0 h-[22rem] w-[22rem] translate-x-1/4 translate-y-1/3 rounded-full bg-[radial-gradient(circle,rgba(0,0,0,0.72)_0%,rgba(0,0,0,0.5)_24%,rgba(0,0,0,0.2)_48%,rgba(0,0,0,0.03)_64%,transparent_100%)]"
+                  class="pointer-events-none absolute bottom-0 right-0 h-88 w-88 translate-x-1/4 translate-y-1/3 rounded-full bg-[radial-gradient(circle,rgba(0,0,0,0.72)_0%,rgba(0,0,0,0.5)_24%,rgba(0,0,0,0.2)_48%,rgba(0,0,0,0.03)_64%,transparent_100%)]"
                   aria-hidden="true"
                 ></div>
 
                 <button
                   type="button"
-                  class="btn btn-accent btn-sm md:btn-md absolute bottom-4 right-4 rounded-full px-5 shadow-xl"
+                  class="btn btn-block w-fit text-accent btn-sm md:btn-md absolute bottom-4 right-4 rounded-full px-5 shadow-xl"
                   data-open-hero-modal={hero.id}
                 >
                   Modifier
@@ -139,7 +139,7 @@ const error = (Astro.url.searchParams.get("error") || "").trim();
               </div>
 
               <dialog id={`hero-modal-${hero.id}`} class="modal">
-                <div class="modal-box max-w-7xl">
+                <div class="modal-box max-h-[80dvh] max-w-7xl overflow-y-auto">
                   <form method="dialog">
                     <button
                       type="submit"
@@ -156,7 +156,7 @@ const error = (Astro.url.searchParams.get("error") || "").trim();
                     </p>
                     <h2 class="mt-1 text-2xl font-bold">{hero.pageLabel}</h2>
                     <p class="mt-2 text-sm text-base-content/70">
-                      Ajustez separatement le cadrage desktop, tablette et
+                      Ajustez separatement le cadrage ordinateur, tablette et
                       mobile avec des curseurs.
                     </p>
                   </div>
@@ -196,7 +196,7 @@ const error = (Astro.url.searchParams.get("error") || "").trim();
                       <section class="rounded-3xl border border-base-300 bg-base-100 p-4 md:p-5">
                         <div class="flex items-center justify-between gap-3">
                           <div>
-                            <h3 class="text-lg font-semibold">Desktop</h3>
+                            <h3 class="text-lg font-semibold">ordinateur</h3>
                             <p class="text-sm text-base-content/60">16:9</p>
                           </div>
                           <button
@@ -209,7 +209,7 @@ const error = (Astro.url.searchParams.get("error") || "").trim();
                         </div>
 
                         <div class="mt-4 overflow-hidden rounded-2xl border border-base-300 bg-base-200">
-                          <div class="relative aspect-[16/9]">
+                          <div class="relative aspect-video">
                             <img
                               src={hero.imageUrl || ""}
                               alt={`Apercu desktop ${hero.pageLabel}`}
@@ -277,7 +277,7 @@ const error = (Astro.url.searchParams.get("error") || "").trim();
                         </div>
 
                         <div class="mt-4 overflow-hidden rounded-2xl border border-base-300 bg-base-200">
-                          <div class="relative aspect-[4/3]">
+                          <div class="relative aspect-4/3">
                             <img
                               src={hero.imageUrl || ""}
                               alt={`Apercu tablette ${hero.pageLabel}`}
@@ -345,11 +345,11 @@ const error = (Astro.url.searchParams.get("error") || "").trim();
                         </div>
 
                         <div class="mt-4 overflow-hidden rounded-2xl border border-base-300 bg-base-200 p-4">
-                          <div class="relative mx-auto aspect-[9/16] max-w-[18rem]">
+                          <div class="relative mx-auto aspect-9/16 max-w-[18rem]">
                             <img
                               src={hero.imageUrl || ""}
                               alt={`Apercu mobile ${hero.pageLabel}`}
-                              class="h-full w-full object-cover rounded-[1.5rem]"
+                              class="h-full w-full object-cover rounded-3xl"
                               style="object-position: 50% 50%;"
                               data-preview-image="mobile"
                             />
@@ -425,268 +425,5 @@ const error = (Astro.url.searchParams.get("error") || "").trim();
 </Layout>
 
 <script>
-  import { showAlert } from "../../../utils/alerts";
-
-  const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
-
-  function normalizePoint(value) {
-    return {
-      x: clamp(Number(value?.x) || 50, 0, 100),
-      y: clamp(Number(value?.y) || 50, 0, 100),
-    };
-  }
-
-  function parseCentrage(value) {
-    if (!value) return {};
-
-    const rawValue =
-      typeof value === "string"
-        ? (() => {
-            try {
-              return JSON.parse(value);
-            } catch {
-              return {};
-            }
-          })()
-        : value;
-
-    if (!rawValue || typeof rawValue !== "object") return {};
-
-    const nextValue = {};
-    ["desktop", "tablet", "mobile"].forEach((support) => {
-      const point = normalizePoint(rawValue[support]);
-      if (point) {
-        nextValue[support] = point;
-      }
-    });
-
-    return nextValue;
-  }
-
-  function serializeCentrage(centrage) {
-    return JSON.stringify(centrage);
-  }
-
-  function initializeHeroForm(form) {
-    const input = form.querySelector("[data-hero-image-input]");
-    const centrageInput = form.querySelector("[data-centrage-input]");
-
-    if (
-      !(input instanceof HTMLInputElement) ||
-      !(centrageInput instanceof HTMLInputElement)
-    ) {
-      return;
-    }
-
-    const previewImages = {
-      desktop: form.querySelector('[data-preview-image="desktop"]'),
-      tablet: form.querySelector('[data-preview-image="tablet"]'),
-      mobile: form.querySelector('[data-preview-image="mobile"]'),
-    };
-
-    const previewMarkers = {
-      desktop: form.querySelector('[data-preview-marker="desktop"]'),
-      tablet: form.querySelector('[data-preview-marker="tablet"]'),
-      mobile: form.querySelector('[data-preview-marker="mobile"]'),
-    };
-
-    const rangeXInputs = {
-      desktop: form.querySelector('[data-range-x="desktop"]'),
-      tablet: form.querySelector('[data-range-x="tablet"]'),
-      mobile: form.querySelector('[data-range-x="mobile"]'),
-    };
-
-    const rangeYInputs = {
-      desktop: form.querySelector('[data-range-y="desktop"]'),
-      tablet: form.querySelector('[data-range-y="tablet"]'),
-      mobile: form.querySelector('[data-range-y="mobile"]'),
-    };
-
-    const positionLabels = {
-      desktop: form.querySelector('[data-support-position="desktop"]'),
-      tablet: form.querySelector('[data-support-position="tablet"]'),
-      mobile: form.querySelector('[data-support-position="mobile"]'),
-    };
-
-    const resetButtons = Array.from(
-      form.querySelectorAll("[data-reset-support]"),
-    );
-
-    const state = {
-      input,
-      centrageInput,
-      previewImages,
-      previewMarkers,
-      rangeXInputs,
-      rangeYInputs,
-      positionLabels,
-      resetButtons,
-      currentObjectUrl: "",
-      initialSrc:
-        previewImages.desktop instanceof HTMLImageElement
-          ? previewImages.desktop.src
-          : "",
-      centrage: {
-        desktop: { x: 50, y: 50 },
-        tablet: { x: 50, y: 50 },
-        mobile: { x: 50, y: 50 },
-        ...parseCentrage(centrageInput.value),
-      },
-    };
-
-    function syncHiddenInput() {
-      state.centrageInput.value = serializeCentrage(state.centrage);
-    }
-
-    function syncSupport(support) {
-      const point = state.centrage[support];
-      const objectPosition = `${point.x}% ${point.y}%`;
-      const image = state.previewImages[support];
-      const marker = state.previewMarkers[support];
-      const rangeX = state.rangeXInputs[support];
-      const rangeY = state.rangeYInputs[support];
-      const label = state.positionLabels[support];
-
-      if (image instanceof HTMLImageElement) {
-        image.style.objectPosition = objectPosition;
-      }
-      if (marker instanceof HTMLElement) {
-        marker.style.left = `${point.x}%`;
-        marker.style.top = `${point.y}%`;
-      }
-      if (rangeX instanceof HTMLInputElement) {
-        rangeX.value = `${point.x}`;
-      }
-      if (rangeY instanceof HTMLInputElement) {
-        rangeY.value = `${point.y}`;
-      }
-      if (label instanceof HTMLElement) {
-        label.textContent = `Centrage: ${Math.round(point.x)}% / ${Math.round(point.y)}%`;
-      }
-    }
-
-    function syncAllSupports() {
-      ["desktop", "tablet", "mobile"].forEach((support) => {
-        syncSupport(support);
-      });
-      syncHiddenInput();
-    }
-
-    function updateSupportPoint(support, axis, value) {
-      const nextPoint = {
-        ...state.centrage[support],
-        [axis]: clamp(Number(value) || 50, 0, 100),
-      };
-      state.centrage[support] = nextPoint;
-      syncSupport(support);
-      syncHiddenInput();
-    }
-
-    function syncImageSource(source) {
-      const nextSource = source || state.initialSrc || "";
-      ["desktop", "tablet", "mobile"].forEach((support) => {
-        const image = state.previewImages[support];
-        if (image instanceof HTMLImageElement) {
-          image.src = nextSource;
-        }
-      });
-    }
-
-    input.addEventListener("change", () => {
-      const [file] = input.files || [];
-
-      if (state.currentObjectUrl) {
-        URL.revokeObjectURL(state.currentObjectUrl);
-        state.currentObjectUrl = "";
-      }
-
-      if (!file) {
-        syncImageSource(state.initialSrc);
-        return;
-      }
-
-      state.currentObjectUrl = URL.createObjectURL(file);
-      syncImageSource(state.currentObjectUrl);
-    });
-
-    ["desktop", "tablet", "mobile"].forEach((support) => {
-      const rangeX = state.rangeXInputs[support];
-      const rangeY = state.rangeYInputs[support];
-
-      rangeX?.addEventListener("input", () => {
-        updateSupportPoint(support, "x", rangeX.value);
-      });
-
-      rangeY?.addEventListener("input", () => {
-        updateSupportPoint(support, "y", rangeY.value);
-      });
-    });
-
-    state.resetButtons.forEach((button) => {
-      if (!(button instanceof HTMLButtonElement)) return;
-      button.addEventListener("click", () => {
-        const support = button.dataset.resetSupport || "";
-        if (!["desktop", "tablet", "mobile"].includes(support)) return;
-        state.centrage[support] = { x: 50, y: 50 };
-        syncSupport(support);
-        syncHiddenInput();
-      });
-    });
-
-    syncAllSupports();
-  }
-
-  document.addEventListener("click", (event) => {
-    const openButton =
-      event.target instanceof HTMLElement
-        ? event.target.closest("[data-open-hero-modal]")
-        : null;
-    if (openButton instanceof HTMLButtonElement) {
-      const heroId = openButton.dataset.openHeroModal || "";
-      const dialog = document.getElementById(`hero-modal-${heroId}`);
-      if (dialog instanceof HTMLDialogElement) {
-        dialog.showModal();
-      }
-      return;
-    }
-
-    const closeButton =
-      event.target instanceof HTMLElement
-        ? event.target.closest("[data-close-hero-modal]")
-        : null;
-    if (closeButton instanceof HTMLButtonElement) {
-      const heroId = closeButton.dataset.closeHeroModal || "";
-      const dialog = document.getElementById(`hero-modal-${heroId}`);
-      if (dialog instanceof HTMLDialogElement) {
-        dialog.close();
-      }
-    }
-  });
-
-  document
-    .querySelectorAll("[data-hero-edit-form]")
-    .forEach((form) => initializeHeroForm(form));
-
-  const successFlag = document.getElementById("hero-success-flag");
-  const errorFlag = document.getElementById("hero-error-flag");
-
-  if (successFlag instanceof HTMLElement) {
-    const message = (successFlag.dataset.message || "").trim();
-    if (message) {
-      showAlert({ type: "success", message });
-      const url = new URL(window.location.href);
-      url.searchParams.delete("success");
-      window.history.replaceState({}, "", url.toString());
-    }
-  }
-
-  if (errorFlag instanceof HTMLElement) {
-    const message = (errorFlag.dataset.message || "").trim();
-    if (message) {
-      showAlert({ type: "error", message });
-      const url = new URL(window.location.href);
-      url.searchParams.delete("error");
-      window.history.replaceState({}, "", url.toString());
-    }
-  }
+  import "../../../scripts/hero-edit";
 </script>
