@@ -95,6 +95,12 @@ const pageHeroImageUrl =
     ? Astro.locals.pb.files.getURL(pageHeroRecord, pageHeroRecord.image)
     : null;
 const heroImage = pageHeroImageUrl || heroLandingfinal;
+let membres: any[] = [];
+try {
+  membres = await Astro.locals.pb.collection("membres").getFullList();
+} catch (error) {
+  membres = [];
+}
 ---
 
 <Layout
@@ -159,7 +165,7 @@ const heroImage = pageHeroImageUrl || heroLandingfinal;
         </h3>
       </div>
       <p>
-        Le Kiwanis Pays de Montbéliard est un club service de 15 bénévoles
+        Le Kiwanis Pays de Montbéliard est un club service de {membres.length} bénévoles
         engagées pour les enfants et les jeunes du territoire. Nous faisons
         partie du Kiwanis International, fondé en 1915, un réseau mondial
         présent dans plus de 85 pays avec près de 7 500 clubs.
